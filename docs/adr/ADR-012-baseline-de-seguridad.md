@@ -5,6 +5,12 @@ Estado: **propuesto** (2026-11-12) · Origen: verificación contra el código (d
 ## Contexto
 El escaneo del fuente encontró fallas que no dependen de Perú ni de la sede única y que se heredarían tal cual: cuentas desactivadas que pueden iniciar sesión y sesiones que sobreviven a la desactivación, ausencia de límite de intentos de login, API key de kiosco en claro y sin rotación, permisos aplicados solo en algunas capas, y secretos/credenciales de demostración versionados.
 
+## Factores de decisión
+*Sección añadida en el pase formal F (2026-11-12, autorizado por el propietario). Derivada del texto del ADR y de los docs 09/11; no cambia la decisión ni el estado.*
+- Fallas verificadas en el fuente (doc 09 §4, doc 11 DI-10/34/35/39/40) que no dependen de Perú ni de la sede única.
+- No construir funcionalidades encima de huecos conocidos.
+- Costo: +3 a 5 días en la Fase 0 (doc 09 §6).
+
 ## Decisión
 Antes de las funcionalidades de Fase 1, se ejecuta una **Fase 0.5** con estos criterios de aceptación, cada uno con test:
 1. `IniciarSesion` y `ValidarSesion` rechazan `activo = false`; desactivar un usuario **invalida todas** sus sesiones (nuevo método de repositorio).
@@ -23,3 +29,14 @@ Antes de las funcionalidades de Fase 1, se ejecuta una **Fase 0.5** con estos cr
 
 ## Consecuencias
 - (+) El sistema sale a producción sin vulnerabilidades heredadas conocidas; (−) +3 a 5 días en Fase 0.
+
+## Cómo se valida
+*(Pase formal F.)* Cada criterio 1-10 de la Decisión indica su test (ya en el texto).
+- **Spec:** S-01.
+- **Invariante a fijar:** toda ruta `app/api/**` y toda server action declara permiso (test de contrato, ADR-016 §3).
+
+## Reversibilidad
+*(Pase formal F.)* Alta para reglas y tests; baja para datos (la API key pasa a almacenarse con hash).
+
+## Dependencias
+*(Pase formal F.)* ADR-005 (secretos), ADR-007 (scripts), ADR-009 (CORS del kiosco), ADR-002 (API key), ADR-003 (`RegistrarTasaManual`), ADR-016 (contrato de permisos). Hallazgos abiertos de la revisión G3: ver `REVISION-ADR.md` §4, §7 y §8.4.

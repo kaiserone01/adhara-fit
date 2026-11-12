@@ -40,3 +40,6 @@ Eliminar todo lo anterior del repo de Adhara. Para cargar los miembros existente
 
 ## Dependencias
 *(Pase formal F.)* ADR-005 (exclusiones), ADR-004 y ADR-003 (formato del CSV), ADR-012 §9 (scripts destructivos). Hallazgos abiertos de la revisión G3: ver `REVISION-ADR.md` §4, §7 y §8.4.
+
+## Notas del propietario (2026-11-12)
+- Confirmó en el chat: «efectivamente hay que sacar lo venezolano». Esto **no** cambia el estado del ADR: pasa a *aceptado* solo con su orden expresa «acepto ADR-nnn».

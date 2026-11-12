@@ -47,3 +47,6 @@ El repo base trabaja con precios en USD y cobros en USD y bolívares con tasa BC
 *Derivadas de decisiones aceptadas por el propietario (ADR-018, ADR-019, ADR-020). El texto anterior se conserva; donde choca, rige esta sección.*
 - `Turno` ya no pasa a «un único `fondoInicialEfectivo`»: la entidad `Turno` se elimina (ADR-018).
 - `Egreso` y `MonedaEgreso` no se adaptan a PEN: se eliminan junto con los egresos (ADR-018).
+
+## Notas del propietario (2026-11-12)
+- Confirmó en el chat: «sin dólares ni bolívares». Esto **no** cambia el estado del ADR: pasa a *aceptado* solo con su orden expresa «acepto ADR-nnn».

@@ -599,6 +599,11 @@ El código heredado está pensado para varias organizaciones con varias sedes ca
 - ¿`vitrina*` va a `ConfiguracionNegocio` junto con `reposo*`? Default: sí (SUP-S05-010).
 - ¿Se mantiene `/login` como señal de salud de Compose en lugar de una ruta de salud nueva? Default: sí (SUP-S05-014).
 
+## Enmiendas posteriores (2026-11-12)
+*Derivadas de la aprobación de S-06. El texto anterior se conserva; donde choca, rige esta sección.*
+- REQ-S05-007, BEH-S05-006, BEH-S05-023, INV-S05-003 y AC-S05-004: la «cédula» pasa a `numeroDocumento` (único global, sin incluir el tipo); SUP-S05-006 y SUP-S05-015 quedan cumplidos por S-06.
+- REQ-S05-031 y las pruebas de caracterización de `api/checkin` y `api/miembros`: el cuerpo pasa de `cedula` a `identificador`, `tipoDocumento` y `numeroDocumento`.
+
 ## Revisión independiente
 
 Revisor: subagente `spec-reviewer` (solo lectura), que recibió únicamente la ruta y la lista de comprobación. Veredicto tal como lo entregó, sobre la versión `a35fc3e`:

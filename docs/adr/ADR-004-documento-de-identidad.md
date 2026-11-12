@@ -45,6 +45,7 @@ El base usa `Miembro.cedula` (única por organización) y el kiosco acepta solo 
 *Derivadas de decisiones aceptadas por el propietario (ADR-018, ADR-019, ADR-020). El texto anterior se conserva; donde choca, rige esta sección.*
 - La unicidad `@@unique([organizacionId, numeroDocumento])` pasa a `@@unique([numeroDocumento])` global, y lo mismo para `codigoSocio`: no existe `organizacionId` (ADR-019).
 - Con el baseline regenerado no hay datos heredados que migrar a la nueva restricción.
+- Por la aprobación de S-06 (2026-11-12): el «[SUPUESTO S-10]» queda resuelto: `codigoSocio` tiene exactamente 4 dígitos, se asigna a quien tiene CE o pasaporte y no cambia; «longitud configurable» pasa a constantes de `documento.ts` (CE de 9 a 12, pasaporte de 6 a 12) repetidas en un CHECK de la base. El invariante «el kiosco no muestra el documento» se cumple en la respuesta del check-in; el campo de entrada queda a cargo de S-21.
 
 ## Notas del propietario (2026-11-12)
 - Respuesta en el chat: «Documento de identidad - Aceptado». Aceptado el 2026-11-12.

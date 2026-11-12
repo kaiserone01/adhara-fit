@@ -32,7 +32,7 @@ Versión 0.1 · 2026-11-11. Los puntos legales/tributarios están marcados **[VE
 
 Modelo: `Miembro.tipoDocumento` (enum `DNI|CE|PASAPORTE`) + `Miembro.numeroDocumento`. Unicidad: `@@unique([organizacionId, numeroDocumento])` (ver ADR-004).
 
-**Kiosco:** el numpad solo ingresa dígitos; para CE/Pasaporte alfanuméricos el miembro debe identificarse en recepción **o** se le asigna un **código de socio numérico** corto. **[SUPUESTO S-10]** El MVP asume que la mayoría usa DNI y que extranjeros se registran con un código numérico interno.
+**Kiosco:** el numpad solo ingresa dígitos; para CE/Pasaporte alfanuméricos el miembro debe identificarse en recepción **o** se le asigna un **código de socio numérico** corto. **[SUPUESTO S-10]** El MVP asume que la mayoría usa DNI y que extranjeros se registran con un código numérico interno. *Enmienda S-06 (2026-11-12): el «[SUPUESTO S-10]» queda resuelto: código de socio de 4 dígitos, asignado a quien tiene CE o pasaporte.*
 
 Celular: 9 dígitos que comienzan en 9, prefijo `+51` opcional.
 

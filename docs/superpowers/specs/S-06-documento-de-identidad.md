@@ -719,6 +719,10 @@ El código heredado identifica al miembro por `cedula`, un texto libre que solo 
 - ¿Se enmascara en el kiosco lo que teclea el socio y se limitan los intentos fallidos del check-in? Default: no se decide aquí; lo resuelve S-21 (S-17 para el límite).
 - ¿Un miembro eliminado puede volver a darse de alta con el mismo documento? Default: no hasta que S-09 lo defina (SUP-S06-011).
 
+## Enmiendas posteriores (2026-11-12)
+*Derivadas de la aprobación de S-10. El texto anterior se conserva; donde choca, rige esta sección.*
+- Por la aprobación de S-10: SUP-S06-007, REQ-S06-030 y las exenciones de `verificar-documento` de la familia del padrón desaparecen porque sus archivos se retiran.
+
 ## Revisión independiente
 
 Revisor: subagente `spec-reviewer` (solo lectura), que recibió únicamente la ruta y la lista de comprobación. Veredicto sobre la versión `1cfd693`; cada fila se resume y el veredicto global se conserva tal como lo entregó. El revisor no pudo ejecutar `spec-lint` ni `git`; verificó con `Grep`, `Glob` y `Read`.

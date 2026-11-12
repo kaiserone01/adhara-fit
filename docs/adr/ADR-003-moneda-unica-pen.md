@@ -50,3 +50,5 @@ El repo base trabaja con precios en USD y cobros en USD y bolívares con tasa BC
 
 ## Notas del propietario (2026-11-12)
 - Confirmó en el chat: «sin dólares ni bolívares». Aceptado por el propietario el 2026-11-12.
+## Enmiendas posteriores (2026-11-12, orden del propietario)
+- **Reloj conservado:** la Decisión «se elimina … el reloj/tasa del layout» se lee así: la tasa y su historial se eliminan, pero el encabezado conserva un reloj con la fecha y la hora de Lima (sin tasa) para que el socio controle la hora de las transacciones (S-10, REQ-S10-008, REQ-S10-033 y REQ-S10-034).

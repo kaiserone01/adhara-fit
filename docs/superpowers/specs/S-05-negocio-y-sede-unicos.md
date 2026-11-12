@@ -605,6 +605,7 @@ El código heredado está pensado para varias organizaciones con varias sedes ca
 - REQ-S05-031 y las pruebas de caracterización de `api/checkin` y `api/miembros`: el cuerpo pasa de `cedula` a `identificador`, `tipoDocumento` y `numeroDocumento`.
 - Por la aprobación de S-07: la línea de 0.2 que agrupa a `CambioPlanAuditoria` entre las tablas que otras specs retiran después se lee así: la tabla se conserva, sin `organizacionId`, con la estructura de S-07.
 - Por la aprobación de S-08: `Turno.sucursalId` y `DeudaProducto.sucursalId` desaparecen con sus tablas; REQ-S05-008, SUP-S05-002, SUP-S05-005, INV-S05-004, 0.2 y 0.3 dejan de nombrar `Turno` y `DeudaProducto`.
+- Por la aprobación de S-10: SUP-S05-002, SUP-S05-005 y 0.3 dejan de nombrar `Sucursal.tasaCambioUSD` y la familia S-10; el nombre visible de encabezado, kiosco y vitrina es `ConfiguracionNegocio.nombre` (REQ-S10-021).
 
 ## Revisión independiente
 

@@ -803,6 +803,7 @@ El código heredado organiza el dinero en torno a la caja con turnos: hay que ab
 ## Enmiendas posteriores (2026-11-12)
 *Derivadas de la aprobación de S-09. El texto anterior se conserva; donde choca, rige esta sección.*
 - Por la aprobación de S-09: el riesgo sobre ADR-013 de 5.3 queda resuelto (eliminar conserva los pagos) y el selector de miembro de `/cobros` excluye a los eliminados (REQ-S09-021); el reporte incluye los pagos de los eliminados (REQ-S09-030).
+- Por la aprobación de S-10: la nota de 0.3 sobre `Pago.montoBs` y la tasa se lee como cumplida.
 
 ## Revisión independiente
 

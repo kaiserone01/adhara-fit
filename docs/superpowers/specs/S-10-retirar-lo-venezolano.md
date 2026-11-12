@@ -1,10 +1,10 @@
 ---
 id: S-10
-estado: en-revision
+estado: aprobada
 adrs: ADR-003, ADR-007, ADR-008, ADR-011, ADR-016, ADR-020, ADR-021
 depende_de: S-00, S-01, S-02, S-03, S-04, S-05, S-06, S-07, S-08, S-09, S-22
-aprobada_por:
-fecha_aprobacion:
+aprobada_por: propietario
+fecha_aprobacion: 2026-11-12
 ---
 # S-10 — Retirar lo venezolano: tasa de cambio, padrón de Excel, bolívares y la marca anterior
 
@@ -14,7 +14,7 @@ fecha_aprobacion:
 El código heredado nació para otro negocio, en Venezuela: convierte dólares a bolívares con una tasa del BCV que un proceso aparte (`worker`) actualiza, muestra esa tasa y los precios en bolívares en el panel, el kiosco y la vitrina, mantiene un espejo de un Excel del cliente anterior (padrón, `MiembroReferencia`, `PadronHoja`, menú «Excel»), marca a los miembros que vienen del Excel como «por regularizar», y lleva el nombre, los colores, los logos y los identificadores de otro gimnasio. Adhara Fit es un solo negocio en Perú con una sola moneda (PEN): el propietario decidió «sacar lo venezolano», sin dólares ni bolívares, sin padrón y sin importador de miembros (ADR-003, ADR-007 y ADR-020, aceptados). S-00 ya deja fuera la copia de `worker`, `kiosk-host`, los scripts de `packages/db`, `migracion-excel/` y todo archivo `zipgym`; S-02 elimina `fechaCaracas.ts`. S-10 elimina lo que queda dentro del código importado de las apps web (`web-admin`, `kiosk`, `vitrina`) y de `packages`, y comprueba que no vuelva; las apps de TV (`kiosk-tv`, `vitrina-tv`) se limpian en S-20 y S-21.
 
 ### 0.2 Dentro de alcance
-- Tasa de cambio: la tabla `TasaCambio`, `Pago.tasaCambio`, `Pago.montoBs`, `Sucursal.tasaCambioUSD`, `VitrinaItem.mostrarEquivalenteBs`, los casos de uso, la entidad, el puerto y los repositorios de la tasa, `BcvApiAdapter`, `estadoTasa`, `ObtenerTasaVigente`, `SincronizarTasas`, `ListarHistoricoTasas`, `RegistrarTasaManual`, las rutas `api/tasa-cambio` y `api/tasa-cambio/historial`, `lib/tasaBcv.ts`, `tasaBcvFija.ts`, `productos/tasaActual.ts`, los tres scripts de `apps/web-admin/scripts` sobre la tasa, `ModalHistorialTasas`, `RelojYTasaConHistorial` y `RelojYTasa`.
+- Tasa de cambio: la tabla `TasaCambio`, `Pago.tasaCambio`, `Pago.montoBs`, `Sucursal.tasaCambioUSD`, `VitrinaItem.mostrarEquivalenteBs`, los casos de uso, la entidad, el puerto y los repositorios de la tasa, `BcvApiAdapter`, `estadoTasa`, `ObtenerTasaVigente`, `SincronizarTasas`, `ListarHistoricoTasas`, `RegistrarTasaManual`, las rutas `api/tasa-cambio` y `api/tasa-cambio/historial`, `lib/tasaBcv.ts`, `tasaBcvFija.ts`, `productos/tasaActual.ts`, los tres scripts de `apps/web-admin/scripts` sobre la tasa, `ModalHistorialTasas`, `RelojYTasaConHistorial` y `RelojYTasa`, que se reemplazan por un reloj de Lima sin tasa (`RelojLima`) que el propietario pidió conservar para controlar la hora de las transacciones.
 - Bolívares y tasa en el contrato y en las pantallas de kiosco y vitrina: `kiosco/estado` y el manifiesto de `kiosco/vitrina` (`tasaBcvParaKiosco`, `tasaBcv`), `Badges.tsx`, `Reproductor.tsx`, `Cartel.tsx`, `vitrinaBadges.ts` (`equivalenteBs`), `FichaReposo.tsx`, `kiosk/lib/api.ts` y `kiosk/app/page.tsx`; y los textos y ayudas de bolívares, tasa y BCV del panel, entre ellos `caja/`, `productos/`, `miembros/[id]/pagos` y `FormularioMiembro.tsx`.
 - Padrón de Excel: las tablas `MiembroReferencia` y `PadronHoja`, `ActivarMiembroDesdePadron`, `EditarMiembroReferencia`, `filtrarFilasPadron`, `padronExcel`, `formatoCeldaPadron`, `saltoFila`, `lib/activacion.ts`, `miembros/ActivarDesdeExcel.tsx`, `activarDesdeExcelAction`, la carpeta `configuraciones/excel` y su pestaña, y sus puertos, entidades, repositorios, mapeadores, datos de prueba y pruebas.
 - Las columnas `Miembro.porRegularizar` y `Miembro.vieneDelExcel` y todas las ramas y avisos que las leen («Por regularizar»), conservando el comportamiento de un miembro con `vieneDelExcel` falso.
@@ -31,12 +31,12 @@ El código heredado nació para otro negocio, en Venezuela: convierte dólares a
 - Los métodos de pago venezolanos (pago móvil, BioPago, Zelle, Binance, Punto): ya los retira S-03.
 - Los colores, la tipografía, los componentes y el logo definitivo de Adhara Fit: S-19 (ADR-008 y ADR-020). Hasta entonces el tema `temaAdhara` conserva la paleta verde anterior.
 - El seed y el baseline: S-15.
-- Un reloj en el encabezado: no se conserva (ADR-003); si el propietario lo quiere, es una decisión de S-19.
+- El diseño visual del reloj (tamaño, color, posición exacta): S-19; S-10 fija su contenido y su fuente de hora.
 
 ### 0.4 Comportamiento actual verificado
 > Verificado el 2026-11-12 sobre el clon de solo lectura del Repo A en `b4352a03`. Los números son del Repo A original, no del árbol que S-10 recibirá después de S-00 a S-09 y S-22; se recontarán al empezar. Los `grep` recorren `apps` y `packages` y excluyen `node_modules`, `generated`, `.next`, `out`, `packages/db`, `apps/worker` y `apps/kiosk-host`, salvo donde se indica.
 - **Tasa de cambio:** 70 archivos mencionan `TasaCambio`, `tasaCambio`, `orquestadorTasa`, `estadoTasa`, `BcvApi`, `ConvertirMontoUSDaVES`, `RegistrarTasaManual`, `ModalHistorialTasas`, `RelojYTasa`, `tasaBcvFija` o `tasa-cambio` (verificado con `grep -rIlE` sobre `*.ts`, `*.tsx`, `*.json`, `*.mjs` y `*.js`); el esquema tiene `model TasaCambio` (`schema.prisma:528`), `Pago.tasaCambio` (`:285`), `Pago.montoBs` (`:286`), `Sucursal.tasaCambioUSD` (`:44`) y `VitrinaItem.mostrarEquivalenteBs` (`:709`); los archivos son `PrismaTasaCambioRepository.ts`, `TasaCambio.ts`, `ITasaCambioRepository.ts`, `ObtenerTasaVigente.ts`, `SincronizarTasas.ts`, `ListarHistoricoTasas.ts`, `RegistrarTasaManual.ts`, `estadoTasa.ts`, `exchange-rate/BcvApiAdapter.ts` (que llama a `ve.dolarapi.com`, `:3`), `ui/components/RelojYTasa.tsx`, `web-admin/lib/tasaBcv.ts`, `(panel)/tasaBcvFija.ts`, `(panel)/RelojYTasaConHistorial.tsx`, `(panel)/ModalHistorialTasas.tsx`, `(panel)/productos/tasaActual.ts`, `api/tasa-cambio/route.ts`, `api/tasa-cambio/historial/route.ts` y los scripts `verificar-tasa-bcv.ts`, `verificar-historial-tasa-bcv.ts` y `poblar-historico-tasa-bcv.ts` (verificado con `find`). No hay variables de entorno de tasa (verificado con `grep -rhoE "process.env.*(BCV|TASA)"`).
-- **Reloj:** `RelojYTasa.tsx:30,73` muestra fecha y segundos con `es-VE` y `layout.tsx:9,39,59` reserva espacio (`pt-16`); ADR-003 elimina «el reloj/tasa del layout» (`ADR-003:17`) (verificado con `Read`).
+- **Reloj:** `RelojYTasa.tsx:30,73` muestra fecha y segundos con `es-VE` junto a la tasa y `layout.tsx:9,39,59` reserva espacio (`pt-16`); ADR-003 elimina «el reloj/tasa del layout» (`ADR-003:17`), y el propietario decidió el 2026-11-12 conservar un reloj para controlar la hora de las transacciones (verificado con `Read`).
 - **Bolívares en kiosco y vitrina:** `vitrina/components/Badges.tsx:2-4,18,57` (`Bs. {formatearBs(bs)}`), `Reproductor.tsx:8,33-35` (`manifiesto.tasaBcv`), `Cartel.tsx:3,10,30`, `packages/domain/utils/vitrinaBadges.ts:20-25` (`equivalenteBs`), `web-admin/lib/kiosco.ts:41-48` (`tasaBcvParaKiosco`), `api/kiosco/estado/route.ts`, `api/kiosco/vitrina/route.ts`, `kiosk/lib/api.ts:74`, `kiosk/app/page.tsx:221`, `kiosk/components/FichaReposo.tsx:4-6,30` («Tasa BCV») y `vitrina/lib/sincronizar.test.ts:35,111`; ADR-021 asigna a S-10 retirar los bolívares de la vitrina (`ADR-021:38`) (verificado con `grep -n` y `Read`).
 - **Padrón de Excel:** 28 archivos mencionan `MiembroReferencia`, `PadronHoja`, `padron`, `padrón`, `ActivarMiembroDesdePadron`, `filtrarFilasPadron` o `activacion` (verificado con `grep -rIlE`); el esquema tiene `model MiembroReferencia` (`:613`) y `model PadronHoja` (`:657`); `configuraciones/excel/` tiene seis archivos (`ExcelGrid.tsx`, `FilaHoja.tsx`, `PanelFiltros.tsx`, `actions.ts`, `page.tsx`, `tiposGrid.ts`) y su pestaña está en `configuraciones/tabs.ts:10`, además de `miembros/ActivarDesdeExcel.tsx`, `padronExcel.ts`, `formatoCeldaPadron.ts`, `filtrarFilasPadron.ts`, `saltoFila.ts` y `ActivarMiembroDesdePadron.ts` con sus pruebas (verificado con `find`). `registrarCheckIn` ya no activa desde el padrón por S-06 (REQ-S06-029).
 - **«Por regularizar»:** 24 archivos mencionan `porRegularizar`, `vieneDelExcel` o «Por regularizar» (verificado con `grep -rIlE`); `ActualizarMiembro.ts:73,80-90,123` tiene ramas `porRegularizar` y `vieneDelExcel`, y `FormularioMiembro.tsx` las usa para `puedeCambiarPlanGratis` (verificado con `grep -n`).
@@ -49,7 +49,7 @@ El código heredado nació para otro negocio, en Venezuela: convierte dólares a
 
 ### 0.5 Supuestos
 - SUP-S10-001: no se conserva ningún dato ni función de la tasa de cambio, ni siquiera como referencia: todos los importes son PEN (ADR-003, ADR-011). Default: eliminar todo; decisión del propietario (ADR-003); asumido, por validar.
-- SUP-S10-002: el encabezado del panel no muestra reloj ni tasa, como dice ADR-003 («se elimina … el reloj/tasa del layout»); el espacio que reservaba el reloj (`pt-16`) se libera. Si el propietario quiere un reloj con hora de Lima, es una decisión de S-19. Default: sin reloj; asumido, por validar.
+- SUP-S10-002: el encabezado del panel conserva un reloj con la fecha y la hora de Lima (formato `dd/mm/aaaa` y 12 horas con segundos, por ejemplo «12/11/2026 3:30:05 p. m.») y sin tasa, para que el socio controle la hora con la que se marcan las transacciones; esto enmienda ADR-003:17. El reloj parte de la hora del servidor, que es la que se guarda en cada transacción, y avanza con el reloj del navegador. Default: ese reloj; decisión del propietario (2026-11-12); asumido, por validar el formato.
 - SUP-S10-003: los miembros existentes de Adhara se cargan a mano, uno por uno; no hay importador ni padrón. Default: sin importador; decisión del propietario (S-16 descartada); asumido, por validar su alcance.
 - SUP-S10-004: `Miembro.porRegularizar` y `vieneDelExcel` se eliminan (ADR-007) y se conserva el comportamiento de un miembro con `vieneDelExcel` falso: el cambio de plan prorratea (S-07) y el aviso no existe. Un miembro inscrito antes de hoy se registra con su fecha de inscripción y su primer cobro puede llevar cualquier fecha pasada (S-04). Default: ese comportamiento; asumido, por validar.
 - SUP-S10-005: el nombre visible (título de la aplicación, encabezado, inicio de sesión, kiosco y vitrina) es `ConfiguracionNegocio.nombre` (S-05, SUP-S05-012), sembrado como «Adhara Fit», y se muestra como rótulo de texto sin logo hasta que el propietario entregue el definitivo (S-19). Default: ese origen del nombre; asumido, por validar.
@@ -104,13 +104,11 @@ El código heredado nació para otro negocio, en Venezuela: convierte dólares a
 - prioridad: MUST
 - origen: ADR-003
 - texto: Los archivos tasaBcv, tasaBcvFija, tasaActual, ModalHistorialTasas, RelojYTasaConHistorial y RelojYTasa, y los tres scripts de la tasa en apps/web-admin/scripts, no deberán existir.
-
 ### REQ-S10-008
 - tipo: ubicuo
 - prioridad: MUST
-- origen: ADR-003
-- texto: El encabezado del panel no deberá mostrar reloj ni tasa de cambio.
-
+- origen: SUP-S10-002
+- texto: El encabezado del panel deberá mostrar un reloj con la fecha y la hora de Lima y ninguna tasa de cambio.
 ### REQ-S10-009
 - tipo: ubicuo
 - prioridad: MUST
@@ -255,6 +253,18 @@ El código heredado nació para otro negocio, en Venezuela: convierte dólares a
 - origen: ADR-016
 - texto: Las listas de exenciones de verificar-fechas, verificar-dinero y verificar-documento no deberán contener archivos de la familia S-10 al terminar la spec.
 
+
+### REQ-S10-033
+- tipo: ubicuo
+- prioridad: MUST
+- origen: SUP-S10-002
+- texto: El reloj deberá formatearse con el formateador de fecha y hora de S-02 como dd/mm/aaaa y 12 horas con segundos, igual con cualquier zona horaria del navegador y del proceso.
+
+### REQ-S10-034
+- tipo: ubicuo
+- prioridad: MUST
+- origen: SUP-S10-002
+- texto: El reloj deberá partir de la hora del servidor y avanzar con el reloj del navegador, de modo que muestre la hora que el servidor guarda en las transacciones.
 ## 2. Comportamiento
 - no_aplica: concurrencia — S-10 solo retira código, columnas y texto; no agrega operaciones con estado compartido ni escrituras simultáneas.
 
@@ -273,12 +283,11 @@ El código heredado nació para otro negocio, en Venezuela: convierte dólares a
 - entonces: no existe ninguno y api/tasa-cambio y api/tasa-cambio/historial responden 404
 
 ### BEH-S10-003
-- cubre: REQ-S10-008
+- cubre: REQ-S10-008, REQ-S10-033
 - categoria: feliz
-- dado: el panel con un socio
+- dado: el panel con un socio a las 15:30:05 de Lima del 12 de noviembre de 2026
 - cuando: se abre cualquier pantalla del panel
-- entonces: el encabezado no muestra reloj ni tasa ni historial de tasas
-
+- entonces: el encabezado muestra «12/11/2026 3:30:05 p. m.» y ninguna tasa ni historial de tasas
 ### BEH-S10-004
 - cubre: REQ-S10-009
 - categoria: feliz
@@ -405,6 +414,20 @@ El código heredado nació para otro negocio, en Venezuela: convierte dólares a
 - cuando: se ejecutan sus pruebas de lista
 - entonces: ninguna entrada nombra un archivo de la familia S-10 (`*Tasa*`, `formatearBs*`, `ConvertirMontoUSDaVES*`, `padron*`, `ModalHistorialTasas*`, `tasaBcv*`, `BcvApi*`, `*MiembroReferencia*`, `saltoFila*`, `activacion*`, `configuraciones/excel/*` ni `FichaReposo.tsx`)
 
+
+### BEH-S10-022
+- cubre: REQ-S10-033
+- categoria: borde
+- dado: un navegador en la zona de Tokio y otro en la de Lima, y los instantes 2026-11-12T23:59:59 y 2026-11-13T00:00:00 de Lima
+- cuando: el reloj los muestra
+- entonces: ambos muestran «12/11/2026 11:59:59 p. m.» y «13/11/2026 12:00:00 a. m.», porque el reloj usa America/Lima y no la zona del navegador
+
+### BEH-S10-023
+- cubre: REQ-S10-034
+- categoria: borde
+- dado: un navegador con el reloj atrasado dos horas y un servidor que responde 15:30:05 de Lima
+- cuando: se carga el panel y pasan 10 segundos
+- entonces: el reloj muestra «3:30:05 p. m.» al cargar y «3:30:15 p. m.» después, y no «1:30:05 p. m.», porque parte de la hora del servidor
 ## 3. Invariantes
 
 ### INV-S10-001
@@ -431,6 +454,12 @@ El código heredado nació para otro negocio, en Venezuela: convierte dólares a
 - deteccion: una prueba cambia ConfiguracionNegocio.nombre a un valor aleatorio generado con semilla fija y comprueba que el título, el encabezado, el inicio de sesión, el kiosco y la vitrina muestran ese valor y que ninguno contiene un literal propio
 - protege: REQ-S10-021
 
+
+### INV-S10-005
+- propiedad: el reloj muestra siempre la hora de Lima en el formato definido, igual con cualquier zona del navegador
+- mecanismo: test-propiedad
+- deteccion: 200 instantes generados con semilla fija alrededor de las 00:00 y las 12:00 de Lima, probados con TZ=UTC, America/Lima y Asia/Tokyo; el texto del reloj debe ser igual al formato dd/mm/aaaa y 12 horas con segundos del instante en Lima
+- protege: REQ-S10-033
 ## 4. Criterios de aceptación
 
 ### AC-S10-001
@@ -448,10 +477,10 @@ El código heredado nació para otro negocio, en Venezuela: convierte dólares a
 - test: pendiente
 
 ### AC-S10-003
-- enlaza: REQ-S10-006, REQ-S10-008, REQ-S10-009, BEH-S10-002, BEH-S10-003, BEH-S10-004, BEH-S10-006
+- enlaza: REQ-S10-006, REQ-S10-009, BEH-S10-002, BEH-S10-004, BEH-S10-006
 - metodo: integracion
-- procedimiento: con la sesión de un socio, pedir api/tasa-cambio, api/tasa-cambio/historial, /configuraciones/excel, kiosco/estado y el manifiesto de kiosco/vitrina, y leer el encabezado del panel; simular un cliente que acepta un tasaBcv nulo
-- esperado: las tres primeras responden 404, ninguna respuesta de kiosco contiene tasaBcv ni equivalente en bolívares, el encabezado no tiene reloj ni tasa y el cliente sin tasa sigue funcionando
+- procedimiento: con la sesión de un socio, pedir api/tasa-cambio, api/tasa-cambio/historial, /configuraciones/excel, kiosco/estado y el manifiesto de kiosco/vitrina, y simular un cliente que acepta un tasaBcv nulo
+- esperado: las tres primeras responden 404, ninguna respuesta de kiosco contiene tasaBcv ni equivalente en bolívares, el cliente sin tasa sigue funcionando
 - test: pendiente
 
 ### AC-S10-004
@@ -503,18 +532,25 @@ El código heredado nació para otro negocio, en Venezuela: convierte dólares a
 - esperado: ninguna entrada nombra un archivo de la familia S-10
 - test: pendiente
 
+
+### AC-S10-011
+- enlaza: REQ-S10-008, REQ-S10-033, REQ-S10-034, BEH-S10-003, BEH-S10-022, BEH-S10-023, INV-S10-005
+- metodo: unitario
+- procedimiento: probar la función pura que da el texto del reloj con los instantes de BEH-S10-003 y BEH-S10-022 y con 200 instantes generados con semilla fija, con TZ=UTC, America/Lima y Asia/Tokyo en procesos hijos; probar el estado del reloj con un reloj simulado que parte de la hora del servidor, avanza 10 segundos y tiene el reloj del navegador desfasado; y buscar la tasa en el encabezado
+- esperado: los textos son los de los comportamientos, iguales en las tres zonas y con el formato de Lima, el reloj avanza desde la hora del servidor sin usar la hora local del navegador como origen y el encabezado no contiene tasa
+- test: pendiente
 ## 5. Plan de pruebas, migración, riesgos y preguntas abiertas
 
 ### 5.1 Plan de pruebas
-- Orden (ADR-016 §1, pruebas primero, un commit por paso y cada commit con typecheck y pruebas en verde, agregando lo nuevo al lado de lo viejo, migrando los llamadores y retirando lo viejo al final; la entrada de exención de cada archivo se retira en el mismo commit que lo borra): (1) pruebas del nombre desde `ConfiguracionNegocio` (INV-S10-004), que pasan contra lo existente porque cubren lo que se conserva, y pruebas de caracterización de `ActualizarMiembro` y del cambio de plan con `vieneDelExcel` falso; (2) `tools/verificar-venezuela.mjs` y sus pruebas, con una lista de exenciones inicial que incluye todos los archivos actuales (con tope por archivo) y que se achica en cada paso; (3) rótulo desde `ConfiguracionNegocio.nombre` y renombre de `temaAdrenalinaXtreme` a `temaAdhara` en un solo commit con todos sus usos, y retiro del reloj y de la tasa del encabezado migrando `layout.tsx`; (4) retirar el padrón: `ActivarDesdeExcel`, la pestaña y la carpeta `configuraciones/excel`, `activarDesdeExcelAction`, los casos de uso y utilidades con sus pruebas, las entidades, los puertos, los repositorios, los mapeadores y los datos de prueba, y los lectores de `porRegularizar` y `vieneDelExcel` (incluidas las ramas de `ActualizarMiembro` y `FormularioMiembro`), junto con `medianocheLimaDeFechaUtc`; (5) retirar la tasa: las rutas, `RelojYTasa*`, `ModalHistorialTasas`, `tasaBcv*`, `tasaActual`, los tres scripts, los casos de uso, `BcvApiAdapter`, la entidad, el puerto, los repositorios, y los lectores y mapeadores de `tasaCambio`, `montoBs` y `tasaCambioUSD`; (6) quitar los bolívares y la tasa de kiosco, vitrina y `FichaReposo` (contrato de `kiosco/estado` y del manifiesto, `Badges`, `Cartel`, `Reproductor`, `vitrinaBadges`, `kiosk/lib/api.ts`, `kiosk/app/page.tsx` y `mostrarEquivalenteBs`), `formatearBs` y `diaCalendarioLima`, y los textos y ayudas de bolívares y tasa; (7) esquema: retirar `TasaCambio`, `MiembroReferencia`, `PadronHoja`, `Pago.tasaCambio`, `Pago.montoBs`, `Sucursal.tasaCambioUSD`, `VitrinaItem.mostrarEquivalenteBs`, `Miembro.porRegularizar` y `Miembro.vieneDelExcel`; (8) retirar los recursos gráficos de la marca anterior, la referencia de `marca-agua.css`, el `slug` de `verificar-autorizacion.ts` y los comentarios, subir la versión de caché del service worker del kiosco, y quitar `xlsx` de `package.json` y regenerar `package-lock.json`; (9) vaciar las exenciones de la familia S-10 de las listas de `verificar-fechas`, `verificar-dinero` y `verificar-documento`.
+- Orden (ADR-016 §1, pruebas primero, un commit por paso y cada commit con typecheck y pruebas en verde, agregando lo nuevo al lado de lo viejo, migrando los llamadores y retirando lo viejo al final; la entrada de exención de cada archivo se retira en el mismo commit que lo borra): (1) pruebas del nombre desde `ConfiguracionNegocio` (INV-S10-004), que pasan contra lo existente porque cubren lo que se conserva, y pruebas de caracterización de `ActualizarMiembro` y del cambio de plan con `vieneDelExcel` falso; (2) `tools/verificar-venezuela.mjs` y sus pruebas, con una lista de exenciones inicial que incluye todos los archivos actuales (con tope por archivo) y que se achica en cada paso; (3) rótulo desde `ConfiguracionNegocio.nombre` y renombre de `temaAdrenalinaXtreme` a `temaAdhara` en un solo commit con todos sus usos, y reemplazo de `RelojYTasa` y de la tasa del encabezado por `RelojLima` (función pura del texto y componente con la hora del servidor) migrando `layout.tsx`; (4) retirar el padrón: `ActivarDesdeExcel`, la pestaña y la carpeta `configuraciones/excel`, `activarDesdeExcelAction`, los casos de uso y utilidades con sus pruebas, las entidades, los puertos, los repositorios, los mapeadores y los datos de prueba, y los lectores de `porRegularizar` y `vieneDelExcel` (incluidas las ramas de `ActualizarMiembro` y `FormularioMiembro`), junto con `medianocheLimaDeFechaUtc`; (5) retirar la tasa: las rutas, `RelojYTasa*`, `ModalHistorialTasas`, `tasaBcv*`, `tasaActual`, los tres scripts, los casos de uso, `BcvApiAdapter`, la entidad, el puerto, los repositorios, y los lectores y mapeadores de `tasaCambio`, `montoBs` y `tasaCambioUSD`; (6) quitar los bolívares y la tasa de kiosco, vitrina y `FichaReposo` (contrato de `kiosco/estado` y del manifiesto, `Badges`, `Cartel`, `Reproductor`, `vitrinaBadges`, `kiosk/lib/api.ts`, `kiosk/app/page.tsx` y `mostrarEquivalenteBs`), `formatearBs` y `diaCalendarioLima`, y los textos y ayudas de bolívares y tasa; (7) esquema: retirar `TasaCambio`, `MiembroReferencia`, `PadronHoja`, `Pago.tasaCambio`, `Pago.montoBs`, `Sucursal.tasaCambioUSD`, `VitrinaItem.mostrarEquivalenteBs`, `Miembro.porRegularizar` y `Miembro.vieneDelExcel`; (8) retirar los recursos gráficos de la marca anterior, la referencia de `marca-agua.css`, el `slug` de `verificar-autorizacion.ts` y los comentarios, subir la versión de caché del service worker del kiosco, y quitar `xlsx` de `package.json` y regenerar `package-lock.json`; (9) vaciar las exenciones de la familia S-10 de las listas de `verificar-fechas`, `verificar-dinero` y `verificar-documento`.
 - Las pruebas usan semillas fijas; no hay dependencias nuevas.
-- Los criterios AC-S10-009 es un paso manual del propietario (el repositorio no tiene un ejecutor de navegador); la lectura de pantallas se prueba sobre los textos y los datos que las alimentan.
+- El criterio AC-S10-009 es un paso manual del propietario (el repositorio no tiene un ejecutor de navegador); la lectura de pantallas se prueba sobre los textos y los datos que las alimentan.
 - La herramienta recorre los archivos con extensión `.ts`, `.tsx`, `.js`, `.mjs`, `.json`, `.css`, `.md`, `.html`, `.java`, `.xml`, `.gradle` y `.yml`, salta los binarios y busca cada término por separado, de modo que los términos solapados se listan todos.
 
 ### 5.2 Migración
 - No hay datos que migrar: el baseline se genera nuevo (S-00, S-15); no existen tasas, padrón ni miembros por regularizar. Los volúmenes de desarrollo creados antes de S-10 se recrean (SUP-S10-012).
 - **Enmiendas que se registran al aprobar S-10:**
-  - ADR-007: la Decisión (el importador CSV genérico) y la mención de ADR-004:42 quedan sin efecto por orden del propietario (S-16 descartada); ADR-003:17 se lee sin reloj en el encabezado.
+  - ADR-007: la Decisión (el importador CSV genérico) y la mención de ADR-004:42 quedan sin efecto por orden del propietario (S-16 descartada); ADR-003:17 se lee conservando un reloj de Lima sin tasa en el encabezado (decisión del propietario, 2026-11-12).
   - S-02: REQ-S02-001 y la tabla de 5.1 retiran `medianocheLimaDeFechaUtc` y `diaCalendarioLima`; AC-S02-012, REQ-S02-020 y SUP-S02-004 pierden a S-10 como dueña de exenciones; 0.3 deja las apps de TV a S-20 y S-21.
   - S-03: la tabla de familias (5.1) y su REQ de exenciones (REQ-S03-030), los comportamientos y criterios que las prueban (BEH-S03 y AC-S03 de exenciones) y SUP-S03-010 dejan a S-10 con una familia vacía; el puente de dinero deja de nombrar archivos de S-10.
   - S-04: SUP-S04-011, 0.3 y 0.4 se leen como cumplidos (`Pago.tasaCambio`, `Pago.montoBs`, «Por regularizar»).
@@ -525,7 +561,7 @@ El código heredado nació para otro negocio, en Venezuela: convierte dólares a
   - S-22: REQ-S22-016, BEH-S22-008 y AC-S22-014 restan tres tablas (`TasaCambio`, `MiembroReferencia`, `PadronHoja`); REQ-S22-007 y AC-S22-003 restan sus repositorios; REQ-S22-009 y AC-S22-004 quitan `TasaCambio` de la prueba de humo; REQ-S22-028, BEH-S22-026 y AC-S22-026 restan la suite de `MiembroReferencia`; AC-S22-028 resta `TasaCambio`; REQ-S22-030, BEH-S22-022, AC-S22-021 y AC-S22-022 dejan de usar `lib/activacion.ts`; REQ-S22-019 baja la cifra de pruebas de dominio retiradas (SUP-S10-011).
   - S-00: el aviso sobre `xlsx` de 0.4 se lee como cumplido (REQ-S10-026).
   - `docs/superpowers/BACKLOG-SPECS.md` (S-15 pasa a depender también de S-08 y S-10; S-10 «Aprobada» al aprobarse), `docs/00-indice.md`, `docs/06-modelo-datos-cambios.md` (línea del importador), `COBERTURA-RF.md` (S-16 descartada) y `docs/09-verificacion-contra-codigo.md`: notas de que S-10 retiró lo venezolano.
-- **Traspasos:** S-19 (colores, tipografía, componentes, reloj opcional y logo de Adhara Fit), S-20 y S-21 (identificadores `com.adrenalina.*`, lanzadores «AX», íconos Android, README, `prueba/index.html` y textos de tasa de las apps de TV, con la exención cerrada), S-11 (catálogo y venta de productos) y S-15 (seed y baseline).
+- **Traspasos:** S-19 (colores, tipografía, componentes, diseño del reloj y logo de Adhara Fit), S-20 y S-21 (identificadores `com.adrenalina.*`, lanzadores «AX», íconos Android, README, `prueba/index.html` y textos de tasa de las apps de TV, con la exención cerrada), S-11 (catálogo y venta de productos) y S-15 (seed y baseline).
 - Reversión: antes del primer push, `git reset` del propietario; después, cada paso del plan es un commit independiente.
 
 ### 5.3 Riesgos
@@ -535,7 +571,7 @@ El código heredado nació para otro negocio, en Venezuela: convierte dólares a
 - Con la marca reducida a un rótulo de texto y el tema verde del cliente anterior bajo el nombre `temaAdhara`, el kiosco, la vitrina y el panel quedan sobrios y con colores heredados hasta S-19. Mitigación: S-19 depende de S-10; el propietario debe entregar el logo definitivo.
 - Las apps de TV conservan la marca anterior (íconos, lanzadores «AX», `appId`) hasta S-20 y S-21; la exención de la herramienta es cerrada y con tope. Mitigación: SUP-S10-009.
 - `escudo.png` retirado de `vitrina/` y de `vitrina-tv/capacitor/assets/` rompe `generar-iconos.mjs:9`; el segundo lo trata S-20.
-- Eliminar el reloj cambia la cabecera del panel (ADR-003); los socios no verán la hora allí.
+- El reloj depende de que el navegador avance de forma estable desde la hora del servidor; un navegador en suspensión puede quedar desfasado hasta recargar. Mitigación: se recalcula al volver a primer plano.
 - Al retirar `porRegularizar` y `vieneDelExcel` se pierde la marca de datos sin verificar; un miembro cargado a mano con datos erróneos queda sin ese aviso. Mitigación: los datos los captura el socio al registrar.
 - Se pierden pruebas y baja la cobertura (ADR-016, S-22 REQ-S22-019); se declara la lista en SUP-S10-011.
 - El nombre del cliente anterior puede sobrevivir en archivos binarios que `grep` no inspecciona. Mitigación: S-19, S-20 y S-21 revisan los recursos gráficos (no verificado).
@@ -543,7 +579,7 @@ El código heredado nació para otro negocio, en Venezuela: convierte dólares a
 - Las cifras de 0.4 cambian cuando S-00 a S-09 modifiquen el árbol. Mitigación: se recuentan al empezar.
 
 ### 5.4 Preguntas abiertas
-- ¿El encabezado del panel queda sin reloj, como dice ADR-003? Default: sí (SUP-S10-002); si quieres una hora con Lima en el encabezado, se decide en S-19.
+- ¿El encabezado conserva un reloj con la fecha y la hora de Lima, sin tasa, para controlar la hora de las transacciones? Default: sí (SUP-S10-002); confirmado por el propietario el 2026-11-12.
 - ¿El nombre visible sale de la configuración del negocio («Adhara Fit») y se muestra como texto hasta que entregues el logo definitivo? Default: sí (SUP-S10-005).
 - ¿Se elimina `Miembro.porRegularizar` junto con el padrón y se conserva el comportamiento normal del cambio de plan? Default: sí (SUP-S10-004).
 - ¿Las apps de TV conservan su marca anterior hasta S-20 y S-21? Default: sí, con una exención cerrada (SUP-S10-009).
@@ -584,3 +620,5 @@ Todos los hallazgos se verificaron contra el Repo A, las specs y los ADR y resul
 - Fila 10: la herramienta distingue mayúsculas para identificadores y no para marca y Venezuela, fija las extensiones que recorre y excluye binarios, `out` y `.turbo`; se quita el reloj nuevo; el plan se rehizo en nueve pasos con las exenciones retiradas en el mismo commit que cada archivo, las entidades y mapeadores antes de las columnas y el lockfile regenerado (REQ-S10-026).
 - Fila 11 y 12: 5.3 suma los riesgos omitidos y 5.2 lista las enmiendas con los IDs del revisor (S-02, S-03, S-05, S-06, S-08, S-22, ADR-007 y documentos).
 - Lo que no se pudo verificar y queda marcado «no verificado»: los archivos binarios y el contenido de las 66 coincidencias de la subcadena `Bs`.
+- Cambio posterior a la conciliación, por orden del propietario (2026-11-12): se conserva un reloj con la fecha y la hora de Lima, sin tasa, para controlar la hora de las transacciones (SUP-S10-002, REQ-S10-008, REQ-S10-033, REQ-S10-034, INV-S10-005 y AC-S10-011); ADR-003:17 se enmienda.
+- Aprobación: el propietario escribió «S-10 aprobada» el 2026-11-12 sobre este texto, con el veredicto pegado; aceptó los valores por defecto de las demás preguntas de 5.4 (nombre desde la configuración del negocio, sin marca «por regularizar», apps de TV con su marca hasta S-20 y S-21 y pruebas retiradas).

@@ -19,7 +19,7 @@ Vienen del documento 10 (§2.C). Convierten el código heredado en el sistema de
 | S-07 Cambio de plan | Unificar las tres formas de cambiar de plan; sin saldo a favor; ya no distingue planes con y sin entrenador. | **Aprobada** (2026-11-12) |
 | S-08 Registro continuo de cobros | **Reformulada por tu decisión:** sin turnos ni arqueo. Registra cada cobro (quién, cuándo, método) y da el reporte diario por método y usuario. | **Aprobada** (2026-11-12) |
 | S-09 Eliminar miembro | «Eliminar» a un miembro (oculta al miembro y conserva sus pagos) y poder restaurarlo. La anonimización de datos se descartó (2026-11-12). | **Aprobada** (2026-11-12) |
-| S-10 Retirar lo venezolano | Quitar tasa BCV, el worker, el padrón Excel, los scripts del otro cliente y su marca. | Por redactar |
+| S-10 Retirar lo venezolano | Quitar tasa BCV, el worker, el padrón Excel, los scripts del otro cliente y su marca. | **Aprobada** (2026-11-12) |
 
 ## B. Las que propuse yo (S-11 a S-23)
 No estaban en los documentos 01 a 12: las agregué tras cruzar **todos los requisitos** contra las specs (`COBERTURA-RF.md`). Cada una cubre algo del PRD que ninguna otra spec cubría.
@@ -30,7 +30,7 @@ No estaban en los documentos 01 a 12: las agregué tras cruzar **todos los requi
 | **S-12 Tickets y comprobantes de pago** | **Todo desarrollado y apagado** hasta que confirmes habilitarlo: ticket digital no fiscal por correo, ticket impreso no fiscal en ticketera y registro de comprobante tributario (boleta, factura). No emite a SUNAT. | RF-39, obligatorio en el MVP (ADR-006). | S-03, S-04 | Propuesta |
 | **S-13 Consentimiento y aviso legal** | Registrar que el miembro aceptó el tratamiento de sus datos (fecha y versión del texto), mostrar la política de privacidad y el aviso del Libro de Reclamaciones. | RF-15, RF-71 y RF-72: obligatorios en el MVP. Los textos legales los debe revisar un abogado. | S-06, S-09 | Propuesta |
 | **S-14 Reportes** | Morosos, por vencer (7 días), histórico de pagos imprimible, ingresos por método y período. | RF-62 y RF-36; reemplaza el arqueo como control. | S-04, S-12 | Propuesta |
-| **S-15 Base de datos inicial y seed** | Crear la base de datos nueva desde cero y un usuario inicial **sin contraseñas fijas**. | Tarea 1.10 del plan, sin dueño; S-00 la deja «para después». | S-03, S-05, S-06, S-09 | Propuesta |
+| **S-15 Base de datos inicial y seed** | Crear la base de datos nueva desde cero y un usuario inicial **sin contraseñas fijas**. | Tarea 1.10 del plan, sin dueño; S-00 la deja «para después». | S-03, S-05, S-06, S-08, S-09, S-10 | Propuesta |
 | **S-16 Importador de miembros** | Cargar los miembros que ya tiene Adhara desde un CSV, con prueba previa y confirmación. | HU-50; sin esto empiezan con la base vacía. | S-06, S-15 | **Descartada** (propietario, 2026-11-12: son pocos miembros y se cargan a mano) |
 | **S-17 Operación** | Copia de seguridad diaria (14 días) y prueba de restauración; alertas; salida a producción con dominio y TLS; restricción por IP para autorizar solo los dispositivos que correspondan (idea del propietario, en desarrollo no se aplica). | RNF-07, RNF-08, RNF-09 y RF-70. | S-00, S-01 | Propuesta |
 | **S-18 Entrenadores** | Hoy un entrenador es un usuario con correo falso y clave aleatoria. Pasa a ser un registro **sin credenciales** que se asigna **solo al miembro**; se elimina la distinción «plan con entrenador» y «plan sin entrenador» (todos los planes incluyen entrenador). | P-22 y hallazgo H-07 (riesgo de seguridad). | S-01, S-06 | Propuesta |

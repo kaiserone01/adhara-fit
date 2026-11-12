@@ -43,3 +43,5 @@ Eliminar todo lo anterior del repo de Adhara. Para cargar los miembros existente
 
 ## Notas del propietario (2026-11-12)
 - Confirmó en el chat: «efectivamente hay que sacar lo venezolano». Aceptado por el propietario el 2026-11-12.
+## Enmiendas posteriores (2026-11-12, orden del propietario)
+- **Sin importador:** la Decisión de construir un importador CSV genérico (HU-50) queda sin efecto; el propietario indicó que no se requiere un importador de miembros y que los existentes se cargan a mano (S-16 descartada). Se mantiene la eliminación del padrón de Excel y de los scripts del cliente anterior (S-10).

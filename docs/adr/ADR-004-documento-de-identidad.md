@@ -39,7 +39,7 @@ El base usa `Miembro.cedula` (única por organización) y el kiosco acepta solo 
 *(Pase formal F.)* Media-baja: renombrar ~52 archivos (cifra por recontar, ver `REVISION-ADR.md` T-04) es costoso de revertir.
 
 ## Dependencias
-*(Pase formal F.)* ADR-013 (anonimización del documento y unicidad), ADR-007 (importador), supuesto SUP-10 / "[SUPUESTO S-10]" (`codigoSocio`), P-05 (dispositivo de check-in, abierta). Hallazgos abiertos de la revisión G3: ver `REVISION-ADR.md` §4, §7 y §8.4.  *Enmienda S-09 (2026-11-12): la anonimización se descartó; el documento de un miembro eliminado sigue ocupado hasta restaurarlo (S-06 SUP-S06-011, S-09 REQ-S09-031).*
+*(Pase formal F.)* ADR-013 (anonimización del documento y unicidad), ADR-007 (importador), supuesto SUP-10 / "[SUPUESTO S-10]" (`codigoSocio`), P-05 (dispositivo de check-in, abierta). Hallazgos abiertos de la revisión G3: ver `REVISION-ADR.md` §4, §7 y §8.4.  *Enmienda S-09 (2026-11-12): la anonimización se descartó; el documento de un miembro eliminado sigue ocupado hasta restaurarlo (S-06 SUP-S06-011, S-09 REQ-S09-031).* *Enmienda S-10 (2026-11-12): el importador (ADR-007) se descartó; no hay importador de miembros.*
 
 ## Enmiendas posteriores (2026-11-12)
 *Derivadas de decisiones aceptadas por el propietario (ADR-018, ADR-019, ADR-020). El texto anterior se conserva; donde choca, rige esta sección.*

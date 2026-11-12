@@ -656,6 +656,10 @@ El código heredado maneja el dinero como `number` de JavaScript, con redondeos 
 - ¿Hay un importe máximo menor que S/ 9,999,999,999.99 para el negocio? Default: ese máximo técnico (SUP-S03-002).
 - ¿El número de operación tiene un formato fijo (por ejemplo solo dígitos)? Default: texto de 1 a 40 caracteres (SUP-S03-007).
 
+## Enmiendas posteriores (2026-11-12)
+*Derivadas de la aprobación de S-10. El texto anterior se conserva; donde choca, rige esta sección.*
+- Por la aprobación de S-10: la tabla de familias de 5.1 deja vacía la familia S-10, y el REQ de exenciones (REQ-S03-030), sus comportamientos y criterios de prueba y SUP-S03-010 dejan de admitirla; el puente de dinero deja de nombrar archivos de S-10.
+
 ## Revisión independiente
 
 ### Veredicto de `spec-reviewer` (texto íntegro, sin editar; sobre la primera versión en revisión)

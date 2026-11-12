@@ -27,3 +27,7 @@ Escritos tal como los dio el propietario, con mayúsculas normalizadas por mí (
 ## Formato y política de montos
 - Política del propietario (2026-11-12), registrada como ADR-011 versión 2 (propuesto): PEN con 2 decimales; base con valor exacto; API con cadena `"120.00"` y código `PEN`; un solo formateador `S/ 120.00` (`S/ 1,200.00`, `-S/ 50.25`); sin coma flotante; sin redondeo global, solo por regla explícita; redondeo de efectivo del BCRP preparado como política intercambiable y apagada, sin alterar nunca el importe original.
 - Solo registros contables; el cálculo tributario y las transacciones fiscales están fuera de alcance.
+
+## Métodos de pago
+- Conformados por el propietario (2026-11-12): **Yape** y **transferencias al BCP**. El catálogo queda abierto para agregar Efectivo, Plin, Tarjeta o Depósito desde la administración. Falta confirmar si se cobra en efectivo en el local.
+

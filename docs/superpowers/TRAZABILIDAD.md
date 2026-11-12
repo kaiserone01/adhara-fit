@@ -109,6 +109,37 @@ Archivo: `S-02-hora-de-lima.md` · REQ: 20 · BEH: 17 · INV: 5 · AC: 13
 | REQ-S02-019 | MUST | BEH-S02-017 | — | AC-S02-013 (unitario) | pendiente |
 | REQ-S02-020 | MUST | BEH-S02-016 | INV-S02-005 | AC-S02-012 (unitario) | pendiente |
 
+## S-03 — Dinero en soles con dos decimales exactos y catálogo de métodos de pago de Perú (en-revision)
+
+Archivo: `S-03-dinero-y-metodos-de-pago.md` · REQ: 24 · BEH: 18 · INV: 6 · AC: 16
+
+| REQ | Prioridad | BEH | INV | AC (método) | Test |
+|---|---|---|---|---|---|
+| REQ-S03-001 | MUST | BEH-S03-001 | INV-S03-001 | AC-S03-001 (unitario), AC-S03-003 (unitario) | pendiente |
+| REQ-S03-002 | MUST | BEH-S03-001 | INV-S03-001, INV-S03-005 | AC-S03-001 (unitario), AC-S03-003 (unitario), AC-S03-014 (unitario) | pendiente |
+| REQ-S03-003 | MUST | BEH-S03-002, BEH-S03-003 | — | AC-S03-002 (unitario) | pendiente |
+| REQ-S03-004 | MUST | BEH-S03-004 | INV-S03-001 | AC-S03-001 (unitario), AC-S03-003 (unitario) | pendiente |
+| REQ-S03-005 | MUST | BEH-S03-005 | — | AC-S03-004 (unitario) | pendiente |
+| REQ-S03-006 | MUST | BEH-S03-006, BEH-S03-007 | INV-S03-002 | AC-S03-005 (unitario) | pendiente |
+| REQ-S03-007 | MUST | BEH-S03-006 | INV-S03-002 | AC-S03-005 (unitario) | pendiente |
+| REQ-S03-008 | MUST | BEH-S03-006 | INV-S03-002 | AC-S03-005 (unitario) | pendiente |
+| REQ-S03-009 | MUST | BEH-S03-008 | — | AC-S03-006 (unitario) | pendiente |
+| REQ-S03-010 | MUST | BEH-S03-009 | — | AC-S03-007 (unitario) | pendiente |
+| REQ-S03-011 | MUST | BEH-S03-010 | INV-S03-003 | AC-S03-008 (integracion) | pendiente |
+| REQ-S03-012 | MUST | BEH-S03-010 | INV-S03-003 | AC-S03-008 (integracion) | pendiente |
+| REQ-S03-013 | MUST | BEH-S03-011 | — | AC-S03-009 (integracion) | pendiente |
+| REQ-S03-014 | MUST | BEH-S03-011 | — | AC-S03-009 (integracion) | pendiente |
+| REQ-S03-015 | MUST | BEH-S03-012 | — | AC-S03-010 (unitario) | pendiente |
+| REQ-S03-016 | MUST | BEH-S03-013 | — | AC-S03-011 (sql) | pendiente |
+| REQ-S03-017 | MUST | BEH-S03-013 | — | AC-S03-011 (sql) | pendiente |
+| REQ-S03-018 | MUST | BEH-S03-014 | INV-S03-004 | AC-S03-012 (integracion) | pendiente |
+| REQ-S03-019 | MUST | BEH-S03-015 | — | AC-S03-013 (unitario) | pendiente |
+| REQ-S03-020 | MUST | BEH-S03-016 | INV-S03-005 | AC-S03-014 (unitario) | pendiente |
+| REQ-S03-021 | MUST | BEH-S03-016 | INV-S03-005 | AC-S03-014 (unitario) | pendiente |
+| REQ-S03-022 | MUST | BEH-S03-017 | — | AC-S03-015 (manual) | pendiente |
+| REQ-S03-023 | MUST | BEH-S03-018 | INV-S03-006 | AC-S03-016 (unitario) | pendiente |
+| REQ-S03-024 | MUST | BEH-S03-013 | — | AC-S03-011 (sql) | pendiente |
+
 ## S-22 — Capa de datos con Drizzle: esquema, repositorios, transacciones y retiro de Prisma (aprobada)
 
 Archivo: `S-22-capa-de-datos-con-drizzle.md` · REQ: 30 · BEH: 27 · INV: 6 · AC: 28

@@ -1,6 +1,6 @@
 # ADR-021: Alcance ampliado — vitrina de TV y check-in en smart-TV
 
-Estado: **propuesto** (2026-11-12) · Decisión de negocio del propietario del 2026-11-12 · **Enmienda a ADR-009** (aceptado), que sigue vigente hasta que el propietario ordene su enmienda
+Estado: **aceptado** (confirmado por el propietario, 2026-11-12) · propuesto el 2026-11-12 · Decisión de negocio del propietario del 2026-11-12 · **Enmienda la tabla de apps de ADR-009**
 
 ## Contexto
 ADR-009 (aceptado el 2026-11-12) difería la vitrina, la vitrina en TV y el kiosco en TV: «smart-TV no previsto, no descartado» (P-05). El propietario decidió ahora que **la vitrina entra en el alcance** y que **el check-in también funciona en un smart-TV**, además del kiosco web.

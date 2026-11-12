@@ -1,10 +1,10 @@
 ---
 id: S-07
-estado: en-revision
+estado: aprobada
 adrs: ADR-010, ADR-011, ADR-016, ADR-018, ADR-022
 depende_de: S-00, S-01, S-02, S-03, S-04, S-05, S-06, S-22
-aprobada_por:
-fecha_aprobacion:
+aprobada_por: propietario
+fecha_aprobacion: 2026-11-12
 ---
 # S-07 — Cambio de plan: una sola operación, sin saldo a favor y sin planes «con entrenador»
 
@@ -920,3 +920,4 @@ Todos los hallazgos se verificaron contra el Repo A y las specs y resultaron cie
 - Fila 10: `fechaLima` suma `sumarDiasLima` (REQ-S07-011); el plan de pruebas se rehízo en diez pasos que agregan lo nuevo al lado de lo viejo, migran los llamadores y retiran lo viejo al final con las exenciones en el mismo commit; los plazos de S-04 se heredan (REQ-S07-015); la bajada con cobro se acepta, con anulación posible por el nuevo orden (BEH-S07-026) y se pregunta al propietario.
 - Fila 12: 5.2 lista las enmiendas por spec con sus IDs (REQ-S02-001, REQ-S02-020, AC-S02-012, REQ-S03-001, REQ-S03-005, REQ-S03-030, SUP-S04-007, REQ-S04-017, REQ-S04-035, SUP-S04-010, REQ-S04-043, BEH-S04-038, AC-S04-023, REQ-S22-016, BEH-S22-008, AC-S22-014 y REQ-S22-028).
 - Lo que no se pudo verificar y queda marcado «no verificado»: que ningún reporte use `Plan.frecuencia`, el detalle de `IUnidadDeTrabajo` y el rango de `Miembro.precioPlan`.
+- Aprobación: el propietario escribió «Aprobado» el 2026-11-12 sobre este texto corregido, con el veredicto ya pegado; se tomó como «S-07 aprobada» y como un sí a los valores por defecto de las seis preguntas de 5.4 y del resumen (cálculo conservado, bajada de plan aceptada con vista previa, duración fija, precio de catálogo, sin deshacer, valor no consumido con el precio acordado).

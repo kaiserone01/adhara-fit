@@ -922,6 +922,9 @@ Todas las decisiones de negocio de S-04 fueron respondidas por el propietario el
 *Derivadas de la aprobación de S-05. El texto anterior se conserva; donde choca, rige esta sección.*
 - REQ-S04-023, BEH-S04-021 y SUP-S04-004: el estado de acceso queda en `activo` y `vencido`; `sucursal_incorrecta` desaparece con la sede única (S-05) y `MiembroFueraDeSucursalError` se retira de `RegistrarPago`.
 - Los cobros no reciben ni validan sede: `sucursalId` de `Pago` se llena con `obtenerSedeUnica` (S-05, REQ-S05-008).
+- Por la aprobación de S-07 (cambio de plan): SUP-S04-007 y REQ-S04-017 definen el cobro anulable como el pago no anulado de mayor `Pago.creadoEn` (a igualdad, el de mayor identificador) y no el de mayor fin de ciclo, porque un cambio de plan con cobro puede dejar un fin menor que el del cobro anterior; el requisito de columnas de `Pago` suma `creadoEn`.
+- Por S-07: SUP-S04-010, REQ-S04-043, BEH-S04-038 y AC-S04-023 dejan de decir que el pago de un cambio de plan no guarda `vencimientoAnterior`: lo guarda, y su anulación restaura el vencimiento y también el plan, el precio acordado y el plan de la suscripción desde `CambioPlanAuditoria` (REQ-S07-039). REQ-S04-035 remite a `cambiarPlan` como la operación que corresponde al rechazar un plan distinto con vencimiento vigente. 0.2, 0.3, 5.1 y los dos riesgos sobre cambio de plan se leen con esta enmienda; SUP-S04-014 y REQ-S04-045 admiten a S-07 como familia.
+- Por S-07: `IUnidadDeTrabajo` expone además los repositorios de planes y de auditoría de cambio de plan.
 
 ## Revisión independiente
 

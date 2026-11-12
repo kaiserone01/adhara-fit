@@ -291,7 +291,7 @@ Archivo: `S-06-documento-de-identidad.md` · REQ: 40 · BEH: 34 · INV: 6 · AC:
 | REQ-S06-039 | MUST | BEH-S06-021 | — | AC-S06-012 (integracion) | pendiente |
 | REQ-S06-040 | MUST | BEH-S06-031 | — | AC-S06-007 (integracion) | pendiente |
 
-## S-07 — Cambio de plan: una sola operación, sin saldo a favor y sin planes «con entrenador» (en-revision)
+## S-07 — Cambio de plan: una sola operación, sin saldo a favor y sin planes «con entrenador» (aprobada)
 
 Archivo: `S-07-cambio-de-plan.md` · REQ: 61 · BEH: 38 · INV: 5 · AC: 15
 

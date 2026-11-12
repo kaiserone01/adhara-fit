@@ -13,22 +13,34 @@ const git = (...a) => execFileSync('git', a, { encoding: 'utf8' }).trim();
  * commits: [{ sha, sig, subject, message, files, authorEmail, committerEmail }]
  * Devuelve la lista de errores (vacía = OK).
  */
-export function checkRange(commits, { ownerEmail = '' } = {}) {
+export function checkRange(commits, { ownerEmail = '', strict = false } = {}) {
   const errors = [];
   if (commits.length === 0) return errors;
   for (const c of commits) {
     const id = c.sha.slice(0, 10);
-    if (!['G', 'U'].includes(c.sig)) errors.push(`commit ${id}: firma no válida (%G?=${c.sig}); ver docs/ops/firma-commits.md`);
     const v = checkCommitMessage(c.message);
     if (v.length) errors.push(`commit ${id}: mensaje rechazado\n${format(v)}`);
-    if (ownerEmail && (c.authorEmail !== ownerEmail || c.committerEmail !== ownerEmail)) {
-      errors.push(`commit ${id}: autor o committer distinto del propietario (adhara.ownerEmail)`);
-    }
+    if (strict) errors.push(...avisosCommit(c, ownerEmail));
   }
   if (!commits.some((c) => c.files.includes('handoff.md'))) {
     errors.push('handoff.md no fue modificado en el rango que se sube (protocolo de cierre, CLAUDE.md §Cierre)');
   }
   return errors;
+}
+
+/** Firma e identidad: desde 2026-11-12 (reglas 1 y 2 anuladas por el propietario) son avisos; con ADHARA_STRICT=1 son errores. */
+function avisosCommit(c, ownerEmail) {
+  const out = [];
+  const id = c.sha.slice(0, 10);
+  if (!['G', 'U'].includes(c.sig)) out.push(`commit ${id}: firma no válida (%G?=${c.sig}); ver docs/ops/firma-commits.md`);
+  if (ownerEmail && (c.authorEmail !== ownerEmail || c.committerEmail !== ownerEmail)) {
+    out.push(`commit ${id}: autor o committer distinto del propietario (adhara.ownerEmail)`);
+  }
+  return out;
+}
+
+export function avisosRange(commits, { ownerEmail = '' } = {}) {
+  return commits.flatMap((c) => avisosCommit(c, ownerEmail));
 }
 
 function readCommits(revs) {
@@ -42,13 +54,16 @@ function readCommits(revs) {
 
 function main() {
   const ownerEmail = (() => { try { return git('config', '--get', 'adhara.ownerEmail'); } catch { return ''; } })();
+  const strict = process.env.ADHARA_STRICT === '1';
   const lines = readFileSync(0, 'utf8').split('\n').filter(Boolean);
   const errors = [];
   for (const line of lines) {
     const [, localSha, remoteRef, remoteSha] = line.split(' ');
     if (ZERO.test(localSha)) continue; // borrado de rama remota: nada que revisar
     const revs = ZERO.test(remoteSha) ? [localSha, '--not', '--remotes'] : [`${remoteSha}..${localSha}`];
-    errors.push(...checkRange(readCommits(revs), { ownerEmail }).map((e) => `${remoteRef}: ${e}`));
+    const commits = readCommits(revs);
+    errors.push(...checkRange(commits, { ownerEmail, strict }).map((e) => `${remoteRef}: ${e}`));
+    if (!strict) for (const w of avisosRange(commits, { ownerEmail })) console.error(`pre-push: AVISO ${w}`);
   }
   if (errors.length) {
     console.error(`pre-push: push rechazado\n${errors.map((e) => `  - ${e}`).join('\n')}`);

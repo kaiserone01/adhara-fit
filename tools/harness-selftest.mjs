@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 import { evaluate } from '../.claude/hooks/guard-bash.mjs';
 import { checkCommitMessage, checkText, checkStagedFiles, checkAddedLines } from './commit-policy.mjs';
 import { checkIdentity } from './hooks/pre-commit.mjs';
-import { checkRange } from './hooks/pre-push.mjs';
+import { checkRange, avisosRange } from './hooks/pre-push.mjs';
 import { check as checkHandoff } from './check-handoff.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -135,27 +135,28 @@ test('check-handoff: formato, datos personales y sección 4 solo-añadir', () =>
 
 // ---------- hooks (lógica pura) ----------
 const OWNER = 'propietario@example.org';
-test('pre-commit: identidad y firma', () => {
+test('pre-commit: identidad y firma son avisos (reglas 1 y 2 anuladas); con strict son errores', () => {
   const ok = { ownerEmail: OWNER, authorIdent: `A <${OWNER}> 1 +0000`, committerIdent: `A <${OWNER}> 1 +0000`, gpgsign: 'true', strict: false };
   assert.deepEqual(checkIdentity(ok), { errors: [], warnings: [] });
-  assert.equal(checkIdentity({ ...ok, authorIdent: 'B <otro@example.org> 1 +0000' }).errors.length, 1);
-  assert.equal(checkIdentity({ ...ok, committerIdent: 'B <otro@example.org> 1 +0000' }).errors.length, 1);
-  assert.equal(checkIdentity({ ...ok, gpgsign: 'false' }).errors.length, 1);
-  assert.equal(checkIdentity({ ...ok, gpgsign: '' }).errors.length, 1);
-  const relaxed = checkIdentity({ ...ok, ownerEmail: '' });
-  assert.equal(relaxed.errors.length, 0);
-  assert.equal(relaxed.warnings.length, 1);
-  assert.equal(checkIdentity({ ...ok, ownerEmail: '', strict: true }).errors.length, 1);
+  for (const o of [{ authorIdent: 'B <otro@example.org> 1 +0000' }, { committerIdent: 'B <otro@example.org> 1 +0000' }, { gpgsign: 'false' }, { gpgsign: '' }, { ownerEmail: '' }]) {
+    const r = checkIdentity({ ...ok, ...o });
+    assert.equal(r.errors.length, 0);
+    assert.equal(r.warnings.length, 1);
+    assert.equal(checkIdentity({ ...ok, ...o, strict: true }).errors.length, 1);
+  }
 });
-test('pre-push: firma, mensaje, autor y handoff.md en el rango', () => {
+test('pre-push: mensaje y handoff.md bloquean; firma y autor son avisos salvo strict', () => {
   const c = (o = {}) => ({ sha: 'a'.repeat(40), sig: 'G', message: 'Agrega x', files: ['handoff.md', 'a.md'], authorEmail: OWNER, committerEmail: OWNER, ...o });
   assert.deepEqual(checkRange([c()], { ownerEmail: OWNER }), []);
   assert.deepEqual(checkRange([c({ sig: 'U' })]), []);
-  assert.ok(checkRange([c({ sig: 'N' })]).some((e) => e.includes('firma')));
-  assert.ok(checkRange([c({ sig: 'B' })]).some((e) => e.includes('firma')));
+  assert.deepEqual(checkRange([c({ sig: 'N' })]), []);
+  assert.ok(avisosRange([c({ sig: 'N' })]).some((e) => e.includes('firma')));
+  assert.ok(checkRange([c({ sig: 'B' })], { strict: true }).some((e) => e.includes('firma')));
   assert.ok(checkRange([c({ message: `Agrega x\n\n${COAUTOR}` })]).some((e) => e.includes('mensaje')));
   assert.ok(checkRange([c({ files: ['a.md'] })]).some((e) => e.includes('handoff.md')));
-  assert.ok(checkRange([c({ authorEmail: 'x@example.org' })], { ownerEmail: OWNER }).some((e) => e.includes('propietario')));
+  assert.deepEqual(checkRange([c({ authorEmail: 'x@example.org' })], { ownerEmail: OWNER }), []);
+  assert.ok(avisosRange([c({ authorEmail: 'x@example.org' })], { ownerEmail: OWNER }).some((e) => e.includes('propietario')));
+  assert.ok(checkRange([c({ authorEmail: 'x@example.org' })], { ownerEmail: OWNER, strict: true }).some((e) => e.includes('propietario')));
   assert.deepEqual(checkRange([c({ files: ['a.md'] }), c({ sha: 'b'.repeat(40) })]), []); // basta un commit del rango con handoff
 });
 

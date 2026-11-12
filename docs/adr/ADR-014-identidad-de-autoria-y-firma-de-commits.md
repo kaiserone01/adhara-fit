@@ -52,3 +52,8 @@ Alta para el formato y la política (son archivos). La identidad publicada en co
 
 ## Referencias
 `CLAUDE.md` §1 y §6 · `docs/12-prompt-inicial-claude-code.md` · `docs/ops/firma-commits.md` · `docs/ops/github-setup.md` · `handoff.md` §2 (excepción y pre-flight).
+
+## Enmiendas posteriores (2026-11-12, orden del propietario)
+- **Reglas 1 y 2 anuladas por el propietario** («anula la regla de los commits para que tú puedas hacer los commits sin problemas… autonomía para ganar velocidad»): ya no se exige que autor, committer y firma sean los del propietario ni que commit y push pasen por sus credenciales. Esto sustituye a las Decisiones 1 y 5 y a la excepción de la Decisión 7, que pasa de temporal a permanente: los commits hechos con la identidad del entorno **no se rehacen ni se re-firman**.
+- Siguen vigentes la regla 3, el formato de una línea sin trailers, las líneas prohibidas y la prohibición de leer o tocar credenciales y de `--no-verify` y `push --force*`. El push sigue condicionado a que el repositorio sea privado.
+- Implementación: `pre-commit`, `pre-push` y el CI avisan y no bloquean por firma o identidad; `ADHARA_STRICT=1` restablece el rigor. El cambio es reversible (son archivos).

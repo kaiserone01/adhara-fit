@@ -41,7 +41,7 @@ jobs:
       - name: Tests de spec-lint
         run: node --test tools/spec-lint.test.mjs
 
-      - name: Commits verificados por GitHub
+      - name: Commits verificados por GitHub (aviso, no bloquea)
         run: |
           set -eu
           fallos=0
@@ -52,8 +52,7 @@ jobs:
             if [ "$verificado" != "true" ]; then fallos=$((fallos + 1)); fi
           done
           if [ "$fallos" -gt 0 ]; then
-            echo "::error::$fallos commit(s) sin firma verificada. Ver docs/ops/firma-commits.md y docs/ops/github-setup.md"
-            exit 1
+            echo "::warning::$fallos commit(s) sin firma verificada. Desde 2026-11-12 es un aviso (reglas 1 y 2 anuladas por el propietario); ver docs/ops/firma-commits.md"
           fi
 
       - name: Exige handoff.md en el PR

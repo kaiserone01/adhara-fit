@@ -15,15 +15,17 @@ const emailOf = (ident) => (ident.match(/<([^>]*)>/) ?? [])[1] ?? '';
  * ownerEmail = valor de `adhara.ownerEmail` (lo configura el propietario, nunca el agente).
  */
 export function checkIdentity({ ownerEmail, authorIdent, committerIdent, gpgsign, strict }) {
+  // Desde 2026-11-12 el propietario anuló las reglas 1 y 2 (firma e identidad del propietario): por defecto
+  // son avisos. Con ADHARA_STRICT=1 vuelven a ser errores (sesión local con identidad y firma del propietario).
   const errors = [];
   const warnings = [];
-  if (gpgsign !== 'true') errors.push('commit.gpgsign no es "true": los commits deben ir firmados');
+  const sink = strict ? errors : warnings;
+  if (gpgsign !== 'true') sink.push('commit.gpgsign no es "true": el commit no irá firmado');
   if (!ownerEmail) {
-    const msg = 'adhara.ownerEmail no está definido: no se puede verificar que autor y committer sean el propietario (MODO RELAJADO)';
-    (strict ? errors : warnings).push(msg);
+    sink.push('adhara.ownerEmail no está definido: no se puede verificar que autor y committer sean el propietario');
   } else {
-    if (emailOf(authorIdent) !== ownerEmail) errors.push('el autor del commit no es el propietario (adhara.ownerEmail)');
-    if (emailOf(committerIdent) !== ownerEmail) errors.push('el committer del commit no es el propietario (adhara.ownerEmail)');
+    if (emailOf(authorIdent) !== ownerEmail) sink.push('el autor del commit no es el propietario (adhara.ownerEmail)');
+    if (emailOf(committerIdent) !== ownerEmail) sink.push('el committer del commit no es el propietario (adhara.ownerEmail)');
   }
   return { errors, warnings };
 }

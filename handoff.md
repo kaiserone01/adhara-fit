@@ -28,7 +28,7 @@ Construir **Adhara Fit** (gimnasio en Perú, un local, PEN, sistema web interno)
 | ADR-015 | **propuesto** (el revisor pidió cambios menores; ya corregidos) |
 | ADR-018, 019, 020, 021 | **aceptado (confirmado por el propietario, 2026-11-12)**: 018 sin turnos, arqueo, egresos ni fiado; 019 negocio único (opción B, eliminar `Organizacion`); 020 sistema de diseño y rebranding; 021 vitrina y check-in en smart-TV (enmienda la tabla de ADR-009) |
 
-Veintiún ADR están aceptados (001 a 007, 009 a 022). Sigue **propuesto ADR-008** (marca y tema visual: paleta carbón, amarillo y blanco, tokens `--gx-*` y contrastes; lo amplía ADR-020): lo marqué «retirado» por un error mío y el propietario lo objetó; está restaurado y espera su «acepto ADR-008». Solo el propietario cambia un estado, ADR por ADR, registrándolo como `aceptado (confirmado por el propietario, AAAA-MM-DD)`.
+Los 22 ADR están aceptados (001 a 022); ninguno queda propuesto ni retirado. ADR-008 (marca y tema visual) se había marcado «retirado» por un error mío, el propietario lo objetó, se restauró y lo aceptó el mismo día. Solo el propietario cambia un estado, ADR por ADR, registrándolo como `aceptado (confirmado por el propietario, AAAA-MM-DD)`.
 
 | Spec | Estado |
 |---|---|

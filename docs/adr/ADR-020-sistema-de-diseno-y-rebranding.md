@@ -49,10 +49,10 @@ Hechos (no re-verificados contra el Repo A):
 Media: los tokens y componentes son reemplazables; la adopción en todas las pantallas es la parte costosa de revertir.
 
 ## Dependencias
-- Amplía **ADR-008** (*propuesto*); sustituye el alcance «branding mínimo» del plan 0.9; coordina con **ADR-021** (cuatro superficies) y **ADR-019** (tema fijo, sin `TemaOrganizacion`). Insumos: colores confirmados por el kit; pendientes la versión vectorial del logotipo, los PNG originales y la tipografía.
+- Amplía **ADR-008** (aceptado el 2026-11-12); sustituye el alcance «branding mínimo» del plan 0.9; coordina con **ADR-021** (cuatro superficies) y **ADR-019** (tema fijo, sin `TemaOrganizacion`). Insumos: colores confirmados por el kit; pendientes la versión vectorial del logotipo, los PNG originales y la tipografía.
 
 ## Referencias
 `docs/adr/ADR-008-marca-y-tema-visual.md` · `docs/03-analisis-repo-base.md` línea 35 · `docs/11` DI-01, DI-05 · `docs/01` RNF-10 · `docs/07` tarea 0.9 · `docs/superpowers/COBERTURA-RF.md` §6.
 
 ## Enmiendas posteriores (2026-11-12)
-- ADR-008 **no está retirado**: se había marcado así por un error mío y se restauró como *propuesto* el 2026-11-12. ADR-008 fija la paleta de marca (carbón `#231F20`, amarillo `#FFCB04`, blanco `#FFFFFF`, tokens `--gx-*` y contrastes) y ADR-020 la amplía a un sistema de diseño completo; los dos coexisten. La Decisión 7 se entiende en ese sentido.
+- ADR-008 **no está retirado**: se había marcado así por un error mío y se restauró el 2026-11-12 y el propietario lo aceptó ese día. ADR-008 fija la paleta de marca (carbón `#231F20`, amarillo `#FFCB04`, blanco `#FFFFFF`, tokens `--gx-*` y contrastes) y ADR-020 la amplía a un sistema de diseño completo; los dos coexisten. La Decisión 7 se entiende en ese sentido.

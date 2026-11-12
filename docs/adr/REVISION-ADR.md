@@ -439,3 +439,6 @@ Aceptados: ADR-006 (versión 3: tickets no fiscales y comprobantes desarrollados
 
 ## 12. Corrección del 2026-11-12: ADR-008 no se retira
 La §11 registró ADR-008 como retirado, tomando una frase que yo mismo había propuesto y que el propietario pegó de vuelta. Fue un error mío: ADR-008 fija la paleta de marca y no puede retirarse (el propietario lo señaló). Se restauró como *propuesto*, a la espera de su «acepto ADR-008». Con esto hay 21 ADR aceptados y 1 propuesto (ADR-008).
+
+## 13. Aceptación de ADR-008 (2026-11-12)
+Tras restaurarlo, el propietario escribió «acepto ADR-008». Con esto los 22 ADR están aceptados (confirmado por el propietario, 2026-11-12); ninguno queda propuesto ni retirado.

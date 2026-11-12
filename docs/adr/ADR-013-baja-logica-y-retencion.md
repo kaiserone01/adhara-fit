@@ -40,3 +40,6 @@ Estado: **propuesto** (2026-11-12) · Origen: `EliminarMiembro` borra pagos e hi
 ## Enmiendas posteriores (2026-11-12)
 *Derivadas de decisiones aceptadas por el propietario (ADR-018, ADR-019, ADR-020). El texto anterior se conserva; donde choca, rige esta sección.*
 - La entidad `DeudaProducto`, que `eliminarConHistorial` borraba, se elimina (ADR-018). La decisión de baja lógica y anonimización no cambia.
+
+## Notas del propietario (2026-11-12)
+- Respuesta en el chat: «Baja de miembros: Aceptado, solo que la denominación será "Eliminar"; dar de baja no es el término correcto. Requiere confirmar». **No cambia el estado todavía**: falta confirmar que en la pantalla la acción se llame «Eliminar» aunque el sistema conserve los pagos y solo oculte al miembro (baja lógica), con la anonimización a pedido.

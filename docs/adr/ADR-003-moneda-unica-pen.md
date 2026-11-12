@@ -1,6 +1,6 @@
 # ADR-003: Moneda única PEN y eliminación del tipo de cambio
 
-Estado: **propuesto** (2026-11-11) · Confirmado el 12-nov-2026: cobro solo en Soles
+Estado: **aceptado** (confirmado por el propietario, 2026-11-12) · propuesto el 2026-11-11 · Confirmado el 12-nov-2026: cobro solo en Soles
 
 ## Contexto
 El repo base trabaja con precios en USD y cobros en USD y bolívares con tasa BCV diaria (`TasaCambio`, worker `actualizar-tasa`, `montoBs`, `tasaCambio`, caja y egresos en doble moneda, vitrina con equivalente en Bs). Perú opera en Soles (PEN) y el requerimiento es "la moneda es Soles".
@@ -49,4 +49,4 @@ El repo base trabaja con precios en USD y cobros en USD y bolívares con tasa BC
 - `Egreso` y `MonedaEgreso` no se adaptan a PEN: se eliminan junto con los egresos (ADR-018).
 
 ## Notas del propietario (2026-11-12)
-- Confirmó en el chat: «sin dólares ni bolívares». Esto **no** cambia el estado del ADR: pasa a *aceptado* solo con su orden expresa «acepto ADR-nnn».
+- Confirmó en el chat: «sin dólares ni bolívares». Aceptado por el propietario el 2026-11-12.

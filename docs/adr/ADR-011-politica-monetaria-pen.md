@@ -1,6 +1,6 @@
 # ADR-011: Política monetaria — Sol peruano (PEN) con dos decimales, aritmética exacta y redondeo por regla
 
-Estado: **propuesto** (2026-11-12) · Versión 2: reescrito el 2026-11-12 con la política que dictó el propietario en el chat; sustituye a la versión 1 («dinero como céntimos enteros en el dominio»). Corrige la afirmación «Decimal en dominio» de ADR-003 v0.2. Pasa a *aceptado* solo con la orden expresa «acepto ADR-011».
+Estado: **aceptado** (confirmado por el propietario, 2026-11-12) · propuesto el 2026-11-12 · Versión 2: reescrito el 2026-11-12 con la política que dictó el propietario en el chat; sustituye a la versión 1 («dinero como céntimos enteros en el dominio»). Corrige la afirmación «Decimal en dominio» de ADR-003 v0.2.
 
 ## Contexto
 Hechos (verificados en el Repo A, `docs/09` V-04 y `docs/linea-base-tests.md`): la base usa `Decimal(10,2)`, `(12,2)`, `(12,4)` y `(14,2)` en 23 columnas; los repositorios convierten con `.toNumber()` (41 líneas en 11 archivos de `packages/infrastructure`) y el dominio opera con `number` de JS, es decir, con coma flotante binaria. `repartirLineasPago` trabaja en céntimos (`aCentavos`) y `validarLineasDePago` compara con tolerancia (`< 0.01`); el resto suma y resta con flotantes. Con pago único exacto (ADR-010) cualquier error de redondeo se convierte en un cobro rechazado.
@@ -56,3 +56,6 @@ ADR-010 (pago exacto), ADR-003 (moneda única; se corrige su afirmación sobre `
 
 ## Referencias
 `docs/09` V-04 · `docs/linea-base-tests.md` §3 · `docs/datos-iniciales.md` (formato de montos) · BCRP, Circular 002-2011 y notas informativas de 2011 y 2018 (no verificadas, ver Contexto).
+
+## Notas del propietario (2026-11-12)
+- Respuesta en el chat: «Política monetaria aceptada». Aceptado el 2026-11-12.

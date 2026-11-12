@@ -1,6 +1,6 @@
 # ADR-010: Pago único por membresía — retirar los pagos fraccionados (abonos)
 
-Estado: **propuesto** (2026-11-12) · Decisión del cliente: "no hay pagos fraccionados, un solo pago y ya" · Pendiente P-16/P-17/P-18
+Estado: **aceptado** (confirmado por el propietario, 2026-11-12) · propuesto el 2026-11-12 · Decisión del cliente: "no hay pagos fraccionados, un solo pago y ya" · Pendiente P-16/P-17/P-18
 
 ## Contexto
 El repo base permite **abonos**: el miembro paga una parte y entra hasta una fecha límite; el saldo se cobra después. Esto atraviesa el sistema: `Plan.permitePagoParcial` y `minimoAbono*`, `ReglaAbonoPorFrecuencia` (con pantalla de configuración), `Suscripcion.fechaLimiteAbono`, `ReglaAbono.ts`, `CobrarAbonoPendiente`, `ListarAbonosPendientes`, `proyeccionAbono.ts`, "Cobrar deudas", estados del kiosco y reglas de acceso en `RegistrarCheckIn`. Hay **78 archivos** que mencionan "abono" (53 de código, 11 de tests). **Verificado en el fuente (v0.3):** el abono no está aislado, sino entrelazado en `RegistrarPago` (511 líneas, no transaccional) con multi-mes, pago retroactivo, "cobrar deudas" (`completarCicloAbierto`), tolerancia y `saldoAFavor`. Adhara Fit no fracciona pagos.
@@ -53,4 +53,4 @@ El repo base permite **abonos**: el miembro paga una parte y entra hasta una fec
 - El fiado de productos deja de ser «un tema distinto que sigue a P-06»: P-06 está respondida y el fiado se elimina (ADR-018). Siguen abiertas P-16, P-17 y P-18.
 
 ## Notas del propietario (2026-11-12)
-- Confirmó en el chat: «pago único de membresía es un criterio decidido». Esto **no** cambia el estado del ADR: pasa a *aceptado* solo con su orden expresa «acepto ADR-nnn».
+- Confirmó en el chat: «pago único de membresía es un criterio decidido». Aceptado por el propietario el 2026-11-12.

@@ -430,3 +430,6 @@ El revisor no tuvo acceso a npm; yo sí confirmé con `npm view` el 2026-11-12: 
 
 ### 9.3 Decisión del propietario
 El 2026-11-12 el propietario escribió «acepto ADR-022, S-22 va después de S-00». ADR-022 pasa a `aceptado (confirmado por el propietario, 2026-11-12)`; se aplican los defaults de las preguntas 1 a 6 (asumidos, por validar). Se aplicaron las enmiendas documentales: ADR-001 (sección «Enmiendas posteriores»), ADR-016 §2, constitución C-21, `CLAUDE.md` (líneas 5 y 67), `docs/04`, `docs/06` y `docs/00-indice.md`. Los docs 01, 03, 10 y 12 se dejan como históricos con una nota en el índice. **Pendiente de aprobación aparte:** regla de `guard-bash` para `drizzle-kit migrate|push|drop` (cambio del arnés).
+
+## 10. Aceptaciones del propietario del 2026-11-12 (tercera ronda)
+Aceptados: ADR-002 («Sin selector confirmado»), 003 («Aceptado»), 004 («Aceptado»), 007 («decisión curada, no volver a preguntar»), 010 («Pago único aceptado») y 011 («Política monetaria aceptada»). Pendientes: ADR-006 (reescrito a pedido: comprobantes previstos y apagados), ADR-008 (propuesto retirarlo, sin respuesta), ADR-013 (aceptado con la salvedad de llamarla «Eliminar»; requiere confirmar) y ADR-015 (descrito como flujo natural con la skill superpowers; falta su «acepto»).

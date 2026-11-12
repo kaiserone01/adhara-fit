@@ -1,6 +1,6 @@
 # ADR-004: Documento de identidad (DNI / CE / Pasaporte)
 
-Estado: **propuesto** (2026-11-11)
+Estado: **aceptado** (confirmado por el propietario, 2026-11-12) · propuesto el 2026-11-11
 
 ## Contexto
 El base usa `Miembro.cedula` (única por organización) y el kiosco acepta solo dígitos; hay normalización de cédulas alfanuméricas en el padrón. En Perú el documento principal es el **DNI** (8 dígitos); extranjeros usan **Carné de Extranjería** o **Pasaporte** (alfanuméricos).
@@ -45,3 +45,6 @@ El base usa `Miembro.cedula` (única por organización) y el kiosco acepta solo 
 *Derivadas de decisiones aceptadas por el propietario (ADR-018, ADR-019, ADR-020). El texto anterior se conserva; donde choca, rige esta sección.*
 - La unicidad `@@unique([organizacionId, numeroDocumento])` pasa a `@@unique([numeroDocumento])` global, y lo mismo para `codigoSocio`: no existe `organizacionId` (ADR-019).
 - Con el baseline regenerado no hay datos heredados que migrar a la nueva restricción.
+
+## Notas del propietario (2026-11-12)
+- Respuesta en el chat: «Documento de identidad - Aceptado». Aceptado el 2026-11-12.

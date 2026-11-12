@@ -1,6 +1,6 @@
 # ADR-002: Modo "sede única" — mantener `Sucursal` oculta en lugar de eliminarla
 
-Estado: **propuesto** (2026-11-11)
+Estado: **aceptado** (confirmado por el propietario, 2026-11-12) · propuesto el 2026-11-11
 
 ## Contexto
 Adhara Fit tiene un solo local. El repo base modela `Organizacion → Sucursal` y la palabra *sucursal* aparece en **183 archivos de código, tests y scripts** (cifra v0.2: "111 archivos con `sucursalId`", no reproducible): pagos, turnos, check-ins, usuarios, sesión con sucursal activa, planes multisede, API key del kiosco, reposo, vitrina.
@@ -45,3 +45,6 @@ Mantener la tabla `Sucursal` con **exactamente una fila** ("Local") creada por e
 - La consecuencia «Caja compartida: `AbrirTurno` permite un solo turno abierto por sede… flujo de traspaso (tarea 1.16)» queda **sin efecto**: no existen turnos de caja (ADR-018).
 - El helper `obtenerSedeUnica(organizacionId)` deja de recibir parámetros: no existe la entidad `Organizacion` (ADR-019). La `Sucursal` única cuelga directamente del negocio.
 - Medición del 2026-11-12 sobre el Repo A (`b4352a0`, mismo criterio de `grep`): `sucursal` aparece en 194 archivos de `apps` y `packages`; el inventario oficial reproduce la cifra de `docs/09` §5.
+
+## Notas del propietario (2026-11-12)
+- Respuesta en el chat: «Sin selector confirmado». Aceptado el 2026-11-12.

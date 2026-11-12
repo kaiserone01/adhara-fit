@@ -49,3 +49,6 @@ Media: cambiar la nomenclatura de IDs una vez creadas las specs obliga a renombr
 
 ## Referencias
 `docs/10-prompt-claude-code.md` (cabecera, §2.C) · `docs/12-prompt-inicial-claude-code.md` · `docs/01-levantamiento-requerimientos.md` §7 · `docs/08-decisiones-pendientes.md` · `CLAUDE.md` §2–§3.
+
+## Notas del propietario (2026-11-12)
+- Respuesta en el chat: «Flujo natural del desarrollo, impulsado por la Skill superpowers con las convenciones de rigor». **No cambia el estado todavía**: falta confirmar que se acepta el ADR con esa precisión (el flujo se apoya en las skills `brainstorming`, `writing-plans` y `using-superpowers`, con las puertas y convenciones de este repositorio).

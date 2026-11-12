@@ -82,6 +82,29 @@ Archivo: `S-01-baseline-de-seguridad.md` · REQ: 33 · BEH: 29 · INV: 7 · AC: 
 | REQ-S01-032 | MUST | BEH-S01-017 | — | AC-S01-012 (unitario) | pendiente |
 | REQ-S01-033 | MUST | BEH-S01-027 | — | AC-S01-013 (integracion) | pendiente |
 
+## S-02 — Hora de Lima: un solo módulo de fechas, sin depender del huso del proceso y con formato peruano (en-revision)
+
+Archivo: `S-02-hora-de-lima.md` · REQ: 16 · BEH: 12 · INV: 4 · AC: 10
+
+| REQ | Prioridad | BEH | INV | AC (método) | Test |
+|---|---|---|---|---|---|
+| REQ-S02-001 | MUST | BEH-S02-001 | — | AC-S02-001 (unitario) | pendiente |
+| REQ-S02-002 | MUST | BEH-S02-012 | INV-S02-001 | AC-S02-002 (unitario) | pendiente |
+| REQ-S02-003 | MUST | BEH-S02-004 | INV-S02-001 | AC-S02-002 (unitario) | pendiente |
+| REQ-S02-004 | MUST | BEH-S02-001, BEH-S02-002 | INV-S02-002 | AC-S02-001 (unitario) | pendiente |
+| REQ-S02-005 | MUST | BEH-S02-005 | INV-S02-004 | AC-S02-004 (integracion) | pendiente |
+| REQ-S02-006 | MUST | BEH-S02-006 | — | AC-S02-005 (unitario) | pendiente |
+| REQ-S02-007 | MUST | BEH-S02-007 | — | AC-S02-006 (unitario) | pendiente |
+| REQ-S02-008 | MUST | BEH-S02-008 | INV-S02-003 | AC-S02-007 (unitario) | pendiente |
+| REQ-S02-009 | MUST | BEH-S02-008 | INV-S02-003 | AC-S02-007 (unitario) | pendiente |
+| REQ-S02-010 | MUST | BEH-S02-009 | — | AC-S02-008 (unitario) | pendiente |
+| REQ-S02-011 | MUST | BEH-S02-009 | — | AC-S02-008 (unitario) | pendiente |
+| REQ-S02-012 | MUST | BEH-S02-011 | — | AC-S02-010 (unitario) | pendiente |
+| REQ-S02-013 | MUST | BEH-S02-008 | INV-S02-003 | AC-S02-007 (unitario) | pendiente |
+| REQ-S02-014 | MUST | BEH-S02-010 | — | AC-S02-009 (e2e) | pendiente |
+| REQ-S02-015 | MUST | BEH-S02-008 | INV-S02-003 | AC-S02-007 (unitario) | pendiente |
+| REQ-S02-016 | MUST | BEH-S02-003 | — | AC-S02-003 (unitario) | pendiente |
+
 ## S-22 — Capa de datos con Drizzle: esquema, repositorios, transacciones y retiro de Prisma (aprobada)
 
 Archivo: `S-22-capa-de-datos-con-drizzle.md` · REQ: 30 · BEH: 27 · INV: 6 · AC: 28

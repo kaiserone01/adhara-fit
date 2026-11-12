@@ -1,0 +1,23 @@
+# Secretos y credenciales (ADR-005)
+*.keystore
+cookies.txt
+.env*
+!.env.example
+*.pem
+
+# Configuración local del agente
+.claude/settings.local.json
+
+# Dependencias y artefactos de build
+node_modules/
+.next/
+.turbo/
+coverage/
+dist/
+*.log
+
+# Sistema y editores
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

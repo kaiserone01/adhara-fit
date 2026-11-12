@@ -513,6 +513,36 @@ Archivo: `S-10-retirar-lo-venezolano.md` · REQ: 34 · BEH: 23 · INV: 5 · AC: 
 | REQ-S10-033 | MUST | BEH-S10-003, BEH-S10-022 | INV-S10-005 | AC-S10-011 (unitario) | pendiente |
 | REQ-S10-034 | MUST | BEH-S10-023 | — | AC-S10-011 (unitario) | pendiente |
 
+## S-18 — Entrenadores: personas del gimnasio sin credenciales, asignadas solo al miembro (en-revision)
+
+Archivo: `S-18-entrenadores.md` · REQ: 23 · BEH: 14 · INV: 3 · AC: 9
+
+| REQ | Prioridad | BEH | INV | AC (método) | Test |
+|---|---|---|---|---|---|
+| REQ-S18-001 | MUST | BEH-S18-001 | — | AC-S18-001 (sql) | pendiente |
+| REQ-S18-002 | MUST | BEH-S18-001 | INV-S18-002 | AC-S18-001 (sql) | pendiente |
+| REQ-S18-003 | MUST | BEH-S18-001 | INV-S18-001 | AC-S18-001 (sql) | pendiente |
+| REQ-S18-004 | MUST | BEH-S18-001 | — | AC-S18-001 (sql) | pendiente |
+| REQ-S18-005 | MUST | BEH-S18-002 | INV-S18-002 | AC-S18-001 (sql), AC-S18-002 (integracion) | pendiente |
+| REQ-S18-006 | MUST | BEH-S18-002 | INV-S18-002 | AC-S18-001 (sql), AC-S18-002 (integracion) | pendiente |
+| REQ-S18-007 | MUST | BEH-S18-002 | — | AC-S18-002 (integracion) | pendiente |
+| REQ-S18-008 | MUST | BEH-S18-003 | — | AC-S18-003 (integracion) | pendiente |
+| REQ-S18-009 | MUST | BEH-S18-004 | — | AC-S18-003 (integracion) | pendiente |
+| REQ-S18-010 | MUST | BEH-S18-005, BEH-S18-014 | — | AC-S18-003 (integracion), AC-S18-007 (integracion) | pendiente |
+| REQ-S18-011 | MUST | BEH-S18-006 | — | AC-S18-003 (integracion), AC-S18-005 (integracion) | pendiente |
+| REQ-S18-012 | MUST | BEH-S18-007 | — | AC-S18-003 (integracion) | pendiente |
+| REQ-S18-013 | MUST | BEH-S18-008 | — | AC-S18-004 (integracion) | pendiente |
+| REQ-S18-014 | MUST | BEH-S18-006 | — | AC-S18-005 (integracion) | pendiente |
+| REQ-S18-015 | MUST | BEH-S18-009 | INV-S18-001 | AC-S18-001 (sql), AC-S18-005 (integracion) | pendiente |
+| REQ-S18-016 | MUST | BEH-S18-003 | — | AC-S18-003 (integracion) | pendiente |
+| REQ-S18-017 | MUST | BEH-S18-005 | — | AC-S18-003 (integracion) | pendiente |
+| REQ-S18-018 | MUST | BEH-S18-005, BEH-S18-010 | — | AC-S18-003 (integracion), AC-S18-005 (integracion) | pendiente |
+| REQ-S18-019 | MUST | BEH-S18-011 | — | AC-S18-006 (manual) | pendiente |
+| REQ-S18-020 | MUST | BEH-S18-006 | — | AC-S18-005 (integracion) | pendiente |
+| REQ-S18-021 | MUST | BEH-S18-012 | INV-S18-003 | AC-S18-008 (unitario) | pendiente |
+| REQ-S18-022 | MUST | BEH-S18-012 | INV-S18-003 | AC-S18-008 (unitario) | pendiente |
+| REQ-S18-023 | MUST | BEH-S18-013 | — | AC-S18-009 (manual) | pendiente |
+
 ## S-22 — Capa de datos con Drizzle: esquema, repositorios, transacciones y retiro de Prisma (aprobada)
 
 Archivo: `S-22-capa-de-datos-con-drizzle.md` · REQ: 30 · BEH: 27 · INV: 6 · AC: 28

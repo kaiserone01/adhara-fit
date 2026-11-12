@@ -1,6 +1,6 @@
 # ADR-012: Baseline de seguridad antes de construir funcionalidades
 
-Estado: **propuesto** (2026-11-12) · Origen: verificación contra el código (doc 09 §4)
+Estado: **aceptado** (confirmado por el propietario, 2026-11-12) · propuesto el 2026-11-12 · Origen: verificación contra el código (doc 09 §4)
 
 ## Contexto
 El escaneo del fuente encontró fallas que no dependen de Perú ni de la sede única y que se heredarían tal cual: cuentas desactivadas que pueden iniciar sesión y sesiones que sobreviven a la desactivación, ausencia de límite de intentos de login, API key de kiosco en claro y sin rotación, permisos aplicados solo en algunas capas, y secretos/credenciales de demostración versionados.

@@ -686,7 +686,7 @@ Archivo: `S-13-consentimiento-y-aviso-legal.md` · REQ: 51 · BEH: 29 · INV: 5 
 
 ## S-14 — Reportes: morosos, por vencer, ingresos por período e histórico imprimible (en-revision)
 
-Archivo: `S-14-reportes.md` · REQ: 43 · BEH: 23 · INV: 4 · AC: 15
+Archivo: `S-14-reportes.md` · REQ: 54 · BEH: 25 · INV: 4 · AC: 17
 
 | REQ | Prioridad | BEH | INV | AC (método) | Test |
 |---|---|---|---|---|---|
@@ -705,7 +705,7 @@ Archivo: `S-14-reportes.md` · REQ: 43 · BEH: 23 · INV: 4 · AC: 15
 | REQ-S14-013 | MUST | BEH-S14-008 | — | AC-S14-003 (integracion) | pendiente |
 | REQ-S14-014 | MUST | BEH-S14-009 | — | AC-S14-004 (integracion) | pendiente |
 | REQ-S14-015 | MUST | BEH-S14-009 | — | AC-S14-004 (integracion) | pendiente |
-| REQ-S14-016 | MUST | BEH-S14-010, BEH-S14-023 | INV-S14-002 | AC-S14-005 (integracion), AC-S14-013 (integracion) | pendiente |
+| REQ-S14-016 | MUST | BEH-S14-010, BEH-S14-012, BEH-S14-023 | INV-S14-002 | AC-S14-005 (integracion), AC-S14-006 (integracion), AC-S14-013 (integracion) | pendiente |
 | REQ-S14-017 | MUST | BEH-S14-010 | — | AC-S14-005 (integracion) | pendiente |
 | REQ-S14-018 | MUST | BEH-S14-011 | INV-S14-002 | AC-S14-005 (integracion), AC-S14-006 (integracion) | pendiente |
 | REQ-S14-019 | MUST | BEH-S14-011 | INV-S14-002 | AC-S14-005 (integracion), AC-S14-006 (integracion) | pendiente |
@@ -713,26 +713,37 @@ Archivo: `S-14-reportes.md` · REQ: 43 · BEH: 23 · INV: 4 · AC: 15
 | REQ-S14-021 | MUST | BEH-S14-012 | INV-S14-001 | AC-S14-001 (integracion), AC-S14-006 (integracion) | pendiente |
 | REQ-S14-022 | MUST | BEH-S14-013 | — | AC-S14-007 (unitario) | pendiente |
 | REQ-S14-023 | MUST | BEH-S14-010 | INV-S14-002 | AC-S14-005 (integracion) | pendiente |
-| REQ-S14-024 | MUST | BEH-S14-014 | — | AC-S14-006 (integracion) | pendiente |
-| REQ-S14-025 | MUST | BEH-S14-015 | — | AC-S14-008 (integracion) | pendiente |
+| REQ-S14-024 | MUST | BEH-S14-014 | INV-S14-002 | AC-S14-005 (integracion), AC-S14-006 (integracion) | pendiente |
+| REQ-S14-025 | MUST | BEH-S14-015 | INV-S14-002 | AC-S14-005 (integracion), AC-S14-008 (integracion) | pendiente |
 | REQ-S14-026 | MUST | BEH-S14-015 | — | AC-S14-008 (integracion) | pendiente |
 | REQ-S14-027 | MUST | BEH-S14-009 | — | AC-S14-004 (integracion) | pendiente |
 | REQ-S14-028 | MUST | BEH-S14-016 | — | AC-S14-009 (manual) | pendiente |
 | REQ-S14-029 | MUST | BEH-S14-016 | — | AC-S14-009 (manual) | pendiente |
 | REQ-S14-030 | MUST | BEH-S14-016 | — | AC-S14-009 (manual) | pendiente |
 | REQ-S14-031 | MUST | BEH-S14-017 | — | AC-S14-009 (manual), AC-S14-010 (manual) | pendiente |
-| REQ-S14-032 | MUST | BEH-S14-017 | — | AC-S14-009 (manual), AC-S14-010 (manual) | pendiente |
-| REQ-S14-033 | MUST | BEH-S14-018 | INV-S14-004 | AC-S14-010 (manual), AC-S14-014 (unitario) | pendiente |
+| REQ-S14-032 | MUST | BEH-S14-017 | — | AC-S14-009 (manual), AC-S14-010 (manual), AC-S14-016 (integracion) | pendiente |
+| REQ-S14-033 | MUST | BEH-S14-018 | INV-S14-004 | AC-S14-014 (unitario), AC-S14-016 (integracion) | pendiente |
 | REQ-S14-034 | MUST | BEH-S14-019 | — | AC-S14-011 (sql) | pendiente |
 | REQ-S14-035 | MUST | BEH-S14-020 | — | AC-S14-012 (integracion) | pendiente |
 | REQ-S14-036 | MUST | BEH-S14-017 | — | AC-S14-009 (manual), AC-S14-010 (manual) | pendiente |
-| REQ-S14-037 | MUST | BEH-S14-017 | — | AC-S14-009 (manual), AC-S14-010 (manual) | pendiente |
+| REQ-S14-037 | MUST | BEH-S14-017 | — | AC-S14-009 (manual), AC-S14-010 (manual), AC-S14-016 (integracion) | pendiente |
 | REQ-S14-038 | MUST | BEH-S14-021 | INV-S14-004 | AC-S14-014 (unitario) | pendiente |
 | REQ-S14-039 | MUST | BEH-S14-021 | INV-S14-004 | AC-S14-014 (unitario) | pendiente |
 | REQ-S14-040 | MUST | BEH-S14-021 | INV-S14-004 | AC-S14-014 (unitario) | pendiente |
 | REQ-S14-041 | MUST | BEH-S14-022 | — | AC-S14-015 (manual) | pendiente |
 | REQ-S14-042 | MUST | BEH-S14-009 | — | AC-S14-004 (integracion) | pendiente |
-| REQ-S14-043 | MUST | BEH-S14-018 | — | AC-S14-010 (manual) | pendiente |
+| REQ-S14-043 | MUST | BEH-S14-018 | — | AC-S14-016 (integracion) | pendiente |
+| REQ-S14-044 | MUST | BEH-S14-006 | — | AC-S14-003 (integracion) | pendiente |
+| REQ-S14-045 | MUST | BEH-S14-007 | — | AC-S14-003 (integracion) | pendiente |
+| REQ-S14-046 | MUST | BEH-S14-010 | — | AC-S14-005 (integracion) | pendiente |
+| REQ-S14-047 | MUST | BEH-S14-015 | INV-S14-002 | AC-S14-005 (integracion), AC-S14-008 (integracion) | pendiente |
+| REQ-S14-048 | MUST | BEH-S14-016 | — | AC-S14-009 (manual) | pendiente |
+| REQ-S14-049 | MUST | BEH-S14-017 | — | AC-S14-009 (manual), AC-S14-010 (manual) | pendiente |
+| REQ-S14-050 | MUST | BEH-S14-017 | — | AC-S14-009 (manual), AC-S14-010 (manual) | pendiente |
+| REQ-S14-051 | MUST | BEH-S14-024 | — | AC-S14-016 (integracion) | pendiente |
+| REQ-S14-052 | MUST | BEH-S14-019 | — | AC-S14-011 (sql) | pendiente |
+| REQ-S14-053 | MUST | BEH-S14-017 | — | AC-S14-009 (manual), AC-S14-010 (manual) | pendiente |
+| REQ-S14-054 | MUST | BEH-S14-005, BEH-S14-025 | — | AC-S14-003 (integracion), AC-S14-017 (unitario) | pendiente |
 
 ## S-15 — Línea base de la base de datos y datos iniciales de Adhara Fit (aprobada)
 

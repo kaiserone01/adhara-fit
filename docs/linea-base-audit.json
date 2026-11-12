@@ -1,0 +1,117 @@
+{
+  "origen": "npm audit --json sobre gym-app @ b4352a0398933cf2665a3e7b82dc84049697e10c",
+  "fecha": "2026-11-12",
+  "resumen": {
+    "info": 0,
+    "low": 0,
+    "moderate": 11,
+    "high": 9,
+    "critical": 1,
+    "total": 21
+  },
+  "avisos_high_critical": [
+    {
+      "paquete": "@prisma/config",
+      "severidad": "high",
+      "ids": [],
+      "rango": "6.13.0-dev.1 - 7.10.0 || 8.1.0-dev.1 - 8.1.0-dev.4",
+      "directo": false
+    },
+    {
+      "paquete": "brace-expansion",
+      "severidad": "high",
+      "ids": [
+        "1240100",
+        "1240103",
+        "1240104",
+        "1240107",
+        "1240108",
+        "1240111"
+      ],
+      "rango": "<=1.1.20 || 4.0.0 - 5.0.11",
+      "directo": false
+    },
+    {
+      "paquete": "deepmerge-ts",
+      "severidad": "high",
+      "ids": [
+        "1145093"
+      ],
+      "rango": "<8.0.0",
+      "directo": false
+    },
+    {
+      "paquete": "mysql2",
+      "severidad": "high",
+      "ids": [
+        "1153173",
+        "1158532"
+      ],
+      "rango": "<=3.23.0",
+      "directo": false
+    },
+    {
+      "paquete": "next",
+      "severidad": "critical",
+      "ids": [
+        "1240609",
+        "1241489",
+        "1241490",
+        "1241492",
+        "1241493",
+        "1241495",
+        "1241496",
+        "1242816",
+        "1242818",
+        "1242825",
+        "1242859"
+      ],
+      "rango": "16.0.0 - 16.4.0",
+      "directo": true
+    },
+    {
+      "paquete": "prisma",
+      "severidad": "high",
+      "ids": [],
+      "rango": "6.13.0-dev.1 - 7.10.0 || 8.0.0-rc.3 - 8.1.0-dev.6",
+      "directo": true
+    },
+    {
+      "paquete": "sharp",
+      "severidad": "high",
+      "ids": [
+        "1241331"
+      ],
+      "rango": "<0.35.5",
+      "directo": false
+    },
+    {
+      "paquete": "source-map-js",
+      "severidad": "high",
+      "ids": [
+        "1241209"
+      ],
+      "rango": "1.0.0 - 1.2.1",
+      "directo": false
+    },
+    {
+      "paquete": "xlsx",
+      "severidad": "high",
+      "ids": [
+        "1108110",
+        "1108111"
+      ],
+      "rango": "*",
+      "directo": true
+    },
+    {
+      "paquete": "zod",
+      "severidad": "high",
+      "ids": [
+        "1243066"
+      ],
+      "rango": "<4.6.6",
+      "directo": false
+    }
+  ]
+}

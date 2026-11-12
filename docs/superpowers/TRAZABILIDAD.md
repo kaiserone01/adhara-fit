@@ -548,7 +548,7 @@ Archivo: `S-11-productos-sin-fiado.md` · REQ: 26 · BEH: 18 · INV: 4 · AC: 11
 
 ## S-18 — Entrenadores: personas del gimnasio sin credenciales, asignadas solo al miembro (en-revision)
 
-Archivo: `S-18-entrenadores.md` · REQ: 23 · BEH: 14 · INV: 3 · AC: 9
+Archivo: `S-18-entrenadores.md` · REQ: 39 · BEH: 20 · INV: 4 · AC: 11
 
 | REQ | Prioridad | BEH | INV | AC (método) | Test |
 |---|---|---|---|---|---|
@@ -556,25 +556,41 @@ Archivo: `S-18-entrenadores.md` · REQ: 23 · BEH: 14 · INV: 3 · AC: 9
 | REQ-S18-002 | MUST | BEH-S18-001 | INV-S18-002 | AC-S18-001 (sql) | pendiente |
 | REQ-S18-003 | MUST | BEH-S18-001 | INV-S18-001 | AC-S18-001 (sql) | pendiente |
 | REQ-S18-004 | MUST | BEH-S18-001 | — | AC-S18-001 (sql) | pendiente |
-| REQ-S18-005 | MUST | BEH-S18-002 | INV-S18-002 | AC-S18-001 (sql), AC-S18-002 (integracion) | pendiente |
+| REQ-S18-005 | MUST | BEH-S18-001 | INV-S18-002 | AC-S18-001 (sql) | pendiente |
 | REQ-S18-006 | MUST | BEH-S18-002 | INV-S18-002 | AC-S18-001 (sql), AC-S18-002 (integracion) | pendiente |
-| REQ-S18-007 | MUST | BEH-S18-002 | — | AC-S18-002 (integracion) | pendiente |
-| REQ-S18-008 | MUST | BEH-S18-003 | — | AC-S18-003 (integracion) | pendiente |
-| REQ-S18-009 | MUST | BEH-S18-004 | — | AC-S18-003 (integracion) | pendiente |
-| REQ-S18-010 | MUST | BEH-S18-005, BEH-S18-014 | — | AC-S18-003 (integracion), AC-S18-007 (integracion) | pendiente |
-| REQ-S18-011 | MUST | BEH-S18-006 | — | AC-S18-003 (integracion), AC-S18-005 (integracion) | pendiente |
-| REQ-S18-012 | MUST | BEH-S18-007 | — | AC-S18-003 (integracion) | pendiente |
-| REQ-S18-013 | MUST | BEH-S18-008 | — | AC-S18-004 (integracion) | pendiente |
-| REQ-S18-014 | MUST | BEH-S18-006 | — | AC-S18-005 (integracion) | pendiente |
-| REQ-S18-015 | MUST | BEH-S18-009 | INV-S18-001 | AC-S18-001 (sql), AC-S18-005 (integracion) | pendiente |
-| REQ-S18-016 | MUST | BEH-S18-003 | — | AC-S18-003 (integracion) | pendiente |
-| REQ-S18-017 | MUST | BEH-S18-005 | — | AC-S18-003 (integracion) | pendiente |
-| REQ-S18-018 | MUST | BEH-S18-005, BEH-S18-010 | — | AC-S18-003 (integracion), AC-S18-005 (integracion) | pendiente |
-| REQ-S18-019 | MUST | BEH-S18-011 | — | AC-S18-006 (manual) | pendiente |
-| REQ-S18-020 | MUST | BEH-S18-006 | — | AC-S18-005 (integracion) | pendiente |
-| REQ-S18-021 | MUST | BEH-S18-012 | INV-S18-003 | AC-S18-008 (unitario) | pendiente |
-| REQ-S18-022 | MUST | BEH-S18-012 | INV-S18-003 | AC-S18-008 (unitario) | pendiente |
-| REQ-S18-023 | MUST | BEH-S18-013 | — | AC-S18-009 (manual) | pendiente |
+| REQ-S18-007 | MUST | BEH-S18-002 | INV-S18-002 | AC-S18-001 (sql), AC-S18-002 (integracion) | pendiente |
+| REQ-S18-008 | MUST | BEH-S18-002 | INV-S18-004 | AC-S18-002 (integracion), AC-S18-010 (unitario) | pendiente |
+| REQ-S18-009 | MUST | BEH-S18-002 | — | AC-S18-002 (integracion) | pendiente |
+| REQ-S18-010 | MUST | BEH-S18-003 | — | AC-S18-003 (manual) | pendiente |
+| REQ-S18-011 | MUST | BEH-S18-004 | — | AC-S18-004 (integracion) | pendiente |
+| REQ-S18-012 | MUST | BEH-S18-005 | — | AC-S18-004 (integracion) | pendiente |
+| REQ-S18-013 | MUST | BEH-S18-006 | — | AC-S18-004 (integracion) | pendiente |
+| REQ-S18-014 | MUST | BEH-S18-007 | — | AC-S18-004 (integracion) | pendiente |
+| REQ-S18-015 | MUST | BEH-S18-008 | — | AC-S18-004 (integracion) | pendiente |
+| REQ-S18-016 | MUST | BEH-S18-008 | — | AC-S18-004 (integracion) | pendiente |
+| REQ-S18-017 | MUST | BEH-S18-009 | — | AC-S18-004 (integracion) | pendiente |
+| REQ-S18-018 | MUST | BEH-S18-010 | — | AC-S18-004 (integracion) | pendiente |
+| REQ-S18-019 | MUST | BEH-S18-011 | — | AC-S18-005 (integracion) | pendiente |
+| REQ-S18-020 | MUST | BEH-S18-012 | — | AC-S18-006 (integracion), AC-S18-007 (manual) | pendiente |
+| REQ-S18-021 | MUST | BEH-S18-012 | — | AC-S18-006 (integracion), AC-S18-007 (manual) | pendiente |
+| REQ-S18-022 | MUST | BEH-S18-011 | — | AC-S18-005 (integracion) | pendiente |
+| REQ-S18-023 | MUST | BEH-S18-004 | — | AC-S18-004 (integracion) | pendiente |
+| REQ-S18-024 | MUST | BEH-S18-013 | INV-S18-001, INV-S18-003 | AC-S18-001 (sql), AC-S18-006 (integracion), AC-S18-008 (integracion) | pendiente |
+| REQ-S18-025 | MUST | BEH-S18-007 | — | AC-S18-004 (integracion), AC-S18-006 (integracion) | pendiente |
+| REQ-S18-026 | MUST | BEH-S18-014 | INV-S18-003 | AC-S18-008 (integracion) | pendiente |
+| REQ-S18-027 | MUST | BEH-S18-007 | — | AC-S18-004 (integracion), AC-S18-006 (integracion) | pendiente |
+| REQ-S18-028 | MUST | BEH-S18-015 | — | AC-S18-006 (integracion) | pendiente |
+| REQ-S18-029 | MUST | BEH-S18-016 | — | AC-S18-007 (manual) | pendiente |
+| REQ-S18-030 | MUST | BEH-S18-016 | — | AC-S18-007 (manual) | pendiente |
+| REQ-S18-031 | MUST | BEH-S18-012 | — | AC-S18-006 (integracion), AC-S18-007 (manual) | pendiente |
+| REQ-S18-032 | MUST | BEH-S18-012 | — | AC-S18-006 (integracion), AC-S18-007 (manual) | pendiente |
+| REQ-S18-033 | MUST | BEH-S18-017 | — | AC-S18-007 (manual), AC-S18-010 (unitario) | pendiente |
+| REQ-S18-034 | MUST | BEH-S18-017 | INV-S18-004 | AC-S18-007 (manual), AC-S18-010 (unitario) | pendiente |
+| REQ-S18-035 | MUST | BEH-S18-018 | — | AC-S18-009 (integracion) | pendiente |
+| REQ-S18-036 | MUST | BEH-S18-019 | INV-S18-004 | AC-S18-010 (unitario) | pendiente |
+| REQ-S18-037 | MUST | BEH-S18-019 | INV-S18-004 | AC-S18-010 (unitario) | pendiente |
+| REQ-S18-038 | MUST | BEH-S18-020 | — | AC-S18-011 (manual) | pendiente |
+| REQ-S18-039 | MUST | BEH-S18-014 | INV-S18-003 | AC-S18-008 (integracion) | pendiente |
 
 ## S-22 — Capa de datos con Drizzle: esquema, repositorios, transacciones y retiro de Prisma (aprobada)
 

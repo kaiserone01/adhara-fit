@@ -1,6 +1,6 @@
 # ADR-020: Sistema de diseño profesional y completo, con rebranding total
 
-Estado: **propuesto** (2026-11-12) · Decisión de negocio del propietario del 2026-11-12 (detalles, incluida la tipografía, se validan después)
+Estado: **aceptado** (confirmado por el propietario, 2026-11-12) · propuesto el 2026-11-12 · Decisión de negocio del propietario del 2026-11-12 (detalles, incluida la tipografía, se validan después)
 
 ## Contexto
 Adhara Fit es un negocio distinto del cliente anterior (Adrenalina Xtreme). El propietario decidió que el **rebranding es totalmente justificado** y que no basta un «branding mínimo»: se necesita un **sistema de diseño profesional y completo** (componentes, tokens, etc.), con **persistencia visual** entre todas las pantallas.

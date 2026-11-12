@@ -1,6 +1,6 @@
 # ADR-016: Estrategia de pruebas
 
-Estado: **propuesto** (2026-11-12)
+Estado: **aceptado** (confirmado por el propietario, 2026-11-12) · propuesto el 2026-11-12
 
 ## Contexto
 Hechos (doc 09, **no re-verificados** por falta del código del Repo A): el dominio del base tiene 39 archivos de test (≈375 casos, **sin ejecutar**); `web-admin` tiene 0 tests (V-01, V-02); el runner es Vitest (DI-01); `RegistrarPago` no es transaccional y concentra reglas críticas (§3.1, DI-64); `RegistrarPago` no exige turno abierto (H-01); la dependencia de zona horaria es triple (§3.3). No se ejecutó ni la suite ni la app (§1).

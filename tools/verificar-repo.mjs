@@ -175,24 +175,32 @@ export function verificarVersiones(raiz) {
   return errores;
 }
 
-/** Scripts de package.json y COPY de Dockerfile que apuntan a rutas inexistentes. */
-export function verificarReferencias(raiz, archivos) {
-  const errores = [];
+/** Scripts de package.json que apuntan a archivos o carpetas inexistentes: [{ archivo, script, ref }]. */
+export function scriptsRotos(raiz, archivos) {
+  const rotos = [];
   for (const a of archivos.filter((f) => f.endsWith("package.json") && !f.includes("node_modules"))) {
     const p = json(raiz, a);
     const dir = posix.dirname(a);
     for (const [nombre, cmd] of Object.entries(p?.scripts ?? {})) {
+      const refs = new Set();
       for (const m of String(cmd).matchAll(/(?:^|[\s"'=])((?:\.{1,2}\/|apps\/|packages\/)?[\w@.\-/]+\.(?:mjs|cjs|js|ts|tsx|sh|prisma))(?=$|[\s"'])/g)) {
         const ref = m[1];
         if (/^(https?:|-)/.test(ref) || /[*$]/.test(ref) || /^(next|tsx|turbo|vitest|tsc|prisma|node|npm)\.\w+$/.test(ref)) continue;
         const candidatos = [posix.normalize(posix.join(dir, ref)), posix.normalize(ref)];
-        if (!candidatos.some((c) => existsSync(join(raiz, c)))) errores.push(`referencia rota: script "${nombre}" de ${a} apunta a ${ref}`);
+        if (!candidatos.some((c) => existsSync(join(raiz, c)))) refs.add(ref);
       }
       for (const m of String(cmd).matchAll(/(?:^|\s)(apps\/[\w-]+|packages\/[\w-]+)(?=$|\s|\/)/g)) {
-        if (!existsSync(join(raiz, m[1]))) errores.push(`referencia rota: script "${nombre}" de ${a} apunta a ${m[1]}`);
+        if (!existsSync(join(raiz, m[1]))) refs.add(m[1]);
       }
+      for (const ref of refs) rotos.push({ archivo: a, script: nombre, ref });
     }
   }
+  return rotos;
+}
+
+/** Scripts de package.json y COPY de Dockerfile que apuntan a rutas inexistentes. */
+export function verificarReferencias(raiz, archivos) {
+  const errores = scriptsRotos(raiz, archivos).map((r) => `referencia rota: script "${r.script}" de ${r.archivo} apunta a ${r.ref}`);
   if (existsSync(join(raiz, "Dockerfile"))) {
     for (const [i, l] of leer(raiz, "Dockerfile").split(/\r?\n/).entries()) {
       const m = /^COPY\s+(?!--from)(?:--\S+\s+)*(\S+)\s+\S+/.exec(l.trim());

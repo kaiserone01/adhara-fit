@@ -5,6 +5,13 @@ Estado: **propuesto** (2026-11-12) · Decisión del cliente: "no hay pagos fracc
 ## Contexto
 El repo base permite **abonos**: el miembro paga una parte y entra hasta una fecha límite; el saldo se cobra después. Esto atraviesa el sistema: `Plan.permitePagoParcial` y `minimoAbono*`, `ReglaAbonoPorFrecuencia` (con pantalla de configuración), `Suscripcion.fechaLimiteAbono`, `ReglaAbono.ts`, `CobrarAbonoPendiente`, `ListarAbonosPendientes`, `proyeccionAbono.ts`, "Cobrar deudas", estados del kiosco y reglas de acceso en `RegistrarCheckIn`. Hay **78 archivos** que mencionan "abono" (53 de código, 11 de tests). **Verificado en el fuente (v0.3):** el abono no está aislado, sino entrelazado en `RegistrarPago` (511 líneas, no transaccional) con multi-mes, pago retroactivo, "cobrar deudas" (`completarCicloAbierto`), tolerancia y `saldoAFavor`. Adhara Fit no fracciona pagos.
 
+## Factores de decisión
+*Sección añadida en el pase formal F (2026-11-12, autorizado por el propietario). Derivada del texto del ADR y de los docs 09/11; no cambia la decisión ni el estado.*
+- Regla de negocio del cliente: "no hay pagos fraccionados, un solo pago y ya".
+- Los abonos están entrelazados en `RegistrarPago` (511 líneas, no transaccional; doc 09 §3.1, doc 11 DI-64).
+- Menos reglas, estados y tests; caja y arqueo más simples.
+- Riesgo comercial para clientes que pagan por partes.
+
 ## Decisión
 - Cada membresía se paga **completa en un solo acto** (precio del plan × meses adelantados).
 - Se elimina todo lo anterior; no se oculta con un indicador (flag), se borra. Incluye `evaluarAbonoParcial`, `saldoNecesario`, `excedenteASaldo`, `validarLineasDePago(..., "conAbono")`, `Miembro.saldoAFavor`, `Suscripcion.fechaLimiteAbono`, el estado `abono_vencido` y la tolerancia.
@@ -28,3 +35,14 @@ El repo base permite **abonos**: el miembro paga una parte y entra hasta una fec
 - (+) Menos migraciones: el baseline ya nace sin estas tablas ni columnas.
 - (−) Sin flexibilidad para clientes que pagan por partes; riesgo comercial a validar con Adhara.
 - (−) Trabajo concentrado en Fase 1 (tarea 1.3b); conviene hacerlo **antes** del cambio de moneda para no adaptar a PEN código que se va a borrar.
+
+## Cómo se valida
+*(Pase formal F.)*
+- **Specs:** S-04 (pago único y suscripciones) y S-07 (cambio de plan). Tests de caracterización previos (tarea 0.11) y tests primero (ADR-016).
+- **Invariantes a fijar:** el pago y su suscripción se crean en una sola transacción; no hay pago sin turno abierto (doc 11 H-01, P-23).
+
+## Reversibilidad
+*(Pase formal F.)* Baja: el ADR decide borrar el código de abonos, no ocultarlo con un indicador.
+
+## Dependencias
+*(Pase formal F.)* ADR-011 (importes exactos), ADR-016 (pruebas), orden respecto a ADR-003 (tarea 1.3b antes de 1.4). Pendientes P-16, P-17 y P-18. Hallazgos abiertos de la revisión G3: ver `REVISION-ADR.md` §4, §7 y §8.4.

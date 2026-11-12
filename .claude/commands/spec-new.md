@@ -13,5 +13,5 @@ Crea la spec `$ARGUMENTS` (formato `S-xx slug`). Requisitos previos: la puerta G
    3. Invariantes `INV-Sxx-nnn` con mecanismo de cumplimiento y cómo se detecta la violación.
    4. Criterios de aceptación `AC-Sxx-nnn` binarios, con método y resultado esperado; enlazan REQ/BEH/INV.
    5. Plan de pruebas, migración, riesgos y preguntas abiertas con default.
-3. Ejecuta `node tools/spec-lint.mjs` y corrige hasta verde. No marques `aprobada`: eso lo ordena el propietario.
+3. Ejecuta `node tools/spec-lint.mjs --write` y corrige hasta verde; añade `docs/superpowers/TRAZABILIDAD.md` al commit. No marques `aprobada`: eso lo ordena el propietario.
 4. Sigue con `/spec-review`.

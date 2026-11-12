@@ -95,5 +95,6 @@ personales** (sin correos, tokens, rutas del home ni URLs o IDs de sesión):
 ## 7. Herramientas del arnés
 - Comandos: `/preflight`, `/spec-new`, `/spec-review`, `/adr-new`, `/adr-review`, `/handoff`, `/gate`.
 - Subagentes de solo lectura: `spec-reviewer`, `adr-reviewer`. Reciben solo la ruta y la lista de comprobación. Su veredicto lo decide el propietario.
-- `node tools/harness-selftest.mjs` (arnés) · `node tools/check-handoff.mjs` (handoff) · `node tools/spec-lint.mjs` (cuando exista, G4).
+- `node tools/harness-selftest.mjs` (arnés) · `node tools/check-handoff.mjs` (handoff) · `node --test tools/spec-lint.test.mjs` (tests del lint).
+- `node tools/spec-lint.mjs` valida las specs de `docs/superpowers/specs/S-NN-<slug>.md`; con `--write` regenera `docs/superpowers/TRAZABILIDAD.md` (no se edita a mano). Plantilla: `docs/superpowers/specs/_plantilla-spec.md`. Principios verificables: `docs/constitution.md`.
 - `.claude/hooks/guard-bash.mjs` bloquea lo prohibido con código 2. Es la defensa real; los patrones de `permissions` son complementarios.

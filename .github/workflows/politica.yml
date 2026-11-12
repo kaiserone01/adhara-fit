@@ -38,6 +38,9 @@ jobs:
       - name: Autotest del arnés
         run: node tools/harness-selftest.mjs
 
+      - name: Tests de spec-lint
+        run: node --test tools/spec-lint.test.mjs
+
       - name: Commits verificados por GitHub
         run: |
           set -eu

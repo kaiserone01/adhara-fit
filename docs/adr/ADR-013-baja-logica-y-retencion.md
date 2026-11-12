@@ -52,3 +52,4 @@ Estado: **aceptado** (confirmado por el propietario, 2026-11-12) · propuesto el
 
 ## Enmiendas posteriores (2026-11-12, orden del propietario)
 - **Anonimización descartada:** el propietario indicó que no se necesita anonimizar datos. La Decisión 2 (`AnonimizarMiembro`) y la Decisión 5 (check-ins solo agregados al anonimizar) quedan sin efecto; un miembro eliminado conserva todos sus datos, incluidos los personales. Siguen vigentes la baja lógica con la denominación «Eliminar», la conservación de pagos y suscripciones, el permiso `ELIMINAR` de `MIEMBROS` y la restauración. El borrado físico por retención (Decisión 3) sigue pendiente de P-20 y no se implementa.
+- **Alcance (S-09):** los textos de «Cómo se valida», «Reversibilidad» y «Dependencias» que nombran la anonimización y `AnonimizarMiembro` quedan sin efecto; el invariante vigente es que ninguna operación borra pagos y que «Eliminar» se puede restaurar. Spec: S-09 (Eliminar miembro).

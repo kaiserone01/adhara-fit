@@ -13,7 +13,7 @@ Versión 0.1 · 2026-11-11. Diff **conceptual** sobre `packages/db/prisma/schema
 | `UsuarioSucursal` | Eliminar | Sin multi-sede |
 | `UsuarioAdmin.sucursalId` | Opcional → se asigna siempre a la sede única | Evita refactor de 100+ referencias |
 | `ModuloPermiso.SUCURSALES` | Eliminar del enum | |
-| `Miembro` | Adaptar | `cedula`→`numeroDocumento`; añadir `tipoDocumento`; `precioPlan`; `saldoAFavorUSD`→`saldoAFavor`; **eliminar** `genero`, `porRegularizar`, `vieneDelExcel`; añadir `consentimientoDatosEn`, `consentimientoVersion`, `codigoSocio?`; `sucursalId` queda nullable/ignorado | *Enmienda S-06: `numeroDocumento` único global; `codigoSocio` opcional, único y de 4 dígitos (se asigna a CE y pasaporte); CHECK de formato por tipo.*
+| `Miembro` | Adaptar | `cedula`→`numeroDocumento`; añadir `tipoDocumento`; `precioPlan`; `saldoAFavorUSD`→`saldoAFavor`; **eliminar** `genero`, `porRegularizar`, `vieneDelExcel`; añadir `consentimientoDatosEn`, `consentimientoVersion`, `codigoSocio?`; `sucursalId` queda nullable/ignorado | *Enmienda S-06: `numeroDocumento` único global; `codigoSocio` opcional, único y de 4 dígitos (se asigna a CE y pasaporte); CHECK de formato por tipo.* *Enmienda S-09: `activo` pasa a `estado` (`ACTIVO`/`BAJA`) con `bajaEn`, `bajaPorId` y `bajaMotivo`.*
 | `Genero` (enum) | Eliminar | |
 | `Plan` | Adaptar | `precioUSD`→`precio` (PEN); **eliminar** `multisede`, `permitePagoParcial`, `minimoAbonoTipo`, `minimoAbonoValor` |
 | `ReglaAbonoPorFrecuencia` | **Eliminar** | Sin abonos (ADR-010) |

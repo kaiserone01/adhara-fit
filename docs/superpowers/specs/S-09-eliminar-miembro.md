@@ -1,10 +1,10 @@
 ---
 id: S-09
-estado: en-revision
+estado: aprobada
 adrs: ADR-004, ADR-010, ADR-012, ADR-013, ADR-016, ADR-022
 depende_de: S-00, S-01, S-02, S-04, S-05, S-06, S-07, S-08, S-22
-aprobada_por:
-fecha_aprobacion:
+aprobada_por: propietario
+fecha_aprobacion: 2026-11-12
 ---
 # S-09 — Eliminar miembro: la baja lógica que oculta al miembro y conserva sus pagos
 
@@ -679,3 +679,4 @@ Todos los hallazgos se verificaron contra el Repo A y las specs y resultaron cie
 - Fila 8, 9, 11 y 12: 5.2 lista las enmiendas con IDs verificados, entre ellas REQ-S22-016 y REQ-S22-007 en lugar de REQ-S22-004; 0.3 y 5.2 agregan los traspasos a S-14, S-10 y S-21; 5.3 suma los riesgos omitidos.
 - Fila 10: el plan se rehízo en ocho pasos con el esquema antes de las pruebas de integración, el puerto de auditoría aparte, los plazos heredados (REQ-S09-019) y la justificación de retirar las pruebas del borrado viejo.
 - Lo que no se pudo verificar y queda marcado «no verificado»: que los scripts de `packages/db` que leen `activo` no se importen (S-00 los excluye).
+- Aprobación: el propietario escribió «Correcto, aprobado» el 2026-11-12 sobre el texto corregido, con el veredicto pegado; la aprobación incluye los valores por defecto de las cuatro preguntas de 5.4. Su «Aceptado» anterior, previo al veredicto, se tomó solo como aceptación de la dirección (sin anonimización).

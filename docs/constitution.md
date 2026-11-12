@@ -37,7 +37,7 @@ Es breve a propósito: cada artículo dice qué se exige y **cómo se verifica**
 | C-16 | **Tiempo:** un único módulo `fechaLima`, `TZ=America/Lima`; sin getters locales ni offsets fijos fuera de él. | — (doc 09 §3.3) | Lint/búsqueda de `getHours`/`toLocale*` fuera del módulo; pruebas 23:59/00:00 Lima |
 | C-17 | **Un pago nunca se borra:** se anula con motivo y autor; no existe «eliminar con historial». | 010, 013 | Restricción de BD/ausencia de borrado en repositorios; test de integración |
 | C-18 | **Seguridad por defecto:** cuenta inactiva no inicia sesión; límite de intentos; API key hasheada y rotable; validación de entrada; sin credenciales fijas en el seed; ningún script destructivo sin `--confirm`. | 012 | Tests por criterio de ADR-012; escaneo de secretos en CI |
-| C-19 | **Privacidad y retención:** baja lógica y anonimización a pedido; el borrado físico solo por retención programada con plazo validado por contador/abogado. | 013 | Tests de `AnonimizarMiembro`; auditoría de quién y cuándo |
+| C-19 | **Privacidad y retención:** baja lógica («Eliminar», reversible, conserva los pagos); el borrado físico solo por retención programada con plazo validado por contador/abogado. | 013 | Tests de eliminar y restaurar (S-09); auditoría de quién y cuándo |
 
 ## IV. Pruebas
 | # | Artículo | ADR | Se verifica con |

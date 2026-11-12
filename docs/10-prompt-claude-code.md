@@ -42,7 +42,7 @@ Si algo de los documentos contradice el código, **el código gana**: anótalo e
 | S-06 | Documento de identidad DNI/CE/Pasaporte y `codigoSocio` | ADR-004 |
 | S-07 | Cambio de plan: unificar o conservar los tres flujos, sin saldo a favor | doc 09 §3.2, P-17 |
 | S-08 | Caja compartida con traspaso de turno y arqueo por método | ADR-002, doc 09 §3.4, P-19 |
-| S-09 | Baja lógica y anonimización de miembros | ADR-013, P-20 |
+| S-09 | Baja lógica y anonimización de miembros | ADR-013, P-20 | *Enmienda: S-09 = Eliminar miembro, sin anonimización (2026-11-12).*
 | S-10 | Retirada de Venezuela: tasa/BCV/worker, padrón Excel, scripts de tenant, marca anterior | ADR-003, ADR-007, ADR-008 |
 
 Para cada spec, además del archivo, entrega en el chat un **resumen de 10 líneas** con las decisiones que necesitan mi aprobación.

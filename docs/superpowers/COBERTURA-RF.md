@@ -14,7 +14,7 @@ Leyenda: ✅ cubierto por la spec indicada · ◐ cubierto en parte · ⚪ hered
 |---|---|---|---|
 | RF-01, RF-02 | Login y permisos granulares | ✅ S-01 | — |
 | RF-03 | Cambio de contraseña | ⚪ | — |
-| RF-04 | Auditoría de acciones sensibles (S) | ◐ S-01 (intentos de login), S-09 (anonimización) | Sin spec propia; el modelo existe sin consumidores (doc 11 DI-28) |
+| RF-04 | Auditoría de acciones sensibles (S) | ◐ S-01 (intentos de login), S-09 (anonimización) | Sin spec propia; el modelo existe sin consumidores (doc 11 DI-28) | *Nota S-09: la anonimización se descartó; S-09 audita eliminar y restaurar.*
 | RF-10, RF-11 | Alta/edición y unicidad de documento | ✅ S-06 | El entrenador del miembro depende de P-22 (ver S-18) |
 | RF-12 | Baja lógica y reactivación | ✅ S-09 | — |
 | RF-13, RF-14 | Listado, ficha, vigencia | ⚪ / ✅ S-04 (fuente única de vigencia) | — |

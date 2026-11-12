@@ -58,4 +58,4 @@ Ver doc 01 §7 (S-01…S-08) y los añadidos: **S-09** (vuelto no persistido), *
 | Pago único, sin abonos (alcance ampliado: reescritura del flujo de pago) | ADR-010 |
 | Dinero en céntimos enteros en el dominio | ADR-011 |
 | Baseline de seguridad antes de funcionalidades | ADR-012 |
-| Baja lógica y anonimización en lugar de borrado | ADR-013 |
+| Baja lógica y anonimización en lugar de borrado | ADR-013 (anonimización descartada, 2026-11-12) |

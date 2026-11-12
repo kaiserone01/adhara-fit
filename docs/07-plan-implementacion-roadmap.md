@@ -50,7 +50,7 @@ Orden pensado para **minimizar el tiempo con el repo roto**: primero quitar lo q
 | 1.12 | Corregir bug `reabrirPorGrupo` (filtrar por organización) | — | XS | Test que lo reproduce |
 | 1.13 | Prueba manual guiada del flujo completo (checklist) | todas | S | Checklist firmado; fallos → issues |
 | 1.14 | Cambio de plan: unificar o conservar los tres flujos (doc 09 §3.2) en PEN | 1.4 | M | Spec decide; tests de prorrateo y de pago exacto |
-| 1.15 | Baja lógica y `AnonimizarMiembro` (ADR-013); quitar `eliminarConHistorial` | 1.4 | M | Un pago nunca desaparece de caja por dar de baja a un miembro |
+| 1.15 | Baja lógica y `AnonimizarMiembro` (ADR-013); quitar `eliminarConHistorial` | 1.4 | M | Un pago nunca desaparece de caja por dar de baja a un miembro | *Enmienda S-09 (2026-11-12): sin `AnonimizarMiembro`; la tarea es eliminar y restaurar con baja lógica.*
 | 1.16 | Caja con turno compartido: traspaso de turno (ADR-002, P-19) | 1.4 | S | Abrir con otro turno abierto muestra quién y ofrece traspaso |
 
 **Hito M1:** demo del flujo inscripción → cobro → check-in → cierre, en S/.

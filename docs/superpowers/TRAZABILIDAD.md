@@ -423,7 +423,7 @@ Archivo: `S-08-registro-continuo-de-cobros.md` · REQ: 57 · BEH: 29 · INV: 4 �
 | REQ-S08-056 | MUST | BEH-S08-028 | — | AC-S08-015 (integracion) | pendiente |
 | REQ-S08-057 | MUST | BEH-S08-022, BEH-S08-029 | — | AC-S08-011 (unitario) | pendiente |
 
-## S-09 — Eliminar miembro: la baja lógica que oculta al miembro y conserva sus pagos (en-revision)
+## S-09 — Eliminar miembro: la baja lógica que oculta al miembro y conserva sus pagos (aprobada)
 
 Archivo: `S-09-eliminar-miembro.md` · REQ: 42 · BEH: 26 · INV: 4 · AC: 12
 

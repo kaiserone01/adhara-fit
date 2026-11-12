@@ -800,6 +800,10 @@ El código heredado organiza el dinero en torno a la caja con turnos: hay que ab
 - ¿El historial de /pagos admite hasta 366 días contando ambos extremos? Default: sí (SUP-S08-005, SUP-S08-013).
 - ¿El permiso para ver cobros e historial es `PAGOS VER`, hoy sin control? Default: sí (SUP-S08-006).
 
+## Enmiendas posteriores (2026-11-12)
+*Derivadas de la aprobación de S-09. El texto anterior se conserva; donde choca, rige esta sección.*
+- Por la aprobación de S-09: el riesgo sobre ADR-013 de 5.3 queda resuelto (eliminar conserva los pagos) y el selector de miembro de `/cobros` excluye a los eliminados (REQ-S09-021); el reporte incluye los pagos de los eliminados (REQ-S09-030).
+
 ## Revisión independiente
 
 Revisor: subagente `spec-reviewer` (solo lectura), que recibió únicamente la ruta y la lista de comprobación. Veredicto sobre la versión `d0f62ce`; cada fila se resume y el veredicto global se conserva tal como lo entregó. El revisor no tuvo shell: contó con `Grep` y `Glob`; verificó la aritmética de BEH-006 a BEH-011 (correcta) y los números de línea de 0.4 (casi todos correctos).

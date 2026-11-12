@@ -26,7 +26,7 @@ Versión 0.1 · 2026-11-11. Diff **conceptual** sobre `packages/db/prisma/schema
 | `CheckIn` | Conservar | |
 | `TasaCambio` | **Eliminar** | |
 | `MetodoPago` / `TipoMetodoPago` | Adaptar | Nuevo enum (ver doc 05); `moneda` eliminado (todo PEN); `codigoBanco`,`rif`,`walletDireccion`,`walletUsuario` eliminados; añadir `cci`, `titular` |
-| `CambioPlanAuditoria`, `Sesion`, `RegistroAuditoria`, `TemaOrganizacion`, `PermisoUsuario` | Conservar | |
+| `CambioPlanAuditoria`, `Sesion`, `RegistroAuditoria`, `TemaOrganizacion`, `PermisoUsuario` | Conservar | *Enmienda S-07 (2026-11-12): `CambioPlanAuditoria` pierde `modo` y `origen`, guarda importes decimales y el plan y precio anteriores; `Plan` pierde `frecuencia` e `incluyeEntrenador`.* |
 | `MiembroReferencia`, `PadronHoja` | **Eliminar** | Padrón Excel |
 | `VitrinaItem`, `TipoVitrinaItem`, `TipoMedioVitrina` | Diferir | Comentar/aislar hasta Fase 3 (o conservar sin uso) |
 | **Nuevo** `ConfiguracionOrganizacion` | Crear | `diasGracia`, `incluyeIGV`, `exigirComprobante`, textos legales (versión consentimiento) | *Enmienda S-05: esa tabla no existe en el Repo A; se crea `ConfiguracionNegocio` de fila única con el nombre del negocio y `reposo*`/`vitrina*`; `diasGracia` se retiró (S-04).*

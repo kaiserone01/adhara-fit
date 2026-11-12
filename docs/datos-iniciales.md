@@ -15,7 +15,7 @@ Registrados el 2026-11-12 a partir de lo que el propietario escribió en el chat
 
 - Los precios se muestran siempre con 2 decimales y sin redondeo (por ejemplo S/ 120.00).
 - El propietario no indicó planes de 4 a 6 meses. El sistema seguirá admitiendo de 1 a 6 meses (ADR-010), pero el seed crea solo estos 3.
-- **Todos los planes incluyen entrenador.** No existe la distinción «con entrenador» y «sin entrenador» en los planes (a diferencia de la versión anterior). El entrenador se asigna solo al miembro, y la asignación es opcional (asumido, por validar).
+- **Todos los planes incluyen entrenador.** No existe la distinción «con entrenador» y «sin entrenador» en los planes (a diferencia de la versión anterior). El entrenador se asigna solo al miembro, y la asignación es opcional (asumido, por validar). *Aprobado en S-07 (2026-11-12): el entrenador del miembro es opcional (supuesto); la duración del plan se fija al crearlo.*
 
 ## Entrenadores (4)
 Escritos tal como los dio el propietario, con mayúsculas normalizadas por mí (ortografía por confirmar):

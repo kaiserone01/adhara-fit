@@ -40,7 +40,7 @@ Los 22 ADR están aceptados (001 a 022); ninguno queda propuesto ni retirado. AD
 | S-04 | **aprobada** (propietario, 2026-11-12). 49 REQ, 42 BEH, 6 INV, 25 AC; `spec-lint` en estado `aprobada`: 0 errores, 0 avisos. Sin pagos repartidos ni días de gracia; fecha pasada sin límite. Enmiendas registradas en S-01, S-02, S-03 y S-22 |
 | S-05 | **aprobada** (propietario, 2026-11-12). 33 REQ, 25 BEH, 5 INV, 17 AC; `spec-lint` en estado `aprobada`: 0 errores, 0 avisos. Una sede oculta «Local», configuración global `ConfiguracionNegocio`, login en un paso, sin `organizacionId`. Enmiendas registradas en S-01, S-04 y S-22 y en `docs/06` |
 | S-06 | **aprobada** (propietario, 2026-11-12). 40 REQ, 34 BEH, 6 INV, 20 AC (ver `spec-lint`: 0 errores, 0 avisos). DNI, CE o pasaporte; `numeroDocumento` único global; `codigoSocio` de 4 dígitos para CE y pasaporte; check-in por `identificador`. Aprobada antes de terminar la revisión independiente; las correcciones no cambiaron decisiones (ver su conciliación). Enmiendas en S-01, S-05, S-22, ADR-004 y `docs/05`/`docs/06` |
-| S-07 | **en revisión** (corregida tras el veredicto «requiere cambios»; 61 REQ, 38 BEH, 5 INV, 15 AC). Espera «S-07 aprobada» del propietario |
+| S-07 | **aprobada** (propietario, 2026-11-12, con los valores por defecto de las preguntas). 61 REQ, 38 BEH, 5 INV, 15 AC; `spec-lint`: 0 errores, 0 avisos. Una sola operación `cambiarPlan`, planes sin frecuencia ni entrenador incluido, anulación por orden de registro. Enmiendas en S-02, S-03, S-04, S-05 y S-22 |
 | S-08 … S-10 | no iniciadas. Todos sus ADR están aceptados. Se redactan de una en una |
 | S-11 … S-21 | propuestas (mapa en lenguaje simple: `docs/superpowers/BACKLOG-SPECS.md`; cruce técnico: `COBERTURA-RF.md`). S-19 aprobada como ítem. S-20 hereda lo que resuelve la vitrina actual; S-21 es el check-in en Android TV con teclado numérico USB |
 
@@ -121,7 +121,7 @@ Los 22 ADR están aceptados (001 a 022); ninguno queda propuesto ni retirado. AD
 - `docs/superpowers/specs/S-04-pago-unico-de-membresia.md`: nueva, `en-revision`; incluye `## Revisión independiente`.
 - `docs/superpowers/specs/S-05-negocio-y-sede-unicos.md`: nueva, `aprobada` (2026-11-12); incluye `## Revisión independiente` y conciliación. Enmiendas posteriores añadidas a S-01, S-22 y S-04 (sección nueva); `docs/06-modelo-datos-cambios.md` anotado; `BACKLOG-SPECS.md` marca S-05 «Aprobada».
 - `docs/superpowers/specs/S-06-documento-de-identidad.md`: nueva, `aprobada` (2026-11-12); incluye `## Revisión independiente` y conciliación. Enmiendas posteriores en S-01, S-05 y S-22; notas en ADR-004, `docs/05`, `docs/06`, `COBERTURA-RF.md` y `BACKLOG-SPECS.md`.
-- `docs/superpowers/specs/S-07-cambio-de-plan.md`: nueva, `en-revision`; incluye `## Revisión independiente` y conciliación.
+- `docs/superpowers/specs/S-07-cambio-de-plan.md`: nueva, `aprobada` (2026-11-12); incluye `## Revisión independiente` y conciliación. Enmiendas posteriores en S-02, S-03, S-04, S-05 y S-22; notas en `docs/06`, `docs/datos-iniciales.md` y `BACKLOG-SPECS.md`.
 - `docs/superpowers/specs/S-03-dinero-y-metodos-de-pago.md`: nueva, `aprobada`; incluye `## Revisión independiente`.
 - `docs/superpowers/specs/S-02-hora-de-lima.md`: nueva, `aprobada`; incluye `## Revisión independiente`.
 - `docs/superpowers/specs/S-01-baseline-de-seguridad.md`: nueva, `en-revision`, con `## Revisión independiente`.

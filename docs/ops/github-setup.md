@@ -8,7 +8,7 @@ Los nombres de menús de GitHub cambian: donde dice "no verificado" confírmalo 
   Settings → General → Danger Zone → *Change repository visibility* → Private.
 - [ ] Decidir dónde se empuja: **sesión local** con tus credenciales (recomendado). Desde la nube el entorno firma y empuja con la plataforma,
   y el hook `pre-push` lo rechazará por firma no válida.
-- [ ] Los 7+ commits hechos desde la nube con identidad de plataforma deben **rehacerse con tu identidad** (por ejemplo, en local, `git rebase` con
+- [ ] Los commits hechos desde la nube (11 al cierre de G2) con identidad de plataforma deben **rehacerse con tu identidad** (por ejemplo, en local, `git rebase` con
   re-firma de cada commit; `main` aún no existe, así que no hay historia compartida que proteger).
 
 ## 1. Identidad y firma local (ver `docs/ops/firma-commits.md`)

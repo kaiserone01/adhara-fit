@@ -45,7 +45,9 @@ Los 22 ADR están aceptados (001 a 022); ninguno queda propuesto ni retirado. AD
 | S-09 | **aprobada** (propietario, 2026-11-12, con los valores por defecto). 42 REQ, 26 BEH, 4 INV, 12 AC; `spec-lint`: 0 errores, 0 avisos. «Eliminar» con baja lógica (`BAJA`), «Restaurar», conserva pagos y datos; sin anonimización. Enmiendas en S-01, S-04, S-06, S-07, S-08, S-22, ADR-013, ADR-004 y documentos |
 | S-10 | **aprobada** (propietario, 2026-11-12, con el reloj de Lima conservado sin tasa). 34 REQ, 23 BEH, 5 INV, 11 AC; `spec-lint`: 0 errores, 0 avisos. Retira tasa, padrón, bolívares, «por regularizar» y la marca anterior de las apps web; las apps de TV quedan para S-20 y S-21. Enmiendas en S-00, S-02, S-03, S-04, S-05, S-06, S-07, S-08, S-22, ADR-003, ADR-004 y ADR-007 |
 
-| S-11 … S-21 | propuestas (mapa en lenguaje simple: `docs/superpowers/BACKLOG-SPECS.md`; cruce técnico: `COBERTURA-RF.md`). S-19 aprobada como ítem. S-20 hereda lo que resuelve la vitrina actual; S-21 es el check-in en Android TV con teclado numérico USB |
+| S-18 | **en revisión** (borrador commiteado; veredicto del `spec-reviewer` pendiente). Entrenadores como tabla propia `Entrenador` sin credenciales; no se borran, se desactivan; 23 REQ, 14 BEH, 3 INV, 9 AC |
+| S-23 | **en revisión** (borrador commiteado; veredicto pendiente). Un solo rol: administrador con acceso total; retira `RolUsuario`, `ModuloPermiso`, `AccionPermiso`, `PermisoUsuario` y todas las consultas de permisos; los administradores se desactivan, no se borran; 21 REQ, 13 BEH, 4 INV, 8 AC |
+| S-11, S-12, S-13, S-14, S-15, S-17, S-19, S-20, S-21 | **entran** (el propietario aprobó la lista completa el 2026-11-12: «aprobado todo, procede»); sin redactar todavía. S-16 (importador) descartada. Mapa en lenguaje simple: `docs/superpowers/BACKLOG-SPECS.md`; cruce técnico: `COBERTURA-RF.md` |
 
 - Defaults asumidos hasta ahora: ninguno de `docs/08`. Documentación v0.4 del zip: **importada íntegra** a `docs/` (40 archivos; `diff -r` vacío y manifiesto sha256 idéntico; el commit de importación solo contiene esos archivos).
 - `docs/12` cita como texto las líneas prohibidas (son las reglas del propietario); el escaneo de commits aplica a mensajes, no a archivos.
@@ -176,9 +178,8 @@ Los 22 ADR están aceptados (001 a 022); ninguno queda propuesto ni retirado. AD
 
 ## 5. Próximos pasos
 1. Leer handoff.md y ejecutar /preflight.
-2. Seguir E5 con **S-06** (documento de identidad: `tipoDocumento` DNI/CE/PASAPORTE, `numeroDocumento` único global, `codigoSocio`, `buscarPorDocumento`; ADR-004 aceptado): borrador con hechos verificados en el Repo A, `spec-lint`, `spec-reviewer` (solo la ruta), conciliación y resumen de 10 líneas; esperar «S-06 aprobada».
-3. Pedir al propietario: repo privado, `adhara.ownerEmail`, firma y `allowedSignersFile`; y si el push se hace desde la nube o en local.
-4. Solo con orden expresa y ADR por ADR: cambiar estados a `aceptado (confirmado por el propietario, AAAA-MM-DD)`. Si acepta ADR-018, enmendar ADR-002, 003, 010 y 011 y reformular S-08 antes de redactarla.
-5. Seguir E5 con las demás specs, de una en una, en el orden S-01…S-10 más las que el propietario apruebe de S-11…S-18; cada una en borrador mientras sus ADR estén *propuestos*; no pasar a revisión sin ADR aceptados. S-04 queda condicionada a la línea base de tests (requiere copia local del Repo A) y ya no exige turno abierto. Solo con «S-xx aprobada» se marca `estado: aprobada`.
-6. Cuando el propietario acepte ADR-019, enmendar ADR-004, ADR-002, ADR-008 y el doc 06, y medir el alcance (inventario ampliado con «organización»). Para S-19 pedir el logo vectorial, P-15 y la tipografía; S-20 y S-21 dependen de S-19.
-7. Opcional, en una sesión nueva: comprobar las skills `brainstorming`, `writing-plans` y `using-superpowers` de la cuenta antes de usarlas en E5/E6.
+2. Conciliar los veredictos del `spec-reviewer` de **S-18** y **S-23** (verificar cada hallazgo contra el Repo A, corregir, pegar veredicto y conciliación), enviar al propietario el resumen de 10 líneas de cada una y esperar «S-18 aprobada» y «S-23 aprobada». Al aprobar, registrar las enmiendas (lista en 5.2 de cada spec) y actualizar BACKLOG-SPECS.
+3. Redactar, revisar y aprobar de una en una, en este orden: S-11 (productos sin fiado), S-15 (línea base y datos iniciales), S-12 (tickets y comprobantes apagados), S-13 (consentimiento y libro de reclamaciones), S-14 (reportes), S-17 (operación), S-19 (diseño), S-20 (vitrina), S-21 (check-in en TV).
+4. Terminadas las specs, redactar el plan global (G6) en `docs/superpowers/plans/`: orden, dependencias y riesgos; decidir si S-08, S-10 y S-11 van antes de S-05 (S-05 edita archivos que ellas borran). G6 termina la sesión de diseño.
+5. Pedir al propietario: repo privado antes de cualquier push; originales del logotipo y tipografía; periodo de retención (P-20); revisión legal de la Ley 29733 (se descartó anonimizar).
+6. Solo con orden expresa y ADR por ADR: cambiar estados de ADR a `aceptado (confirmado por el propietario, AAAA-MM-DD)`.

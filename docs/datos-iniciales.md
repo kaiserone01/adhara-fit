@@ -7,13 +7,15 @@ Registrados el 2026-11-12 a partir de lo que el propietario escribió en el chat
 - Los entrenadores se registran como personas del gimnasio **sin credenciales de acceso** (interpretación mía de «solo el rol del socio o administrador, los entrenadores»; asumido, por validar).
 
 ## Planes (pago único, ADR-010 propuesto)
-| Plan | Duración | Precio | En céntimos |
-|---|---:|---:|---:|
-| 1 mes | 1 mes | S/ 120.00 | 12000 |
-| 2 meses | 2 meses | S/ 200.00 | 20000 |
-| 3 meses | 3 meses | S/ 280.00 | 28000 |
+| Plan | Precio |
+|---|---:|
+| 1 mes | S/ 120.00 |
+| 2 meses | S/ 200.00 |
+| 3 meses | S/ 280.00 |
 
+- Los precios se muestran siempre con 2 decimales y sin redondeo (por ejemplo S/ 120.00).
 - El propietario no indicó planes de 4 a 6 meses. El sistema seguirá admitiendo de 1 a 6 meses (ADR-010), pero el seed crea solo estos 3.
+- **Todos los planes incluyen entrenador.** No existe la distinción «con entrenador» y «sin entrenador» en los planes (a diferencia de la versión anterior). El entrenador se asigna solo al miembro, y la asignación es opcional (asumido, por validar).
 
 ## Entrenadores (4)
 Escritos tal como los dio el propietario, con mayúsculas normalizadas por mí (ortografía por confirmar):

@@ -652,6 +652,7 @@ El código heredado tiene dos formas de sacar a un miembro: un interruptor «Dar
 - Por la aprobación de S-23: REQ-S09-005, REQ-S09-006, REQ-S09-023 y REQ-S09-039 (permiso `MIEMBROS ELIMINAR`) se leen como «sesión válida de un administrador activo».
 - Por la aprobación de S-12: la lista de campos editables del `PATCH` de `api/miembros/[id]` suma `correo` y `aceptaCorreo` cuando el interruptor del correo está encendido; un miembro eliminado no recibe correos.
 - Por la aprobación de S-13: el traspaso de consentimiento queda cumplido y `crearMiembro` suma el consentimiento en su transacción.
+- Por la aprobación de S-14: el traspaso de los reportes de morosos, por vencer e ingresos queda cumplido (los eliminados no aparecen en morosos ni por vencer y sus pagos cuentan en ingresos).
 
 ## Revisión independiente
 

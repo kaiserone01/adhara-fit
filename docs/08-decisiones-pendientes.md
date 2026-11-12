@@ -59,3 +59,5 @@ Ver doc 01 §7 (S-01…S-08) y los añadidos: **S-09** (vuelto no persistido), *
 | Dinero en céntimos enteros en el dominio | ADR-011 |
 | Baseline de seguridad antes de funcionalidades | ADR-012 |
 | Baja lógica y anonimización en lugar de borrado | ADR-013 (anonimización descartada, 2026-11-12) |
+
+> Nota (2026-11-12): S-17 aprobada fija el despliegue por defecto de P-12 (VPS con Docker Compose y Caddy); el proveedor y el dominio los elige el propietario. P-15: S-19 aprobada confirma los colores y deja la tipografía definitiva del logotipo por entregar.

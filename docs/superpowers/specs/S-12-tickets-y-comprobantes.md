@@ -873,6 +873,8 @@ ADR-006 (aceptado el 2026-11-12) decidió que el sistema desarrolla por completo
 ## Enmiendas posteriores (2026-11-12)
 *Derivadas de la aprobación de otras specs. El texto anterior se conserva; donde choca, rige esta sección.*
 - Por la aprobación de S-13: guardar un correo con aceptación y `enviarTicketPorCorreo` rechazan con `ConsentimientoRevocadoError` a un miembro cuyo consentimiento está REVOCADO (REQ-S13-029); revocar el consentimiento pone en nulo `correoConsentidoEn`.
+- Por la aprobación de S-14: el reporte por tipo de comprobante queda cumplido en `obtenerIngresosPorPeriodo` mientras `comprobantesRegistroActivo` esté encendido.
+- Por la aprobación de S-19: el formateador único de fechas que usa el ticket está en `packages/design-system/formato/fechaHora.ts`.
 
 ## Revisión independiente
 

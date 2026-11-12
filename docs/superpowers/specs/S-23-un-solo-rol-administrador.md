@@ -564,6 +564,7 @@ El código heredado distingue cuatro roles (`SOCIO`, `GERENTE`, `RECEPCION` y `E
 ## Enmiendas posteriores (2026-11-12)
 *Derivadas de la aprobación de otras specs. El texto anterior se conserva; donde choca, rige esta sección.*
 - Por la aprobación de S-15: el seed crea el primer administrador con la contraseña inicial generada o dada por variable de entorno; la recuperación manual de la contraseña (SUP-S23-010) sigue sin dueño y pasa a S-17.
+- Por la aprobación de S-17: SUP-S23-010 y 5.3 se cumplen con `admin:restablecer` y `docs/ops/recuperar-acceso.md`.
 
 ## Revisión independiente
 

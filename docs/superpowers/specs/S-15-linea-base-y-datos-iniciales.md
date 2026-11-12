@@ -659,6 +659,8 @@ Las specs S-01 a S-23 cambian el esquema y dejan a S-15 tres cosas: (1) la **lí
 *Derivadas de la aprobación de otras specs. El texto anterior se conserva; donde choca, rige esta sección.*
 - Por la aprobación de S-12: el baseline incluye `TicketPago`, `EnvioTicket`, `ComprobantePago`, los enums `TipoComprobante` y `EstadoEnvio` y las columnas nuevas de `Miembro` y de `ConfiguracionNegocio`; el seed no cambia (los interruptores quedan apagados).
 - Por la aprobación de S-13: el baseline incluye `TextoLegal` con su disparador de inmutabilidad, `ConsentimientoMiembro` con su clave compuesta, CHECK y única parcial, y los campos del negocio; el seed no publica textos.
+- Por la aprobación de S-14: el baseline incluye los índices `Pago(fechaPago)` y `Miembro(estado, fechaVencimiento)`.
+- Por la aprobación de S-17: el despliegue en producción ejecuta `db:migrar` con el servicio `migrar` de `docker-compose.prod.yml` y una copia previa; el traspaso queda cumplido.
 
 ## Revisión independiente
 

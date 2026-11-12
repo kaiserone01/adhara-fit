@@ -807,6 +807,7 @@ El código heredado organiza el dinero en torno a la caja con turnos: hay que ab
 - Por la aprobación de S-18: `cobros/` deja de cargar la lista de entrenadores y `EntrenadorParaCambio` (REQ-S18-034).
 - Por la aprobación de S-11: el reporte de cobros trata cada venta como un solo producto (SUP-S08-010 y BEH-S08-008 siguen válidos); las ventas con varios productos o varias líneas ya no existen.
 - Por la aprobación de S-23: REQ-S08-009 y REQ-S08-010, con sus BEH y AC de «permisos por defecto» y de «pantalla de permisos», y los permisos `PAGOS VER`, `CREAR` y `ELIMINAR` (REQ-S08-042) se leen como «sesión válida de un administrador activo».
+- Por la aprobación de S-14: `/pagos` suma los estilos de impresión y el encabezado (REQ-S14-028 a REQ-S14-030, REQ-S14-048); la consulta única de REQ-S08-037 trae además el comprobante cuando su interruptor está encendido; `obtenerReporteCobros` reutiliza `RangoInvalidoError` de S-14; el botón de imprimir se conserva.
 
 ## Revisión independiente
 

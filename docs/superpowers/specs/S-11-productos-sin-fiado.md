@@ -592,6 +592,7 @@ El gimnasio vende artículos (agua, bebidas, guantes) además de membresías. El
 ## Enmiendas posteriores (2026-11-12)
 *Derivadas de la aprobación de otras specs. El texto anterior se conserva; donde choca, rige esta sección.*
 - Por la aprobación de S-15: SUP-S11-003 y el índice único del nombre de producto fijan la expresión `lower(btrim(regexp_replace(nombre, '\s+', ' ', 'g')))`.
+- Por la aprobación de S-14: el reporte de ventas por producto queda cumplido en `obtenerIngresosPorPeriodo`.
 
 ## Revisión independiente
 

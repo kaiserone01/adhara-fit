@@ -1,10 +1,10 @@
 ---
 id: S-19
-estado: en-revision
+estado: aprobada
 adrs: ADR-008, ADR-012, ADR-016, ADR-020, ADR-021
 depende_de: S-00, S-01, S-02, S-05, S-06, S-10, S-23
-aprobada_por:
-fecha_aprobacion:
+aprobada_por: propietario
+fecha_aprobacion: 2026-11-12
 ---
 # S-19 — Sistema de diseño y marca de Adhara Fit
 

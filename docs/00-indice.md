@@ -40,3 +40,5 @@ Sistema de gestión de gimnasio con control de accesos para **Adhara Fit** (Per�
 - Los términos de dominio se mantienen en español como en el código (`Miembro`, `Plan`, `Suscripcion`, `Turno`, `Pago`).
 - Marcadores: **[SUPUESTO]** = decidido por mí para poder avanzar, requiere confirmación; **[PREGUNTA]** = bloquea o cambia el alcance; **[VERIFICAR]** = hecho legal/tributario que debe confirmar un contador o abogado peruano.
 - "PDR" en la solicitud se interpretó como **PRD** (Product Requirements Document). Si se refería a otro documento, avísame.
+
+> Nota (2026-11-12): S-14 (reportes), S-17 (operación y despliegue) y S-19 (sistema de diseño y marca) quedaron aprobadas por el propietario.

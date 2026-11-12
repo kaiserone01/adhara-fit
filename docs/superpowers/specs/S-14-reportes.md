@@ -1,10 +1,10 @@
 ---
 id: S-14
-estado: en-revision
+estado: aprobada
 adrs: ADR-006, ADR-011, ADR-012, ADR-013, ADR-016, ADR-018, ADR-022
 depende_de: S-00, S-01, S-02, S-03, S-04, S-05, S-06, S-07, S-08, S-09, S-11, S-12, S-13, S-22, S-23
-aprobada_por:
-fecha_aprobacion:
+aprobada_por: propietario
+fecha_aprobacion: 2026-11-12
 ---
 # S-14 — Reportes: morosos, por vencer, ingresos por período e histórico imprimible
 

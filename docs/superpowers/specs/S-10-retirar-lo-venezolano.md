@@ -588,6 +588,7 @@ El código heredado nació para otro negocio, en Venezuela: convierte dólares a
 ## Enmiendas posteriores (2026-11-12)
 *Derivadas de la aprobación de otras specs. El texto anterior se conserva; donde choca, rige esta sección.*
 - Por la aprobación de S-11: `productos/tasaActual.ts` se elimina entero y no solo la tasa.
+- Por la aprobación de S-19: SUP-S10-005 y SUP-S10-006 quedan cumplidas: `temaAdhara` cambia a los valores de SUP-S19-001 y el nombre visible pasa a `LogoMarca`; REQ-S10-022 retira los archivos de marca anteriores y S-19 solo agrega `backgound.jpg` y `backgound1.mp4`.
 
 ## Revisión independiente
 

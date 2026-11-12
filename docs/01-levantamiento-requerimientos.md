@@ -128,7 +128,7 @@ Prioridad: **M** = Must (MVP), **S** = Should, **C** = Could (post-MVP). "Base" 
 ### 4.7 Acceso web privado (sin sitio público)
 | ID | Requerimiento | Pri |
 |---|---|---|
-| RF-70 | Despliegue en subdominio propio con TLS; todo requiere sesión salvo login y kiosco; sin indexación (`noindex`) | M |
+| RF-70 | Despliegue en subdominio propio con TLS; todo requiere sesión salvo login y kiosco; sin indexación (`noindex`) *(enmienda S-17, 2026-11-12: excepción de `/api/salud`, pública y sin datos del negocio)* | M |
 | RF-71 | Aviso del Libro de Reclamaciones en el local (físico o virtual) | M |
 | RF-72 | Texto de consentimiento y política de privacidad accesibles desde el alta | M |
 

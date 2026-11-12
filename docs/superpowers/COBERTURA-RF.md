@@ -124,3 +124,5 @@ Siguen abiertos: aceptación de ADR-018 (ahora también sin egresos ni fiado)
 > Nota (2026-11-12): S-11 (RF-37, productos sin fiado), S-18 (P-22, H-07) y S-23 (RF-02, RF-34, HU-40: un solo rol de administrador) quedaron aprobadas por el propietario.
 
 > Nota (2026-11-12): S-12 (RF-39: ticket y comprobantes, apagados), S-13 (RF-15, RF-71, RF-72) y S-15 (baseline y seed) quedaron aprobadas por el propietario.
+
+> Nota (2026-11-12): S-14 (RF-36, RF-62), S-17 (RF-70, RNF-07 a RNF-09) y S-19 (RNF-10, ADR-020) quedaron aprobadas por el propietario.

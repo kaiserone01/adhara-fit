@@ -146,3 +146,9 @@ Se eliminan en dominio `ReglaAbono.ts`, `CobrarAbonoPendiente`, `ListarAbonosPen
 | **Nuevo** `TextoLegal` | Crear (S-13) | versiones inmutables de consentimiento, política de privacidad y aviso de reclamaciones |
 | **Nuevo** `ConsentimientoMiembro` | Crear (S-13) | aceptación con versión, medio, fecha y revocación; única parcial sobre las no revocadas |
 | Migración inicial y seed | Crear (S-15) | primera migración versionada en `packages/db/drizzle/`; el seed crea sede «Local», negocio «Adhara Fit», 3 planes, 3 métodos de pago, 4 entrenadores, la clave del kiosco y el primer administrador |
+
+## Cambios por S-14 (2026-11-12)
+| Tabla | Acción | Detalle |
+|---|---|---|
+| `Pago` | Índice (S-14) | `Pago(fechaPago)` para los reportes por período |
+| `Miembro` | Índice (S-14) | `Miembro(estado, fechaVencimiento)` para morosos y por vencer |

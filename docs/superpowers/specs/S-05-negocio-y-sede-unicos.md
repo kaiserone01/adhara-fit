@@ -611,6 +611,8 @@ El código heredado está pensado para varias organizaciones con varias sedes ca
 - Por la aprobación de S-15: el plan B de los CHECK y únicos de `unica` con SQL en el baseline se aplica solo si `drizzle-kit` no los emite.
 - Por la aprobación de S-12: `ConfiguracionNegocio` suma `ticketCorreoActivo`, `ticketImpresionActiva` y `comprobantesRegistroActivo`, apagadas por defecto.
 - Por la aprobación de S-13: `ConfiguracionNegocio` suma `razonSocial`, `ruc` y `direccion` (REQ-S05-003).
+- Por la aprobación de S-17: REQ-S05-025 y SUP-S05-014 se leen con una ruta pública más, `/api/salud`.
+- Por la aprobación de S-19: `ConfiguracionNegocio.nombre` es el texto alternativo del logotipo.
 
 ## Revisión independiente
 

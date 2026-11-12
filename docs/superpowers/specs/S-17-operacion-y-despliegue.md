@@ -1,10 +1,10 @@
 ---
 id: S-17
-estado: en-revision
+estado: aprobada
 adrs: ADR-012, ADR-016, ADR-022
 depende_de: S-00, S-01, S-02, S-05, S-06, S-09, S-15, S-22, S-23
-aprobada_por:
-fecha_aprobacion:
+aprobada_por: propietario
+fecha_aprobacion: 2026-11-12
 ---
 # S-17 — Operación y despliegue: producción con TLS, respaldos, restauración, monitoreo y recuperación de acceso
 

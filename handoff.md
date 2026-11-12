@@ -51,9 +51,9 @@ Los 22 ADR están aceptados (001 a 022); ninguno queda propuesto ni retirado. AD
 | S-15 | **aprobada** (propietario, 2026-11-12, con los valores por defecto). 44 REQ, 22 BEH, 4 INV, 16 AC; `spec-lint`: 0 errores, 0 avisos. Baseline, servicio `migrar` y seed repetible. Enmiendas en S-00, S-01, S-05, S-06, S-11, S-22, S-23 |
 | S-12 | **aprobada** (propietario, 2026-11-12, con los valores por defecto). 62 REQ, 30 BEH, 5 INV, 22 AC; `spec-lint`: 0 errores, 0 avisos. Tickets y comprobantes apagados. Enmiendas en S-00, S-05, S-06, S-07, S-09, S-15, S-22 |
 | S-13 | **aprobada** (propietario, 2026-11-12, con los valores por defecto). 51 REQ, 29 BEH, 5 INV, 20 AC; `spec-lint`: 0 errores, 0 avisos. Consentimiento, textos legales, aviso de reclamaciones y documento enmascarado. Enmiendas en S-04, S-05, S-06, S-09, S-12, S-15, S-22 |
-| S-14 | **en revisión, veredicto conciliado** (espera «S-14 aprobada»). Reportes: morosos, por vencer, ingresos por período e histórico imprimible; 54 REQ, 25 BEH, 4 INV, 17 AC; `spec-lint`: 0 errores, 0 avisos |
-| S-17 | **en revisión, veredicto conciliado** (espera «S-17 aprobada»). Operación: VPS con Docker, Caddy (TLS), respaldos cifrados con `age`, restauración, `/api/salud`, registros JSON, despliegue y `admin:restablecer`; 78 REQ, 33 BEH, 5 INV, 24 AC; `spec-lint`: 0 errores, 0 avisos |
-| S-19 | **en revisión, veredicto conciliado** (espera «S-19 aprobada»). Sistema de diseño y marca: tokens, tipografías propias, componentes, galería, contraste y marca; 76 REQ, 33 BEH, 5 INV, 22 AC; `spec-lint`: 0 errores, 0 avisos |
+| S-14 | **aprobada** (propietario, 2026-11-12, con los valores por defecto). 54 REQ, 25 BEH, 4 INV, 17 AC; `spec-lint`: 0 errores, 0 avisos. Reportes de morosos, por vencer, ingresos e histórico imprimible. Enmiendas en S-01, S-04, S-08, S-09, S-11, S-12, S-13, S-15, S-22 |
+| S-17 | **aprobada** (propietario, 2026-11-12, con los valores por defecto). 78 REQ, 33 BEH, 5 INV, 24 AC; `spec-lint`: 0 errores, 0 avisos. VPS con Docker y Caddy, respaldos cifrados, `/api/salud`, registros JSON, despliegue y `admin:restablecer`. Enmiendas en S-00, S-01, S-02, S-05, S-06, S-15, S-22, S-23 y `docs/01` (RF-70) |
+| S-19 | **aprobada** (propietario, 2026-11-12, con los valores por defecto, incluidas las dos desviaciones de ADR-020: sin Bebas Neue y sin redibujar el logotipo en SVG). 76 REQ, 33 BEH, 5 INV, 22 AC; `spec-lint`: 0 errores, 0 avisos. Enmiendas en S-00, S-01, S-02, S-05, S-06, S-10, S-12, S-22 |
 | S-20, S-21 | **entran** (el propietario aprobó la lista completa el 2026-11-12); sin redactar todavía. S-16 (importador) descartada. Mapa en lenguaje simple: `docs/superpowers/BACKLOG-SPECS.md`; cruce técnico: `COBERTURA-RF.md` |
 
 - Defaults asumidos hasta ahora: ninguno de `docs/08`. Documentación v0.4 del zip: **importada íntegra** a `docs/` (40 archivos; `diff -r` vacío y manifiesto sha256 idéntico; el commit de importación solo contiene esos archivos).
@@ -149,6 +149,7 @@ Los 22 ADR están aceptados (001 a 022); ninguno queda propuesto ni retirado. AD
 - `docs/superpowers/specs/S-15-linea-base-y-datos-iniciales.md`, `S-12-tickets-y-comprobantes.md`, `S-13-consentimiento-y-aviso-legal.md`: redactadas, revisadas por el `spec-reviewer` y corregidas (2026-11-12); a la espera de aprobación.
 - `docs/superpowers/specs/S-15`, `S-12`, `S-13`: aprobadas (2026-11-12); `S-00`, `S-01`, `S-04`, `S-05`, `S-06`, `S-07`, `S-09`, `S-10`, `S-11`, `S-12`, `S-15`, `S-22`, `S-23`: «Enmiendas posteriores» ampliadas; `docs/06`, `docs/datos-iniciales.md`, `COBERTURA-RF.md` y `BACKLOG-SPECS.md`: notas y estados.
 - `docs/superpowers/specs/S-14-reportes.md`, `S-17-operacion-y-despliegue.md`, `S-19-sistema-de-diseno-y-marca.md`: redactadas; S-14 y S-17 revisadas y corregidas, S-19 en revisión (2026-11-12).
+- `docs/superpowers/specs/S-14`, `S-17`, `S-19`: aprobadas (2026-11-12); enmiendas en `S-00`, `S-01`, `S-02`, `S-04`, `S-05`, `S-06`, `S-08`, `S-09`, `S-10`, `S-11`, `S-12`, `S-13`, `S-15`, `S-22`, `S-23`; `docs/01` (RF-70), `docs/06`, `docs/08`, `docs/00-indice.md`, `COBERTURA-RF.md` y `BACKLOG-SPECS.md`: notas y estados.
 
 ## 4. Intentos fallidos
 - 2026-11-12: se intentó verificar la sintaxis de hooks, permisos y subagentes en la documentación oficial (`code.claude.com`); el host no resuelve desde la sesión. Resultado: la configuración de `.claude/` se escribió de memoria y queda **no verificada contra la documentación vigente**. No reintentar hasta que el propietario permita el host.
@@ -196,7 +197,7 @@ Los 22 ADR están aceptados (001 a 022); ninguno queda propuesto ni retirado. AD
 
 ## 5. Próximos pasos
 1. Leer handoff.md y ejecutar /preflight.
-2. Esperar «S-14 aprobada», «S-17 aprobada» y «S-19 aprobada» (veredictos conciliados; resumen enviado). Al aprobar cada una: marcar `estado: aprobada`, registrar las enmiendas de su sección 5.2, actualizar BACKLOG-SPECS y este handoff. Después redactar, revisar y aprobar S-20 (vitrina de TV) y S-21 (check-in en TV).
+2. Redactar, revisar y aprobar de una en una S-20 (vitrina de TV) y S-21 (check-in en TV, que carga `kiosk` con `?superficie=tv`); ambas consumen los tokens de S-19 y limpian sus exenciones. Después, el plan global (G6).
 3. Terminadas las specs, redactar el plan global (G6) en `docs/superpowers/plans/`: orden, dependencias y riesgos; decidir si S-08, S-10 y S-11 van antes de S-05 (S-05 edita archivos que ellas borran). G6 termina la sesión de diseño.
 4. Pedir al propietario: repo privado antes de cualquier push; originales del logotipo y tipografía; periodo de retención (P-20); revisión legal de la Ley 29733 (se descartó anonimizar).
 5. **Push:** el propietario ordenó (2026-11-12) levantar el bloqueo y empujar a `main`; tras el primer push, empujar el avance de cada puerta o cuando el propietario lo pida, siempre en avance rápido.

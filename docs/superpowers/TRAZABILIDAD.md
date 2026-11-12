@@ -684,7 +684,7 @@ Archivo: `S-13-consentimiento-y-aviso-legal.md` · REQ: 51 · BEH: 29 · INV: 5 
 | REQ-S13-050 | MUST | BEH-S13-010 | — | AC-S13-007 (integracion) | pendiente |
 | REQ-S13-051 | MUST | BEH-S13-016 | — | AC-S13-010 (integracion) | pendiente |
 
-## S-14 — Reportes: morosos, por vencer, ingresos por período e histórico imprimible (en-revision)
+## S-14 — Reportes: morosos, por vencer, ingresos por período e histórico imprimible (aprobada)
 
 Archivo: `S-14-reportes.md` · REQ: 54 · BEH: 25 · INV: 4 · AC: 17
 
@@ -796,7 +796,7 @@ Archivo: `S-15-linea-base-y-datos-iniciales.md` · REQ: 44 · BEH: 22 · INV: 4 
 | REQ-S15-043 | MUST | BEH-S15-021 | INV-S15-004 | AC-S15-015 (unitario) | pendiente |
 | REQ-S15-044 | MUST | BEH-S15-022 | — | AC-S15-016 (manual) | pendiente |
 
-## S-17 — Operación y despliegue: producción con TLS, respaldos, restauración, monitoreo y recuperación de acceso (en-revision)
+## S-17 — Operación y despliegue: producción con TLS, respaldos, restauración, monitoreo y recuperación de acceso (aprobada)
 
 Archivo: `S-17-operacion-y-despliegue.md` · REQ: 78 · BEH: 33 · INV: 5 · AC: 24
 
@@ -927,7 +927,7 @@ Archivo: `S-18-entrenadores.md` · REQ: 39 · BEH: 20 · INV: 4 · AC: 11
 | REQ-S18-038 | MUST | BEH-S18-020 | — | AC-S18-011 (manual) | pendiente |
 | REQ-S18-039 | MUST | BEH-S18-014 | INV-S18-003 | AC-S18-008 (integracion) | pendiente |
 
-## S-19 — Sistema de diseño y marca de Adhara Fit (en-revision)
+## S-19 — Sistema de diseño y marca de Adhara Fit (aprobada)
 
 Archivo: `S-19-sistema-de-diseno-y-marca.md` · REQ: 76 · BEH: 32 · INV: 5 · AC: 22
 

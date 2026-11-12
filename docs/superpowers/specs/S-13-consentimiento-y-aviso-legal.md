@@ -783,6 +783,10 @@ El gimnasio guarda datos personales de sus miembros (nombre, documento de identi
 - ¿La lista de miembros oculta el documento (solo los últimos 3 caracteres) y la búsqueda se hace en el servidor con tope de 100? Default: sí (SUP-S13-008).
 - ¿Las tres plantillas de texto legal se entregan como borradores para que las revise un abogado y tú publicas el texto revisado desde la pantalla? Default: sí (SUP-S13-010).
 
+## Enmiendas posteriores (2026-11-12)
+*Derivadas de la aprobación de otras specs. El texto anterior se conserva; donde choca, rige esta sección.*
+- Por la aprobación de S-14: la lista de miembros deja de ofrecer los filtros de fecha; el filtro por plan pasa a ser el parámetro `planId` del servidor; `enmascararDocumento` es la función compartida del enmascarado (también la usa S-21).
+
 ## Revisión independiente
 
 Revisor: subagente `spec-reviewer` (solo lectura, sin ejecutar `spec-lint`), 2026-11-12, sobre el primer borrador. Veredicto global: **REQUIERE CAMBIOS**. Resumen fiel:

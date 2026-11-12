@@ -725,6 +725,8 @@ El código heredado identifica al miembro por `cedula`, un texto libre que solo 
 - Por la aprobación de S-15: el plan B de los CHECK de documento con SQL en el baseline se aplica solo si `drizzle-kit` no los emite.
 - Por la aprobación de S-12: `Miembro` suma `correo` y `correoConsentidoEn`.
 - Por la aprobación de S-13: el traspaso de `GET api/miembros` queda cumplido; SUP-S06-008 se lee con la lista enmascarada (últimos 3 caracteres) y la búsqueda en el servidor.
+- Por la aprobación de S-17: los `console.error` de `api/checkin`, `api/miembros` y `lib/activacion.ts` pasan al módulo de registros JSON.
+- Por la aprobación de S-19: el nombre de la caché `kiosco-shell-v6` sube a la versión siguiente a la que deje S-10.
 
 ## Revisión independiente
 

@@ -457,6 +457,39 @@ Archivo: `S-09-eliminar-miembro.md` · REQ: 27 · BEH: 19 · INV: 4 · AC: 9
 | REQ-S09-026 | MUST | BEH-S09-018 | INV-S09-004 | AC-S09-008 (unitario) | pendiente |
 | REQ-S09-027 | MUST | BEH-S09-019 | — | AC-S09-009 (manual) | pendiente |
 
+## S-10 — Retirar lo venezolano: tasa de cambio, padrón de Excel, bolívares, hora de Caracas y la marca anterior (en-revision)
+
+Archivo: `S-10-retirar-lo-venezolano.md` · REQ: 26 · BEH: 14 · INV: 4 · AC: 8
+
+| REQ | Prioridad | BEH | INV | AC (método) | Test |
+|---|---|---|---|---|---|
+| REQ-S10-001 | MUST | BEH-S10-001 | INV-S10-001 | AC-S10-001 (sql) | pendiente |
+| REQ-S10-002 | MUST | BEH-S10-001 | INV-S10-001 | AC-S10-001 (sql) | pendiente |
+| REQ-S10-003 | MUST | BEH-S10-001 | INV-S10-001 | AC-S10-001 (sql) | pendiente |
+| REQ-S10-004 | MUST | BEH-S10-002 | — | AC-S10-002 (integracion) | pendiente |
+| REQ-S10-005 | MUST | BEH-S10-002 | — | AC-S10-002 (integracion) | pendiente |
+| REQ-S10-006 | MUST | BEH-S10-002, BEH-S10-014 | — | AC-S10-002 (integracion), AC-S10-003 (unitario) | pendiente |
+| REQ-S10-007 | MUST | BEH-S10-003, BEH-S10-014 | INV-S10-004 | AC-S10-003 (unitario) | pendiente |
+| REQ-S10-008 | MUST | BEH-S10-004 | INV-S10-002 | AC-S10-001 (sql) | pendiente |
+| REQ-S10-009 | MUST | BEH-S10-005 | — | AC-S10-002 (integracion) | pendiente |
+| REQ-S10-010 | MUST | BEH-S10-004 | — | AC-S10-001 (sql) | pendiente |
+| REQ-S10-011 | MUST | BEH-S10-005 | — | AC-S10-002 (integracion) | pendiente |
+| REQ-S10-012 | MUST | BEH-S10-006 | INV-S10-002 | AC-S10-001 (sql), AC-S10-004 (integracion) | pendiente |
+| REQ-S10-013 | MUST | BEH-S10-006 | — | AC-S10-004 (integracion) | pendiente |
+| REQ-S10-014 | MUST | BEH-S10-007 | — | AC-S10-005 (manual) | pendiente |
+| REQ-S10-015 | MUST | BEH-S10-007 | — | AC-S10-005 (manual) | pendiente |
+| REQ-S10-016 | MUST | BEH-S10-008 | — | AC-S10-005 (manual) | pendiente |
+| REQ-S10-017 | MUST | BEH-S10-009 | — | AC-S10-005 (manual) | pendiente |
+| REQ-S10-018 | MUST | BEH-S10-009 | — | AC-S10-005 (manual) | pendiente |
+| REQ-S10-019 | MUST | BEH-S10-009 | — | AC-S10-005 (manual) | pendiente |
+| REQ-S10-020 | MUST | BEH-S10-010 | — | AC-S10-005 (manual) | pendiente |
+| REQ-S10-021 | MUST | BEH-S10-011 | INV-S10-003 | AC-S10-006 (unitario) | pendiente |
+| REQ-S10-022 | MUST | BEH-S10-011 | INV-S10-003 | AC-S10-006 (unitario) | pendiente |
+| REQ-S10-023 | MUST | BEH-S10-012 | — | AC-S10-007 (manual) | pendiente |
+| REQ-S10-024 | MUST | BEH-S10-013 | — | AC-S10-008 (unitario) | pendiente |
+| REQ-S10-025 | MUST | BEH-S10-007 | — | AC-S10-005 (manual) | pendiente |
+| REQ-S10-026 | MUST | BEH-S10-008 | — | AC-S10-005 (manual) | pendiente |
+
 ## S-22 — Capa de datos con Drizzle: esquema, repositorios, transacciones y retiro de Prisma (aprobada)
 
 Archivo: `S-22-capa-de-datos-con-drizzle.md` · REQ: 30 · BEH: 27 · INV: 6 · AC: 28

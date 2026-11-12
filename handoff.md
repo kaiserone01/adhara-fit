@@ -45,6 +45,8 @@ Siete ADR están aceptados (001, 005, 009, 012, 014, 016, 017). Solo el propieta
 - Defaults aplicados en S-00 (marcados «asumido, por validar» como SUP-S00-001…014): apps diferidas se omiten (D3), migraciones excluidas con `prisma db push` solo en la base desechable de Compose (D12), gitleaks sí (D13), `npm audit` falla en high/critical no presentes en la línea base, texto de LICENSE, S-00 incluye la comprobación de `politica` (D19), branding mínimo (plan 0.9) pasa a S-10, el seed del Repo A no se importa, Compose solo con PostgreSQL y `web-admin`, regla propia de gitleaks para pruebas, `docs/` del Repo A no se importa.
 - **Decisión de negocio nueva (2026-11-12):** no habrá turnos de caja ni arqueo (registrada en ADR-018, *propuesto*). Default asumido, por validar: los egresos se conservan como registro de gasto con fecha y usuario, sin turno.
 - **Hueco de alcance detectado por el propietario:** las funcionalidades de productos (RF-37, RF-38) no tenían spec ni tarea; el cruce completo de requisitos está en `docs/superpowers/COBERTURA-RF.md` (propone S-11…S-18; el fiado, P-06, espera decisión).
+- **Decisión de negocio nueva (2026-11-12):** Adhara Fit no es un SaaS multi-organización; es un solo negocio. Registrada en ADR-019 (*propuesto*), con la opción A (una sola fila `Organizacion` oculta) asumida por defecto, por validar. Pendiente: que el propietario elija A o B (eliminar `Organizacion`/`organizacionId`, alcance no medido) y si se renombra «Adhara Fit Platform» en el PRD.
+- **Sistema de diseño:** solo existe ADR-008 (paleta, tokens, contrastes, estado «activo»); faltan inventario de pantallas y componentes, escala tipográfica, patrones y estados. Propuesta S-19 en `COBERTURA-RF.md` §6; necesita el logo (PDF fuera del repo), P-15 y la tipografía.
 - **Decisiones pendientes del propietario:** aprobar S-00 o pedir cambios; aceptar ADR-018 y decidir si se amplía el backlog (COBERTURA-RF §4 y §5); responder las D2–D20 que sigan abiertas (`docs/adr/REVISION-ADR.md` §5 y §8.4); proporcionar la copia local del Repo A; poner el repo en privado; definir `adhara.ownerEmail`, firma y `allowedSignersFile` (ver `docs/ops/firma-commits.md`); decidir si se hace push desde la nube o se pasa a local; permitir el host `code.claude.com`. (Texto anterior conservado a continuación.)
 
 ## 3. Archivos y cambios
@@ -73,7 +75,9 @@ Siete ADR están aceptados (001, 005, 009, 012, 014, 016, 017). Solo el propieta
 - `docs/adr/ADR-001, 005, 009, 012, 014, 016, 017`: línea `Estado` cambiada a `aceptado (confirmado por el propietario, 2026-11-12)` por orden expresa (un commit por ADR).
 - `docs/adr/ADR-018-sin-turnos-de-caja-ni-arqueo.md`: nuevo ADR propuesto.
 - `docs/superpowers/COBERTURA-RF.md`: cruce de requisitos contra specs, propuesta S-11…S-18 y cambio de alcance por ADR-018.
-- `handoff.md`: actualizado al cierre de la revisión de S-00.
+- `docs/adr/ADR-019-organizacion-unica.md`: nuevo ADR propuesto (organización única, no SaaS).
+- `docs/superpowers/COBERTURA-RF.md`: añadidas S-19 (sistema de diseño y marca), §6 (lo documentado y lo que falta del diseño) y §7 (organización única).
+- `handoff.md`: actualizado tras el informe de diseño y enfoque de negocio.
 
 ## 4. Intentos fallidos
 - 2026-11-12: se intentó verificar la sintaxis de hooks, permisos y subagentes en la documentación oficial (`code.claude.com`); el host no resuelve desde la sesión. Resultado: la configuración de `.claude/` se escribió de memoria y queda **no verificada contra la documentación vigente**. No reintentar hasta que el propietario permita el host.
@@ -99,4 +103,5 @@ Siete ADR están aceptados (001, 005, 009, 012, 014, 016, 017). Solo el propieta
 3. Pedir al propietario: repo privado, `adhara.ownerEmail`, firma y `allowedSignersFile`; y si el push se hace desde la nube o en local.
 4. Solo con orden expresa y ADR por ADR: cambiar estados a `aceptado (confirmado por el propietario, AAAA-MM-DD)`. Si acepta ADR-018, enmendar ADR-002, 003, 010 y 011 y reformular S-08 antes de redactarla.
 5. Seguir E5 con las demás specs, de una en una, en el orden S-01…S-10 más las que el propietario apruebe de S-11…S-18; cada una en borrador mientras sus ADR estén *propuestos*; no pasar a revisión sin ADR aceptados. S-04 queda condicionada a la línea base de tests (requiere copia local del Repo A) y ya no exige turno abierto. Solo con «S-xx aprobada» se marca `estado: aprobada`.
-6. Opcional, en una sesión nueva: comprobar las skills `brainstorming`, `writing-plans` y `using-superpowers` de la cuenta antes de usarlas en E5/E6.
+6. Esperar la decisión del propietario sobre ADR-019 (A o B) y sobre S-19 (sistema de diseño y marca); para S-19 pedir el logo, P-15 y la tipografía. Si elige la opción B, medir primero las coincidencias de «organización» en el Repo A (ampliar `generar_inventario.py`).
+7. Opcional, en una sesión nueva: comprobar las skills `brainstorming`, `writing-plans` y `using-superpowers` de la cuenta antes de usarlas en E5/E6.

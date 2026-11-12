@@ -1010,6 +1010,59 @@ Archivo: `S-19-sistema-de-diseno-y-marca.md` · REQ: 76 · BEH: 32 · INV: 5 · 
 | REQ-S19-075 | MUST | BEH-S19-006 | — | AC-S19-004 (unitario) | pendiente |
 | REQ-S19-076 | SHOULD | BEH-S19-032 | — | AC-S19-018 (unitario) | pendiente |
 
+## S-20 — Vitrina de TV: carteles en soles, administración, SSE y APK (en-revision)
+
+Archivo: `S-20-vitrina-de-tv.md` · REQ: 46 · BEH: 22 · INV: 4 · AC: 20
+
+| REQ | Prioridad | BEH | INV | AC (método) | Test |
+|---|---|---|---|---|---|
+| REQ-S20-001 | MUST | BEH-S20-001 | — | AC-S20-001 (integracion) | pendiente |
+| REQ-S20-002 | MUST | BEH-S20-001 | — | AC-S20-001 (integracion) | pendiente |
+| REQ-S20-003 | MUST | BEH-S20-002 | INV-S20-001 | AC-S20-002 (integracion) | pendiente |
+| REQ-S20-004 | MUST | BEH-S20-002 | INV-S20-001 | AC-S20-002 (integracion) | pendiente |
+| REQ-S20-005 | MUST | BEH-S20-002 | INV-S20-001 | AC-S20-002 (integracion) | pendiente |
+| REQ-S20-006 | MUST | BEH-S20-003 | INV-S20-001 | AC-S20-002 (integracion), AC-S20-003 (unitario), AC-S20-020 (manual) | pendiente |
+| REQ-S20-007 | MUST | BEH-S20-004 | INV-S20-003 | AC-S20-004 (unitario) | pendiente |
+| REQ-S20-008 | MUST | BEH-S20-004 | INV-S20-003 | AC-S20-004 (unitario) | pendiente |
+| REQ-S20-009 | MUST | BEH-S20-003 | INV-S20-003 | AC-S20-003 (unitario), AC-S20-004 (unitario) | pendiente |
+| REQ-S20-010 | MUST | BEH-S20-005 | — | AC-S20-005 (integracion) | pendiente |
+| REQ-S20-011 | MUST | BEH-S20-005 | — | AC-S20-005 (integracion) | pendiente |
+| REQ-S20-012 | MUST | BEH-S20-006, BEH-S20-007 | INV-S20-002 | AC-S20-006 (integracion), AC-S20-007 (integracion) | pendiente |
+| REQ-S20-013 | MUST | BEH-S20-006, BEH-S20-007 | INV-S20-002 | AC-S20-006 (integracion), AC-S20-007 (integracion) | pendiente |
+| REQ-S20-014 | MUST | BEH-S20-006, BEH-S20-007 | INV-S20-002 | AC-S20-006 (integracion), AC-S20-007 (integracion) | pendiente |
+| REQ-S20-015 | MUST | BEH-S20-006 | INV-S20-002 | AC-S20-006 (integracion), AC-S20-007 (integracion) | pendiente |
+| REQ-S20-016 | MUST | BEH-S20-008 | INV-S20-002 | AC-S20-006 (integracion), AC-S20-007 (integracion) | pendiente |
+| REQ-S20-017 | MUST | BEH-S20-009 | — | AC-S20-008 (integracion) | pendiente |
+| REQ-S20-018 | MUST | BEH-S20-009 | — | AC-S20-008 (integracion) | pendiente |
+| REQ-S20-019 | MUST | BEH-S20-009 | — | AC-S20-008 (integracion) | pendiente |
+| REQ-S20-020 | MUST | BEH-S20-010 | — | AC-S20-009 (integracion) | pendiente |
+| REQ-S20-021 | MUST | BEH-S20-010 | — | AC-S20-009 (integracion) | pendiente |
+| REQ-S20-022 | MUST | BEH-S20-011 | — | AC-S20-010 (unitario), AC-S20-020 (manual) | pendiente |
+| REQ-S20-023 | MUST | BEH-S20-011 | — | AC-S20-010 (unitario), AC-S20-020 (manual) | pendiente |
+| REQ-S20-024 | MUST | BEH-S20-011 | — | AC-S20-010 (unitario) | pendiente |
+| REQ-S20-025 | MUST | BEH-S20-011 | — | AC-S20-010 (unitario) | pendiente |
+| REQ-S20-026 | MUST | BEH-S20-012 | — | AC-S20-011 (integracion) | pendiente |
+| REQ-S20-027 | MUST | BEH-S20-013 | — | AC-S20-012 (integracion) | pendiente |
+| REQ-S20-028 | MUST | BEH-S20-013 | — | AC-S20-012 (integracion) | pendiente |
+| REQ-S20-029 | MUST | BEH-S20-014 | — | AC-S20-013 (unitario) | pendiente |
+| REQ-S20-030 | MUST | BEH-S20-015 | — | AC-S20-014 (unitario), AC-S20-020 (manual) | pendiente |
+| REQ-S20-031 | MUST | BEH-S20-015 | — | AC-S20-014 (unitario) | pendiente |
+| REQ-S20-032 | MUST | BEH-S20-016 | — | AC-S20-015 (unitario) | pendiente |
+| REQ-S20-033 | MUST | BEH-S20-016 | — | AC-S20-015 (unitario) | pendiente |
+| REQ-S20-034 | MUST | BEH-S20-016 | — | AC-S20-015 (unitario) | pendiente |
+| REQ-S20-035 | MUST | BEH-S20-017 | — | AC-S20-014 (unitario), AC-S20-017 (unitario) | pendiente |
+| REQ-S20-036 | MUST | BEH-S20-018 | INV-S20-004 | AC-S20-016 (unitario), AC-S20-018 (unitario) | pendiente |
+| REQ-S20-037 | MUST | BEH-S20-018 | — | AC-S20-016 (unitario) | pendiente |
+| REQ-S20-038 | MUST | BEH-S20-018 | — | AC-S20-016 (unitario) | pendiente |
+| REQ-S20-039 | MUST | BEH-S20-019 | — | AC-S20-016 (unitario) | pendiente |
+| REQ-S20-040 | MUST | BEH-S20-017 | — | AC-S20-014 (unitario), AC-S20-017 (unitario) | pendiente |
+| REQ-S20-041 | MUST | BEH-S20-017 | — | AC-S20-014 (unitario), AC-S20-017 (unitario) | pendiente |
+| REQ-S20-042 | MUST | BEH-S20-020 | — | AC-S20-011 (integracion) | pendiente |
+| REQ-S20-043 | MUST | BEH-S20-021 | INV-S20-004 | AC-S20-018 (unitario) | pendiente |
+| REQ-S20-044 | MUST | BEH-S20-021 | INV-S20-004 | AC-S20-018 (unitario) | pendiente |
+| REQ-S20-045 | MUST | BEH-S20-021 | INV-S20-004 | AC-S20-018 (unitario) | pendiente |
+| REQ-S20-046 | MUST | BEH-S20-022 | — | AC-S20-019 (manual) | pendiente |
+
 ## S-21 — Check-in en smart-TV: entrada con teclado numérico USB, enmascarado, límite de intentos y APK (en-revision)
 
 Archivo: `S-21-checkin-en-smart-tv.md` · REQ: 44 · BEH: 20 · INV: 4 · AC: 15

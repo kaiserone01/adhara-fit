@@ -4,7 +4,7 @@
 Construir **Adhara Fit** (gimnasio en Perú, un local, PEN, sistema web interno) con Spec-Driven Development. Esta etapa es de diseño y fundaciones: arnés, ADRs, specs y plan; sin código de producto.
 
 ## 2. Estado actual
-- **Puerta actual: G5.00 (spec S-00) — en revisión, pendiente de «S-00 aprobada» del propietario.** G1, G2, G3 y G4 aprobadas (2026-11-12). El propietario aceptó ADR-001, 005, 009, 012, 014, 016 y 017 (2026-11-12). D2–D20 siguen sin respuesta salvo esas aceptaciones.
+- **Puerta actual: G5.00 (spec S-00) — vuelve a BORRADOR por el cambio de alcance; sin aprobar.** G1, G2, G3 y G4 aprobadas (2026-11-12). Aceptados por el propietario: ADR-001, 005, 009, 012, 014, 016 y 017. La vitrina y el check-in en smart-TV entran en el alcance (ADR-021 propuesto, enmienda a ADR-009), así que S-00 cita un ADR propuesto y no puede estar en revisión hasta que el propietario lo acepte.
 - **G0 superado en modo relajado por decisión del propietario (2026-11-12, America/Lima).** Último pre-flight, con los 4 controles en FAIL:
 
 | Control | Resultado | Motivo |
@@ -27,14 +27,17 @@ Construir **Adhara Fit** (gimnasio en Perú, un local, PEN, sistema web interno)
 | ADR-014, 016, 017 | **aceptado (confirmado por el propietario, 2026-11-12)** |
 | ADR-015 | **propuesto** (el revisor pidió cambios menores; ya corregidos) |
 | ADR-018 | **propuesto** (nuevo, 2026-11-12): sin turnos de caja ni arqueo, decisión de negocio del propietario. Enmendará ADR-002, 003, 010 y 011 y afecta a S-04, S-08 y S-11 |
+| ADR-019 | **propuesto**: negocio único, **opción B elegida por el propietario** (eliminar `Organizacion`/`organizacionId`); falta su orden de aceptación y medir el alcance |
+| ADR-020 | **propuesto** (nuevo): sistema de diseño profesional y completo con rebranding total y persistencia visual; tipografía por validar |
+| ADR-021 | **propuesto** (nuevo): vitrina y check-in en smart-TV dentro del alcance; enmienda la tabla de ADR-009 (aceptado). `worker` y `kiosk-host` siguen fuera |
 
 Siete ADR están aceptados (001, 005, 009, 012, 014, 016, 017). Solo el propietario cambia un estado, ADR por ADR, registrándolo como `aceptado (confirmado por el propietario, AAAA-MM-DD)`.
 
 | Spec | Estado |
 |---|---|
-| S-00 | **en-revision** (26 REQ, 21 BEH, 6 INV, 18 AC; `spec-lint`: 0 errores, 0 avisos). Revisión independiente: «REQUIERE CAMBIOS» (pegada íntegra en la spec); corregida por el autor y **no vuelta a pasar por el revisor**. Espera «S-00 aprobada» |
+| S-00 | **borrador** (26 REQ, 21 BEH, 6 INV, 18 AC; `spec-lint`: 0 errores y 1 aviso A02 por ADR-021 propuesto). Tuvo una revisión independiente («REQUIERE CAMBIOS», pegada en la spec) sobre el alcance anterior; el alcance cambió y **la versión actual no está revisada**. Importa cinco apps (`web-admin`, `kiosk`, `kiosk-tv`, `vitrina`, `vitrina-tv`) |
 | S-01 … S-10 | no iniciadas. Se redactan de una en una y cada una exige sus ADR aceptados antes de la revisión. Con ADR-018 propuesto, S-08 se reformula (registro continuo de cobros y reporte diario) y S-04 y S-11 pierden el «turno obligatorio» |
-| S-11 … S-18 | propuestas en `docs/superpowers/COBERTURA-RF.md` (productos, comprobantes, consentimiento, reportes, baseline y seed, importador, operación, entrenadores); pendientes de decisión del propietario |
+| S-11 … S-21 | propuestas en `docs/superpowers/COBERTURA-RF.md`: productos, comprobantes, consentimiento, reportes, baseline y seed, importador, operación, entrenadores, **S-19 sistema de diseño y rebranding (aprobada como ítem del backlog)**, **S-20 vitrina de TV** y **S-21 check-in en smart-TV**; el resto pendiente de decisión del propietario |
 
 - Defaults asumidos hasta ahora: ninguno de `docs/08`. Documentación v0.4 del zip: **importada íntegra** a `docs/` (40 archivos; `diff -r` vacío y manifiesto sha256 idéntico; el commit de importación solo contiene esos archivos).
 - `docs/12` cita como texto las líneas prohibidas (son las reglas del propietario); el escaneo de commits aplica a mensajes, no a archivos.
@@ -45,8 +48,8 @@ Siete ADR están aceptados (001, 005, 009, 012, 014, 016, 017). Solo el propieta
 - Defaults aplicados en S-00 (marcados «asumido, por validar» como SUP-S00-001…014): apps diferidas se omiten (D3), migraciones excluidas con `prisma db push` solo en la base desechable de Compose (D12), gitleaks sí (D13), `npm audit` falla en high/critical no presentes en la línea base, texto de LICENSE, S-00 incluye la comprobación de `politica` (D19), branding mínimo (plan 0.9) pasa a S-10, el seed del Repo A no se importa, Compose solo con PostgreSQL y `web-admin`, regla propia de gitleaks para pruebas, `docs/` del Repo A no se importa.
 - **Decisión de negocio nueva (2026-11-12):** no habrá turnos de caja ni arqueo (registrada en ADR-018, *propuesto*). Default asumido, por validar: los egresos se conservan como registro de gasto con fecha y usuario, sin turno.
 - **Hueco de alcance detectado por el propietario:** las funcionalidades de productos (RF-37, RF-38) no tenían spec ni tarea; el cruce completo de requisitos está en `docs/superpowers/COBERTURA-RF.md` (propone S-11…S-18; el fiado, P-06, espera decisión).
-- **Decisión de negocio nueva (2026-11-12):** Adhara Fit no es un SaaS multi-organización; es un solo negocio. Registrada en ADR-019 (*propuesto*), con la opción A (una sola fila `Organizacion` oculta) asumida por defecto, por validar. Pendiente: que el propietario elija A o B (eliminar `Organizacion`/`organizacionId`, alcance no medido) y si se renombra «Adhara Fit Platform» en el PRD.
-- **Sistema de diseño:** solo existe ADR-008 (paleta, tokens, contrastes, estado «activo»); faltan inventario de pantallas y componentes, escala tipográfica, patrones y estados. Propuesta S-19 en `COBERTURA-RF.md` §6; necesita el logo (PDF fuera del repo), P-15 y la tipografía.
+- **Decisiones de negocio del propietario (2026-11-12, segunda ronda):** (1) negocio único, se elimina `Organizacion` (ADR-019, opción B); el PRD ya se renombró a «negocio único»; (2) rebranding total y sistema de diseño profesional y completo (ADR-020); la tipografía y más detalles de diseño se validan después; (3) la vitrina y el check-in en smart-TV entran en el alcance (ADR-021); (4) S-19 aprobada como ítem del backlog. `CLAUDE.md` §5 y constitución C-24 ya no excluyen vitrina/TV.
+- **Sistema de diseño:** antes solo existía ADR-008 (paleta, tokens, contrastes); ahora ADR-020 y S-19 definen el alcance completo. Faltan insumos: logo vectorial (el PDF está fuera del repo), P-15 y la tipografía. Pendiente de cerrar con el propietario: cómo se digita el DNI en el TV, qué muestra la vitrina, el fiado (P-06) y `kiosk-host`.
 - **Decisiones pendientes del propietario:** aprobar S-00 o pedir cambios; aceptar ADR-018 y decidir si se amplía el backlog (COBERTURA-RF §4 y §5); responder las D2–D20 que sigan abiertas (`docs/adr/REVISION-ADR.md` §5 y §8.4); proporcionar la copia local del Repo A; poner el repo en privado; definir `adhara.ownerEmail`, firma y `allowedSignersFile` (ver `docs/ops/firma-commits.md`); decidir si se hace push desde la nube o se pasa a local; permitir el host `code.claude.com`. (Texto anterior conservado a continuación.)
 
 ## 3. Archivos y cambios
@@ -77,7 +80,10 @@ Siete ADR están aceptados (001, 005, 009, 012, 014, 016, 017). Solo el propieta
 - `docs/superpowers/COBERTURA-RF.md`: cruce de requisitos contra specs, propuesta S-11…S-18 y cambio de alcance por ADR-018.
 - `docs/adr/ADR-019-organizacion-unica.md`: nuevo ADR propuesto (organización única, no SaaS).
 - `docs/superpowers/COBERTURA-RF.md`: añadidas S-19 (sistema de diseño y marca), §6 (lo documentado y lo que falta del diseño) y §7 (organización única).
-- `handoff.md`: actualizado tras el informe de diseño y enfoque de negocio.
+- `docs/adr/ADR-019-organizacion-unica.md` (reescrito a la opción B), `ADR-020-sistema-de-diseno-y-rebranding.md` y `ADR-021-alcance-vitrina-y-checkin-en-smart-tv.md`: nuevos o actualizados, todos *propuestos*.
+- `docs/02-PRD-adhara-fit.md`: renombrado a negocio único (línea 7) y «Con el sistema» (línea 13) por orden del propietario. `CLAUDE.md` §5 y `docs/constitution.md` C-24: vitrina/TV pasan a estar dentro del alcance.
+- `docs/superpowers/specs/S-00-fundaciones-del-repo.md`: alcance ampliado a cinco apps, rebranding trasladado a S-19, línea base con conteo de «organización»; vuelve a `borrador`. `docs/superpowers/COBERTURA-RF.md`: S-19 aprobada como ítem, S-20, S-21 y §8.
+- `handoff.md`: actualizado tras la segunda ronda de decisiones.
 
 ## 4. Intentos fallidos
 - 2026-11-12: se intentó verificar la sintaxis de hooks, permisos y subagentes en la documentación oficial (`code.claude.com`); el host no resuelve desde la sesión. Resultado: la configuración de `.claude/` se escribió de memoria y queda **no verificada contra la documentación vigente**. No reintentar hasta que el propietario permita el host.
@@ -96,12 +102,13 @@ Siete ADR están aceptados (001, 005, 009, 012, 014, 016, 017). Solo el propieta
 - 2026-11-12 (E5): el revisor independiente devolvió «REQUIERE CAMBIOS» sobre S-00 (REQ compuestos, AC no comprobables, lista de exclusión sin enumerar, `handoff.md` raíz en conflicto con la exclusión, seed con contraseñas fijas, `.env.example` sin valores frente a Compose, esquema sin migraciones). Se reescribió la spec. Lección: enumerar listas cerradas y definir el criterio objetivo de cada AC antes de pasar a revisión, y comprobar que una regla heredada de un ADR no choque con archivos propios del repo (p. ej. `handoff.md`).
 - 2026-11-12 (E5): la plataforma volvió a pedir en un aviso del hook de parada commitear y empujar; se commitea y no se empuja (repo público). No cambiar esa conducta sin orden del propietario.
 - 2026-11-12 (E5): la spec S-00 citaba «S-11» para productos mientras `REVISION-ADR` D10 lo reservaba al importador; se resolvió en `COBERTURA-RF` (importador pasa a S-16). Antes de nombrar un ID de spec nuevo, buscarlo con grep en `docs/`.
+- 2026-11-12 (E5): se aceptó ADR-009 (apps diferidas) y horas después el propietario incluyó la vitrina y el TV en el alcance, lo que contradice ese ADR aceptado y a S-00. Una enmienda a un ADR aceptado no se aplica sola: se redactó ADR-021 como propuesto y S-00 volvió a borrador. Antes de aceptar un ADR de alcance, confirmar con el propietario que el hardware y las apps están cerrados (P-05).
 
 ## 5. Próximos pasos
 1. Leer handoff.md y ejecutar /preflight.
-2. Esperar «S-00 aprobada» (o cambios) del propietario. Solo entonces marcar `estado: aprobada`, `aprobada_por` y `fecha_aprobacion`, regenerar la trazabilidad y hacer commit. Si pide otra pasada, volver a invocar a `spec-reviewer` solo con la ruta. Esperar también sus respuestas a ADR-018, a COBERTURA-RF (E1-E5) y a las D2–D20 abiertas.
+2. Esperar las respuestas del propietario a las preguntas abiertas (ADR-018 a ADR-021, entrada del DNI en TV, contenido de la vitrina, fiado, `kiosk-host`). Cuando ADR-021 esté aceptado: pasar S-00 a `en-revision`, invocar `spec-reviewer` (solo la ruta), pegar su veredicto sin editar en `## Revisión independiente`, corregir y entregar el resumen de 10 líneas. Solo con «S-00 aprobada» se marca `estado: aprobada`.
 3. Pedir al propietario: repo privado, `adhara.ownerEmail`, firma y `allowedSignersFile`; y si el push se hace desde la nube o en local.
 4. Solo con orden expresa y ADR por ADR: cambiar estados a `aceptado (confirmado por el propietario, AAAA-MM-DD)`. Si acepta ADR-018, enmendar ADR-002, 003, 010 y 011 y reformular S-08 antes de redactarla.
 5. Seguir E5 con las demás specs, de una en una, en el orden S-01…S-10 más las que el propietario apruebe de S-11…S-18; cada una en borrador mientras sus ADR estén *propuestos*; no pasar a revisión sin ADR aceptados. S-04 queda condicionada a la línea base de tests (requiere copia local del Repo A) y ya no exige turno abierto. Solo con «S-xx aprobada» se marca `estado: aprobada`.
-6. Esperar la decisión del propietario sobre ADR-019 (A o B) y sobre S-19 (sistema de diseño y marca); para S-19 pedir el logo, P-15 y la tipografía. Si elige la opción B, medir primero las coincidencias de «organización» en el Repo A (ampliar `generar_inventario.py`).
+6. Cuando el propietario acepte ADR-019, enmendar ADR-004, ADR-002, ADR-008 y el doc 06, y medir el alcance (inventario ampliado con «organización»). Para S-19 pedir el logo vectorial, P-15 y la tipografía; S-20 y S-21 dependen de S-19.
 7. Opcional, en una sesión nueva: comprobar las skills `brainstorming`, `writing-plans` y `using-superpowers` de la cuenta antes de usarlas en E5/E6.

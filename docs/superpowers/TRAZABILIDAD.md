@@ -206,17 +206,17 @@ Archivo: `S-04-pago-unico-de-membresia.md` · REQ: 49 · BEH: 42 · INV: 6 · AC
 
 ## S-05 — Negocio y sede únicos: sin organización, con una sola sede oculta y una configuración global (en-revision)
 
-Archivo: `S-05-negocio-y-sede-unicos.md` · REQ: 25 · BEH: 21 · INV: 5 · AC: 16
+Archivo: `S-05-negocio-y-sede-unicos.md` · REQ: 33 · BEH: 25 · INV: 5 · AC: 17
 
 | REQ | Prioridad | BEH | INV | AC (método) | Test |
 |---|---|---|---|---|---|
 | REQ-S05-001 | MUST | BEH-S05-001 | INV-S05-002 | AC-S05-001 (sql), AC-S05-014 (unitario) | pendiente |
 | REQ-S05-002 | MUST | BEH-S05-001 | INV-S05-002 | AC-S05-001 (sql), AC-S05-014 (unitario) | pendiente |
 | REQ-S05-003 | MUST | BEH-S05-002 | — | AC-S05-002 (sql) | pendiente |
-| REQ-S05-004 | MUST | BEH-S05-003 | INV-S05-001 | AC-S05-003 (integracion) | pendiente |
+| REQ-S05-004 | MUST | BEH-S05-003, BEH-S05-022 | INV-S05-001 | AC-S05-003 (integracion) | pendiente |
 | REQ-S05-005 | MUST | BEH-S05-004 | INV-S05-001 | AC-S05-003 (integracion) | pendiente |
 | REQ-S05-006 | MUST | BEH-S05-005 | INV-S05-001 | AC-S05-003 (integracion) | pendiente |
-| REQ-S05-007 | MUST | BEH-S05-006 | INV-S05-003 | AC-S05-004 (integracion) | pendiente |
+| REQ-S05-007 | MUST | BEH-S05-006, BEH-S05-023 | INV-S05-003 | AC-S05-004 (integracion) | pendiente |
 | REQ-S05-008 | MUST | BEH-S05-007, BEH-S05-008 | INV-S05-004 | AC-S05-005 (integracion) | pendiente |
 | REQ-S05-009 | MUST | BEH-S05-009 | — | AC-S05-006 (sql) | pendiente |
 | REQ-S05-010 | MUST | BEH-S05-009 | — | AC-S05-006 (sql) | pendiente |
@@ -235,6 +235,14 @@ Archivo: `S-05-negocio-y-sede-unicos.md` · REQ: 25 · BEH: 21 · INV: 5 · AC: 
 | REQ-S05-023 | MUST | BEH-S05-019 | INV-S05-002 | AC-S05-001 (sql), AC-S05-014 (unitario) | pendiente |
 | REQ-S05-024 | MUST | BEH-S05-020 | — | AC-S05-015 (manual) | pendiente |
 | REQ-S05-025 | MUST | BEH-S05-021 | — | AC-S05-016 (unitario) | pendiente |
+| REQ-S05-026 | MUST | BEH-S05-004 | INV-S05-001 | AC-S05-003 (integracion) | pendiente |
+| REQ-S05-027 | MUST | BEH-S05-010 | — | AC-S05-007 (unitario) | pendiente |
+| REQ-S05-028 | MUST | BEH-S05-011 | — | AC-S05-008 (e2e) | pendiente |
+| REQ-S05-029 | MUST | BEH-S05-014 | — | AC-S05-010 (integracion) | pendiente |
+| REQ-S05-030 | MUST | BEH-S05-024 | — | AC-S05-010 (integracion) | pendiente |
+| REQ-S05-031 | MUST | BEH-S05-018 | — | AC-S05-013 (integracion) | pendiente |
+| REQ-S05-032 | MUST | BEH-S05-025 | — | AC-S05-017 (integracion) | pendiente |
+| REQ-S05-033 | MUST | BEH-S05-025 | — | AC-S05-017 (integracion) | pendiente |
 
 ## S-22 — Capa de datos con Drizzle: esquema, repositorios, transacciones y retiro de Prisma (aprobada)
 

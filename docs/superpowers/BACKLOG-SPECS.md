@@ -21,7 +21,7 @@ Vienen del documento 10 (§2.C). Convierten el código heredado en el sistema de
 | S-09 Baja y anonimización | Dar de baja a un miembro sin borrar sus pagos; anonimizar sus datos si lo pide. | Por redactar |
 | S-10 Retirar lo venezolano | Quitar tasa BCV, el worker, el padrón Excel, los scripts del otro cliente y su marca. | Por redactar |
 
-## B. Las que propuse yo (S-11 a S-22)
+## B. Las que propuse yo (S-11 a S-23)
 No estaban en los documentos 01 a 12: las agregué tras cruzar **todos los requisitos** contra las specs (`COBERTURA-RF.md`). Cada una cubre algo del PRD que ninguna otra spec cubría.
 
 | Spec | Qué es, en simple | Por qué la propongo | De qué depende | Estado |
@@ -38,6 +38,7 @@ No estaban en los documentos 01 a 12: las agregué tras cruzar **todos los requi
 | **S-20 Vitrina de TV** | Heredar lo que resuelve la vitrina actual: carteles de entrenador, promoción y producto, con imagen o video, vigencia, orden y precios; adaptada a soles y a la marca nueva. | Entra al alcance por tu decisión (ADR-021). | S-03, S-19 | Propuesta |
 | **S-21 Check-in en smart-TV** | El kiosco funcionando en un Android TV, con **teclado numérico USB** conectado. | Entra al alcance por tu decisión (ADR-021). | S-05, S-06, S-19 | Propuesta |
 | **S-22 Capa de datos con Drizzle** | Reemplazar Prisma por Drizzle en el acceso a la base de datos, sin cambiar el comportamiento; se hace justo después de S-00 y antes de S-01. | Tu indicación del 2026-11-12; ADR-022 (aceptado el 2026-11-12: va después de S-00 y antes de S-01). Incluye pruebas de los repositorios, que hoy no existen, y el cambio de unos 75 archivos de `web-admin`. S-01 a S-21 dependerían de ella. | S-00 | **Aprobada** (2026-11-12) |
+| **S-23 Un solo rol: socio o administrador** | Dejar como única persona que inicia sesión al socio o administrador, con acceso total; quitar los roles GERENTE y RECEPCION y los permisos por módulo; los entrenadores pasan a ser un registro sin acceso. | Tu respuesta del 2026-11-12: gimnasio pequeño, sin empleados. | S-01, S-18 | Propuesta |
 
 ## C. Qué decides tú
 1. Si entran todas las de la sección B (o cuáles).

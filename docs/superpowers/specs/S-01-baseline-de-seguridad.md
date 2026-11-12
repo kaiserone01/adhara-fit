@@ -81,6 +81,7 @@ ADR-012 (aceptado el 2026-11-12) exige cerrar, antes de construir funcionalidade
 - SUP-S01-016: S-01 se aparta de ADR-012 §2 en dos puntos: no hay retroceso exponencial (SUP-S01-001) y no hay tope adicional por correo sin IP ni por IP sin correo, para que un atacante no bloquee una cuenta desde cualquier lugar; la ruta a Redis se documenta en `docs/ops/limite-de-intentos.md` (REQ-S01-027). Default: esas desviaciones; asumido, por validar, pendiente de confirmación del propietario.
 - SUP-S01-017: aplicar la tabla de permisos de 5.1 puede negar acceso a roles que hoy lo tienen solo porque la ruta no comprobaba nada; se acepta y AC-S01-019 fija el resultado por rol con los permisos por defecto, que no se han verificado. Default: aceptar el cierre; asumido, por validar.
 - SUP-S01-018: un intento bloqueado se registra una sola vez por clave y por minuto. Default: ese tope; asumido, por validar.
+- SUP-S01-019: el propietario indicó (2026-11-12) que solo inicia sesión el socio o administrador. S-01 conserva las guardas por rol y por permiso porque los roles GERENTE, RECEPCION y ENTRENADOR y los permisos por módulo se retiran en S-23 (propuesta), no aquí; mientras existan, AC-S01-019 los prueba. Default: ese orden; asumido, por validar.
 
 ## 1. Requisitos
 

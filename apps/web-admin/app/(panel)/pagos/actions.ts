@@ -1,0 +1,395 @@
+"use server";
+
+import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
+import { prisma } from "@/lib/prisma";
+import { obtenerUsuarioDeSesionActual } from "@/lib/sesion";
+import { PrismaPagoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPagoRepository";
+import { PrismaSuscripcionRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSuscripcionRepository";
+import { PrismaMemberRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaMemberRepository";
+import { PrismaPlanRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPlanRepository";
+import { PrismaTurnoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaTurnoRepository";
+import { PrismaPermisoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPermisoRepository";
+import { PrismaSucursalRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSucursalRepository";
+import { PrismaReglaAbonoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaReglaAbonoRepository";
+import type { PrismaClientOrTx } from "@gym-app/infrastructure/persistence/prisma/PrismaClientOrTx";
+import { PrismaDeudaProductoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaDeudaProductoRepository";
+import { PrismaCambioPlanAuditoriaRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaCambioPlanAuditoriaRepository";
+import { AuthorizationService } from "@gym-app/domain/services/AuthorizationService";
+import { validarTasaSiEsEnBs } from "@/lib/tasaBcv";
+import { PrismaTasaCambioRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaTasaCambioRepository";
+import { conMensajeOk } from "../redirectConMensaje";
+import {
+  registrarPago,
+  MiembroNoEncontradoError,
+  MiembroFueraDeSucursalError,
+  PlanNoEncontradoError,
+  PlanInactivoError,
+  RolNoAutorizadoError,
+  MontoInvalidoError,
+  LineasDePagoInvalidasError,
+  AbonoNoPermitidoError,
+  AbonoMenorAlMinimoError,
+  FechaPagoInvalidaError,
+  MesesInvalidosError,
+  MesesRequierenPagoCompletoError,
+  MesesNoDisponiblesError,
+  SinTasaParaFechaError,
+} from "@gym-app/domain/use-cases/RegistrarPago";
+import { registrarPagoConDeudas, MontoNoCubreDeudaError } from "@gym-app/domain/use-cases/RegistrarPagoConDeudas";
+import {
+  RolNoAutorizadoError as RolNoAutorizadoCobrarDeudas,
+  DeudasYaCobradasError,
+  SinTurnoAbiertoError,
+} from "@gym-app/domain/use-cases/CobrarDeudasMiembro";
+import {
+  cambiarPlanConPago,
+  MiembroNoEncontradoError as MiembroNoEncontradoErrorCambio,
+  PlanNoEncontradoError as PlanNoEncontradoErrorCambio,
+  PlanInactivoError as PlanInactivoErrorCambio,
+  RolNoAutorizadoError as RolNoAutorizadoErrorCambio,
+  SinCicloVigenteError,
+  MetodoPagoRequeridoError,
+  EntrenadorRequeridoError,
+  PlanCortesiaConTiempoRestanteError,
+  LineasDePagoInvalidasError as LineasDePagoInvalidasErrorCambio,
+  MontoLineasNoCubreObjetivoError,
+} from "@gym-app/domain/use-cases/CambiarPlanConPago";
+
+export interface EstadoFormularioPago {
+  error?: string;
+  // Solo se completa cuando la acción NO redirige (origen "miembro" o
+  // "caja", ver más abajo) — el formulario sigue montado en la misma
+  // página, así que el éxito viaja por acá en vez de por ?ok= en la URL.
+  ok?: string;
+  // Fecha real de fin de ciclo tras el pago (ISO) — solo presente junto
+  // con `ok`. La usa el Paso 4 del modal de Caja para mostrar la fecha de
+  // vencimiento resultante sin recalcularla en el cliente.
+  fechaFinCiclo?: string;
+  // La tasa BCV cambió justo al validar (Etapa 3) — el formulario debe
+  // actualizarla y dejar que el operador confirme de nuevo, sin cerrar el modal.
+  tasaNueva?: number;
+  // No se pudo verificar la tasa BCV en este momento (fallo temporal de
+  // DolarAPI) — el formulario debe ofrecer usar la última guardada, verificar
+  // en bcv.org.ve, o ingresarla manualmente.
+  fallaTemporal?: boolean;
+  tasaGuardada?: number;
+}
+
+export async function registrarPagoAction(
+  _estadoPrevio: EstadoFormularioPago,
+  formData: FormData
+): Promise<EstadoFormularioPago> {
+  const sesion = await obtenerUsuarioDeSesionActual();
+  if (!sesion) redirect("/login");
+  const { usuario, sucursalActivaId } = sesion;
+
+  const miembroId = formData.get("miembroId")?.toString();
+  const planId = formData.get("planId")?.toString();
+  const lineasRaw = formData.get("lineas")?.toString();
+  const origen = formData.get("origen")?.toString();
+  // Casilla "Cobrar también los productos pendientes" del wizard de Caja.
+  const incluirDeudas = formData.get("incluirDeudas")?.toString() === "1";
+  // Fecha del pago (yyyy-mm-dd), solo con el aviso "Por regularizar": un pago con fecha pasada regulariza
+  // el ciclo. Vacía = hoy. Se toma al mediodía para no caer en el día anterior por zona horaria.
+  const fechaPagoTexto = formData.get("fechaPago")?.toString();
+  // Sede elegida en el selector "Sede del pago" (ver SelectorMetodoPago);
+  // si no vino (formularios viejos o sin selector visible), se cae a la
+  // sede activa de la sesión.
+  const sucursalIdPago = formData.get("sucursalIdPago")?.toString() || sucursalActivaId;
+
+  if (!miembroId || !planId || !lineasRaw) {
+    return { error: "Miembro, plan y al menos un método de pago son requeridos." };
+  }
+  if (!sucursalIdPago) {
+    return { error: "No se pudo determinar en qué sucursal se registra el pago." };
+  }
+
+  let lineas: Array<{
+    monto: number;
+    metodo: string;
+    metodoPagoId: string | null;
+    numeroOperacion: string | null;
+    tasaCambio: number | null;
+  }>;
+  try {
+    lineas = JSON.parse(lineasRaw);
+  } catch {
+    return { error: "No se pudo interpretar la información del pago." };
+  }
+  if (!Array.isArray(lineas) || lineas.length === 0) {
+    return { error: "Agregá al menos una línea de pago." };
+  }
+  // Un plan de cortesía ($0) no tiene nada que cobrar — el método de pago
+  // solo es obligatorio cuando hay un monto real de por medio (ver diseño
+  // acordado, membresías con beneficio que no pagan en el gym). Se permite
+  // la única excepción de una sola línea en $0 (pago de cortesía); toda
+  // otra línea necesita monto > 0 y método elegido.
+  const esCortesia = lineas.length === 1 && lineas[0].monto === 0;
+  if (!esCortesia && lineas.some((linea) => linea.monto <= 0 || !linea.metodo || !linea.metodoPagoId)) {
+    return { error: "Cada línea del pago necesita un monto mayor a $0 y un método." };
+  }
+
+  // Pago combinado (más de una línea): el cliente gatea el envío en que la
+  // suma coincida con el monto objetivo, pero el servidor nunca recibía ese
+  // objetivo — un FormData armado a mano podía mandar líneas que no suman lo
+  // acordado. Solo aplica cuando montoObjetivo viene en el POST (combinado);
+  // total/abono siguen sin mandarlo... salvo que el campo del wizard ya lo
+  // postea siempre, así que esto también protege esos flujos sin cambiar su
+  // comportamiento (la única línea ya suma exactamente montoObjetivo).
+  const montoObjetivoRaw = formData.get("montoObjetivo")?.toString();
+  if (lineas.length > 1 && montoObjetivoRaw) {
+    const montoObjetivo = Number(montoObjetivoRaw);
+    const sumaLineas = lineas.reduce((suma, linea) => suma + linea.monto, 0);
+    if (!Number.isNaN(montoObjetivo) && Math.abs(sumaLineas - montoObjetivo) >= 0.01) {
+      return { error: "La suma de las líneas no coincide con el monto a pagar." };
+    }
+  }
+
+  // La tasa BCV se valida por línea que opere en Bs — cada línea puede
+  // usar un método distinto, así que cada una se revalida por separado
+  // contra el servidor (Etapa 3 del plan de tasa BCV, no se confía en la
+  // tasa que mandó el formulario).
+  const lineasValidadas: Array<{
+    monto: number;
+    metodo: string;
+    metodoPagoId: string | null;
+    numeroOperacion: string | null;
+    tasaCambio: number | null;
+    montoBs?: number | null;
+  }> = [];
+  const esPagoConFechaPasada =
+    !!fechaPagoTexto && new Date(`${fechaPagoTexto}T12:00:00`) < new Date(new Date().setHours(0, 0, 0, 0));
+  for (const linea of lineas) {
+    if (esPagoConFechaPasada) {
+      lineasValidadas.push(linea);
+      continue;
+    }
+    const validacionTasa = await validarTasaSiEsEnBs(linea.tasaCambio !== null ? String(linea.tasaCambio) : undefined);
+    if (!validacionTasa.ok) return validacionTasa.estado;
+    lineasValidadas.push({ ...linea, tasaCambio: validacionTasa.tasaCambio });
+  }
+
+  let pagos;
+  try {
+    const dependencias = (cliente: PrismaClientOrTx) => ({
+      pagos: new PrismaPagoRepository(cliente),
+      suscripciones: new PrismaSuscripcionRepository(cliente),
+      miembros: new PrismaMemberRepository(cliente),
+      planes: new PrismaPlanRepository(cliente),
+      turnos: new PrismaTurnoRepository(cliente),
+      sucursales: new PrismaSucursalRepository(cliente),
+      // Los permisos se leen con el cliente global: no necesitan estar dentro de la transacción.
+      autorizacion: new AuthorizationService(new PrismaPermisoRepository(prisma)),
+      reglasAbono: new PrismaReglaAbonoRepository(prisma),
+      tasas: new PrismaTasaCambioRepository(prisma),
+      deudas: new PrismaDeudaProductoRepository(cliente),
+    });
+    const datosPago = {
+      organizacionId: usuario.organizacionId,
+      miembroId,
+      planId,
+      lineas: lineasValidadas.map((linea) => ({ ...linea, metodo: linea.metodo || "Cortesía" })),
+      sucursalId: sucursalIdPago,
+      registradoPorId: usuario.id,
+      rolUsuario: usuario.rol,
+      ...(fechaPagoTexto ? { fechaPago: new Date(`${fechaPagoTexto}T12:00:00`) } : {}),
+      // Si pagó de más: guardar el sobrante como saldo a favor (si no, es de otro cobro y solo queda registrado).
+      excedenteASaldoAFavor: formData.get("excedenteSaldo")?.toString() === "1",
+      // Meses que cubre el pago (1 a 6); el dominio valida el rango.
+      meses: Number(formData.get("meses")?.toString() || 1),
+    };
+
+    // Con productos pendientes incluidos, cobrar las deudas y registrar la
+    // membresía van en una sola transacción: si una falla, la otra no queda hecha.
+    pagos = incluirDeudas && !esPagoConFechaPasada
+      ? await prisma.$transaction((tx) => registrarPagoConDeudas(dependencias(tx), { ...datosPago, incluirDeudas: true }), {
+          timeout: 20000,
+        })
+      : await registrarPago(dependencias(prisma), datosPago);
+  } catch (error) {
+    if (
+      error instanceof MiembroNoEncontradoError ||
+      error instanceof MiembroFueraDeSucursalError ||
+      error instanceof PlanNoEncontradoError ||
+      error instanceof PlanInactivoError ||
+      error instanceof RolNoAutorizadoError ||
+      error instanceof MontoInvalidoError ||
+      error instanceof LineasDePagoInvalidasError ||
+      error instanceof AbonoNoPermitidoError ||
+      error instanceof AbonoMenorAlMinimoError ||
+      error instanceof FechaPagoInvalidaError ||
+      error instanceof MesesInvalidosError ||
+      error instanceof MesesRequierenPagoCompletoError ||
+      error instanceof MesesNoDisponiblesError ||
+      error instanceof SinTasaParaFechaError ||
+      error instanceof MontoNoCubreDeudaError ||
+      error instanceof DeudasYaCobradasError ||
+      error instanceof SinTurnoAbiertoError ||
+      error instanceof RolNoAutorizadoCobrarDeudas
+    ) {
+      return { error: error.message };
+    }
+    throw error;
+  }
+
+  revalidatePath("/pagos");
+  revalidatePath(`/miembros/${miembroId}`);
+  revalidatePath(`/miembros/${miembroId}/pagos`);
+  revalidatePath("/caja");
+
+  if (origen !== "miembro" && origen !== "caja") {
+    redirect(conMensajeOk(`/miembros/${miembroId}`, "Pago registrado."));
+  }
+
+  // Todas las líneas de un mismo envío comparten fechaFinCiclo — cualquiera
+  // sirve para mostrarla en el Paso 4 del wizard.
+  return { ok: "Pago registrado.", fechaFinCiclo: pagos[0]?.fechaFinCiclo?.toISOString() };
+}
+
+export interface EstadoCambioPlan {
+  error?: string;
+  // Ver EstadoFormularioPago — mismo criterio de reconfirmación/aviso de
+  // fallo temporal (Etapa 3 del plan de tasa BCV).
+  tasaNueva?: number;
+  fallaTemporal?: boolean;
+  tasaGuardada?: number;
+  // Presente solo cuando origen === "caja" (ver más abajo) — el wizard de
+  // Caja usa esto para cerrar el modal sin navegar, en vez del redirect a
+  // /miembros que usa el origen por defecto (ficha del miembro).
+  ok?: string;
+  diferencia?: number;
+  saldoAFavorGenerado?: number;
+}
+
+export async function cambiarPlanAction(
+  _estadoPrevio: EstadoCambioPlan,
+  formData: FormData
+): Promise<EstadoCambioPlan> {
+  const sesion = await obtenerUsuarioDeSesionActual();
+  if (!sesion) redirect("/login");
+  const { usuario, sucursalActivaId } = sesion;
+
+  const miembroId = formData.get("miembroId")?.toString();
+  const planNuevoId = formData.get("planNuevoId")?.toString();
+  const lineasRaw = formData.get("lineas")?.toString();
+  const sucursalIdPago = formData.get("sucursalIdPago")?.toString() || sucursalActivaId;
+  const entrenadorId = formData.get("entrenadorId")?.toString() || null;
+  // "caja": viene del wizard de Caja (Paso 2), dentro de un modal — se
+  // queda en /caja en vez de navegar a /miembros (ver diseño acordado, igual
+  // criterio que origen en registrarPagoAction).
+  const origen = formData.get("origen")?.toString();
+
+  if (!miembroId || !planNuevoId) {
+    return { error: "Miembro y plan nuevo son requeridos." };
+  }
+  if (!sucursalIdPago) {
+    return { error: "No se pudo determinar en qué sucursal se registra el cambio." };
+  }
+
+  let lineas: Array<{
+    monto: number;
+    metodo: string;
+    metodoPagoId: string | null;
+    numeroOperacion: string | null;
+    tasaCambio: number | null;
+  }> = [];
+  if (lineasRaw) {
+    try {
+      lineas = JSON.parse(lineasRaw);
+    } catch {
+      return { error: "No se pudo interpretar la información del pago." };
+    }
+    if (!Array.isArray(lineas)) {
+      return { error: "No se pudo interpretar la información del pago." };
+    }
+  }
+
+  // La tasa BCV se valida por línea que opere en Bs — cada línea puede usar
+  // un método distinto (Etapa 3 del plan de tasa BCV, no se confía en la
+  // tasa que mandó el formulario). Sin líneas (nada que cobrar), no hay
+  // nada que validar.
+  const lineasValidadas: typeof lineas = [];
+  for (const linea of lineas) {
+    const validacionTasa = await validarTasaSiEsEnBs(linea.tasaCambio !== null ? String(linea.tasaCambio) : undefined);
+    if (!validacionTasa.ok) return validacionTasa.estado;
+    lineasValidadas.push({ ...linea, tasaCambio: validacionTasa.tasaCambio });
+  }
+
+  let resultado;
+  try {
+    // Guardado atómico (regla 11 del diseño acordado): plan, vencimiento,
+    // pago y el registro de auditoría se escriben en una sola transacción
+    // Prisma — todos los repos reciben `tx` (compatible con la misma
+    // interfaz que PrismaClient) en vez del cliente global, así que si
+    // cualquier paso falla, ninguno de los otros queda a medio escribir.
+    resultado = await prisma.$transaction((tx) =>
+      cambiarPlanConPago(
+        {
+          pagos: new PrismaPagoRepository(tx),
+          suscripciones: new PrismaSuscripcionRepository(tx),
+          miembros: new PrismaMemberRepository(tx),
+          planes: new PrismaPlanRepository(tx),
+          turnos: new PrismaTurnoRepository(tx),
+          sucursales: new PrismaSucursalRepository(tx),
+          autorizacion: new AuthorizationService(new PrismaPermisoRepository(tx)),
+          auditoria: new PrismaCambioPlanAuditoriaRepository(tx),
+        },
+        {
+          organizacionId: usuario.organizacionId,
+          miembroId,
+          planNuevoId,
+          origen: origen === "caja" ? "CAJA" : "FICHA_MIEMBRO",
+          lineas: lineasValidadas,
+          sucursalId: sucursalIdPago,
+          registradoPorId: usuario.id,
+          rolUsuario: usuario.rol,
+          entrenadorId,
+        }
+      )
+    );
+  } catch (error) {
+    if (
+      error instanceof MiembroNoEncontradoErrorCambio ||
+      error instanceof MiembroFueraDeSucursalError ||
+      error instanceof PlanNoEncontradoErrorCambio ||
+      error instanceof PlanInactivoErrorCambio ||
+      error instanceof RolNoAutorizadoErrorCambio ||
+      error instanceof SinCicloVigenteError ||
+      error instanceof MetodoPagoRequeridoError ||
+      error instanceof EntrenadorRequeridoError ||
+      error instanceof PlanCortesiaConTiempoRestanteError ||
+      error instanceof LineasDePagoInvalidasErrorCambio ||
+      error instanceof MontoLineasNoCubreObjetivoError
+    ) {
+      return { error: error.message };
+    }
+    throw error;
+  }
+
+  revalidatePath("/pagos");
+  revalidatePath("/miembros");
+  revalidatePath(`/miembros/${miembroId}`);
+  revalidatePath(`/miembros/${miembroId}/pagos`);
+  revalidatePath("/caja");
+
+  // CambiarPlanConPago ya no genera saldo a favor (ver regla 5 del diseño
+  // acordado: el valor no consumido se convierte en días, nunca en
+  // crédito) — resultado.diferencia siempre es >= 0.
+  const mensaje =
+    resultado.diferencia > 0
+      ? `Plan cambiado — se cobró $${resultado.diferencia.toFixed(2)}.`
+      : "Plan cambiado, sin costo adicional.";
+
+  // Desde el wizard de Caja: se queda en /caja y cierra el modal (ver
+  // diseño acordado), igual criterio que registrarPagoAction con
+  // origen "caja" — no tiene sentido navegar afuera del modal que sigue
+  // abierto. Desde la ficha del miembro (sin origen), se redirige a la
+  // lista — evita el "¿para qué es Guardar?" de volver a tocar otro botón
+  // en la misma pantalla.
+  if (origen === "caja") {
+    return { ok: mensaje, diferencia: resultado.diferencia, saldoAFavorGenerado: resultado.saldoAFavorGenerado };
+  }
+
+  redirect(conMensajeOk("/miembros", mensaje));
+}

@@ -1,0 +1,14 @@
+{
+  "name": "@gym-app/ui",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@phosphor-icons/react": "^2",
+    "lottie-react": "^3.1.2",
+    "react-day-picker": "^10.0.1"
+  },
+  "peerDependencies": {
+    "next": "*",
+    "react": "*"
+  }
+}

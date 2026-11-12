@@ -57,7 +57,7 @@ export function motivoExclusion(ruta) {
   const partes = r.split("/");
   const nombre = partes[partes.length - 1];
   if (nombre === "cookies.txt") return "cookies.txt";
-  if (nombre === "handoff.md" && partes.length > 1) return "handoff.md fuera de la raíz";
+  if (nombre === "handoff.md" && partes.length > 1 && partes[0] !== ".claude") return "handoff.md fuera de la raíz";
   if (/\.(keystore|jks|p12|pfx|pem)$/.test(nombre) || nombre === "keystore.properties") return "credencial de firma";
   if (nombre.startsWith(".env") && nombre !== ".env.example") return "archivo .env";
   if (/^reset-vencimientos-log-.*\.json$/.test(nombre)) return "log de reset de vencimientos";

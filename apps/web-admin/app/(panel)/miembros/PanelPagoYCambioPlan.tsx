@@ -1,0 +1,135 @@
+"use client";
+
+import { useState } from "react";
+import { Button } from "@gym-app/ui/components/Button";
+import { Card } from "@gym-app/ui/components/Card";
+import type { MetodoPago } from "@gym-app/domain/entities/MetodoPago";
+import { FormularioPago, type PlanParaSelector, type PlanFijo } from "../pagos/FormularioPago";
+import { FormularioCambiarPlan, type PlanParaCambio, type EntrenadorParaCambio } from "./FormularioCambiarPlan";
+import type { EstadoFormularioPago, EstadoCambioPlan } from "../pagos/actions";
+
+type Tab = "pago" | "cambiarPlan";
+
+// Antes eran dos <Card> separadas, cada una con su propia grilla de método
+// de pago — se veían las dos a la vez apenas elegías un plan con
+// entrenador, como si hicieran falta dos pagos. Con pestañas solo se ve
+// una grilla por vez (ver diseño acordado, Opción A del mockup).
+export function PanelPagoYCambioPlan({
+  miembroId,
+  accionRegistrarPago,
+  accionCambiarPlan,
+  planes,
+  planFijo,
+  saldoPendiente,
+  saldoAFavorUSD,
+  metodosPago,
+  tieneCicloVigente,
+  planActualId,
+  precioActual,
+  diasCicloActual,
+  fechaVencimientoActual,
+  entrenadores,
+  entrenadorActualId,
+}: {
+  miembroId: string;
+  accionRegistrarPago: (estado: EstadoFormularioPago, formData: FormData) => Promise<EstadoFormularioPago>;
+  accionCambiarPlan: (estado: EstadoCambioPlan, formData: FormData) => Promise<EstadoCambioPlan>;
+  planes: PlanParaSelector[];
+  planFijo?: PlanFijo;
+  // Cuánto falta para completar el ciclo vigente — viene de la página del
+  // miembro (ver diseño acordado, pagos fraccionados/mixtos). Undefined o
+  // 0 significa que no hay ningún ciclo a medio pagar.
+  saldoPendiente?: number;
+  // Crédito a favor del miembro (generado por un cambio de plan a la
+  // baja) — se descuenta automáticamente del próximo pago (ver
+  // RegistrarPago), se muestra como aviso informativo.
+  saldoAFavorUSD?: number;
+  metodosPago: MetodoPago[];
+  tieneCicloVigente: boolean;
+  planActualId: string | null;
+  precioActual: number;
+  diasCicloActual: number;
+  // Solo se usa (y solo es correcta) cuando tieneCicloVigente es true — la
+  // fórmula de prorrateo de FormularioCambiarPlan la necesita para calcular
+  // el valor no consumido del ciclo actual.
+  fechaVencimientoActual: Date;
+  entrenadores: EntrenadorParaCambio[];
+  entrenadorActualId: string | null;
+}) {
+  const [tab, setTab] = useState<Tab>("pago");
+  const planesParaCambio: PlanParaCambio[] = planes;
+
+  return (
+    <Card>
+      {saldoPendiente !== undefined && saldoPendiente > 0 && (
+        <p
+          className="mb-4 rounded-lg px-3 py-2 text-sm font-medium"
+          style={{ background: "color-mix(in srgb, var(--gx-accent) 15%, transparent)", color: "var(--gx-accent)" }}
+        >
+          Saldo pendiente de este ciclo: ${saldoPendiente.toFixed(2)}
+        </p>
+      )}
+
+      {tieneCicloVigente && (
+        <div className="mb-4 flex gap-1 rounded-lg border p-1" style={{ borderColor: "var(--gx-edge)" }}>
+          <Button
+            type="button"
+            variant={tab === "pago" ? "primario" : "fantasma"}
+            className="flex-1"
+            onClick={() => setTab("pago")}
+          >
+            Registrar pago
+          </Button>
+          <Button
+            type="button"
+            variant={tab === "cambiarPlan" ? "primario" : "fantasma"}
+            className="flex-1"
+            onClick={() => setTab("cambiarPlan")}
+          >
+            Cambiar de plan
+          </Button>
+        </div>
+      )}
+
+      {(!tieneCicloVigente || tab === "pago") && (
+        <>
+          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide" style={{ color: "var(--gx-muted)" }}>
+            Registrar pago
+          </h2>
+          <FormularioPago
+            accion={accionRegistrarPago}
+            miembros={[]}
+            planes={planes}
+            metodosPago={metodosPago}
+            miembroIdFijo={miembroId}
+            planFijo={planFijo}
+            saldoPendiente={saldoPendiente}
+            saldoAFavorUSD={saldoAFavorUSD}
+            origen="miembro"
+          />
+        </>
+      )}
+
+      {tieneCicloVigente && tab === "cambiarPlan" && (
+        <>
+          <p className="mb-4 text-xs" style={{ color: "var(--gx-muted)" }}>
+            Para subir o bajar de plan sin esperar a que venza el ciclo actual — el sistema prorratea el valor no
+            consumido del ciclo contra el precio del plan nuevo y cobra o absorbe la diferencia automáticamente.
+          </p>
+          <FormularioCambiarPlan
+            accion={accionCambiarPlan}
+            miembroId={miembroId}
+            planes={planesParaCambio}
+            planActualId={planActualId}
+            precioActual={precioActual}
+            diasCicloActual={diasCicloActual}
+            fechaVencimientoActual={fechaVencimientoActual}
+            metodosPago={metodosPago}
+            entrenadores={entrenadores}
+            entrenadorActualId={entrenadorActualId}
+          />
+        </>
+      )}
+    </Card>
+  );
+}

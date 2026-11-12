@@ -1,0 +1,1181 @@
+"use client";
+
+import { useActionState, useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { Button } from "@gym-app/ui/components/Button";
+import { Input } from "@gym-app/ui/components/Input";
+import { InputFecha } from "@gym-app/ui/components/InputFecha";
+import { CurrencyInput } from "@gym-app/ui/components/CurrencyInput";
+import { MAX_MESES_POR_PAGO, toleranciaDiferenciaPagoUSD } from "@gym-app/domain/entities/Pago";
+import { Card } from "@gym-app/ui/components/Card";
+import { Badge } from "@gym-app/ui/components/Badge";
+import { useFeedback } from "@gym-app/ui/components/FeedbackOverlay";
+import { actualizarFotoMiembroAction, type EstadoFormularioMiembro } from "./actions";
+import { SelectorMetodoPago } from "../pagos/SelectorMetodoPago";
+import { LineaPagoMiembroCampos, type LineaPagoMiembro } from "./LineaPagoMiembro";
+import { formatearBs } from "../tasaBcvFija";
+import { ProveedorCambiosSinGuardar } from "./ContextoCambiosSinGuardar";
+import { SelectorFotoPerfil } from "./SelectorFotoPerfil";
+import type { EntrenadorResumen } from "@gym-app/domain/entities/EntrenadorResumen";
+import type { SucursalResumen } from "@gym-app/domain/entities/SucursalResumen";
+import type { Plan, FrecuenciaPago } from "@gym-app/domain/entities/Plan";
+import type { MetodoPago } from "@gym-app/domain/entities/MetodoPago";
+
+export interface ValoresFormularioMiembro {
+  nombre: string;
+  cedula: string;
+  celular: string;
+  fechaInscripcion: string; // yyyy-mm-dd, solo informativa (no se envía al guardar)
+  fechaVencimiento?: string; // yyyy-mm-dd, "" si no tiene
+  fechaUltimoPago?: string; // yyyy-mm-dd, "" si no tiene
+  sucursalId: string | null; // null = "Ambas"
+  planId: string | null;
+  precioPlan: number;
+  entrenadorId: string | null;
+  fotoUrl: string | null;
+}
+
+const ID_AMBAS_SEDES = "__ambas__";
+
+const ETIQUETA_FRECUENCIA: Record<FrecuenciaPago, string> = {
+  DIARIO: "Diario",
+  SEMANAL: "Semanal",
+  QUINCENAL: "Quincenal",
+  MENSUAL: "Mensual",
+  SEMESTRAL: "Semestral",
+  ANUAL: "Anual",
+  PERSONALIZADO: "Personalizado",
+};
+
+// OJO: nunca usar fecha.toISOString() acá — convierte a UTC primero, y de
+// noche (pasadas las 8pm en Venezuela, UTC-4) eso salta al día siguiente.
+function hoyISO(): string {
+  const hoy = new Date();
+  const anio = hoy.getFullYear();
+  const mes = String(hoy.getMonth() + 1).padStart(2, "0");
+  const dia = String(hoy.getDate()).padStart(2, "0");
+  return `${anio}-${mes}-${dia}`;
+}
+
+function formatearFecha(fechaISO: string): string {
+  if (!fechaISO) return "—";
+  const [anio, mes, dia] = fechaISO.split("-");
+  return `${dia}/${mes}/${anio}`;
+}
+
+function formatearFechaCorta(fecha: Date): string {
+  return new Date(fecha).toLocaleDateString("es-VE", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+
+function iniciales(nombre: string): string {
+  return nombre
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((parte) => parte[0]?.toUpperCase())
+    .join("");
+}
+
+function Fila({ label, valor }: { label: string; valor: string }) {
+  return (
+    <div className="flex justify-between gap-3">
+      <dt style={{ color: "var(--gx-muted)" }}>{label}</dt>
+      <dd className="text-right font-medium" style={{ color: "var(--gx-ink)" }}>
+        {valor}
+      </dd>
+    </div>
+  );
+}
+
+export function FormularioMiembro({
+  accion,
+  entrenadoresPorSucursal,
+  sucursales,
+  sucursalActivaNombre,
+  sucursalIdDefault,
+  planes,
+  metodosPago,
+  miembroId,
+  ultimosCiclos,
+  saldoPendiente,
+  accesoHastaAbono,
+  totalPagos,
+  valoresIniciales,
+  tieneCicloVigente,
+  porRegularizar = false,
+  vieneDelExcel = false,
+}: {
+  accion: (estado: EstadoFormularioMiembro, formData: FormData) => Promise<EstadoFormularioMiembro>;
+  // Entrenadores disponibles por cada sucursal visible — el elegible
+  // depende de la sucursal seleccionada en el propio formulario, así que
+  // se filtra en el cliente sin ida y vuelta al servidor.
+  entrenadoresPorSucursal: Record<string, EntrenadorResumen[]>;
+  // Se sigue usando para resolver entrenadoresDeLaSede y para mostrar el
+  // nombre cuando sucursalId === ID_AMBAS_SEDES; ya NO se usa para poblar
+  // un <select> de sedes.
+  sucursales: SucursalResumen[];
+  // Nombre de la sucursal activa de la sesión — solo se muestra en el ticket
+  // de confirmación (crear/editar un miembro siempre lo asigna a la sede
+  // activa, salvo "Ambas").
+  sucursalActivaNombre: string;
+  sucursalIdDefault: string | null;
+  planes: Plan[];
+  metodosPago: MetodoPago[];
+  // null solo en modo creación (no hay ficha de ciclos que enlazar
+  // todavía). En modo edición siempre es el id real del miembro.
+  miembroId: string | null;
+  // Últimos 3-5 pagos del miembro que tienen datos de ciclo (pagos
+  // previos a esta funcionalidad no tienen fechaInicioCiclo/
+  // fechaFinCiclo y no aparecen aquí) — solo se usa en modo edición.
+  ultimosCiclos: { id: string; fechaInicioCiclo: Date | null; fechaFinCiclo: Date | null }[];
+  // Cuánto falta para completar el ciclo vigente — se muestra dentro de la
+  // tarjeta de Plan de membresía. Undefined o 0 significa que no hay saldo
+  // pendiente (ver diseño acordado: los pagos se registran desde Caja, acá
+  // solo se informa si debe algo).
+  saldoPendiente?: number;
+  // yyyy-mm-dd: hasta cuándo alcanza el acceso con lo abonado, si hay saldo pendiente con plazo de abono.
+  accesoHastaAbono?: string;
+  // Cantidad total de pagos del miembro — solo para el contador del link
+  // "Ver historial de pagos". Undefined en modo creación.
+  totalPagos?: number;
+  valoresIniciales?: ValoresFormularioMiembro;
+  // Mientras el ciclo actual esté vigente, cambiar de plan gratis desde acá
+  // quedaría pisado por "Cambiar de plan" del panel derecho (que sí cobra
+  // la diferencia) — se oculta el editor de plan acá para no tener dos
+  // botones "Cambiar plan" haciendo cosas distintas al mismo tiempo (ver
+  // diseño acordado). Solo relevante en edición; en alta siempre es true.
+  tieneCicloVigente?: boolean;
+  // Fecha de vencimiento no confiable (migrada): aviso "Por regularizar" y campo de vencimiento que titila.
+  porRegularizar?: boolean;
+  // Miembro activado desde el padrón del Excel: sus fechas de pago y de vencimiento se editan siempre
+  // (no tiene fecha de inscripción confiable) y cambiar de plan no las mueve.
+  vieneDelExcel?: boolean;
+}) {
+  const [estado, enviar, enviando] = useActionState(accion, {});
+  const esEdicion = !!valoresIniciales;
+  const formRef = useRef<HTMLFormElement>(null);
+  const { mostrarError, mostrarExito } = useFeedback();
+
+  useEffect(() => {
+    if (estado.error) mostrarError(estado.error);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- solo debe reaccionar a un nuevo estado.error, no a mostrarError
+  }, [estado.error]);
+
+  const [nombre, setNombre] = useState(valoresIniciales?.nombre ?? "");
+  const [cedula, setCedula] = useState(valoresIniciales?.cedula ?? "");
+  const [celular, setCelular] = useState(valoresIniciales?.celular ?? "");
+  // Solo informativa: en Nuevo miembro se puede poner una fecha pasada (por defecto hoy) y en la ficha no se edita ni se envía.
+  const [fechaInscripcion, setFechaInscripcion] = useState(valoresIniciales?.fechaInscripcion ?? hoyISO());
+  const [fechaUltimoPago, setFechaUltimoPago] = useState(valoresIniciales?.fechaUltimoPago ?? "");
+  const [fechaVencimiento, setFechaVencimiento] = useState(valoresIniciales?.fechaVencimiento ?? "");
+  // Fechas de pago y vencimiento: editables para cualquier miembro (p. ej. para corregir un error).
+  const editaFechas = esEdicion;
+  const [sucursalId, setSucursalId] = useState(
+    valoresIniciales ? (valoresIniciales.sucursalId ?? ID_AMBAS_SEDES) : sucursalIdDefault ?? ""
+  );
+  const [entrenadorId, setEntrenadorId] = useState(valoresIniciales?.entrenadorId ?? "");
+  const [fotoPreview, setFotoPreview] = useState<string | null>(valoresIniciales?.fotoUrl ?? null);
+
+  // Si la sucursal o el plan actuales del miembro ya no están entre las
+  // opciones visibles (p. ej. un plan que se dio de baja, o una sucursal
+  // fuera del alcance del usuario que edita), se agregan igual a la lista
+  // para no perder el dato al mostrar el formulario.
+  const sucursalesConActual =
+    valoresIniciales && valoresIniciales.sucursalId && !sucursales.some((s) => s.id === valoresIniciales.sucursalId)
+      ? [...sucursales, { id: valoresIniciales.sucursalId, nombre: "(sede actual)", direccion: null, diasGracia: 0, activo: true }]
+      : sucursales;
+
+  const planesActivos = planes.filter(
+    (plan) => plan.activo || (valoresIniciales && plan.id === valoresIniciales.planId)
+  );
+
+  // Entrenadores elegibles según la sucursal actualmente seleccionada. Si
+  // el entrenador ya asignado no está en esa lista (p. ej. se cambió de
+  // sede, o el entrenador dejó de tener esa sucursal asignada), se agrega
+  // igual para no perder el dato al mostrar el formulario de edición.
+  const entrenadoresDeLaSede =
+    sucursalId === ID_AMBAS_SEDES
+      ? Object.values(entrenadoresPorSucursal)
+          .flat()
+          .filter((e, i, lista) => lista.findIndex((otro) => otro.id === e.id) === i)
+      : entrenadoresPorSucursal[sucursalId] ?? [];
+  const entrenadores =
+    valoresIniciales?.entrenadorId && !entrenadoresDeLaSede.some((e) => e.id === valoresIniciales.entrenadorId)
+      ? [...entrenadoresDeLaSede, { id: valoresIniciales.entrenadorId, nombre: "(entrenador actual)" }]
+      : entrenadoresDeLaSede;
+
+  const [planId, setPlanId] = useState<string>(() => {
+    if (!valoresIniciales) return planesActivos[0]?.id ?? "";
+    return valoresIniciales.planId ?? "";
+  });
+  const [precio, setPrecio] = useState<string>(String(valoresIniciales?.precioPlan ?? planesActivos[0]?.precioUSD ?? ""));
+  const [errorPrecio, setErrorPrecio] = useState<string | null>(null);
+  const [seleccionMetodo, setSeleccionMetodo] = useState<{
+    metodoPagoId: string | null;
+    metodo: string;
+    tasaCambio: number | null;
+    numeroOperacion: string;
+  }>({ metodoPagoId: null, metodo: "", tasaCambio: null, numeroOperacion: "" });
+  const [mostrarTicket, setMostrarTicket] = useState(false);
+  // Mientras el ciclo actual esté vigente, el cambio de plan gratis queda
+  // deshabilitado acá — usa "Cambiar de plan" del panel derecho, que cobra
+  // la diferencia correspondiente (ver diseño acordado). Quien viene del
+  // Excel lo tiene siempre: la regularización lo necesita y no mueve fechas.
+  const puedeCambiarPlanGratis = !esEdicion || !tieneCicloVigente || vieneDelExcel;
+  // En edición, el plan asignado se ve de solo lectura hasta que se
+  // confirma explícitamente que se quiere cambiar (ver diseño acordado:
+  // evita cambios de plan por error, ya que dispara el prorrateo).
+  const [editandoPlan, setEditandoPlan] = useState(!esEdicion);
+  const [confirmandoCambioPlan, setConfirmandoCambioPlan] = useState(false);
+  const planIdOriginal = valoresIniciales?.planId ?? null;
+  // El entrenador también se ve de solo lectura en edición — se asigna en
+  // la inscripción, cambiarlo es una acción explícita aparte (ver diseño
+  // acordado). La sede ya no se muestra ni tiene modo edición propio — la
+  // única alternativa a la sede activa es el toggle de "Ambas sedes" (solo
+  // con planes multisede, ver más abajo).
+  const [editandoEntrenador, setEditandoEntrenador] = useState(!esEdicion);
+  const entrenadorIdOriginal = valoresIniciales?.entrenadorId ?? "";
+
+  const planSeleccionado = planesActivos.find((p) => p.id === planId);
+
+  const requiereEntrenador = planSeleccionado?.incluyeEntrenador ?? false;
+  // Un plan de cortesía ($0 oficial en Configuración → Planes) fija el
+  // precio en $0 y no se deja editar — no tiene sentido "negociar" el
+  // precio de algo que ya se definió como gratuito.
+  const planEsCortesia = planSeleccionado?.precioUSD === 0;
+  const precioActual = Number(precio) || 0;
+  // Primer pago de un miembro nuevo: vacío = el precio completo; menos que el precio queda como abono.
+  // null = sin tocar (se ve el precio del plan); "" = el cajero borró el campo para escribir otro monto.
+  const [montoHoy, setMontoHoy] = useState<string | null>(null);
+  // Meses que cubre el primer pago (1 a MAX_MESES_POR_PAGO): el total y la duración del ciclo se multiplican.
+  const [meses, setMeses] = useState(1);
+  const precioCiclo = precioActual * meses;
+  const [errorMontoHoy, setErrorMontoHoy] = useState<string | null>(null);
+  // Primer pago dividido en dos métodos (p. ej. dos pagos móviles): cada línea trae su método y su monto.
+  const [dividirPago, setDividirPago] = useState(false);
+  const [lineasDivididas, setLineasDivididas] = useState<{ id: number; linea: LineaPagoMiembro | null }[]>([
+    { id: 1, linea: null },
+    { id: 2, linea: null },
+  ]);
+  const [siguienteIdLinea, setSiguienteIdLinea] = useState(3);
+  const totalDividido = lineasDivididas.reduce((suma, { linea }) => suma + (linea?.monto ?? 0), 0);
+  const montoAPagar = dividirPago ? Math.round(totalDividido * 100) / 100 : montoHoy === null ? precioCiclo : Number(montoHoy) || 0;
+  const esAbonoInicial = montoAPagar > 0 && montoAPagar < precioCiclo;
+  // Lo pagado supera el precio (wifi u otro cobro, o pagar de más): sin límite; se elige qué hacer con el sobrante.
+  const hayExcedente = precioActual > 0 && montoAPagar - precioCiclo > 0.005;
+  const excedenteUSD = Math.max(0, montoAPagar - precioCiclo);
+  const [excedente, setExcedente] = useState<"otro" | "saldo">("otro");
+  // En pantallas angostas el resumen y los avisos del pago quedan lejos del botón Guardar: se lleva la vista hasta ellos.
+  const ticketRef = useRef<HTMLDivElement>(null);
+  const errorPagoRef = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (mostrarTicket) ticketRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [mostrarTicket]);
+  useEffect(() => {
+    if (errorMontoHoy) errorPagoRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [errorMontoHoy]);
+  const nombrePlanActual = planSeleccionado?.nombre ?? "—";
+  const nombreEntrenadorActual = entrenadores.find((e) => e.id === entrenadorId)?.nombre ?? null;
+  const nombreMetodoPagoActual = dividirPago
+    ? lineasDivididas.map(({ linea }) => linea?.metodo).filter(Boolean).join(" + ") || null
+    : seleccionMetodo.metodo || null;
+  // El ciclo más reciente (por fechaFinCiclo) entre los que tienen datos
+  // de ciclo — su fechaInicioCiclo es la "última fecha de renovación", y
+  // su fechaFinCiclo es la fecha de vencimiento vigente (próximo cobro).
+  const cicloMasReciente = ultimosCiclos.find((c) => c.fechaInicioCiclo && c.fechaFinCiclo) ?? null;
+  // Días hasta el próximo cobro — negativo si ya venció. Se redondea con
+  // ceil sobre el delta en horas para no perder un día por horas sueltas
+  // (p. ej. faltan 23h50m -> "falta 1 día", no "0 días").
+  const diasHastaProximoCobro = cicloMasReciente?.fechaFinCiclo
+    // eslint-disable-next-line react-hooks/purity -- los dias hasta el cobro se calculan con la hora actual en cada render; congelarlos cambiaria el comportamiento
+    ? Math.ceil((new Date(cicloMasReciente.fechaFinCiclo).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    : null;
+
+  // Si se cambia de sede y el entrenador seleccionado no está entre los
+  // elegibles de la nueva sede, se limpia la selección en vez de dejar un
+  // entrenadorId "fantasma" que el usuario ya no ve en el select.
+  useEffect(() => {
+    if (entrenadorId && !entrenadores.some((e) => e.id === entrenadorId)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- limpia el entrenador si no pertenece a la sede elegida (depende solo de sucursalId)
+      setEntrenadorId("");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- solo debe re-evaluar cuando cambia la sede, no en cada render de `entrenadores`
+  }, [sucursalId]);
+  const montoBsActual = dividirPago
+    ? lineasDivididas.some(({ linea }) => linea && linea.tasaCambio !== null)
+      ? lineasDivididas.reduce(
+          (suma, { linea }) => suma + (linea && linea.tasaCambio !== null ? (linea.montoBs ?? linea.monto * linea.tasaCambio) : 0),
+          0
+        )
+      : null
+    : seleccionMetodo.tasaCambio !== null
+      ? montoAPagar * seleccionMetodo.tasaCambio
+      : null;
+
+  // "Cambiar de plan" (panelLateral) redirige a /miembros al confirmar —
+  // si hay cambios de Datos personales sin guardar en este momento, se
+  // perderían sin aviso. FormularioCambiarPlan lee esto por contexto
+  // (vive en otro árbol de React, dentro de panelLateral) para preguntar
+  // antes de mandarte para afuera de esta pantalla.
+  const hayCambiosSinGuardar =
+    esEdicion &&
+    !!valoresIniciales &&
+    (nombre !== valoresIniciales.nombre ||
+      celular !== valoresIniciales.celular ||
+      (editaFechas && fechaUltimoPago !== (valoresIniciales.fechaUltimoPago ?? "")) ||
+      (editaFechas && fechaVencimiento !== (valoresIniciales.fechaVencimiento ?? "")) ||
+      sucursalId !== (valoresIniciales.sucursalId ?? ID_AMBAS_SEDES) ||
+      entrenadorId !== (valoresIniciales.entrenadorId ?? "") ||
+      fotoPreview !== (valoresIniciales.fotoUrl ?? null) ||
+      (editandoPlan && planId !== planIdOriginal));
+
+  function manejarCambioPlan(nuevoId: string) {
+    setPlanId(nuevoId);
+    const plan = planesActivos.find((p) => p.id === nuevoId);
+    const permiteMultisede = plan?.multisede ?? false;
+    if (plan) setPrecio(String(plan.precioUSD));
+    // Si el nuevo plan no permite multisede y había quedado "Ambas"
+    // seleccionado, se cae a la primera sede visible en vez de dejar un
+    // valor que ya no es válido para este plan.
+    if (!permiteMultisede && sucursalId === ID_AMBAS_SEDES) {
+      setSucursalId(sucursalIdDefault ?? "");
+    }
+  }
+
+  const planPermiteMultisede = planesActivos.find((p) => p.id === planId)?.multisede ?? false;
+
+  function manejarClickGuardar() {
+    const form = formRef.current;
+    if (!form) return;
+    if (!form.reportValidity()) return;
+
+    if (!planEsCortesia && (!precio || Number(precio) <= 0)) {
+      setErrorPrecio("Ingresá un precio válido.");
+      return;
+    }
+
+    setErrorPrecio(null);
+    if (!esEdicion && dividirPago) {
+      const incompleta = lineasDivididas.findIndex(({ linea }) => !linea || !linea.metodoPagoId || linea.monto <= 0);
+      if (incompleta >= 0) {
+        setErrorMontoHoy(
+          lineasDivididas[incompleta].linea?.metodoPagoId
+            ? `Pago ${incompleta + 1}: falta el monto.`
+            : `Pago ${incompleta + 1}: falta elegir el método completo (el banco o la moneda).`
+        );
+        return;
+      }
+    } else if (!esEdicion && precioActual > 0 && montoAPagar <= 0) {
+      setErrorMontoHoy("El monto a pagar debe ser mayor a 0.");
+      return;
+    }
+    if (!esEdicion && meses > 1 && precioCiclo - montoAPagar > toleranciaDiferenciaPagoUSD(precioCiclo)) {
+      setErrorMontoHoy(`Para pagar ${meses} meses el monto debe cubrir el total ($${precioCiclo.toFixed(2)}).`);
+      return;
+    }
+    setErrorMontoHoy(null);
+    // Al editar se guarda directo (el aviso de "Cambios guardados" sale tras el redirect); el resumen es solo del alta.
+    if (esEdicion) form.requestSubmit();
+    else setMostrarTicket(true);
+  }
+
+  function manejarCambioFoto(archivo: File) {
+    if (fotoPreview?.startsWith("blob:")) URL.revokeObjectURL(fotoPreview);
+    setFotoPreview(URL.createObjectURL(archivo));
+  }
+
+  async function guardarAjusteFoto(archivo: File) {
+    if (!miembroId) return;
+    const datos = new FormData();
+    datos.set("foto", archivo);
+    try {
+      const resultado = await actualizarFotoMiembroAction(miembroId, datos);
+      if (!resultado.fotoUrl) throw new Error(resultado.error ?? "No se pudo guardar el encuadre.");
+      if (fotoPreview?.startsWith("blob:")) URL.revokeObjectURL(fotoPreview);
+      setFotoPreview(resultado.fotoUrl);
+      mostrarExito("Encuadre guardado.");
+    } catch (error) {
+      mostrarError(error instanceof Error ? error.message : "No se pudo guardar el encuadre.");
+      throw error;
+    }
+  }
+
+  const idFormulario = "formulario-miembro";
+
+  return (
+    <ProveedorCambiosSinGuardar value={hayCambiosSinGuardar}>
+    {estado.error && (
+      <p
+        className="mb-6 rounded-lg px-3 py-2 text-sm"
+        style={{ background: "color-mix(in srgb, var(--gx-bad) 15%, transparent)", color: "var(--gx-bad)" }}
+      >
+        {estado.error}
+      </p>
+    )}
+
+    {esEdicion && porRegularizar && miembroId && (
+      <div
+        className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border px-4 py-3 text-sm"
+        style={{ borderColor: "var(--gx-warn)", color: "var(--gx-ink)" }}
+      >
+        <span className="flex flex-wrap items-center gap-2">
+          <Badge tono="ambar">Por regularizar</Badge>
+          Las fechas de pago y de vencimiento vienen de una fuente externa (Excel/migración) y no están verificadas. Ajústalas o registra el último pago con su fecha real.
+          {!fotoPreview && (
+            <span style={{ color: "var(--gx-muted)" }}>Pendiente además: foto (no impide quitar el aviso).</span>
+          )}
+        </span>
+        <span className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            variant="secundario"
+            onClick={() => {
+              const campo = document.getElementById("campo-fecha-vencimiento");
+              campo?.scrollIntoView({ behavior: "smooth", block: "center" });
+              campo?.focus({ preventScroll: true });
+            }}
+          >
+            Ajustar fechas
+          </Button>
+          <Link href={`/caja?cobrar=${miembroId}`}>
+            <Button type="button">Registrar pago con fecha</Button>
+          </Link>
+        </span>
+      </div>
+    )}
+
+    <div className={`grid grid-cols-1 gap-6 ${esEdicion ? "lg:grid-cols-2" : "lg:grid-cols-3"}`}>
+      {/* display: contents — Datos personales y Plan de membresía quedan como
+          celdas independientes de la grilla de 3 columnas, pero sus campos
+          (incluidos los de la card de Plan) siguen siendo hijos reales de
+          este <form> en el DOM, nunca se desmontan aparte (a diferencia del
+          intento anterior con form={idFormulario}, que sí se rompía). */}
+      <form ref={formRef} id={idFormulario} action={enviar} style={{ display: "contents" }}>
+        <input type="hidden" name="planId" value={planId} />
+        <input type="hidden" name="precioPlan" value={precioActual} />
+        <input type="hidden" name="planNombre" value={nombrePlanActual} />
+        {!esEdicion && (
+          <>
+            <input type="hidden" name="montoInicial" value={montoAPagar} />
+            {meses > 1 && <input type="hidden" name="meses" value={meses} />}
+            <input type="hidden" name="excedente" value={hayExcedente ? excedente : ""} />
+            {dividirPago && (
+              <input
+                type="hidden"
+                name="lineas"
+                value={JSON.stringify(
+                  lineasDivididas.flatMap(({ linea }) =>
+                    linea
+                      ? [
+                          {
+                            monto: Math.round(linea.monto * 100) / 100,
+                            montoBs: linea.montoBs,
+                            metodo: linea.metodo,
+                            metodoPagoId: linea.metodoPagoId,
+                            numeroOperacion: linea.numeroOperacion || null,
+                            tasaCambio: linea.tasaCambio,
+                          },
+                        ]
+                      : []
+                  )
+                )}
+              />
+            )}
+            <input type="hidden" name="metodo" value={seleccionMetodo.metodo} />
+            <input type="hidden" name="metodoPagoId" value={seleccionMetodo.metodoPagoId ?? ""} />
+            <input type="hidden" name="tasaCambio" value={seleccionMetodo.tasaCambio ?? ""} />
+            <input type="hidden" name="numeroOperacion" value={seleccionMetodo.numeroOperacion} />
+          </>
+        )}
+
+        <Card className="lg:col-start-1 lg:row-start-1">
+          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide" style={{ color: "var(--gx-muted)" }}>
+            Datos personales
+          </h2>
+
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-4">
+              <div
+                className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full text-lg font-semibold"
+                style={{ background: "var(--gx-surface-2)", color: "var(--gx-muted)" }}
+              >
+                {fotoPreview ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- vista previa de un archivo elegido en el cliente, no un asset del proyecto
+                  <img src={fotoPreview} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  iniciales(nombre || "?")
+                )}
+              </div>
+
+              <SelectorFotoPerfil tieneFoto={!!fotoPreview} fotoActualUrl={fotoPreview} alGuardarAjuste={esEdicion ? guardarAjusteFoto : undefined} onCambio={manejarCambioFoto} />
+            </div>
+
+            <Input
+              name="nombre"
+              label="Nombre"
+              required
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
+            />
+
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                name="cedula"
+                label="Cédula"
+                required
+                value={cedula}
+                onChange={(e) => setCedula(e.target.value)}
+              />
+              <Input
+                name="celular"
+                label="Celular"
+                value={celular}
+                onChange={(e) => setCelular(e.target.value)}
+              />
+            </div>
+
+            {/* Quien viene del Excel no tiene inscripción conocida: su fecha de pago y de vencimiento van
+                juntas en la tarjeta de Plan de membresía. */}
+            {!(esEdicion && vieneDelExcel) && (
+              esEdicion ? (
+                // Fija e informativa: sin name (no viaja) y sin calendario (un InputFecha deshabilitado
+                // igual dejaría abrir el calendario).
+                <InputFecha label="Fecha de inscripción" value={fechaInscripcion} disabled sinCalendario />
+              ) : (
+                <InputFecha
+                  name="fechaInscripcion"
+                  label="Fecha de inscripción"
+                  value={fechaInscripcion}
+                  onChange={setFechaInscripcion}
+                  max={hoyISO()}
+                  required
+                />
+              )
+            )}
+          </div>
+
+          <Button type="button" className="mt-6 w-full" onClick={manejarClickGuardar} disabled={enviando}>
+            Guardar
+          </Button>
+          <span className="mt-2 block text-xs" style={{ color: "var(--gx-muted-dim)" }}>
+            Guarda estos datos junto con el entrenador y el plan del cuadro de al lado.
+          </span>
+        </Card>
+
+        <Card className="lg:col-start-2 lg:row-start-1">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: "var(--gx-muted)" }}>
+              Plan de membresía
+            </h2>
+            <div className="flex gap-2">
+              {esEdicion && !editandoEntrenador && requiereEntrenador && (
+                <Button type="button" variant="secundario" onClick={() => setEditandoEntrenador(true)}>
+                  Asignar entrenador
+                </Button>
+              )}
+              {esEdicion && !editandoPlan && puedeCambiarPlanGratis && (
+                <Button type="button" variant="secundario" onClick={() => setConfirmandoCambioPlan(true)}>
+                  Cambiar plan
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* La sede es un metadato (sede activa o "Ambas"): no se muestra, solo viaja en el formulario. */}
+          <input type="hidden" name="sucursalId" value={sucursalId} />
+          {planPermiteMultisede && (
+            <div className="mb-4 rounded-lg border p-4" style={{ borderColor: "var(--gx-edge)" }}>
+              <label className="flex min-h-11 items-center gap-2 text-sm" style={{ color: "var(--gx-muted)" }}>
+                <input
+                  type="checkbox"
+                  checked={sucursalId === ID_AMBAS_SEDES}
+                  onChange={(e) => setSucursalId(e.target.checked ? ID_AMBAS_SEDES : sucursalIdDefault ?? "")}
+                  className="gx-check"
+                />
+                Disponible en ambas sedes
+              </label>
+            </div>
+          )}
+
+          {/* Editables para todos; titila solo mientras dure el aviso "Por regularizar". Se envía solo si cambia. */}
+          {editaFechas && (
+            <div className="mb-4 grid gap-4 sm:grid-cols-2">
+              <input type="hidden" name="fechaUltimoPagoOriginal" value={valoresIniciales?.fechaUltimoPago ?? ""} />
+              <InputFecha name="fechaUltimoPago" label="Fecha de pago" value={fechaUltimoPago} onChange={setFechaUltimoPago} />
+              <input type="hidden" name="fechaVencimientoOriginal" value={valoresIniciales?.fechaVencimiento ?? ""} />
+              <InputFecha
+                id="campo-fecha-vencimiento"
+                name="fechaVencimiento"
+                label="Fecha de vencimiento"
+                value={fechaVencimiento}
+                onChange={setFechaVencimiento}
+                className={porRegularizar ? "titilar-fecha" : ""}
+              />
+            </div>
+          )}
+
+          {esEdicion && !editandoPlan && (
+            <div className="rounded-lg border p-4" style={{ borderColor: "var(--gx-edge)" }}>
+              <div className="flex items-baseline justify-between">
+                <span className="text-sm font-medium" style={{ color: "var(--gx-muted)" }}>
+                  {nombrePlanActual}
+                </span>
+                <span className="text-2xl font-semibold" style={{ color: "var(--gx-ink)" }}>
+                  ${precioActual}
+                  {planSeleccionado && (
+                    <span className="text-sm font-normal" style={{ color: "var(--gx-muted)" }}>
+                      /{ETIQUETA_FRECUENCIA[planSeleccionado.frecuencia].toLowerCase()}
+                    </span>
+                  )}
+                </span>
+              </div>
+              {requiereEntrenador && (
+                <p className="mt-1 text-xs font-medium" style={{ color: "var(--gx-accent)" }}>
+                  Entrenador: {nombreEntrenadorActual ?? "Sin asignar"}
+                </p>
+              )}
+              {!puedeCambiarPlanGratis && (
+                <p className="mt-2 text-xs" style={{ color: "var(--gx-muted)" }}>
+                  Este ciclo ya está pagado — para subir o bajar de plan usá &quot;Cambiar de plan&quot; en el panel
+                  de al lado.
+                </p>
+              )}
+            </div>
+          )}
+
+          {confirmandoCambioPlan && !editandoPlan && (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+              style={{ background: "color-mix(in srgb, black 60%, transparent)" }}
+            >
+              <div
+                className="marca-agua-modal w-full max-w-sm rounded-2xl border-2 p-6"
+                style={{ borderColor: "var(--gx-accent)", background: "var(--gx-surface)" }}
+              >
+                <h3 className="text-lg font-bold" style={{ color: "var(--gx-ink)" }}>
+                  ¿Cambiar el plan?
+                </h3>
+                <p className="mt-2 text-sm" style={{ color: "var(--gx-muted)" }}>
+                  {vieneDelExcel
+                    ? "Se va a cambiar el plan de membresía. Sus fechas de pago y de vencimiento no cambian (se ajustan aparte). ¿Estás seguro?"
+                    : "Se va a cambiar el plan de membresía. Si el miembro tiene una suscripción activa, su fecha de vencimiento se recalcula (prorrateo) a la nueva frecuencia. ¿Estás seguro?"}
+                </p>
+                <div className="mt-4 flex gap-3">
+                  <Button
+                    type="button"
+                    variant="secundario"
+                    className="flex-1"
+                    onClick={() => setConfirmandoCambioPlan(false)}
+                  >
+                    Abortar
+                  </Button>
+                  <Button
+                    type="button"
+                    className="flex-1"
+                    onClick={() => {
+                      setConfirmandoCambioPlan(false);
+                      setEditandoPlan(true);
+                    }}
+                  >
+                    Sí, cambiar plan
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {editandoPlan && (
+          <div className="grid grid-cols-2 gap-3">
+            {planesActivos.map((plan) => {
+              const seleccionado = planId === plan.id;
+              return (
+                <button
+                  key={plan.id}
+                  type="button"
+                  onClick={() => manejarCambioPlan(plan.id)}
+                  className="flex flex-col items-start gap-1 rounded-lg border-2 p-4 text-left transition-colors duration-150 active:scale-[0.98]"
+                  style={
+                    seleccionado
+                      ? {
+                          borderColor: "var(--gx-accent)",
+                          background: "color-mix(in srgb, var(--gx-accent) 12%, transparent)",
+                        }
+                      : { borderColor: "var(--gx-edge)" }
+                  }
+                >
+                  <span className="text-sm font-medium" style={{ color: "var(--gx-muted)" }}>
+                    {plan.nombre}
+                  </span>
+                  <span className="text-2xl font-semibold" style={{ color: "var(--gx-ink)" }}>
+                    ${plan.precioUSD}
+                    <span className="text-sm font-normal" style={{ color: "var(--gx-muted)" }}>
+                      /{ETIQUETA_FRECUENCIA[plan.frecuencia].toLowerCase()}
+                    </span>
+                  </span>
+                  {plan.incluyeEntrenador && (
+                    <span className="text-xs font-medium" style={{ color: "var(--gx-accent)" }}>
+                      Incluye entrenador
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          )}
+
+          {editandoPlan && esEdicion && (
+          <div className="mt-4 flex flex-col gap-3 rounded-lg border p-4" style={{ borderColor: "var(--gx-edge)" }}>
+            {planEsCortesia ? (
+              <label className="flex flex-col gap-1.5 text-sm" style={{ color: "var(--gx-muted)" }}>
+                Precio
+                <div
+                  className="flex min-h-11 items-center rounded-lg border px-3"
+                  style={{ background: "var(--gx-surface-2)", borderColor: "var(--gx-edge)", color: "var(--gx-ink)" }}
+                >
+                  $0 — plan de cortesía (no editable)
+                </div>
+              </label>
+            ) : (
+              <CurrencyInput
+                name="precioPlanEditado"
+                label="Precio"
+                moneda="USD"
+                value={precio}
+                onChange={(valor) => {
+                  setPrecio(valor);
+                  setErrorPrecio(null);
+                }}
+              />
+            )}
+            {errorPrecio && (
+              <p className="text-sm" style={{ color: "var(--gx-bad)" }}>
+                {errorPrecio}
+              </p>
+            )}
+          </div>
+          )}
+
+          <label className={`mt-4 flex flex-col gap-1.5 text-sm ${requiereEntrenador ? "" : "hidden"}`} style={{ color: "var(--gx-muted)" }}>
+            Entrenador asignado
+            {(() => {
+              const bloqueado = !requiereEntrenador || (esEdicion && !editandoPlan && !editandoEntrenador);
+              return (
+                <>
+                  {/* Un <select disabled> no se envía en el submit — cuando está
+                      bloqueado se manda su valor actual por un hidden aparte,
+                      así no se pisa el entrenadorId existente con null. */}
+                  {bloqueado && <input type="hidden" name="entrenadorId" value={entrenadorId} />}
+                  <select
+                    name={bloqueado ? undefined : "entrenadorId"}
+                    value={entrenadorId}
+                    onChange={(e) => setEntrenadorId(e.target.value)}
+                    disabled={bloqueado}
+                    className="min-h-11 rounded-lg border px-3 gx-campo"
+                  >
+                    <option value="">Seleccioná un entrenador</option>
+                    {entrenadores.map((entrenador) => (
+                      <option key={entrenador.id} value={entrenador.id}>
+                        {entrenador.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </>
+              );
+            })()}
+            {!requiereEntrenador && (
+              <span className="text-xs" style={{ color: "var(--gx-muted)" }}>
+                Elegí un plan con entrenador para poder asignar uno.
+              </span>
+            )}
+            {esEdicion && editandoEntrenador && !editandoPlan && (
+              <Button
+                type="button"
+                variant="secundario"
+                className="mt-1 self-start"
+                onClick={() => {
+                  setEntrenadorId(entrenadorIdOriginal);
+                  setEditandoEntrenador(false);
+                }}
+              >
+                Cancelar cambio de entrenador
+              </Button>
+            )}
+          </label>
+
+          {esEdicion && editandoPlan && (
+            <Button
+              type="button"
+              variant="secundario"
+              className="mt-4"
+              onClick={() => {
+                // Revierte al plan original del miembro sin tocar el resto
+                // del formulario (nombre, sede, etc. ya editados se conservan).
+                if (planIdOriginal) manejarCambioPlan(planIdOriginal);
+                setEditandoPlan(false);
+              }}
+            >
+              Cancelar cambio de plan
+            </Button>
+          )}
+
+          {esEdicion && (
+            <div className="mt-4 flex flex-col gap-3">
+              {!!saldoPendiente && saldoPendiente > 0 && (
+                <div
+                  className="flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium"
+                  style={{ background: "color-mix(in srgb, var(--gx-accent) 15%, transparent)", color: "var(--gx-accent)" }}
+                >
+                  <span>Saldo pendiente</span>
+                  <span>${saldoPendiente.toFixed(2)}</span>
+                </div>
+              )}
+              {!!saldoPendiente && saldoPendiente > 0 && accesoHastaAbono && (
+                <p className="text-sm" style={{ color: "var(--gx-muted)" }}>
+                  Acceso por el abono hasta el <strong style={{ color: "var(--gx-ink)" }}>{formatearFecha(accesoHastaAbono)}</strong>.
+                  Si no paga el saldo antes, se le bloquea el acceso.
+                </p>
+              )}
+              {miembroId && (
+                <Link
+                  href={`/miembros/${miembroId}/pagos`}
+                  className="block min-h-11 content-center rounded-lg px-4 text-center text-sm font-medium transition-colors duration-150 active:scale-95"
+                  style={{ background: "var(--gx-surface-2)", color: "var(--gx-ink)" }}
+                >
+                  Ver historial de pagos ({totalPagos ?? 0})
+                </Link>
+              )}
+            </div>
+          )}
+        </Card>
+      </form>
+
+      {/* Primer pago (solo al crear un miembro) / ticket de confirmación —
+          formulario propio, fuera de "formulario-miembro" a propósito (no se
+          pueden anidar <form>). En edición no hay columna acá salvo mientras
+          se confirma el ticket — los pagos se registran desde Caja. */}
+      {!esEdicion && (
+      <div className="lg:col-start-3 lg:row-start-1">
+        {!mostrarTicket ? (
+            <Card>
+              <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide" style={{ color: "var(--gx-muted)" }}>
+                Primer pago
+              </h2>
+              <p className="mb-4 text-xs" style={{ color: "var(--gx-muted)" }}>
+                Se registra en el mismo paso que creás al miembro, así queda activo desde hoy sin
+                tener que entrar después a &quot;Registrar pago&quot;.
+              </p>
+
+              {precioActual > 0 && (
+                <div className="mb-4">
+                  <p className="mb-2 text-sm font-semibold" style={{ color: "var(--gx-ink)" }}>
+                    Meses a pagar
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {Array.from({ length: MAX_MESES_POR_PAGO }, (_, i) => i + 1).map((n) => (
+                      <Button
+                        key={n}
+                        type="button"
+                        variant={meses === n ? "primario" : "secundario"}
+                        onClick={() => {
+                          setMeses(n);
+                          setMontoHoy(null);
+                          setErrorMontoHoy(null);
+                        }}
+                      >
+                        {n}
+                      </Button>
+                    ))}
+                  </div>
+                  {meses > 1 && (
+                    <p className="mt-2 text-sm font-bold" style={{ color: "var(--gx-ink)" }}>
+                      Total de {meses} meses: ${precioCiclo.toFixed(2)}. Se paga completo; puedes repartirlo en varios métodos.
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {precioActual > 0 && planSeleccionado?.permitePagoParcial !== false && !dividirPago && meses === 1 && (
+                <div className="mb-4">
+                  <CurrencyInput
+                    name="montoHoy"
+                    label="Monto a pagar hoy"
+                    moneda="USD"
+                    value={montoHoy ?? String(precioCiclo)}
+                    onChange={(valor) => {
+                      setMontoHoy(valor);
+                      setErrorMontoHoy(null);
+                    }}
+                  />
+                  {esAbonoInicial && (
+                    <p className="mt-2 text-sm font-bold" style={{ color: "var(--gx-ink)" }}>
+                      {precioCiclo - montoAPagar <= toleranciaDiferenciaPagoUSD(precioCiclo)
+                        ? "Diferencia aceptada: el acceso cubre el ciclo completo y quedan "
+                        : "Queda como abono: el acceso se da en proporción a lo pagado y quedan "}
+                      ${(precioCiclo - montoAPagar).toFixed(2)} pendientes.
+                    </p>
+                  )}
+                  {errorMontoHoy && (
+                    <p ref={errorPagoRef} className="mt-1 text-sm" style={{ color: "var(--gx-bad)" }}>
+                      {errorMontoHoy}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {precioActual > 0 && dividirPago ? (
+                <>
+                  {lineasDivididas.map(({ id }, indice) => (
+                    <LineaPagoMiembroCampos
+                      key={id}
+                      nombre={`pago${id}`}
+                      titulo={`Pago ${indice + 1}`}
+                      metodosPago={metodosPago}
+                      idFormulario={idFormulario}
+                      fechaTasa={fechaInscripcion && fechaInscripcion < hoyISO() ? fechaInscripcion : undefined}
+                      onCambio={(linea) => {
+                        // El aviso del pago se borra solo en cuanto se corrige algo.
+                        setErrorMontoHoy(null);
+                        setLineasDivididas((previas) => previas.map((previa) => (previa.id === id ? { id, linea } : previa)));
+                      }}
+                      onQuitar={
+                        lineasDivididas.length > 2
+                          ? () => setLineasDivididas((previas) => previas.filter((previa) => previa.id !== id))
+                          : undefined
+                      }
+                    />
+                  ))}
+                  <Button
+                    type="button"
+                    variant="secundario"
+                    className="mb-3 w-full"
+                    onClick={() => {
+                      setLineasDivididas((previas) => [...previas, { id: siguienteIdLinea, linea: null }]);
+                      setSiguienteIdLinea((n) => n + 1);
+                    }}
+                  >
+                    Agregar otro método de pago
+                  </Button>
+                  <p className="mb-2 text-sm font-bold" style={{ color: "var(--gx-ink)" }}>
+                    Total de los pagos: <strong style={{ color: "var(--gx-ink)" }}>${montoAPagar.toFixed(2)}</strong> de ${precioCiclo.toFixed(2)}
+                    {esAbonoInicial && (
+                      <>
+                        {" "}
+                        — quedan ${(precioCiclo - montoAPagar).toFixed(2)} pendientes
+                        {precioCiclo - montoAPagar <= toleranciaDiferenciaPagoUSD(precioCiclo) ? " (diferencia aceptada)" : " (abono)"}.
+                      </>
+                    )}
+                  </p>
+                  {errorMontoHoy && (
+                    <p ref={errorPagoRef} className="mb-2 text-sm" style={{ color: "var(--gx-bad)" }}>
+                      {errorMontoHoy}
+                    </p>
+                  )}
+                </>
+              ) : precioActual > 0 ? (
+                <SelectorMetodoPago
+                  metodos={metodosPago}
+                  monto={montoAPagar}
+                  onCambio={setSeleccionMetodo}
+                  idFormulario={idFormulario}
+                  // Con inscripción pasada el pago inicial se fecha ese día: la tasa y el monto en Bs son los de esa fecha.
+                  fechaTasa={fechaInscripcion && fechaInscripcion < hoyISO() ? fechaInscripcion : undefined}
+                />
+              ) : (
+                <p className="text-sm" style={{ color: "var(--gx-muted)" }}>
+                  Este plan no tiene costo — no hace falta elegir método de pago.
+                </p>
+              )}
+
+              {hayExcedente && (
+                <fieldset className="mt-4 flex flex-col gap-2 rounded-lg border p-3 text-sm" style={{ borderColor: "var(--gx-edge)" }}>
+                  <legend className="px-1 font-bold" style={{ color: "var(--gx-ink)" }}>
+                    Sobran ${excedenteUSD.toFixed(2)}. ¿Qué hacemos con ese dinero?
+                  </legend>
+                  {excedenteUSD > precioCiclo && (
+                    <p className="text-sm" style={{ color: "var(--gx-bad)" }}>
+                      Sobra más que el precio del plan: revisa que no hayas escrito bolívares en un campo de dólares.
+                    </p>
+                  )}
+                  <label className="flex min-h-11 items-center gap-2 font-bold" style={{ color: "var(--gx-ink)" }}>
+                    <input
+                      type="radio"
+                      checked={excedente === "otro"}
+                      onChange={() => setExcedente("otro")}
+                      className="h-5 w-5 accent-[var(--gx-accent)]"
+                    />
+                    Es de otro cobro (wifi u otra cosa): solo queda registrado
+                  </label>
+                  <label className="flex min-h-11 items-center gap-2 font-bold" style={{ color: "var(--gx-ink)" }}>
+                    <input
+                      type="radio"
+                      checked={excedente === "saldo"}
+                      onChange={() => setExcedente("saldo")}
+                      className="h-5 w-5 accent-[var(--gx-accent)]"
+                    />
+                    Guardarlo como saldo a favor para su próximo pago
+                  </label>
+                </fieldset>
+              )}
+
+              {precioActual > 0 && (
+                <Button
+                  type="button"
+                  variant="secundario"
+                  className="mt-4 w-full"
+                  onClick={() => {
+                    setDividirPago((v) => !v);
+                    setErrorMontoHoy(null);
+                    setLineasDivididas([
+                      { id: 1, linea: null },
+                      { id: 2, linea: null },
+                    ]);
+                    setSiguienteIdLinea(3);
+                  }}
+                >
+                  {dividirPago ? "Pagar con un solo método" : "Dividir el pago en dos métodos"}
+                </Button>
+              )}
+            </Card>
+        ) : (
+          <div
+            ref={ticketRef}
+            className="resplandor-confirmacion rounded-2xl border-2 border-dashed p-5"
+            style={{ borderColor: "var(--gx-edge)", background: "var(--gx-surface)" }}
+          >
+            <p
+              className="text-center text-xs font-semibold uppercase tracking-widest"
+              style={{ color: "var(--gx-muted)" }}
+            >
+              Resumen del nuevo miembro
+            </p>
+
+            <div className="my-3 flex justify-center">
+              <div
+                className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full text-lg font-semibold"
+                style={{ background: "var(--gx-surface-2)", color: "var(--gx-muted)" }}
+              >
+                {fotoPreview ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- vista previa de un archivo elegido en el cliente, no un asset del proyecto
+                  <img src={fotoPreview} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  iniciales(nombre || "?")
+                )}
+              </div>
+            </div>
+
+            <div className="my-3 border-t border-dashed" style={{ borderColor: "var(--gx-edge)" }} />
+
+            <dl className="flex flex-col gap-2 text-sm">
+              <Fila label="Nombre" valor={nombre || "—"} />
+              <Fila label="Cédula" valor={cedula || "—"} />
+              <Fila label="Celular" valor={celular || "—"} />
+              <Fila label="Inscripción" valor={formatearFecha(fechaInscripcion)} />
+              <Fila
+                label="Sede"
+                valor={sucursalId === ID_AMBAS_SEDES ? "Ambas" : sucursalActivaNombre}
+              />
+              <Fila label="Plan" valor={meses > 1 ? `${nombrePlanActual} · ${meses} meses` : nombrePlanActual} />
+              <Fila label="Entrenador" valor={requiereEntrenador ? (nombreEntrenadorActual ?? "Sin asignar") : "No aplica"} />
+              <Fila label="Método de pago" valor={nombreMetodoPagoActual ?? "—"} />
+            </dl>
+
+            <div className="my-3 border-t border-dashed" style={{ borderColor: "var(--gx-edge)" }} />
+
+            <div className="flex items-baseline justify-between">
+              <span className="text-sm font-medium" style={{ color: "var(--gx-muted)" }}>
+                {esAbonoInicial ? "Abono hoy" : "Total"}
+              </span>
+              <span className="text-2xl font-bold" style={{ color: "var(--gx-ink)" }}>
+                ${montoAPagar.toFixed(2)}
+              </span>
+            </div>
+            {esAbonoInicial && (
+              <p className="text-right text-sm" style={{ color: "var(--gx-muted)" }}>
+                Pendiente ${(precioCiclo - montoAPagar).toFixed(2)} de ${precioCiclo.toFixed(2)}
+              </p>
+            )}
+            {hayExcedente && (
+              <p className="text-right text-sm" style={{ color: "var(--gx-muted)" }}>
+                Sobran ${excedenteUSD.toFixed(2)} — {excedente === "saldo" ? "se guardan como saldo a favor" : "de otro cobro"}
+              </p>
+            )}
+            {montoBsActual !== null && (
+              <p className="text-right text-sm" style={{ color: "var(--gx-muted)" }}>
+                Bs. {formatearBs(montoBsActual)}
+              </p>
+            )}
+
+            <p className="mt-5 text-center text-sm font-medium" style={{ color: "var(--gx-muted)" }}>
+              ¿Está seguro de la información suministrada?
+            </p>
+
+            <div className="mt-3 flex gap-3">
+              <Button
+                type="button"
+                variant="secundario"
+                className="flex-1"
+                onClick={() => setMostrarTicket(false)}
+              >
+                No, editar
+              </Button>
+              <Button
+                type="button"
+                className="flex-1"
+                disabled={enviando}
+                onClick={() => formRef.current?.requestSubmit()}
+              >
+                {enviando ? "Guardando..." : "Sí, guardar"}
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+      )}
+
+      {esEdicion && ultimosCiclos.length > 0 && (
+        <Card className={`lg:col-start-1 lg:row-start-2 lg:col-span-2`}>
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: "var(--gx-muted)" }}>
+              Ciclos
+            </h2>
+            {diasHastaProximoCobro !== null && (
+              <Badge tono={diasHastaProximoCobro < 0 ? "rojo" : diasHastaProximoCobro <= 3 ? "ambar" : "verde"}>
+                {diasHastaProximoCobro < 0
+                  ? `Vencido hace ${Math.abs(diasHastaProximoCobro)} día${Math.abs(diasHastaProximoCobro) === 1 ? "" : "s"}`
+                  : diasHastaProximoCobro === 0
+                    ? "Vence hoy"
+                    : `${diasHastaProximoCobro} día${diasHastaProximoCobro === 1 ? "" : "s"} para el próximo cobro`}
+              </Badge>
+            )}
+          </div>
+          <div className="flex flex-col">
+            {ultimosCiclos.map((ciclo, indice) => (
+              <div
+                key={ciclo.id}
+                className="flex items-center justify-between border-b py-2 text-sm last:border-b-0"
+                style={{ borderColor: "var(--gx-edge)" }}
+              >
+                <span style={{ color: "var(--gx-ink)" }}>
+                  {ciclo.fechaInicioCiclo && ciclo.fechaFinCiclo
+                    ? `${formatearFechaCorta(ciclo.fechaInicioCiclo)} → ${formatearFechaCorta(ciclo.fechaFinCiclo)}`
+                    : "—"}
+                </span>
+                <Badge tono={indice === 0 ? "verde" : "gris"}>{indice === 0 ? "VIGENTE" : "VENCIDO"}</Badge>
+              </div>
+            ))}
+          </div>
+          {miembroId && (
+            <Link
+              href={`/miembros/${miembroId}/pagos`}
+              className="mt-3 inline-block text-sm font-medium hover:underline"
+              style={{ color: "var(--gx-accent)" }}
+            >
+              Ver todos los ciclos
+            </Link>
+          )}
+        </Card>
+      )}
+    </div>
+    </ProveedorCambiosSinGuardar>
+  );
+}

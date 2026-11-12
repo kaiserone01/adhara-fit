@@ -63,6 +63,8 @@ test("detecta cada exclusión de la lista cerrada", () => {
   }
 });
 
+test("el comando /handoff del arnés no es una exclusión", () => con((r) => { escribir(r, ".claude/commands/handoff.md", "x"); assert.deepEqual(verificar(r), []); }));
+
 test(".env.example no es una exclusión", () => con((r) => assert.deepEqual(verificar(r), [])));
 
 test("detecta contraseñas del Repo A bajo packages (BEH-S00-020)", () => con((r) => {

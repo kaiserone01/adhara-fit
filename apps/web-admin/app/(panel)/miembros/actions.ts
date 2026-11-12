@@ -1,0 +1,448 @@
+"use server";
+
+import { randomUUID } from "crypto";
+import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
+import { prisma } from "@/lib/prisma";
+import { obtenerUsuarioDeSesionActual } from "@/lib/sesion";
+import { PrismaMemberRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaMemberRepository";
+import { PrismaPlanRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPlanRepository";
+import { PrismaPagoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPagoRepository";
+import { PrismaSuscripcionRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSuscripcionRepository";
+import { crearMiembro, CedulaDuplicadaError } from "@gym-app/domain/use-cases/CrearMiembro";
+import {
+  actualizarMiembro,
+  MiembroNoEncontradoError,
+  MiembroFueraDeSucursalError,
+  PlanNoEncontradoError as ActualizarPlanNoEncontradoError,
+  FechasIncoherentesError,
+} from "@gym-app/domain/use-cases/ActualizarMiembro";
+import { calcularCambiosFechas } from "@gym-app/domain/utils/cambiosFechasFicha";
+import { inicioDelDiaCaracas } from "@gym-app/domain/utils/fechaCaracas";
+import { PrismaTurnoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaTurnoRepository";
+import { PrismaPermisoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPermisoRepository";
+import { PrismaSucursalRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSucursalRepository";
+import { PrismaTasaCambioRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaTasaCambioRepository";
+import { PrismaReglaAbonoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaReglaAbonoRepository";
+import { AuthorizationService } from "@gym-app/domain/services/AuthorizationService";
+import { storageR2 } from "@/lib/storageR2";
+import {
+  registrarPago,
+  MesesInvalidosError,
+  MesesRequierenPagoCompletoError,
+  MesesNoDisponiblesError,
+  MiembroNoEncontradoError as PagoMiembroNoEncontradoError,
+  MiembroFueraDeSucursalError as PagoMiembroFueraDeSucursalError,
+  PlanNoEncontradoError,
+  PlanInactivoError,
+  RolNoAutorizadoError as PagoRolNoAutorizadoError,
+  MontoInvalidoError,
+  AbonoNoPermitidoError,
+  AbonoMenorAlMinimoError,
+  FechaPagoInvalidaError,
+  SinTasaParaFechaError,
+} from "@gym-app/domain/use-cases/RegistrarPago";
+import { eliminarMiembro } from "@gym-app/domain/use-cases/EliminarMiembro";
+import { activarMiembroEnTransaccion } from "@/lib/activacion";
+import { conMensajeOk } from "../redirectConMensaje";
+
+export interface EstadoFormularioMiembro {
+  error?: string;
+}
+
+const ID_AMBAS_SEDES = "__ambas__";
+
+// "Ambas" en el selector de sede se traduce a null (sin restricción de
+// sucursal) — ver diseño acordado del checkbox Plan.multisede.
+function resolverSucursalId(valor: string | undefined): string | null {
+  if (!valor || valor === ID_AMBAS_SEDES) return null;
+  return valor;
+}
+
+function resolverPlanId(formData: FormData): string | null {
+  return formData.get("planId")?.toString() || null;
+}
+
+// "yyyy-mm-dd" del <input type="date"> → fecha local a las 00:00; vacío o inválido → null.
+// Líneas del primer pago dividido en dos métodos. null si no vienen o no son válidas (se usa el pago de una sola línea).
+function leerLineasDePago(valor: FormDataEntryValue | null) {
+  try {
+    const lineas = JSON.parse(valor?.toString() ?? "");
+    if (!Array.isArray(lineas) || lineas.length === 0) return null;
+    const validas = lineas.map((l) => ({
+      monto: Number(l.monto),
+      montoBs: l.montoBs !== null && l.montoBs !== undefined && Number(l.montoBs) > 0 ? Number(l.montoBs) : null,
+      metodo: String(l.metodo ?? ""),
+      metodoPagoId: l.metodoPagoId ? String(l.metodoPagoId) : null,
+      numeroOperacion: l.numeroOperacion ? String(l.numeroOperacion) : null,
+      tasaCambio: l.tasaCambio !== null && l.tasaCambio !== undefined ? Number(l.tasaCambio) : null,
+    }));
+    return validas.every((l) => l.monto > 0 && l.metodoPagoId) ? validas : null;
+  } catch {
+    return null;
+  }
+}
+
+function leerFecha(valor: FormDataEntryValue | null): Date | null {
+  const texto = valor?.toString();
+  if (!texto) return null;
+  const fecha = new Date(`${texto}T00:00:00`);
+  return Number.isNaN(fecha.getTime()) ? null : fecha;
+}
+
+// Sube la foto al bucket "gym-app" en Cloudflare R2 (carpeta "miembros") y
+// devuelve la URL pública (dominio R2.dev configurado en R2_PUBLIC_URL).
+async function guardarFoto(archivo: FormDataEntryValue | null): Promise<string | null> {
+  if (!(archivo instanceof File) || archivo.size === 0) return null;
+
+  const extension = archivo.name.split(".").pop()?.toLowerCase() || "jpg";
+  const nombreArchivo = `${randomUUID()}.${extension}`;
+  const contenido = Buffer.from(await archivo.arrayBuffer());
+
+  return storageR2().subir("miembros", nombreArchivo, contenido, archivo.type || "application/octet-stream");
+}
+
+export async function crearMiembroAction(
+  _estadoPrevio: EstadoFormularioMiembro,
+  formData: FormData
+): Promise<EstadoFormularioMiembro> {
+  const sesion = await obtenerUsuarioDeSesionActual();
+  if (!sesion) redirect("/login");
+  const { usuario, sucursalActivaId } = sesion;
+
+  const nombre = formData.get("nombre")?.toString().trim();
+  const cedula = formData.get("cedula")?.toString().trim();
+  const sucursalId = formData.get("sucursalId")?.toString();
+  const precioPlan = Number(formData.get("precioPlan"));
+  // Primer pago: por defecto el precio completo; menos que eso se registra como abono.
+  const montoInicial = Number(formData.get("montoInicial"));
+  // Meses que cubre el primer pago (1 a 6); el dominio valida el rango.
+  const meses = Number(formData.get("meses")?.toString() || 1);
+  const montoPago = montoInicial > 0 ? montoInicial : precioPlan * meses;
+  // Primer pago dividido en dos métodos: llega como JSON desde el formulario (null = un solo método, como siempre).
+  const lineasDivididas = leerLineasDePago(formData.get("lineas"));
+  const metodo = formData.get("metodo")?.toString();
+  const metodoPagoId = formData.get("metodoPagoId")?.toString() || null;
+  const tasaCambioRaw = formData.get("tasaCambio")?.toString();
+  const numeroOperacion = formData.get("numeroOperacion")?.toString().trim() || null;
+  // Sede elegida en el selector "Sede del pago" (ver SelectorMetodoPago);
+  // si no vino, se cae a la sede activa de la sesión.
+  const sucursalIdPago = formData.get("sucursalIdPago")?.toString() || sucursalActivaId;
+
+  if (!nombre || !cedula || !sucursalId || Number.isNaN(precioPlan)) {
+    return { error: "Nombre, cédula y sede son requeridos." };
+  }
+  // Un plan de cortesía ($0) no tiene nada que cobrar — el método de pago
+  // solo es obligatorio cuando hay un monto real de por medio (ver diseño
+  // acordado, membresías con beneficio que no pagan en el gym).
+  if (precioPlan > 0 && lineasDivididas === null && (!metodo || !metodoPagoId)) {
+    return { error: "Elegí un método de pago." };
+  }
+
+  const planId = resolverPlanId(formData);
+  if (!planId) {
+    return { error: "Elegí un plan para el miembro." };
+  }
+
+  const fotoUrl = await guardarFoto(formData.get("foto"));
+
+  let miembro;
+  try {
+    miembro = await crearMiembro(
+      { miembros: new PrismaMemberRepository(prisma) },
+      {
+        organizacionId: usuario.organizacionId,
+        sucursalId: resolverSucursalId(sucursalId),
+        nombre,
+        cedula,
+        // Viene del formulario (puede ser pasada: miembros anotados en cuaderno); si falta, hoy: el instante en
+        // que empieza el día calendario de Caracas, que es la medianoche local de Venezuela sin depender de la zona del servidor.
+        fechaInscripcion: leerFecha(formData.get("fechaInscripcion")) ?? inicioDelDiaCaracas(new Date()),
+        fechaNacimiento: null,
+        celular: formData.get("celular")?.toString() || null,
+        fotoUrl,
+        entrenadorId: formData.get("entrenadorId")?.toString() || null,
+        planId,
+        precioPlan,
+      }
+    );
+  } catch (error) {
+    if (error instanceof CedulaDuplicadaError) {
+      return { error: error.message };
+    }
+    throw error;
+  }
+
+  // El miembro ya quedó creado en este punto — un error acá abajo no lo
+  // deshace, así que solo se manejan los errores de dominio esperables;
+  // cualquier otra cosa se deja propagar (el miembro queda creado, sin
+  // pago, y se puede registrar a mano desde su ficha).
+  if (!sucursalIdPago) {
+    return {
+      error: "El miembro se creó, pero no se pudo registrar el pago inicial: no se pudo determinar en qué sucursal se registra el pago.",
+    };
+  }
+
+  try {
+    await registrarPago(
+      {
+        pagos: new PrismaPagoRepository(prisma),
+        suscripciones: new PrismaSuscripcionRepository(prisma),
+        miembros: new PrismaMemberRepository(prisma),
+        planes: new PrismaPlanRepository(prisma),
+        turnos: new PrismaTurnoRepository(prisma),
+        sucursales: new PrismaSucursalRepository(prisma),
+        autorizacion: new AuthorizationService(new PrismaPermisoRepository(prisma)),
+        reglasAbono: new PrismaReglaAbonoRepository(prisma),
+        tasas: new PrismaTasaCambioRepository(prisma),
+      },
+      {
+        organizacionId: usuario.organizacionId,
+        miembroId: miembro.id,
+        planId,
+        // El pago inicial lleva la fecha de inscripción: con una fecha pasada el ciclo y el vencimiento
+        // cuentan desde ese día (ver primerPagoDeInscripcion).
+        fechaPago: miembro.fechaInscripcion ?? undefined,
+        primerPagoDeInscripcion: true,
+        meses,
+        // Si pagó de más: guardar el sobrante como saldo a favor (si no, es de otro cobro y solo queda registrado).
+        excedenteASaldoAFavor: formData.get("excedente")?.toString() === "saldo",
+        lineas: lineasDivididas ?? [
+          {
+            monto: montoPago,
+            metodo: metodo || "Cortesía",
+            metodoPagoId,
+            numeroOperacion,
+            tasaCambio: tasaCambioRaw ? Number(tasaCambioRaw) : null,
+          },
+        ],
+        sucursalId: sucursalIdPago,
+        registradoPorId: usuario.id,
+        rolUsuario: usuario.rol,
+      }
+    );
+  } catch (error) {
+    if (
+      error instanceof PagoMiembroNoEncontradoError ||
+      error instanceof PagoMiembroFueraDeSucursalError ||
+      error instanceof PlanNoEncontradoError ||
+      error instanceof PlanInactivoError ||
+      error instanceof PagoRolNoAutorizadoError ||
+      error instanceof MontoInvalidoError ||
+      error instanceof AbonoNoPermitidoError ||
+      error instanceof AbonoMenorAlMinimoError ||
+      error instanceof FechaPagoInvalidaError ||
+      error instanceof MesesInvalidosError ||
+      error instanceof MesesRequierenPagoCompletoError ||
+      error instanceof MesesNoDisponiblesError ||
+      error instanceof SinTasaParaFechaError
+    ) {
+      return { error: `El miembro se creó, pero no se pudo registrar el pago inicial: ${error.message}` };
+    }
+    throw error;
+  }
+
+  revalidatePath("/miembros");
+  revalidatePath("/planes");
+  revalidatePath("/pagos");
+  redirect(conMensajeOk("/miembros", "Miembro creado y pago inicial registrado."));
+}
+
+export async function actualizarMiembroAction(
+  id: string,
+  _estadoPrevio: EstadoFormularioMiembro,
+  formData: FormData
+): Promise<EstadoFormularioMiembro> {
+  const sesion = await obtenerUsuarioDeSesionActual();
+  if (!sesion) redirect("/login");
+  const { usuario, sucursalActivaId } = sesion;
+
+  const nombre = formData.get("nombre")?.toString().trim();
+  const cedula = formData.get("cedula")?.toString().trim();
+  const sucursalId = formData.get("sucursalId")?.toString();
+  const precioPlan = Number(formData.get("precioPlan"));
+
+  if (!nombre || !cedula || !sucursalId || Number.isNaN(precioPlan)) {
+    return { error: "Nombre, cédula, sede y precio del plan son requeridos." };
+  }
+
+  // null = el campo no se envió (el miembro no puede ajustar esa fecha); "" = el campo se vació.
+  const leerTexto = (campo: string) => (formData.has(campo) ? (formData.get(campo)?.toString() ?? "") : null);
+  // Solo las fechas que el socio cambió (distintas a las que cargó el formulario): así no se reescribe
+  // la hora guardada ni se apaga el aviso en cada guardado.
+  const cambiosFechas = calcularCambiosFechas({
+    vencimiento: leerTexto("fechaVencimiento"),
+    vencimientoOriginal: leerTexto("fechaVencimientoOriginal"),
+    pago: leerTexto("fechaUltimoPago"),
+    pagoOriginal: leerTexto("fechaUltimoPagoOriginal"),
+  });
+
+  const planId = resolverPlanId(formData);
+  const fotoUrl = await guardarFoto(formData.get("foto"));
+
+  try {
+    await actualizarMiembro(
+      {
+        miembros: new PrismaMemberRepository(prisma),
+        planes: new PrismaPlanRepository(prisma),
+        suscripciones: new PrismaSuscripcionRepository(prisma),
+        sucursales: new PrismaSucursalRepository(prisma),
+        pagos: new PrismaPagoRepository(prisma),
+      },
+      {
+        organizacionId: usuario.organizacionId,
+        id,
+        sucursalActivaId,
+        cambios: {
+          nombre,
+          cedula,
+          sucursalId: resolverSucursalId(sucursalId),
+          celular: formData.get("celular")?.toString() || null,
+          entrenadorId: formData.get("entrenadorId")?.toString() || null,
+          ...(planId ? { planId } : {}),
+          precioPlan,
+          ...(fotoUrl ? { fotoUrl } : {}),
+          ...cambiosFechas,
+        },
+      }
+    );
+  } catch (error) {
+    if (
+      error instanceof CedulaDuplicadaError ||
+      error instanceof FechasIncoherentesError ||
+      error instanceof MiembroNoEncontradoError ||
+      error instanceof MiembroFueraDeSucursalError ||
+      error instanceof ActualizarPlanNoEncontradoError
+    ) {
+      return { error: error.message };
+    }
+    throw error;
+  }
+
+  revalidatePath("/miembros");
+  // Sin esto, el redirect de abajo puede servir la versión en caché de esta
+  // misma página (Router Cache) — el formulario de "Registrar pago" de al
+  // lado seguiría mostrando el plan/monto viejos aunque el cambio ya esté
+  // guardado en la base (ver diseño acordado, bug real reportado).
+  revalidatePath(`/miembros/${id}`);
+  redirect(conMensajeOk(`/miembros/${id}`, "Cambios guardados."));
+}
+
+// Guarda solo la foto (sin tocar el resto de la ficha) y devuelve su URL pública.
+// Lo usa "Ajustar encuadre" para persistir el recorte al instante.
+export async function actualizarFotoMiembroAction(
+  id: string,
+  formData: FormData
+): Promise<{ fotoUrl?: string; error?: string }> {
+  const sesion = await obtenerUsuarioDeSesionActual();
+  if (!sesion) redirect("/login");
+  const { usuario, sucursalActivaId } = sesion;
+
+  const fotoUrl = await guardarFoto(formData.get("foto"));
+  if (!fotoUrl) return { error: "No se recibió la foto." };
+
+  try {
+    await actualizarMiembro(
+      {
+        miembros: new PrismaMemberRepository(prisma),
+        planes: new PrismaPlanRepository(prisma),
+        suscripciones: new PrismaSuscripcionRepository(prisma),
+        sucursales: new PrismaSucursalRepository(prisma),
+        pagos: new PrismaPagoRepository(prisma),
+      },
+      { organizacionId: usuario.organizacionId, id, sucursalActivaId, cambios: { fotoUrl } }
+    );
+  } catch (error) {
+    if (error instanceof MiembroNoEncontradoError || error instanceof MiembroFueraDeSucursalError) {
+      return { error: error.message };
+    }
+    throw error;
+  }
+
+  revalidatePath("/miembros");
+  revalidatePath(`/miembros/${id}`);
+  return { fotoUrl };
+}
+
+export async function darDeBajaAction(id: string): Promise<void> {
+  const sesion = await obtenerUsuarioDeSesionActual();
+  if (!sesion) redirect("/login");
+  const { usuario, sucursalActivaId } = sesion;
+
+  await actualizarMiembro(
+    {
+      miembros: new PrismaMemberRepository(prisma),
+      planes: new PrismaPlanRepository(prisma),
+      suscripciones: new PrismaSuscripcionRepository(prisma),
+      sucursales: new PrismaSucursalRepository(prisma),
+      pagos: new PrismaPagoRepository(prisma),
+    },
+    { organizacionId: usuario.organizacionId, id, sucursalActivaId, cambios: { activo: false } }
+  );
+
+  revalidatePath("/miembros");
+}
+
+export async function reactivarAction(id: string): Promise<void> {
+  const sesion = await obtenerUsuarioDeSesionActual();
+  if (!sesion) redirect("/login");
+  const { usuario, sucursalActivaId } = sesion;
+
+  await actualizarMiembro(
+    {
+      miembros: new PrismaMemberRepository(prisma),
+      planes: new PrismaPlanRepository(prisma),
+      suscripciones: new PrismaSuscripcionRepository(prisma),
+      sucursales: new PrismaSucursalRepository(prisma),
+      pagos: new PrismaPagoRepository(prisma),
+    },
+    { organizacionId: usuario.organizacionId, id, sucursalActivaId, cambios: { activo: true } }
+  );
+
+  revalidatePath("/miembros");
+}
+
+// Borra al miembro con todo su historial. Los errores de dominio (en español)
+// se dejan propagar para que el cliente los muestre con useFeedback.
+export async function eliminarMiembroAction(id: string): Promise<void> {
+  const sesion = await obtenerUsuarioDeSesionActual();
+  if (!sesion) redirect("/login");
+  const { usuario, sucursalActivaId } = sesion;
+
+  await eliminarMiembro(
+    {
+      miembros: new PrismaMemberRepository(prisma),
+      sucursales: new PrismaSucursalRepository(prisma),
+      autorizacion: new AuthorizationService(new PrismaPermisoRepository(prisma)),
+    },
+    { organizacionId: usuario.organizacionId, id, sucursalActivaId, usuarioIdSolicitante: usuario.id }
+  );
+
+  revalidatePath("/miembros");
+  redirect(conMensajeOk("/miembros", "Miembro quitado del sistema."));
+}
+
+// Activa (o abre, si ya existe) al miembro de esa cédula desde el padrón de la sede y lleva a su ficha.
+// Los errores esperados (en español) se devuelven como { error }: Next.js oculta el mensaje de los errores lanzados en producción.
+export async function activarDesdeExcelAction(cedula: string): Promise<{ error: string }> {
+  const sesion = await obtenerUsuarioDeSesionActual();
+  if (!sesion) redirect("/login");
+  const { usuario, sucursalActivaId } = sesion;
+
+  const autorizado = await new AuthorizationService(new PrismaPermisoRepository(prisma)).tienePermiso(usuario.id, "MIEMBROS", "CREAR");
+  if (!autorizado) return { error: "Tu rol no tiene permiso para activar miembros." };
+
+  const cedulaLimpia = cedula.trim();
+  if (!cedulaLimpia) return { error: "Escribe la cédula." };
+
+  const yaExistia = await new PrismaMemberRepository(prisma).buscarPorOrganizacionYCedula(usuario.organizacionId, cedulaLimpia);
+  const miembro = await activarMiembroEnTransaccion({ organizacionId: usuario.organizacionId, sucursalId: sucursalActivaId, cedula: cedulaLimpia });
+  if (!miembro) return { error: "No hay ninguna persona con esa cédula en el Excel de esta sede." };
+
+  revalidatePath("/miembros");
+  redirect(
+    yaExistia
+      ? `/miembros/${miembro.id}`
+      : conMensajeOk(`/miembros/${miembro.id}`, "Miembro activado desde el Excel. Revisa sus datos y regularízalo.")
+  );
+}

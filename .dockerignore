@@ -1,0 +1,10 @@
+**/node_modules
+**/.next
+**/.turbo
+**/.git
+**/*.log
+.env*
+!.env.example
+docs
+handoff.md
+packages/db/prisma7.local.config.ts

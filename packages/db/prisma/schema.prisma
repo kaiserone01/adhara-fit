@@ -1,0 +1,723 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ── gym-app: modelos SaaS multi-tenant (ADR-001 v1 §6 + v2 §13) ──────────
+
+model Organizacion {
+  id        String   @id @default(cuid())
+  nombre    String
+  slug      String   @unique
+  plan      String   @default("basico")
+  createdAt DateTime @default(now())
+
+  sucursales           Sucursal[]
+  usuariosAdmin        UsuarioAdmin[]
+  miembros             Miembro[]
+  planes               Plan[]
+  productos            Producto[]
+  deudasProducto       DeudaProducto[]
+  metodosPago          MetodoPago[]
+  tema                 TemaOrganizacion?
+  turnos               Turno[]
+  reglasAbono          ReglaAbonoPorFrecuencia[]
+  cambiosPlanAuditoria CambioPlanAuditoria[]
+  miembrosReferencia   MiembroReferencia[]
+  padronHojas          PadronHoja[]
+}
+
+model Sucursal {
+  id             String       @id @default(cuid())
+  organizacionId String
+  organizacion   Organizacion @relation(fields: [organizacionId], references: [id])
+  nombre         String
+  direccion      String?
+  diasGracia     Int          @default(0) // días después del vencimiento antes de marcar "vencido"
+  tasaCambioUSD  Decimal?     @db.Decimal(10, 2) // fallback manual si la API BCV falla (ver ADR v1 §7)
+  activo         Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  apiKey         String       @unique @default(uuid()) // el kiosco se autentica con esto (header X-Kiosk-Api-Key), nunca manda sucursalId directo (ADR v1 §4.2)
+  reposoFrases    String[]    @default([]) // frases de la ficha en reposo del kiosco; vacío = las predeterminadas
+  reposoImagenUrl String? // imagen del círculo de la ficha en reposo (R2); null = placeholder del kiosco
+  reposoOpacidad  Int         @default(100) // % de opacidad del fondo de la ficha en reposo (20–100)
+  vitrinaDuracionSeg Int         @default(12) // duración por defecto de cada diapositiva de la vitrina (segundos)
+  vitrinaTransicion  String      @default("FUNDIDO") // FUNDIDO | DESLIZAR
+  vitrinaVersion     Int         @default(0) // se incrementa en cada cambio de contenido de la vitrina
+
+  usuariosAdmin     UsuarioAdmin[]
+  checkIns          CheckIn[]
+  pagos             Pago[]
+  turnos            Turno[]
+  usuariosConAcceso UsuarioSucursal[]
+  miembros          Miembro[]
+  sesiones          Sesion[]
+  deudasProducto    DeudaProducto[]
+  miembrosReferencia MiembroReferencia[]
+  padronHojas        PadronHoja[]
+  vitrinaItems       VitrinaItem[]
+}
+
+enum RolUsuario {
+  SOCIO // acceso total a la Organización, todas las sucursales
+  GERENTE // administra 1+ sucursales asignadas
+  RECEPCION // solo check-in, cobros y consulta de estado de miembros
+  ENTRENADOR // acceso de solo lectura a su cartera de miembros asignados
+}
+
+model UsuarioAdmin {
+  id             String       @id @default(cuid())
+  organizacionId String
+  organizacion   Organizacion @relation(fields: [organizacionId], references: [id])
+  sucursalId     String? // sucursal por defecto para operar (preselección) — NO es la fuente de acceso, ver UsuarioSucursal
+  sucursal       Sucursal?    @relation(fields: [sucursalId], references: [id])
+  nombre         String       @default("")
+  telefono       String?
+  fotoUrl        String?
+  rol            RolUsuario
+  email          String       @unique
+  passwordHash   String
+  activo         Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+
+  registrosAuditoria     RegistroAuditoria[]
+  sesiones               Sesion[]
+  turnos                 Turno[]
+  pagosRegistrados       Pago[]                @relation("PagosRegistrados")
+  pagosAnulados          Pago[]                @relation("PagosAnulados")
+  permisos               PermisoUsuario[]
+  sucursales             UsuarioSucursal[]
+  miembrosEntrenados     Miembro[]             @relation("EntrenadorDeMiembro")
+  cambiosPlanRegistrados CambioPlanAuditoria[]
+  deudasRegistradas      DeudaProducto[]       @relation("DeudasRegistradas")
+  deudasCobradas         DeudaProducto[]       @relation("DeudasCobradas")
+  deudasAnuladas         DeudaProducto[]       @relation("DeudasAnuladas")
+}
+
+enum ModuloPermiso {
+  MIEMBROS
+  PAGOS
+  PLANES
+  CAJA
+  USUARIOS
+  SUCURSALES
+  EN_SALA
+}
+
+enum AccionPermiso {
+  VER
+  CREAR
+  EDITAR
+  ELIMINAR
+}
+
+model PermisoUsuario {
+  id        String        @id @default(cuid())
+  usuarioId String
+  usuario   UsuarioAdmin  @relation(fields: [usuarioId], references: [id])
+  modulo    ModuloPermiso
+  accion    AccionPermiso
+
+  @@unique([usuarioId, modulo, accion])
+}
+
+model UsuarioSucursal {
+  usuarioId  String
+  sucursalId String
+  usuario    UsuarioAdmin @relation(fields: [usuarioId], references: [id])
+  sucursal   Sucursal     @relation(fields: [sucursalId], references: [id])
+
+  @@id([usuarioId, sucursalId])
+}
+
+enum Genero {
+  MASCULINO
+  FEMENINO
+}
+
+model Miembro {
+  id               String        @id @default(cuid())
+  organizacionId   String // el Miembro cuelga de la Organización, no de una Sucursal (ADR v1 §4.1)
+  organizacion     Organizacion  @relation(fields: [organizacionId], references: [id])
+  sucursalId       String? // sede asignada al miembro; null = "Ambas" (todas las sedes, solo si plan.multisede) — determina en qué sucursal puede hacer check-in (ver RegistrarCheckIn)
+  sucursal         Sucursal?     @relation(fields: [sucursalId], references: [id])
+  nombre           String
+  cedula           String // única POR organización (ver @@unique abajo)
+  fechaInscripcion DateTime?
+  fechaNacimiento  DateTime?
+  celular          String?
+  fotoUrl          String?
+  entrenadorId     String? // referencia a UsuarioAdmin con rol ENTRENADOR (ver "EntrenadorDeMiembro")
+  entrenador       UsuarioAdmin? @relation("EntrenadorDeMiembro", fields: [entrenadorId], references: [id])
+  planId           String? // plan vigente asignado (frecuencia y con/sin entrenador se leen de ahí)
+  plan             Plan?         @relation(fields: [planId], references: [id])
+  precioPlan       Decimal       @db.Decimal(10, 2) // precio vigente que paga (puede diferir del precio de catálogo del Plan, ej. "Personalizado")
+  saldoAFavorUSD   Decimal       @default(0) @db.Decimal(10, 2) // crédito generado al bajar de plan (ver CambiarPlanConPago) — se descuenta automáticamente del próximo pago (ver RegistrarPago), sin importar el plan de ese pago
+  fechaUltimoPago  DateTime?
+  fechaVencimiento DateTime?
+  activo           Boolean       @default(true) // baja lógica del miembro
+  porRegularizar   Boolean       @default(false) // los datos de fecha/pago vienen de una fuente externa (Excel/padrón) sin verificar: el socio debe ajustar el vencimiento o registrar un pago (badge "Por regularizar"); se limpia al ajustar la fecha o al registrar un pago
+  vieneDelExcel    Boolean       @default(false) // el miembro viene del padrón/migración del Excel: su fecha de pago y de vencimiento se editan siempre en la ficha (no se conoce su fecha de inscripción)
+  genero           Genero? // solo para saludar en el kiosco ("Bienvenido" / "Bienvenida"); null = no definido
+  createdAt        DateTime      @default(now())
+
+  pagos                Pago[]
+  checkIns             CheckIn[]
+  suscripciones        Suscripcion[]
+  cambiosPlanAuditoria CambioPlanAuditoria[]
+  deudasProducto       DeudaProducto[]
+
+  @@unique([organizacionId, cedula])
+}
+
+enum FrecuenciaPago {
+  DIARIO // 1 día
+  SEMANAL // 7 días
+  QUINCENAL // 15 días
+  MENSUAL // 30 días
+  SEMESTRAL // 180 días
+  ANUAL // 365 días
+  // Sin duración fija asociada — diasCiclo del Plan es el número que el
+  // admin tipeó a mano (ver FormularioPlan.tsx, opción "Personalizado").
+  PERSONALIZADO
+}
+
+model Plan {
+  id                String         @id @default(cuid())
+  organizacionId    String
+  organizacion      Organizacion   @relation(fields: [organizacionId], references: [id])
+  nombre            String
+  frecuencia        FrecuenciaPago
+  // Duración del ciclo en días — única fuente de verdad (reemplaza el mapa
+  // hardcodeado que existía en el dominio). Para las 6 frecuencias fijas
+  // se autocompleta (1/7/15/30/180/365); para PERSONALIZADO es el valor
+  // que el admin tipeó a mano.
+  diasCiclo         Int
+  incluyeEntrenador Boolean        @default(false)
+  precioUSD         Decimal        @db.Decimal(10, 2)
+  multisede         Boolean        @default(false) // si es true, el Miembro con este plan puede asignarse a "Ambas" sedes (sucursalId = null)
+  activo            Boolean        @default(true)
+
+  // Si este plan admite la modalidad de pago "Abono parcial". El pago
+  // combinado (múltiples métodos en un solo cobro) NUNCA se restringe por
+  // este campo — es universal para cualquier plan.
+  permitePagoParcial Boolean  @default(true)
+  // Mínimo de abono propio de este plan — sobreescribe la regla de su
+  // frecuencia (ReglaAbonoPorFrecuencia) cuando ambos están definidos.
+  // null = este plan no define un mínimo propio, hereda el de su
+  // frecuencia (si esa regla está activa).
+  minimoAbonoTipo    String? // "DIAS" | "PORCENTAJE"
+  minimoAbonoValor   Decimal? @db.Decimal(10, 2) // días si tipo=DIAS, 0-100 si tipo=PORCENTAJE
+
+  suscripciones          Suscripcion[]
+  miembros               Miembro[]
+  auditoriasComoAnterior CambioPlanAuditoria[] @relation("CambioPlanAuditoriaPlanAnterior")
+  auditoriasComoNuevo    CambioPlanAuditoria[] @relation("CambioPlanAuditoriaPlanNuevo")
+}
+
+// Regla de abono por defecto para todos los planes de una frecuencia — un
+// Plan individual puede sobreescribirla definiendo su propio
+// minimoAbonoTipo/minimoAbonoValor (ver Plan). Una fila por cada una de
+// las 4 frecuencias, por organización.
+model ReglaAbonoPorFrecuencia {
+  id               String         @id @default(cuid())
+  organizacionId   String
+  organizacion     Organizacion   @relation(fields: [organizacionId], references: [id])
+  frecuencia       FrecuenciaPago
+  // Si esta regla aplica — una frecuencia sin activar se comporta como si
+  // no existiera (abono sin mínimo ni plazo, salvo que el plan mismo
+  // defina su propio mínimo).
+  activo           Boolean        @default(false)
+  minimoAbonoTipo  String // "DIAS" | "PORCENTAJE"
+  minimoAbonoValor Decimal        @db.Decimal(10, 2)
+
+  @@unique([organizacionId, frecuencia])
+}
+
+enum EstadoSuscripcion {
+  ACTIVA
+  VENCIDA
+  CANCELADA
+  PAUSADA
+}
+
+model Suscripcion {
+  id               String            @id @default(cuid())
+  miembroId        String
+  miembro          Miembro           @relation(fields: [miembroId], references: [id])
+  planId           String
+  plan             Plan              @relation(fields: [planId], references: [id])
+  inicio           DateTime
+  fin              DateTime
+  // Fecha límite de acceso que otorga el monto abonado hasta ahora en
+  // este ciclo — null si el ciclo está saldado al 100%, si el pago fue
+  // total, o si ninguna regla de abono aplica. Ver
+  // packages/domain/entities/ReglaAbono.ts.
+  fechaLimiteAbono DateTime?
+  estado           EstadoSuscripcion @default(ACTIVA)
+  createdAt        DateTime          @default(now())
+}
+
+model Pago {
+  id              String       @id @default(cuid())
+  // Null en ventas de producto (sin miembro) — ver productoId.
+  miembroId       String?
+  miembro         Miembro?     @relation(fields: [miembroId], references: [id])
+  sucursalId      String
+  sucursal        Sucursal     @relation(fields: [sucursalId], references: [id])
+  turnoId         String?
+  turno           Turno?       @relation(fields: [turnoId], references: [id])
+  registradoPorId String
+  registradoPor   UsuarioAdmin @relation("PagosRegistrados", fields: [registradoPorId], references: [id])
+
+  monto            Decimal     @db.Decimal(10, 2)
+  metodo           String // snapshot legible al momento del pago (ej. "Pago Móvil - Banesco"), no cambia si el MetodoPago se edita/borra luego
+  metodoPagoId     String?
+  metodoPago       MetodoPago? @relation(fields: [metodoPagoId], references: [id])
+  numeroOperacion  String?
+  tasaCambio       Decimal?    @db.Decimal(10, 2)
+  montoBs          Decimal?    @db.Decimal(12, 2)
+  fechaPago        DateTime    @default(now())
+  fechaInicioCiclo DateTime? // inicio real del ciclo que este pago activó/extendió — null en pagos previos a esta migración
+  fechaFinCiclo    DateTime? // fin real de ese ciclo (mismo valor que pasa a ser Suscripcion.fin/Miembro.fechaVencimiento tras este pago)
+
+  // Correlaciona las N filas Pago que se crean en un solo envío de "pago
+  // combinado" (múltiples métodos en una misma operación de cobro). Null
+  // en pagos de una sola línea (total o abono simple) — no cambia su
+  // comportamiento. No reemplaza fechaFinCiclo como mecanismo de
+  // agrupación por ciclo; es solo para mostrar/auditar "estas N filas
+  // fueron un mismo cobro".
+  grupoPagoId String?
+
+  // Venta de producto: cada fila Pago es una línea de método de pago de la
+  // venta. productoNombre es snapshot (no cambia si se renombra el
+  // producto). Sin control de stock.
+  productoId     String?
+  producto       Producto? @relation(fields: [productoId], references: [id])
+  productoNombre String?
+  cantidad       Int?
+
+  anuladoEn       DateTime?
+  anuladoPorId    String?
+  anuladoPor      UsuarioAdmin? @relation("PagosAnulados", fields: [anuladoPorId], references: [id])
+  motivoAnulacion String?
+
+  cambioPlanAuditoria CambioPlanAuditoria[]
+
+  @@index([grupoPagoId])
+}
+
+// Artículo a la venta en el gimnasio (agua, Gatorade, guantines). El
+// equivalente en Bs no se persiste: se calcula con la tasa vigente.
+model Producto {
+  id             String       @id @default(cuid())
+  organizacionId String
+  organizacion   Organizacion @relation(fields: [organizacionId], references: [id])
+  nombre         String
+  descripcion    String?
+  costoUSD       Decimal      @db.Decimal(10, 2)
+  fotoUrl        String?
+  activo         Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+
+  pagos  Pago[]
+  deudas DeudaProducto[]
+
+  @@index([organizacionId])
+}
+
+enum EstadoDeuda {
+  PENDIENTE
+  COBRADA
+  ANULADA
+}
+
+// Producto fiado a un miembro: se entrega ya, se cobra después en bloque
+// (ver CobrarDeudasMiembro). No es un Pago hasta que se cobra: así el
+// turno, el arqueo y el histórico no la ven mientras está pendiente.
+model DeudaProducto {
+  id                String       @id @default(cuid())
+  organizacionId    String
+  organizacion      Organizacion @relation(fields: [organizacionId], references: [id])
+  sucursalId        String
+  sucursal          Sucursal     @relation(fields: [sucursalId], references: [id])
+  miembroId         String
+  miembro           Miembro      @relation(fields: [miembroId], references: [id])
+  productoId        String?
+  producto          Producto?    @relation(fields: [productoId], references: [id], onDelete: SetNull)
+  productoNombre    String // copia del nombre al fiar
+  cantidad          Int
+  precioUnitarioUSD Decimal      @db.Decimal(10, 2) // congelado al fiar; los Bs se calculan al cobrar
+  estado            EstadoDeuda  @default(PENDIENTE)
+
+  registradaPorId String
+  registradaPor   UsuarioAdmin  @relation("DeudasRegistradas", fields: [registradaPorId], references: [id])
+  creadaEn        DateTime      @default(now())
+  cobradaEn       DateTime?
+  cobradaPorId    String?
+  cobradaPor      UsuarioAdmin? @relation("DeudasCobradas", fields: [cobradaPorId], references: [id])
+  grupoPagoId     String? // grupo de Pagos que la cubrió
+  anuladaEn       DateTime?
+  anuladaPorId    String?
+  anuladaPor      UsuarioAdmin? @relation("DeudasAnuladas", fields: [anuladaPorId], references: [id])
+
+  @@index([organizacionId, estado])
+  @@index([miembroId, estado])
+}
+
+enum ModoCambioPlanAuditoria {
+  AJUSTAR_VENCIMIENTO
+  CICLO_COMPLETO
+}
+
+// Desde dónde se disparó el cambio de plan que generó este registro — la
+// misma tabla sirve para los 3 flujos que escriben Suscripcion.fin sin
+// mantener Miembro.fechaVencimiento sincronizado (ver informe de la 2a):
+// CambiarPlanConPago (Caja), ActualizarMiembro (ficha del miembro, sin
+// pago) y ActualizarFrecuenciaPlan (cambio masivo desde el catálogo de
+// Planes). Agregado ahora para que conectar esos otros dos flujos en la
+// 2d no requiera otra migración.
+enum OrigenCambioPlanAuditoria {
+  CAJA
+  FICHA_MIEMBRO
+  CAMBIO_FRECUENCIA_PLAN
+}
+
+// Un registro por cada cambio de plan aplicado — ver
+// packages/domain/entities/cambioPlanCalculo.ts (única función de cálculo,
+// usada tanto por la vista previa como por el guardado). Se escribe en la
+// MISMA transacción que actualiza Miembro/Suscripcion/Pago, nunca por
+// separado (ver diseño acordado: "guardado atómico"). Solo
+// aditiva/append-only — nunca se edita ni se borra un registro existente
+// (la excepción es packages/db/limpiarMiembros.ts, script de datos de
+// prueba que sí borra en cascada a mano).
+model CambioPlanAuditoria {
+  id             String       @id @default(cuid())
+  organizacionId String
+  organizacion   Organizacion @relation(fields: [organizacionId], references: [id])
+  miembroId      String
+  miembro        Miembro      @relation(fields: [miembroId], references: [id])
+
+  planAnteriorId String
+  planAnterior   Plan   @relation("CambioPlanAuditoriaPlanAnterior", fields: [planAnteriorId], references: [id])
+  planNuevoId    String
+  planNuevo      Plan   @relation("CambioPlanAuditoriaPlanNuevo", fields: [planNuevoId], references: [id])
+
+  // Fechas de calendario puras (sin hora) — mismo criterio que
+  // calcularCambioPlan, que opera en días de calendario America/Caracas,
+  // no en timestamps.
+  vencimientoAnterior DateTime @db.Date
+  vencimientoNuevo    DateTime @db.Date
+
+  // Snapshot de los datos EXACTOS usados en el cálculo (precio y días de
+  // ciclo de cada plan al momento del cambio, no solo la tarifa ya
+  // derivada) — así el registro no depende de una división ya redondeada
+  // y se puede auditar/recalcular la tarifa real aplicada sin ambigüedad.
+  // Los precios se guardan en centavos enteros, igual que
+  // calcularCambioPlan (evita errores de coma flotante); los días de
+  // ciclo son enteros de por sí (DURACION_DIAS_POR_FRECUENCIA).
+  diasRestantes            Int
+  valorNoConsumidoCentavos Int
+  precioAnteriorCentavos   Int
+  diasCicloAnterior        Int
+  precioNuevoCentavos      Int
+  diasCicloNuevo           Int
+  diasNuevos               Int
+  montoCobradoCentavos     Int
+  modo                     ModoCambioPlanAuditoria
+  origen                   OrigenCambioPlanAuditoria
+
+  pagoId String? // null en AJUSTAR_VENCIMIENTO, donde nunca se cobra nada
+  pago   Pago?   @relation(fields: [pagoId], references: [id])
+
+  registradoPorId String
+  registradoPor   UsuarioAdmin @relation(fields: [registradoPorId], references: [id])
+  fecha           DateTime     @default(now())
+
+  @@index([miembroId])
+  @@index([organizacionId, fecha])
+}
+
+enum EstadoTurno {
+  ABIERTO
+  CERRADO
+}
+
+model Turno {
+  id             String       @id @default(cuid())
+  organizacionId String
+  organizacion   Organizacion @relation(fields: [organizacionId], references: [id])
+  sucursalId     String
+  sucursal       Sucursal     @relation(fields: [sucursalId], references: [id])
+  usuarioId      String
+  usuario        UsuarioAdmin @relation(fields: [usuarioId], references: [id])
+
+  // Solo efectivo físico en caja al abrir el turno — no incluye saldos de
+  // cuentas bancarias ni lo recaudado por puntos de venta (ver
+  // ObtenerResumenTurno: únicamente los métodos efectivo_usd/efectivo_bs
+  // arrancan con este fondo, el resto de métodos arranca en 0).
+  fondoInicialEfectivoUSD Decimal @db.Decimal(10, 2)
+  fondoInicialEfectivoBs  Decimal @db.Decimal(14, 2)
+
+  abiertoEn DateTime    @default(now())
+  cerradoEn DateTime?
+  estado    EstadoTurno @default(ABIERTO)
+
+  pagos   Pago[]
+  egresos Egreso[]
+  arqueo  ArqueoLinea[]
+
+  @@index([sucursalId, estado])
+}
+
+enum MonedaEgreso {
+  USD
+  BS
+}
+
+model Egreso {
+  id           String       @id @default(cuid())
+  turnoId      String
+  turno        Turno        @relation(fields: [turnoId], references: [id])
+  monto        Decimal      @db.Decimal(14, 2)
+  moneda       MonedaEgreso
+  // Tasa BCV vigente al registrar — solo para moneda BS (igual patrón que
+  // Pago.tasaCambio/montoBs). null para egresos en USD.
+  tasaCambio   Decimal?     @db.Decimal(10, 2)
+  // Referencia en USD: monto directo si moneda=USD, o monto/tasaCambio si
+  // moneda=BS — permite sumar/comparar egresos de ambas monedas en USD.
+  montoUSD     Decimal?     @db.Decimal(14, 2)
+  metodo       String
+  motivo       String
+  registradoEn DateTime     @default(now())
+}
+
+model ArqueoLinea {
+  id            String  @id @default(cuid())
+  turnoId       String
+  turno         Turno   @relation(fields: [turnoId], references: [id])
+  metodo        String
+  montoEsperado Decimal @db.Decimal(14, 2)
+  montoContado  Decimal @db.Decimal(14, 2)
+  diferencia    Decimal @db.Decimal(14, 2)
+  nota          String?
+
+  @@unique([turnoId, metodo])
+}
+
+model CheckIn {
+  id              String   @id @default(cuid())
+  sucursalId      String // el CheckIn siempre queda atado a la Sucursal física (ADR v1 §4.1)
+  sucursal        Sucursal @relation(fields: [sucursalId], references: [id])
+  miembroId       String
+  miembro         Miembro  @relation(fields: [miembroId], references: [id])
+  fechaHora       DateTime @default(now())
+  estadoAlMomento String // "activo" | "vencido" — snapshot histórico, no cambia si luego el miembro paga
+  salidaAt        DateTime? // null = sigue "en sala"; se completa a mano desde /en-sala
+
+  @@index([sucursalId, fechaHora])
+}
+
+model TasaCambio {
+  id              String   @id @default(cuid())
+  fecha           DateTime @unique // día calendario
+  valor           Decimal  @db.Decimal(12, 4)
+  fuente          String // "BCV" | "BINANCE_P2P" | "MANUAL"
+  registradoPorId String? // UsuarioAdmin.id — solo se conoce para fuente MANUAL; null en filas BCV o en MANUAL previas a esta columna.
+  createdAt       DateTime @default(now())
+}
+
+enum TipoMetodoPago {
+  EFECTIVO
+  PAGO_MOVIL
+  TRANSFERENCIA
+  PUNTO_VENTA
+  BIOPAGO
+  CRIPTO
+}
+
+model MetodoPago {
+  id             String         @id @default(cuid())
+  organizacionId String
+  organizacion   Organizacion   @relation(fields: [organizacionId], references: [id])
+  tipo           TipoMetodoPago
+  nombreBanco    String? // "Banesco", "Banco de Venezuela", "USDT"... null para Efectivo
+  logoUrl        String?
+  moneda         String // "USD" | "BS" — usado sobre todo por EFECTIVO, y para saber si aplica tasa BCV
+  activo         Boolean        @default(true)
+  orden          Int            @default(0)
+
+  // coordenadas — todas opcionales, se usan según el tipo
+  codigoBanco     String? // prefijo pago móvil, ej "0134"
+  telefono        String?
+  rif             String?
+  numeroCuenta    String? // transferencia
+  beneficiario    String? // transferencia
+  qrUrl           String? // pago móvil / cripto
+  walletDireccion String? // cripto
+  walletUsuario   String? // cripto (usuario/ID de Binance u otro exchange)
+
+  createdAt DateTime @default(now())
+
+  pagos Pago[]
+}
+
+model TemaOrganizacion {
+  organizacionId  String       @id
+  organizacion    Organizacion @relation(fields: [organizacionId], references: [id])
+  colorPrimario   String
+  colorSecundario String?
+  logoUrl         String?
+  fuenteId        String       @default("inter") // catálogo curado, no texto libre
+  layoutPreset    String       @default("clasico") // "clasico" | "moderno" | "compacto"
+}
+
+model RegistroAuditoria {
+  id            String       @id @default(cuid())
+  entidad       String // "Suscripcion", "Miembro", etc.
+  entidadId     String
+  campo         String // "fin", "estado"
+  valorAnterior String
+  valorNuevo    String
+  motivo        String
+  usuarioId     String
+  usuario       UsuarioAdmin @relation(fields: [usuarioId], references: [id])
+  createdAt     DateTime     @default(now())
+}
+
+model Sesion {
+  id               String       @id @default(cuid())
+  token            String       @unique
+  usuarioId        String
+  usuario          UsuarioAdmin @relation(fields: [usuarioId], references: [id])
+  // Sucursal elegida al iniciar esta sesión (o la única visible, si no
+  // hizo falta elegir) — fija hasta el próximo login. Nullable a nivel de
+  // columna solo por sesiones ya existentes antes de esta migración; el
+  // código de aplicación nunca crea una Sesion sin esto (ver
+  // ISesionRepository.crear).
+  sucursalActivaId String?
+  sucursalActiva   Sucursal?    @relation(fields: [sucursalActivaId], references: [id])
+  expiraEn         DateTime
+  createdAt        DateTime     @default(now())
+}
+
+// Padrón de referencia: espejo del Excel (solo filas con cédula única). NO son miembros del sistema;
+// se activan bajo demanda (ver ActivarMiembroDesdePadron). Ligado a la sede que usa ese Excel.
+model MiembroReferencia {
+  id               String       @id @default(cuid())
+  organizacionId   String
+  organizacion     Organizacion @relation(fields: [organizacionId], references: [id])
+  sucursalId       String
+  sucursal         Sucursal     @relation(fields: [sucursalId], references: [id])
+  cedula           String
+  numeroFila       Int
+  // Columnas crudas del Excel, como texto (fechas serial → yyyy-mm-dd)
+  nombre           String
+  status           String?
+  fNacimiento      String?
+  celular          String?
+  fVenc            String?
+  fechaPago        String?
+  plan             String?
+  // Normalizadas (null = sin dato confiable)
+  fechaVencimiento DateTime?
+  fechaUltimoPago  DateTime?
+  fechaNacimiento  DateTime?
+  planNombre       String?
+  precioPlanUSD    Decimal?     @db.Decimal(10, 2)
+  archivoOrigen    String
+  importadoAt      DateTime     @default(now())
+  // Ediciones manuales desde el menú Excel: columnas crudas tocadas, cuándo y quién. Vacío = tal cual el Excel.
+  camposEditados   String[]     @default([])
+  editadoAt        DateTime?
+  editadoPor       String?
+  // Columnas I, J, K del Excel (texto, editables)
+  colI             String?
+  colJ             String?
+  colK             String?
+  // Estilos por columna del Excel ({ "F": { "b": true, "c": "FF0000", "a": "center" } }); solo se importan
+  estilos          Json?
+  // Color de relleno de la fila (hex sin #, ej. FFC000)
+  resaltado        String?
+  // El color se puso a mano: la reimportación lo respeta
+  resaltadoEditado Boolean      @default(false)
+
+  @@unique([organizacionId, cedula])
+  @@index([sucursalId])
+}
+
+// Hoja del padrón (una por organización + sede): encabezados y anchos de las 11 columnas A–K del Excel.
+model PadronHoja {
+  id                 String       @id @default(cuid())
+  organizacionId     String
+  organizacion       Organizacion @relation(fields: [organizacionId], references: [id])
+  sucursalId         String
+  sucursal           Sucursal     @relation(fields: [sucursalId], references: [id])
+  encabezados        Json // [{ col: "A", titulo: "NOMBRE", anchoPx: 233 }, ...] las 11 columnas A–K
+  alturaEncabezadoPx Float // alto de la fila 3 (títulos)
+  archivoOrigen      String
+  importadoAt        DateTime     @default(now())
+
+  @@unique([organizacionId, sucursalId])
+}
+
+enum TipoVitrinaItem {
+  ENTRENADOR
+  PROMO
+  PRODUCTO
+}
+
+enum TipoMedioVitrina {
+  IMAGEN
+  VIDEO
+}
+
+// Ítem de la secuencia de la TV (vitrina). Independiente de Producto y de UsuarioAdmin: el entrenador lleva su
+// propio nombre y medio. Orden global por sucursal; nace inactivo.
+model VitrinaItem {
+  id         String           @id @default(cuid())
+  sucursalId String
+  sucursal   Sucursal         @relation(fields: [sucursalId], references: [id], onDelete: Cascade)
+  tipo       TipoVitrinaItem
+  orden      Int
+  activo     Boolean          @default(false)
+
+  duracionSeg Int? // nulo = la de la sede
+  inicio      DateTime?
+  fin         DateTime?
+
+  mediaUrl  String
+  mediaTipo TipoMedioVitrina
+  posterUrl String?
+  sonido    Boolean          @default(false) // solo con VIDEO: si suena en la TV
+
+  precioUSD            Decimal? @db.Decimal(10, 2)
+  ofertaUSD            Decimal? @db.Decimal(10, 2)
+  descuentoPct         Int?
+  etiqueta             String?
+  mostrarPrecio        Boolean  @default(true)
+  mostrarOferta        Boolean  @default(true)
+  mostrarDescuento     Boolean  @default(true)
+  mostrarEtiqueta      Boolean  @default(true)
+  mostrarEquivalenteBs Boolean  @default(true)
+
+  nombre              String?
+  especialidad        String?
+  frase               String?
+  mostrarMedio        Boolean @default(true)
+  mostrarNombre       Boolean @default(true)
+  mostrarEspecialidad Boolean @default(true)
+  mostrarFrase        Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sucursalId, orden])
+}

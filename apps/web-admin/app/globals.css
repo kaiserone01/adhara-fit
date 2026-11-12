@@ -1,0 +1,80 @@
+@import "tailwindcss";
+@source "../../../packages/ui/**/*.{ts,tsx}";
+@import "../../../packages/ui/styles/marca-agua.css";
+@import "../../../packages/ui/styles/campos.css";
+@import "../../../packages/ui/styles/selector-fecha.css";
+
+* {
+  touch-action: manipulation;
+}
+
+html {
+  /* Sin esto, el navegador pinta los controles nativos (lista del <select>,
+     date picker, scrollbars) con su tema claro por defecto, aunque toda la
+     UI sea oscura — se ve un rectángulo blanco al abrir un <select>. */
+  color-scheme: dark;
+}
+
+body {
+  background: var(--gx-ground);
+  color: var(--gx-ink);
+  font-family: "Barlow", sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Campo que el socio debe ajustar a mano: titila hasta que se guarde la fecha nueva. */
+@keyframes titilar-fecha {
+  0%, 100% { box-shadow: 0 0 0 0 transparent; border-color: var(--gx-edge); }
+  50% { box-shadow: 0 0 0 3px var(--gx-warn, #f5a524); border-color: var(--gx-warn, #f5a524); }
+}
+.titilar-fecha {
+  animation: titilar-fecha 1.2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .titilar-fecha {
+    animation: none;
+    border-color: var(--gx-warn, #f5a524);
+  }
+}
+
+/* Cuadro de confirmación final: un halo verde que late suave para que se note antes de guardar. */
+@keyframes resplandor-confirmacion {
+  0%, 100% { box-shadow: 0 0 10px 1px color-mix(in srgb, var(--gx-accent) 35%, transparent); }
+  50% { box-shadow: 0 0 28px 6px color-mix(in srgb, var(--gx-accent) 65%, transparent); }
+}
+.resplandor-confirmacion {
+  border-color: var(--gx-accent);
+  animation: 2s ease-in-out infinite resplandor-confirmacion;
+}
+@media (prefers-reduced-motion: reduce) {
+  .resplandor-confirmacion {
+    animation: none;
+    box-shadow: 0 0 22px 4px color-mix(in srgb, var(--gx-accent) 55%, transparent);
+  }
+}
+
+/* Tarjetas de Miembros y En sala: borde verde con halo para que resalten sobre el fondo negro.
+   !important porque Card fija su borderColor en línea. */
+.tarjeta-luminosa {
+  border-color: color-mix(in srgb, var(--gx-accent) 70%, transparent) !important;
+  box-shadow: 0 0 14px 1px color-mix(in srgb, var(--gx-accent) 35%, transparent);
+}
+
+/* Misma tarjeta luminosa pero roja: vencidos y por regularizar (Miembros y En sala). */
+.tarjeta-luminosa-roja {
+  border-color: color-mix(in srgb, var(--gx-bad) 75%, transparent) !important;
+  box-shadow: 0 0 14px 1px color-mix(in srgb, var(--gx-bad) 40%, transparent);
+}
+
+/* Barra de filtros de Miembros: títulos de los campos en blanco (el gris verdoso casi no se distinguía). */
+.etiquetas-blancas > label,
+.etiquetas-blancas > div {
+  color: #ffffff !important;
+  font-weight: 500;
+}
+
+@media print {
+  body {
+    background: #ffffff;
+  }
+}

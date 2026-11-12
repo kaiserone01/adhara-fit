@@ -1,0 +1,77 @@
+import { Fragment, Suspense } from "react";
+import { redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
+import { obtenerUsuarioDeSesionActual } from "@/lib/sesion";
+import { PrismaSucursalRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSucursalRepository";
+import { Sidebar } from "@gym-app/ui/components/Sidebar";
+import { FeedbackProvider } from "@gym-app/ui/components/FeedbackOverlay";
+import { FeedbackDesdeUrl } from "@gym-app/ui/components/FeedbackDesdeUrl";
+import { RelojYTasaConHistorial } from "./RelojYTasaConHistorial";
+import { BarraUsuario } from "./BarraUsuario";
+import { EncabezadoSidebar } from "./EncabezadoSidebar";
+import { NavegacionMobile } from "./NavegacionMobile";
+import { tienePermisoEnSala } from "@/lib/permisoEnSala";
+import { puedeEditarKiosko } from "@/lib/permisoKiosko";
+import { ProveedorEnSala, ContadorEnSala, AvisoCobros } from "./en-sala/ContextoEnSala";
+
+export default async function PanelLayout({ children }: { children: React.ReactNode }) {
+  const sesion = await obtenerUsuarioDeSesionActual();
+
+  if (!sesion) {
+    redirect("/login");
+  }
+  const { usuario, sucursalActivaId } = sesion;
+
+  const sucursalActiva = await new PrismaSucursalRepository(prisma).buscarPorId(
+    usuario.organizacionId,
+    sucursalActivaId
+  );
+
+  const puedeVerEnSala = await tienePermisoEnSala(usuario, "VER");
+  // Solo quien puede ver "En sala" monta el sondeo de check-ins (alertas de cobro en todo el panel).
+  const ConEnSala = puedeVerEnSala ? ProveedorEnSala : Fragment;
+
+  return (
+    <FeedbackProvider>
+      <Suspense fallback={null}>
+        <FeedbackDesdeUrl />
+      </Suspense>
+      <RelojYTasaConHistorial />
+      <ConEnSala>
+      <div className="marca-agua-pagina flex min-h-dvh flex-col lg:flex-row" style={{ background: "var(--gx-ground)" }}>
+        <AvisoCobros />
+        <div className="hidden lg:block print:hidden">
+          <Sidebar
+            encabezado={<EncabezadoSidebar sucursalNombre={sucursalActiva?.nombre ?? "—"} />}
+            items={[
+              ...(puedeVerEnSala ? [{ href: "/en-sala", label: "En sala", extra: <ContadorEnSala /> }] : []),
+              { href: "/miembros", label: "Miembros" },
+              { href: "/caja", label: "Caja" },
+              { href: "/productos", label: "Productos" },
+              // Planes, Sucursales y Usuarios se administran desde las tabs
+              // de Configuraciones (ver diseño acordado) — SOCIO y GERENTE llegan
+              // a ellas desde ahí.
+              ...(puedeEditarKiosko(usuario.rol) ? [{ href: "/configuraciones", label: "Configuraciones" }] : []),
+            ]}
+            pie={<BarraUsuario nombre={usuario.nombre} email={usuario.email} fotoUrl={usuario.fotoUrl} />}
+          />
+        </div>
+        {/* pt-16 reserva el espacio del badge de RelojYTasa (fixed,
+            arriba a la derecha) — sin esto tapaba controles de página
+            que también viven en esa esquina (ej. "Nuevo miembro" en
+            /miembros). Se aplica acá, una sola vez, en vez de que cada
+            página tenga que acordarse de dejarle margen. */}
+        <main className="flex-1 pt-16 pb-16 lg:pb-0">{children}</main>
+        <div className="print:hidden">
+          <NavegacionMobile
+            nombre={usuario.nombre}
+            email={usuario.email}
+            rol={usuario.rol}
+            puedeVerEnSala={puedeVerEnSala}
+          />
+        </div>
+      </div>
+      </ConEnSala>
+    </FeedbackProvider>
+  );
+}

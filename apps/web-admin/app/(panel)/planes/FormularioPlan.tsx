@@ -1,0 +1,417 @@
+"use client";
+
+import { useActionState, useEffect, useState } from "react";
+import { Button } from "@gym-app/ui/components/Button";
+import { Input } from "@gym-app/ui/components/Input";
+import { CurrencyInput } from "@gym-app/ui/components/CurrencyInput";
+import { useFeedback } from "@gym-app/ui/components/FeedbackOverlay";
+import type { EstadoFormularioPlan } from "./actions";
+import type { FrecuenciaPago, TipoMinimoAbono } from "@gym-app/domain/entities/Plan";
+
+export interface ValoresFormularioPlan {
+  nombre: string;
+  frecuencia: FrecuenciaPago;
+  diasCiclo: number;
+  incluyeEntrenador: boolean;
+  precioUSD: number;
+  multisede: boolean;
+  permitePagoParcial: boolean;
+  minimoAbonoTipo: TipoMinimoAbono | null;
+  minimoAbonoValor: number | null;
+}
+
+const ETIQUETA_FRECUENCIA: Record<FrecuenciaPago, string> = {
+  DIARIO: "Diario",
+  SEMANAL: "Semanal",
+  QUINCENAL: "Quincenal",
+  MENSUAL: "Mensual",
+  SEMESTRAL: "Semestral",
+  ANUAL: "Anual",
+  PERSONALIZADO: "Personalizado",
+};
+
+// Duración fija (en días) para las 6 frecuencias con ciclo estándar —
+// PERSONALIZADO no tiene entrada acá a propósito: su diasCiclo lo tipea el
+// admin a mano en un input aparte (ver selectorFrecuencia más abajo).
+const DIAS_CICLO_POR_FRECUENCIA_FIJA: Record<Exclude<FrecuenciaPago, "PERSONALIZADO">, number> = {
+  DIARIO: 1,
+  SEMANAL: 7,
+  QUINCENAL: 15,
+  MENSUAL: 30,
+  SEMESTRAL: 180,
+  ANUAL: 365,
+};
+
+export function FormularioPlan({
+  accion,
+  valoresIniciales,
+  // Solo se pasa en edición: habilita el bloque de "cambiar frecuencia/
+  // entrenador" con su modal de doble alerta (solo SOCIO).
+  cambioFrecuencia,
+}: {
+  accion: (estado: EstadoFormularioPlan, formData: FormData) => Promise<EstadoFormularioPlan>;
+  valoresIniciales?: ValoresFormularioPlan;
+  cambioFrecuencia?: {
+    accion: (estado: EstadoFormularioPlan, formData: FormData) => Promise<EstadoFormularioPlan>;
+    puedeEditar: boolean;
+    cantidadSuscripcionesActivas: number;
+  };
+}) {
+  const [estado, enviar, enviando] = useActionState(accion, {});
+  const esEdicion = !!valoresIniciales;
+  const { mostrarError } = useFeedback();
+
+  useEffect(() => {
+    if (estado.error) mostrarError(estado.error);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- solo debe reaccionar a un nuevo estado.error, no a mostrarError
+  }, [estado.error]);
+
+  const [frecuencia, setFrecuencia] = useState<FrecuenciaPago>(valoresIniciales?.frecuencia ?? "MENSUAL");
+  const [diasCicloPersonalizado, setDiasCicloPersonalizado] = useState(
+    String(valoresIniciales?.frecuencia === "PERSONALIZADO" ? valoresIniciales.diasCiclo : "")
+  );
+  const esPersonalizado = frecuencia === "PERSONALIZADO";
+  const diasCicloEfectivo = esPersonalizado
+    ? Number(diasCicloPersonalizado) || 0
+    : DIAS_CICLO_POR_FRECUENCIA_FIJA[frecuencia];
+  const [permitePagoParcial, setPermitePagoParcial] = useState(valoresIniciales?.permitePagoParcial ?? true);
+  const [tieneMinimoPropio, setTieneMinimoPropio] = useState(
+    valoresIniciales?.minimoAbonoTipo !== null && valoresIniciales?.minimoAbonoTipo !== undefined
+  );
+  const [minimoAbonoTipo, setMinimoAbonoTipo] = useState<TipoMinimoAbono>(valoresIniciales?.minimoAbonoTipo ?? "DIAS");
+  const [minimoAbonoValor, setMinimoAbonoValor] = useState(String(valoresIniciales?.minimoAbonoValor ?? ""));
+
+  return (
+    <>
+      <form action={enviar} className="flex flex-col gap-4">
+        {estado.error && (
+          <p
+            className="rounded-lg px-3 py-2 text-sm"
+            style={{ background: "color-mix(in srgb, var(--gx-bad) 15%, transparent)", color: "var(--gx-bad)" }}
+          >
+            {estado.error}
+          </p>
+        )}
+
+        <Input name="nombre" label="Nombre" required defaultValue={valoresIniciales?.nombre} />
+
+        {!esEdicion && (
+          <>
+            <label className="flex flex-col gap-1.5 text-sm" style={{ color: "var(--gx-muted)" }}>
+              Frecuencia de pago
+              <select
+                name="frecuencia"
+                required
+                value={frecuencia}
+                onChange={(e) => setFrecuencia(e.target.value as FrecuenciaPago)}
+                className="min-h-11 rounded-lg border px-3 gx-campo"
+              >
+                <option value="DIARIO">Diario</option>
+                <option value="SEMANAL">Semanal</option>
+                <option value="QUINCENAL">Quincenal</option>
+                <option value="MENSUAL">Mensual</option>
+                <option value="SEMESTRAL">Semestral</option>
+                <option value="ANUAL">Anual</option>
+                <option value="PERSONALIZADO">Personalizado</option>
+              </select>
+            </label>
+
+            {esPersonalizado && (
+              <Input
+                name="diasCiclo"
+                label="Duración del ciclo (días)"
+                type="number"
+                min={1}
+                required
+                value={diasCicloPersonalizado}
+                onChange={(e) => setDiasCicloPersonalizado(e.target.value)}
+              />
+            )}
+            {!esPersonalizado && <input type="hidden" name="diasCiclo" value={diasCicloEfectivo} />}
+
+            <label className="flex min-h-11 items-center gap-2 text-sm" style={{ color: "var(--gx-muted)" }}>
+              <input type="checkbox" name="incluyeEntrenador" className="gx-check" />
+              Incluye entrenador personal
+            </label>
+          </>
+        )}
+
+        <label className="flex min-h-11 items-center gap-2 text-sm" style={{ color: "var(--gx-muted)" }}>
+          <input
+            type="checkbox"
+            name="multisede"
+            defaultChecked={valoresIniciales?.multisede}
+            className="gx-check"
+          />
+          Multisede (permite asignar &quot;Ambas&quot; sedes a un miembro con este plan)
+        </label>
+
+        <label className="flex min-h-11 items-center gap-2 text-sm" style={{ color: "var(--gx-muted)" }}>
+          <input
+            type="checkbox"
+            name="permitePagoParcial"
+            checked={permitePagoParcial}
+            onChange={(e) => setPermitePagoParcial(e.target.checked)}
+            className="gx-check"
+          />
+          Permite pago parcial (abono)
+        </label>
+
+        {permitePagoParcial && (
+          <div className="flex flex-col gap-2 rounded-lg border p-3" style={{ borderColor: "var(--gx-edge)" }}>
+            <label className="flex items-center gap-2 text-sm" style={{ color: "var(--gx-muted)" }}>
+              <input
+                type="checkbox"
+                checked={tieneMinimoPropio}
+                onChange={(e) => setTieneMinimoPropio(e.target.checked)}
+                className="gx-check"
+              />
+              Mínimo de abono personalizado para este plan
+            </label>
+
+            {tieneMinimoPropio ? (
+              <div className="flex items-end gap-3">
+                <select
+                  name="minimoAbonoTipo"
+                  value={minimoAbonoTipo}
+                  onChange={(e) => setMinimoAbonoTipo(e.target.value as TipoMinimoAbono)}
+                  className="min-h-11 rounded-lg border px-3 gx-campo"
+                >
+                  <option value="DIAS">Días</option>
+                  <option value="PORCENTAJE">Porcentaje</option>
+                </select>
+                <Input
+                  name="minimoAbonoValor"
+                  label={minimoAbonoTipo === "DIAS" ? "Días mínimos" : "Porcentaje mínimo"}
+                  type="number"
+                  min={0}
+                  value={minimoAbonoValor}
+                  onChange={(e) => setMinimoAbonoValor(e.target.value)}
+                />
+              </div>
+            ) : (
+              <p className="text-xs" style={{ color: "var(--gx-muted)" }}>
+                Usa el mínimo configurado en Configuraciones → Reglas de abono
+                para la frecuencia {ETIQUETA_FRECUENCIA[valoresIniciales?.frecuencia ?? "MENSUAL"]}.
+              </p>
+            )}
+          </div>
+        )}
+
+        {esEdicion && (
+          <div className="rounded-lg border p-3 text-sm" style={{ borderColor: "var(--gx-edge)" }}>
+            <div className="flex justify-between">
+              <span style={{ color: "var(--gx-muted)" }}>Frecuencia</span>
+              <span style={{ color: "var(--gx-ink)" }}>
+                {ETIQUETA_FRECUENCIA[valoresIniciales.frecuencia]} ({valoresIniciales.diasCiclo} días)
+              </span>
+            </div>
+            <div className="mt-1 flex justify-between">
+              <span style={{ color: "var(--gx-muted)" }}>Entrenador</span>
+              <span style={{ color: "var(--gx-ink)" }}>
+                {valoresIniciales.incluyeEntrenador ? "Incluido" : "No incluido"}
+              </span>
+            </div>
+          </div>
+        )}
+
+        <CurrencyInput
+          name="precioUSD"
+          label="Precio"
+          moneda="USD"
+          required
+          defaultValue={valoresIniciales?.precioUSD !== undefined ? String(valoresIniciales.precioUSD) : ""}
+        />
+
+        <Button type="submit" disabled={enviando}>
+          {enviando ? "Guardando..." : "Guardar"}
+        </Button>
+      </form>
+
+      {esEdicion && cambioFrecuencia?.puedeEditar && (
+        <CambiarFrecuenciaSection
+          nombrePlan={valoresIniciales.nombre}
+          frecuenciaActual={valoresIniciales.frecuencia}
+          diasCicloActual={valoresIniciales.diasCiclo}
+          incluyeEntrenadorActual={valoresIniciales.incluyeEntrenador}
+          cantidadSuscripcionesActivas={cambioFrecuencia.cantidadSuscripcionesActivas}
+          accion={cambioFrecuencia.accion}
+        />
+      )}
+    </>
+  );
+}
+
+function CambiarFrecuenciaSection({
+  nombrePlan,
+  frecuenciaActual,
+  diasCicloActual,
+  incluyeEntrenadorActual,
+  cantidadSuscripcionesActivas,
+  accion,
+}: {
+  nombrePlan: string;
+  frecuenciaActual: FrecuenciaPago;
+  diasCicloActual: number;
+  incluyeEntrenadorActual: boolean;
+  cantidadSuscripcionesActivas: number;
+  accion: (estado: EstadoFormularioPlan, formData: FormData) => Promise<EstadoFormularioPlan>;
+}) {
+  const [estado, enviar, enviando] = useActionState(accion, {});
+  const { mostrarError } = useFeedback();
+
+  useEffect(() => {
+    if (estado.error) mostrarError(estado.error);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- solo debe reaccionar a un nuevo estado.error, no a mostrarError
+  }, [estado.error]);
+
+  const [abierto, setAbierto] = useState(false);
+  const [frecuencia, setFrecuencia] = useState<FrecuenciaPago>(frecuenciaActual);
+  const [diasCicloPersonalizado, setDiasCicloPersonalizado] = useState(
+    String(frecuenciaActual === "PERSONALIZADO" ? diasCicloActual : "")
+  );
+  const esPersonalizado = frecuencia === "PERSONALIZADO";
+  const diasCicloEfectivo = esPersonalizado
+    ? Number(diasCicloPersonalizado) || 0
+    : DIAS_CICLO_POR_FRECUENCIA_FIJA[frecuencia];
+  const [incluyeEntrenador, setIncluyeEntrenador] = useState(incluyeEntrenadorActual);
+  const [exonerar, setExonerar] = useState(false);
+  const [confirmacion, setConfirmacion] = useState("");
+
+  const hayCambios =
+    frecuencia !== frecuenciaActual ||
+    diasCicloEfectivo !== diasCicloActual ||
+    incluyeEntrenador !== incluyeEntrenadorActual;
+  const confirmacionValida = confirmacion.trim() === nombrePlan;
+
+  return (
+    <div className="mt-8 rounded-lg border-2 p-4" style={{ borderColor: "var(--gx-bad)" }}>
+      <h3 className="text-sm font-semibold" style={{ color: "var(--gx-bad)" }}>
+        Zona de riesgo: cambiar frecuencia o entrenador
+      </h3>
+      <p className="mt-1 text-xs" style={{ color: "var(--gx-muted)" }}>
+        Solo el socio puede hacer este cambio. Afecta a todos los miembros con este plan.
+      </p>
+
+      <div className="mt-4 flex flex-col gap-3">
+        <label className="flex flex-col gap-1.5 text-sm" style={{ color: "var(--gx-muted)" }}>
+          Nueva frecuencia
+          <select
+            value={frecuencia}
+            onChange={(e) => setFrecuencia(e.target.value as FrecuenciaPago)}
+            className="min-h-11 rounded-lg border px-3 gx-campo"
+          >
+            <option value="DIARIO">Diario</option>
+            <option value="SEMANAL">Semanal</option>
+            <option value="QUINCENAL">Quincenal</option>
+            <option value="MENSUAL">Mensual</option>
+            <option value="SEMESTRAL">Semestral</option>
+            <option value="ANUAL">Anual</option>
+            <option value="PERSONALIZADO">Personalizado</option>
+          </select>
+        </label>
+
+        {esPersonalizado && (
+          <label className="flex flex-col gap-1.5 text-sm" style={{ color: "var(--gx-muted)" }}>
+            Duración del ciclo (días)
+            <input
+              type="number"
+              min={1}
+              value={diasCicloPersonalizado}
+              onChange={(e) => setDiasCicloPersonalizado(e.target.value)}
+              className="min-h-11 rounded-lg border px-3 gx-campo"
+            />
+          </label>
+        )}
+
+        <label className="flex min-h-11 items-center gap-2 text-sm" style={{ color: "var(--gx-muted)" }}>
+          <input
+            type="checkbox"
+            checked={incluyeEntrenador}
+            onChange={(e) => setIncluyeEntrenador(e.target.checked)}
+            className="gx-check"
+          />
+          Incluye entrenador personal
+        </label>
+
+        <Button type="button" variant="peligro" disabled={!hayCambios} onClick={() => setAbierto(true)}>
+          Cambiar frecuencia / entrenador
+        </Button>
+      </div>
+
+      {abierto && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "color-mix(in srgb, black 60%, transparent)" }}
+        >
+          <div
+            className="marca-agua-modal w-full max-w-md rounded-2xl border-2 p-6"
+            style={{ borderColor: "var(--gx-bad)", background: "var(--gx-surface)" }}
+          >
+            <h3 className="text-lg font-bold" style={{ color: "var(--gx-bad)" }}>
+              ⚠️ Esta acción afecta a {cantidadSuscripcionesActivas}{" "}
+              {cantidadSuscripcionesActivas === 1 ? "miembro" : "miembros"}
+            </h3>
+            <p className="mt-2 text-sm" style={{ color: "var(--gx-muted)" }}>
+              Vas a cambiar la frecuencia y/o el entrenador del plan <strong>{nombrePlan}</strong>. Esto{" "}
+              {exonerar
+                ? "NO recalculará ningún vencimiento — las suscripciones activas quedan exactamente como están."
+                : `recalculará el vencimiento de las ${cantidadSuscripcionesActivas} suscripciones activas vigentes de este plan (prorrateado a la nueva frecuencia, sin cobrar nada extra).`}
+            </p>
+
+            {estado.error && (
+              <p
+                className="mt-3 rounded-lg px-3 py-2 text-sm"
+                style={{ background: "color-mix(in srgb, var(--gx-bad) 15%, transparent)", color: "var(--gx-bad)" }}
+              >
+                {estado.error}
+              </p>
+            )}
+
+            <form action={enviar} className="mt-4 flex flex-col gap-3">
+              <input type="hidden" name="frecuencia" value={frecuencia} />
+              <input type="hidden" name="diasCiclo" value={diasCicloEfectivo} />
+              <input type="hidden" name="incluyeEntrenador" value={incluyeEntrenador ? "1" : ""} />
+              <input type="hidden" name="exonerar" value={exonerar ? "1" : ""} />
+
+              <label className="flex min-h-11 items-center gap-2 text-sm" style={{ color: "var(--gx-muted)" }}>
+                <input
+                  type="checkbox"
+                  checked={exonerar}
+                  onChange={(e) => setExonerar(e.target.checked)}
+                  className="gx-check"
+                />
+                Exonerar: no recalcular las suscripciones activas
+              </label>
+
+              <label className="flex flex-col gap-1.5 text-sm" style={{ color: "var(--gx-muted)" }}>
+                Escribí <strong>{nombrePlan}</strong> para confirmar
+                <input
+                  name="confirmacion"
+                  required
+                  value={confirmacion}
+                  onChange={(e) => setConfirmacion(e.target.value)}
+                  className="min-h-11 rounded-lg border px-3 gx-campo"
+                />
+              </label>
+
+              <div className="mt-2 flex gap-3">
+                <Button type="button" variant="secundario" className="flex-1" onClick={() => setAbierto(false)}>
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  variant="peligro"
+                  className="flex-1"
+                  disabled={!confirmacionValida || enviando}
+                >
+                  {enviando ? "Aplicando..." : "Confirmar cambio"}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

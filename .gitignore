@@ -1,5 +1,9 @@
 # Secretos y credenciales (ADR-005)
 *.keystore
+*.jks
+*.p12
+*.pfx
+keystore.properties
 cookies.txt
 .env*
 !.env.example
@@ -9,10 +13,10 @@ cookies.txt
 .claude/settings.local.json
 
 # Dependencias y artefactos de build
-node_modules/
-.next/
-.turbo/
-coverage/
+node_modules
+.next
+.turbo
+coverage
 dist/
 *.log
 

@@ -30,3 +30,7 @@ Escritos tal como los dio el propietario, con mayúsculas normalizadas por mí (
 
 ## Métodos de pago
 - Conformados por el propietario (2026-11-12): **Yape**, **transferencias al BCP** y **Efectivo** (los cobros en efectivo también son una opción). El catálogo queda abierto para agregar Plin, Tarjeta o Depósito desde la administración. El redondeo de efectivo del BCRP sigue apagado (ADR-011).
+
+## Dinero y cobros (aclaración del propietario, 2026-11-12)
+- Efectivo sigue siendo un método de pago permitido (junto con Yape y transferencias al BCP).
+- No existen turnos, fiado ni deudas; el sistema registra el cobro de membresías (también las de miembros vencidos) y la venta de productos con cobro inmediato.

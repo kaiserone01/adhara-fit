@@ -361,7 +361,7 @@ Archivo: `S-07-cambio-de-plan.md` · REQ: 61 · BEH: 38 · INV: 5 · AC: 15
 
 ## S-08 — Registro continuo de cobros: sin turnos, arqueo ni egresos, con reporte diario por método y usuario (en-revision)
 
-Archivo: `S-08-registro-continuo-de-cobros.md` · REQ: 49 · BEH: 24 · INV: 4 · AC: 13
+Archivo: `S-08-registro-continuo-de-cobros.md` · REQ: 57 · BEH: 29 · INV: 4 · AC: 15
 
 | REQ | Prioridad | BEH | INV | AC (método) | Test |
 |---|---|---|---|---|---|
@@ -414,6 +414,14 @@ Archivo: `S-08-registro-continuo-de-cobros.md` · REQ: 49 · BEH: 24 · INV: 4 �
 | REQ-S08-047 | MUST | BEH-S08-023 | — | AC-S08-012 (manual) | pendiente |
 | REQ-S08-048 | MUST | BEH-S08-024 | — | AC-S08-013 (unitario) | pendiente |
 | REQ-S08-049 | MUST | BEH-S08-006 | — | AC-S08-004 (manual) | pendiente |
+| REQ-S08-050 | MUST | BEH-S08-025 | — | AC-S08-014 (integracion) | pendiente |
+| REQ-S08-051 | MUST | BEH-S08-025 | — | AC-S08-014 (integracion) | pendiente |
+| REQ-S08-052 | MUST | BEH-S08-026 | — | AC-S08-015 (integracion) | pendiente |
+| REQ-S08-053 | MUST | BEH-S08-026 | — | AC-S08-015 (integracion) | pendiente |
+| REQ-S08-054 | MUST | BEH-S08-026 | — | AC-S08-015 (integracion) | pendiente |
+| REQ-S08-055 | MUST | BEH-S08-027 | — | AC-S08-015 (integracion) | pendiente |
+| REQ-S08-056 | MUST | BEH-S08-028 | — | AC-S08-015 (integracion) | pendiente |
+| REQ-S08-057 | MUST | BEH-S08-022, BEH-S08-029 | — | AC-S08-011 (unitario) | pendiente |
 
 ## S-22 — Capa de datos con Drizzle: esquema, repositorios, transacciones y retiro de Prisma (aprobada)
 

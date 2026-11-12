@@ -11,12 +11,14 @@ fecha_aprobacion:
 ## 0. Contexto y alcance
 
 ### 0.1 Problema
-El código heredado organiza el dinero en torno a la caja con turnos: hay que abrir un turno con un fondo inicial para inscribir a un miembro o cobrar, un solo usuario "tiene" la caja, el cierre compara lo esperado con lo contado (arqueo) y se registran egresos. El propietario decidió que no hay turnos ni arqueo, que no hay egresos ni fiado y que el sistema solo captura la recepción de pagos de membresías y de productos (ADR-018, aceptado). S-08 quita esa maquinaria y deja un registro continuo de cobros: cada cobro guarda quién, cuándo, método y monto, se puede anular con motivo (S-04) y hay un reporte diario por método y por usuario, que sustituye al arqueo como control.
+El código heredado organiza el dinero en torno a la caja con turnos: hay que abrir un turno con un fondo inicial para inscribir a un miembro o cobrar, un solo usuario "tiene" la caja, el cierre compara lo esperado con lo contado (arqueo) y se registran egresos. El propietario decidió que no hay turnos ni arqueo, que no hay egresos, fiado ni deudas (el 2026-11-12 lo reiteró: «no existe ni el fiado ni las deudas») y que el sistema solo captura la recepción de pagos de membresías, incluidas las de miembros vencidos, y de productos con cobro inmediato; Efectivo sigue siendo un método de pago permitido (ADR-018, aceptado; S-03). S-08 quita esa maquinaria y deja un registro continuo de cobros: cada cobro guarda quién, cuándo, método y monto, se puede anular con motivo (S-04) y hay un reporte diario por método y por usuario, que sustituye al arqueo como control.
 
 ### 0.2 Dentro de alcance
 - Eliminación de `Turno`, `Egreso`, `ArqueoLinea`, de los enums `EstadoTurno` y `MonedaEgreso`, de `Pago.turnoId` y del valor `CAJA` de `ModuloPermiso`.
 - Eliminación de los casos de uso `AbrirTurno`, `CerrarTurno`, `ObtenerResumenTurno`, `ObtenerUltimoCierrePorSucursal`, `RegistrarEgreso` y `ObtenerReporteCaja`, de sus entidades, puertos y repositorios, de `SinTurnoAbiertoError` (definido en `VenderProducto.ts:28` y reexportado en `CobrarDeudasMiembro.ts:12`) y de la ruta `api/caja/ultimo-cierre`, que S-01 deja a esta spec.
-- Reemplazo del permiso `CAJA` por `PAGOS` en los casos de uso de producto y deuda, en el alta de usuarios y en las pantallas de permisos.
+- Eliminación del fiado y de las deudas: la tabla `DeudaProducto`, el enum `EstadoDeuda`, los casos de uso `FiarProducto`, `CobrarDeudasMiembro`, `CobrarDeudasSeleccionadas`, `AnularDeuda`, `ListarDeudasPendientes` y `RegistrarPagoConDeudas` (que S-04 ya retira de `registrarPago`), su entidad, puerto y repositorio, las acciones `fiarProductoAction`, `cobrarDeudasAction` y `anularDeudaAction`, y los componentes `BotonCobrarDeudas`, `ModalCobrarDeudas` y `ModalDetalleDeuda`.
+- Reemplazo del permiso `CAJA` por `PAGOS` en `VenderProducto`, en el alta de usuarios y en las pantallas de permisos.
+- Que Efectivo se ofrezca como método de pago en el cobro de membresía, el cambio de plan y la venta de producto, y que el cobro de la membresía de un miembro vencido se pueda hacer desde `/cobros`.
 - Que inscribir un miembro, cobrar, cambiar de plan y vender un producto nunca consulten un turno: `miembros/page.tsx`, `miembros/nuevo/page.tsx`, `miembros/actions.ts`, `pagos/actions.ts`, `api/pagos/route.ts`, el inicio de sesión y los casos de uso de cobro que aún lo hagan.
 - La carpeta `caja/` pasa a `cobros/` (ruta `/cobros`, menú «Cobros») en un solo cambio con todos los enlaces, `revalidatePath` e importaciones que la nombran (`pagos/`, `miembros/`, `en-sala/`): selector de miembro, asistente de cobro de membresía (S-04), cambio de plan (S-07), entrada a la venta de productos (S-11), cobros de hoy con anulación y totales de hoy, y enlace a `/pagos`. Las acciones de producto y deuda pasan a `cobros/productosActions.ts` (familia S-11) y los demás archivos que quedan en `cobros/` se convierten a `dinero.ts` y `fechaLima`.
 - Reporte de cobros: caso de uso `obtenerReporteCobros` con un puerto de lectura de una sola consulta, y la página de historial `/pagos` (hoy sin control de permiso), con totales por día, por método y por usuario, concepto de cada cobro, cobros anulados marcados y cobros con fecha pasada marcados.
@@ -24,7 +26,7 @@ El código heredado organiza el dinero en torno a la caja con turnos: hay que ab
 - `tools/verificar-caja.mjs` con su paso en el CI; retiro de los archivos de la familia S-08 de las exenciones de S-02, S-03 y S-04 y de la de S-07.
 
 ### 0.3 Fuera de alcance
-- Ventas de productos, fiado y las tablas de deuda: S-11, que elimina el fiado. S-08 solo quita el turno y reemplaza el permiso en `VenderProducto`, `FiarProducto` y `CobrarDeudasMiembro` (trabajo mínimo que S-11 puede borrar) y deja `ModalVenderProducto`, `ModalCobrarDeudas` y las acciones de producto dentro de `cobros/`; el botón de deudas se sigue ofreciendo hasta S-11.
+- El catálogo de productos y sus ventas con cobro inmediato (precios, permisos propios, pantallas de productos): S-11. S-08 solo quita el turno y reemplaza el permiso en `VenderProducto` y deja `ModalVenderProducto` y la acción de venta dentro de `cobros/`; el fiado y las deudas ya no existen desde S-08.
 - Tickets y comprobantes: S-12. Frontera con S-14: S-08 entrega `/pagos` con el reporte diario por método y usuario; S-14 lo amplía con morosos, por vencer, ingresos por período e histórico imprimible (S-08 conserva el botón de imprimir que ya existe).
 - Cobros y anulaciones de membresía: S-04. Cambio de plan: S-07. Métodos de pago: S-03.
 - Un control de efectivo contado frente a esperado: no existe (ADR-018); el control es el reporte diario por método y usuario.
@@ -45,6 +47,8 @@ El código heredado organiza el dinero en torno a la caja con turnos: hay que ab
 - **Enlaces y rutas a `/caja`:** `miembros/FormularioMiembro.tsx:440` y `en-sala/ListaEnSala.tsx:106` (`/caja?cobrar=<miembro>`), `caja/BotonRegistrarPagoCaja.tsx:66`, `pagos/actions.ts:239,374` y ocho `revalidatePath("/caja")` en `caja/actions.ts`; `pagos/FormularioPago.tsx:13` importa `../caja/SelectorMiembroModal` y `login/page.tsx:11-12,191` pinta `cajaAbiertaPor` (verificado con `grep -n`).
 - **Datos del reporte:** `conceptoPago.ts:5-10` solo distingue producto de miembro y `Pago` no tiene un campo que separe la membresía del cambio de plan (solo `CambioPlanAuditoria.pagoId`, S-07); `listarPorOrganizacionYRango` (`PrismaPagoRepository.ts:116-120`) devuelve pagos sin nombre de usuario ni de miembro; `listarFechasConTurno` usa SQL con `America/Caracas` (`PrismaTurnoRepository.ts:94-112`); `/pagos` (`pagos/page.tsx:56-58`) y `/caja` solo comprueban la sesión, no un permiso, y la lista actual excluye los anulados (`pagos/page.tsx:81`) (verificado con `Read`).
 - **Otros usos:** comentarios con «Arqueo», «Egreso» u `ObtenerResumenTurno` en `tasaBcvFija.ts:23`, `configuraciones/metodosPagoUI.ts:27,31` y `pagos/SelectorMetodoPago.tsx:439,484`; `ObtenerResumenTurno` exporta `METODO_EFECTIVO_BS`, que usa `caja/page.tsx:9`; solo `pagos/page.tsx:8,68` usa `obtenerReporteCaja` (verificado con `grep -n`).
+- **Fiado y deudas:** `DeudaProducto` aparece en 22 archivos, `FiarProducto` en 5, `CobrarDeudasMiembro` en 7, `ListarDeudas` en 7, `anularDeuda` en 4, `ModalCobrarDeudas` en 2, `BotonCobrarDeudas` en 2, `ModalDetalleDeuda` en 2, `RegistrarPagoConDeudas` en 4 y `EstadoDeuda` en 2; los casos de uso están en `packages/domain/use-cases` (`AnularDeuda`, `CobrarDeudasMiembro`, `CobrarDeudasSeleccionadas`, `FiarProducto`, `ListarDeudasPendientes`, `RegistrarPagoConDeudas`) y los componentes en `caja/` (verificado con `ls` y `grep -rIlF`).
+- **Efectivo:** S-03 conformó los métodos Yape, transferencias al BCP y Efectivo (SUP-S03-005), no exige número de operación para el efectivo y mantiene `esEfectivo` solo para los reportes (S-03 5.1; ADR-006 punto 2) (verificado con `grep -n` en `S-03` y `ADR-006`).
 - No verificado: el contenido de `caja/ModalRegistrarPagoCaja.tsx` más allá de lo que citan S-04 y S-07, y las 4 836 líneas de `caja/` contadas con `wc -l` sin revisar archivo por archivo.
 
 ### 0.5 Supuestos
@@ -63,6 +67,9 @@ El código heredado organiza el dinero en torno a la caja con turnos: hay que ab
 - SUP-S08-013: el rango máximo de 366 días cuenta ambos extremos (el 2026-01-01 al 2027-01-01 es válido). Default: inclusivo; asumido, por validar.
 - SUP-S08-014: no se mantienen las pruebas del reporte viejo (`obtenerReporteCaja`) porque prueban un comportamiento que se elimina por decisión del propietario (ADR-018); se reemplazan por las del reporte nuevo en el mismo paso. Default: reemplazarlas; asumido, por validar.
 - SUP-S08-015: tras mover `caja/` a `cobros/` no queda ninguna exención de la familia S-08; los archivos de producto y deuda son de la familia S-11 y los demás se convierten a `dinero.ts` y `fechaLima` en S-08. Default: ese reparto; asumido, por validar.
+- SUP-S08-017: el fiado y las deudas se eliminan en S-08 y no en S-11, porque el propietario dijo el 2026-11-12 que no existen; S-11 conserva el catálogo de productos y su venta con cobro inmediato. Default: eliminarlos aquí; decisión confirmada por el propietario (ADR-018 §4); asumido, por validar el reparto con S-11.
+- SUP-S08-018: la venta de productos se mantiene sin fiado, con cobro inmediato y con Efectivo, Yape o transferencia, por respuesta del propietario del 2026-11-12. Default: mantenerla; decisión confirmada por el propietario; asumido, por validar su alcance (catálogo y permisos en S-11).
+- SUP-S08-019: «el cobro de membresías vencidas» es el cobro de la membresía de un miembro sin vencimiento vigente, que hace `registrarPago` (S-04) y que `/cobros` debe ofrecer sin ningún paso previo. Default: esa lectura; asumido, por validar.
 - SUP-S08-016: la medianoche de Lima con la página abierta: `/cobros` calcula «hoy» al cargar y no se refresca sola. Default: ese comportamiento; asumido, por validar.
 
 ## 1. Requisitos
@@ -119,7 +126,7 @@ El código heredado organiza el dinero en torno a la caja con turnos: hay que ab
 - tipo: ubicuo
 - prioridad: MUST
 - origen: SUP-S08-006
-- texto: Los casos de uso VenderProducto, FiarProducto y CobrarDeudasMiembro deberán exigir el permiso PAGOS CREAR en lugar de CAJA CREAR.
+- texto: El caso de uso VenderProducto deberá exigir el permiso PAGOS CREAR en lugar de CAJA CREAR.
 
 ### REQ-S08-010
 - tipo: ubicuo
@@ -227,7 +234,7 @@ El código heredado organiza el dinero en torno a la caja con turnos: hay que ab
 - tipo: ubicuo
 - prioridad: MUST
 - origen: ADR-011
-- texto: Los archivos de cobros que no son de la familia S-11 deberán usar dinero.ts y fechaLima.
+- texto: Los archivos de cobros que no son de la familia S-11 (VenderProducto y ModalVenderProducto) deberán usar dinero.ts y fechaLima.
 
 ### REQ-S08-028
 - tipo: ubicuo
@@ -323,7 +330,7 @@ El código heredado organiza el dinero en torno a la caja con turnos: hay que ab
 - tipo: ubicuo
 - prioridad: MUST
 - origen: ADR-018
-- texto: El menú y la navegación móvil no deberán ofrecer Caja, Turno, Arqueo ni Egresos.
+- texto: El menú y la navegación móvil no deberán ofrecer Caja, Turno, Arqueo, Egresos ni Deudas.
 
 ### REQ-S08-044
 - tipo: ubicuo
@@ -361,6 +368,54 @@ El código heredado organiza el dinero en torno a la caja con turnos: hay que ab
 - prioridad: MUST
 - origen: SUP-S08-007
 - texto: La ruta /cobros con el parámetro cobrar y el identificador de un miembro deberá abrir el cobro de ese miembro.
+
+### REQ-S08-050
+- tipo: ubicuo
+- prioridad: MUST
+- origen: SUP-S08-018
+- texto: Los formularios de cobro de membresía, de cambio de plan y de venta de producto deberán ofrecer Efectivo entre los métodos de pago activos, sin pedir número de operación.
+
+### REQ-S08-051
+- tipo: ubicuo
+- prioridad: MUST
+- origen: SUP-S08-018
+- texto: El total por método del reporte y de /cobros deberá mostrar el efectivo como un método más, sin monto esperado ni contado.
+
+### REQ-S08-052
+- tipo: ubicuo
+- prioridad: MUST
+- origen: SUP-S08-017
+- texto: El esquema no deberá contener la tabla DeudaProducto ni el enum EstadoDeuda.
+
+### REQ-S08-053
+- tipo: ubicuo
+- prioridad: MUST
+- origen: SUP-S08-017
+- texto: Los casos de uso FiarProducto, CobrarDeudasMiembro, CobrarDeudasSeleccionadas, AnularDeuda, ListarDeudasPendientes y RegistrarPagoConDeudas, y la entidad, el puerto y el repositorio de DeudaProducto, no deberán existir.
+
+### REQ-S08-054
+- tipo: ubicuo
+- prioridad: MUST
+- origen: SUP-S08-017
+- texto: Las acciones fiarProductoAction, cobrarDeudasAction y anularDeudaAction y los componentes BotonCobrarDeudas, ModalCobrarDeudas y ModalDetalleDeuda no deberán existir.
+
+### REQ-S08-055
+- tipo: ubicuo
+- prioridad: MUST
+- origen: SUP-S08-017
+- texto: La página /cobros y la venta de productos no deberán ofrecer fiar, registrar deudas ni cobrar deudas.
+
+### REQ-S08-056
+- tipo: ubicuo
+- prioridad: MUST
+- origen: SUP-S08-019
+- texto: La página /cobros deberá ofrecer cobrar la membresía de un miembro sin vencimiento vigente sin ningún paso previo.
+
+### REQ-S08-057
+- tipo: ubicuo
+- prioridad: MUST
+- origen: ADR-016
+- texto: Los archivos de apps y packages, salvo node_modules, .next y generated, no deberán contener los términos DeudaProducto, EstadoDeuda, FiarProducto, CobrarDeudas, RegistrarPagoConDeudas, ListarDeudas, AnularDeuda, fiarProductoAction, anularDeudaAction ni ModalDetalleDeuda.
 ## 2. Comportamiento
 
 ### BEH-S08-001
@@ -388,8 +443,8 @@ El código heredado organiza el dinero en torno a la caja con turnos: hay que ab
 - cubre: REQ-S08-009, REQ-S08-010
 - categoria: feliz
 - dado: un usuario nuevo creado con los permisos por defecto y un usuario con PAGOS CREAR
-- cuando: se crea el usuario, se abre la pantalla de permisos y se ejecuta VenderProducto, FiarProducto y CobrarDeudasMiembro con cada usuario
-- entonces: la pantalla no ofrece CAJA, el usuario nuevo tiene PAGOS VER y PAGOS CREAR, y los tres casos de uso aceptan a quien tiene PAGOS CREAR y rechazan a quien no
+- cuando: se crea el usuario, se abre la pantalla de permisos y se ejecuta VenderProducto con cada usuario
+- entonces: la pantalla no ofrece CAJA, el usuario nuevo tiene PAGOS VER y PAGOS CREAR, y VenderProducto acepta a quien tiene PAGOS CREAR y rechaza a quien no
 
 ### BEH-S08-005
 - cubre: REQ-S08-014, REQ-S08-015, REQ-S08-016, REQ-S08-017, REQ-S08-043
@@ -511,11 +566,11 @@ El código heredado organiza el dinero en torno a la caja con turnos: hay que ab
 - entonces: las tres se rechazan sin leer pagos
 
 ### BEH-S08-022
-- cubre: REQ-S08-044, REQ-S08-045, REQ-S08-046
+- cubre: REQ-S08-044, REQ-S08-045, REQ-S08-046, REQ-S08-057
 - categoria: error
-- dado: un archivo por cada uno de los veintiún términos de REQ-S08-044, otro con la ruta /caja, otro con el valor CAJA y un archivo con siguienteTurno
+- dado: un archivo por cada uno de los veintiún términos de REQ-S08-044, otro con la ruta /caja, otro con el valor CAJA, un archivo por cada uno de los diez términos de REQ-S08-057 y un archivo con siguienteTurno
 - cuando: se ejecuta tools/verificar-caja.mjs
-- entonces: falla y nombra archivo, línea y término de cada uno de los veintitrés casos, y no marca siguienteTurno
+- entonces: falla y nombra archivo, línea y término de cada uno de los treinta y tres casos, y no marca siguienteTurno
 
 ### BEH-S08-023
 - cubre: REQ-S08-047
@@ -531,6 +586,41 @@ El código heredado organiza el dinero en torno a la caja con turnos: hay que ab
 - cuando: se ejecutan sus pruebas de lista
 - entonces: ninguna entrada nombra un archivo de Turno*, Arqueo*, Egreso*, ObtenerReporteCaja*, ObtenerResumenTurno* ni de la carpeta caja o cobros que no sea de la familia S-11
 
+
+### BEH-S08-025
+- cubre: REQ-S08-050, REQ-S08-051
+- categoria: feliz
+- dado: los métodos activos Yape, transferencia al BCP y Efectivo
+- cuando: se abre el cobro de membresía, el cambio de plan y la venta de producto, y se cobran 50.00 en efectivo
+- entonces: los tres formularios ofrecen Efectivo sin pedir número de operación, los demás métodos sí lo piden, y el cobro en efectivo aparece en /cobros y en el reporte con su propia fila de total, sin monto esperado ni contado
+
+### BEH-S08-026
+- cubre: REQ-S08-052, REQ-S08-053, REQ-S08-054
+- categoria: feliz
+- dado: el esquema y el código finales
+- cuando: se consultan la tabla DeudaProducto, el enum EstadoDeuda, los seis casos de uso, la entidad, el puerto, el repositorio, las tres acciones y los tres componentes
+- entonces: no existe ninguno
+
+### BEH-S08-027
+- cubre: REQ-S08-055
+- categoria: feliz
+- dado: /cobros con un miembro elegido y el formulario de venta de producto
+- cuando: el socio revisa las acciones y los campos que se ofrecen
+- entonces: no hay botón de fiar, de deudas ni de cobrar deudas, y la venta solo admite cobro inmediato
+
+### BEH-S08-028
+- cubre: REQ-S08-056
+- categoria: feliz
+- dado: un miembro con vencimiento de hace 10 días y otro que nunca pagó
+- cuando: el socio elige a cada uno en /cobros y cobra su membresía
+- entonces: el cobro se ofrece sin ningún paso previo y se registra con las reglas de S-04, con la base del vencimiento en el día de hoy
+
+### BEH-S08-029
+- cubre: REQ-S08-057
+- categoria: error
+- dado: un archivo por cada uno de los diez términos de REQ-S08-057
+- cuando: se ejecuta tools/verificar-caja.mjs
+- entonces: falla y nombra archivo, línea y término de cada uno
 ## 3. Invariantes
 
 ### INV-S08-001
@@ -576,8 +666,8 @@ El código heredado organiza el dinero en torno a la caja con turnos: hay que ab
 ### AC-S08-003
 - enlaza: REQ-S08-009, REQ-S08-010, BEH-S08-004
 - metodo: integracion
-- procedimiento: crear un usuario con los permisos por defecto, leer sus permisos y la pantalla de permisos, y ejecutar VenderProducto, FiarProducto y CobrarDeudasMiembro con un usuario con PAGOS CREAR y con uno sin él
-- esperado: el usuario tiene PAGOS VER y PAGOS CREAR y ningún permiso CAJA, la pantalla no ofrece CAJA, y los casos de uso aceptan y rechazan según PAGOS CREAR
+- procedimiento: crear un usuario con los permisos por defecto, leer sus permisos y la pantalla de permisos, y ejecutar VenderProducto con un usuario con PAGOS CREAR y con uno sin él
+- esperado: el usuario tiene PAGOS VER y PAGOS CREAR y ningún permiso CAJA, la pantalla no ofrece CAJA, y VenderProducto acepta y rechaza según PAGOS CREAR
 - test: pendiente
 
 ### AC-S08-004
@@ -630,10 +720,10 @@ El código heredado organiza el dinero en torno a la caja con turnos: hay que ab
 - test: pendiente
 
 ### AC-S08-011
-- enlaza: REQ-S08-044, REQ-S08-045, REQ-S08-046, BEH-S08-022, INV-S08-004
+- enlaza: REQ-S08-044, REQ-S08-045, REQ-S08-046, REQ-S08-057, BEH-S08-022, BEH-S08-029, INV-S08-004
 - metodo: unitario
-- procedimiento: ejecutar las pruebas de tools/verificar-caja.mjs con un árbol por cada uno de los veintiún términos, otro con la ruta /caja, otro con el valor CAJA, otro con siguienteTurno y otro limpio; después ejecutarla sobre el árbol final
-- esperado: falla con los veintitrés casos nombrando archivo, línea y término, no marca siguienteTurno, pasa con el limpio y no encuentra nada en el árbol final
+- procedimiento: ejecutar las pruebas de tools/verificar-caja.mjs con un árbol por cada uno de los veintiún términos, uno por cada uno de los diez términos de deuda, otro con la ruta /caja, otro con el valor CAJA, otro con siguienteTurno y otro limpio; después ejecutarla sobre el árbol final
+- esperado: falla con los treinta y tres casos nombrando archivo, línea y término, no marca siguienteTurno, pasa con el limpio y no encuentra nada en el árbol final
 - test: pendiente
 
 ### AC-S08-012
@@ -650,10 +740,24 @@ El código heredado organiza el dinero en torno a la caja con turnos: hay que ab
 - esperado: ninguna entrada nombra un archivo de la familia S-08
 - test: pendiente
 
+
+### AC-S08-014
+- enlaza: REQ-S08-050, REQ-S08-051, BEH-S08-025
+- metodo: integracion
+- procedimiento: con los métodos activos Yape, transferencia al BCP y Efectivo, leer el catálogo que reciben los formularios de cobro de membresía, de cambio de plan y de venta de producto, cobrar 50.00 en efectivo sin número de operación y 50.00 en Yape sin número, y leer el reporte del día
+- esperado: los tres formularios ofrecen Efectivo, el cobro en efectivo se acepta sin número de operación, el de Yape sin número se rechaza y el reporte trae una fila de total para Efectivo sin monto esperado ni contado
+- test: pendiente
+
+### AC-S08-015
+- enlaza: REQ-S08-052, REQ-S08-053, REQ-S08-054, REQ-S08-055, REQ-S08-056, BEH-S08-026, BEH-S08-027, BEH-S08-028
+- metodo: integracion
+- procedimiento: consultar el esquema y buscar con la API de typescript los archivos, casos de uso y acciones de fiado y deudas; leer las acciones que ofrece /cobros; y cobrar la membresía de un miembro vencido y de uno que nunca pagó
+- esperado: nada de fiado ni deudas existe, /cobros no lo ofrece y los dos cobros se registran con las reglas de S-04 sin ningún paso previo
+- test: pendiente
 ## 5. Plan de pruebas, migración, riesgos y preguntas abiertas
 
 ### 5.1 Plan de pruebas
-- Orden (ADR-016 §1, pruebas primero, un commit por paso y cada commit con typecheck y pruebas en verde, agregando lo nuevo al lado de lo viejo, migrando los llamadores y retirando lo viejo al final): (1) pruebas de caracterización de las acciones de producto y de la anulación en lo que se conserva; (2) pruebas de `tools/verificar-caja.mjs` y la herramienta con todos los archivos actuales de turno, arqueo y egreso en su lista de exenciones, que se achica en cada paso siguiente; (3) pruebas de `obtenerReporteCobros`, de su puerto de lectura y de `obtenerDiasConActividad` basado en pagos, con los casos de BEH-S08-013 a BEH-S08-019 y las propiedades de INV-S08-001 e INV-S08-003, junto al reporte viejo; (4) reemplazar el permiso `CAJA` por `PAGOS` en `VenderProducto`, `FiarProducto`, `CobrarDeudasMiembro`, `CrearUsuarioAdmin`, `usuarios/actions.ts` y `FormularioPermisos.tsx`; (5) quitar el turno de `VenderProducto`, `CobrarDeudasMiembro`, los residuos de `RegistrarPago` y `CambiarPlan`, `miembros/page.tsx`, `miembros/nuevo/page.tsx`, `miembros/actions.ts`, `pagos/actions.ts`, `api/pagos/route.ts`, la ruta y la página de inicio de sesión, migrando en el mismo commit a todos los llamadores de `SinTurnoAbiertoError`; (6) mover `caja/` a `cobros/` en un solo commit junto con todos los enlaces, `revalidatePath`, importaciones (`pagos/FormularioPago.tsx`, `miembros/FormularioMiembro.tsx`, `en-sala/ListaEnSala.tsx`) y las listas de exenciones que nombraban rutas de `caja/`, separar las acciones de producto en `cobros/productosActions.ts` y reducir `page.tsx` al selector, las acciones de cobro, los cobros de hoy y los totales de hoy; (7) rehacer `/pagos` con el reporte nuevo y el permiso `PAGOS VER`; (8) retirar los casos de uso, entidades, puertos, repositorios, acciones, pantallas y la ruta `api/caja/ultimo-cierre` de turno, arqueo y egreso, y las pruebas del reporte viejo (SUP-S08-014), achicando la lista de exenciones de la herramienta; (9) esquema: retirar `Turno`, `Egreso`, `ArqueoLinea`, sus enums, `Pago.turnoId` y el valor `CAJA`; (10) convertir a `dinero.ts` y `fechaLima` los archivos de `cobros/` que no son de la familia S-11 y vaciar las exenciones de la familia S-08 de S-02, S-03, S-04 y S-07.
+- Orden (ADR-016 §1, pruebas primero, un commit por paso y cada commit con typecheck y pruebas en verde, agregando lo nuevo al lado de lo viejo, migrando los llamadores y retirando lo viejo al final): (1) pruebas de caracterización de la venta de producto y de la anulación en lo que se conserva (las pruebas de fiado y de deudas se retiran con sus casos de uso, SUP-S08-017); (2) pruebas de `tools/verificar-caja.mjs` y la herramienta con todos los archivos actuales de turno, arqueo y egreso en su lista de exenciones, que se achica en cada paso siguiente; (3) pruebas de `obtenerReporteCobros`, de su puerto de lectura y de `obtenerDiasConActividad` basado en pagos, con los casos de BEH-S08-013 a BEH-S08-019 y las propiedades de INV-S08-001 e INV-S08-003, junto al reporte viejo; (4) reemplazar el permiso `CAJA` por `PAGOS` en `VenderProducto`, `CrearUsuarioAdmin`, `usuarios/actions.ts` y `FormularioPermisos.tsx`, y retirar el fiado y las deudas (casos de uso, entidad, puerto, repositorio, acciones, componentes y sus pruebas, con los llamadores en `caja/page.tsx` y `pagos/actions.ts`) antes de tocar el esquema; (5) quitar el turno de `VenderProducto`, los residuos de `RegistrarPago` y `CambiarPlan`, `miembros/page.tsx`, `miembros/nuevo/page.tsx`, `miembros/actions.ts`, `pagos/actions.ts`, `api/pagos/route.ts`, la ruta y la página de inicio de sesión, migrando en el mismo commit a todos los llamadores de `SinTurnoAbiertoError`; (6) mover `caja/` a `cobros/` en un solo commit junto con todos los enlaces, `revalidatePath`, importaciones (`pagos/FormularioPago.tsx`, `miembros/FormularioMiembro.tsx`, `en-sala/ListaEnSala.tsx`) y las listas de exenciones que nombraban rutas de `caja/`, separar la acción de venta de producto en `cobros/productosActions.ts` y reducir `page.tsx` al selector, las acciones de cobro, los cobros de hoy y los totales de hoy; (7) rehacer `/pagos` con el reporte nuevo y el permiso `PAGOS VER`; (8) retirar los casos de uso, entidades, puertos, repositorios, acciones, pantallas y la ruta `api/caja/ultimo-cierre` de turno, arqueo y egreso, y las pruebas del reporte viejo (SUP-S08-014), achicando la lista de exenciones de la herramienta; (9) esquema: retirar `Turno`, `Egreso`, `ArqueoLinea`, `DeudaProducto`, sus enums (`EstadoTurno`, `MonedaEgreso`, `EstadoDeuda`), `Pago.turnoId` y el valor `CAJA`; (10) convertir a `dinero.ts` y `fechaLima` los archivos de `cobros/` que no son de la familia S-11 y vaciar las exenciones de la familia S-08 de S-02, S-03, S-04 y S-07.
 - Las pruebas del reporte usan semillas fijas, una base efímera y los husos `TZ=UTC`, `America/Lima` y `Asia/Tokyo`; no hay dependencias nuevas.
 - Los criterios AC-S08-004, AC-S08-005 y AC-S08-012 son pasos manuales del propietario (el repositorio no tiene un ejecutor de navegador).
 - La herramienta busca cada término por separado, de modo que `Egreso` y `RegistrarEgreso` pueden coincidir en una misma línea y la herramienta lista ambos; no hay topes porque no hay exenciones permanentes.
@@ -666,9 +770,12 @@ El código heredado organiza el dinero en torno a la caja con turnos: hay que ab
   - S-03: la tabla de familias (5.1) cambia la carpeta `caja/` por `cobros/` y retira `Turno*`, `Arqueo*`, `Egreso*`, `ObtenerReporteCaja*` y `ObtenerResumenTurno*` de la familia S-08, y el caso de prueba de `Turno.ts` se elimina.
   - S-04: SUP-S04-011, 0.2, 0.3, REQ-S04-045 y los dos riesgos remiten a S-08 como cumplida; los tres archivos de `caja/` que adaptan S-04 y S-07 pasan a `cobros/`.
   - S-05: REQ-S05-008, SUP-S05-002, SUP-S05-005, INV-S05-004, 0.2 y 0.3 dejan de nombrar `Turno` al desaparecer la tabla.
-  - S-22: REQ-S22-002, BEH-S22-012 y AC-S22-001 restan dos enums (`EstadoTurno` y `MonedaEgreso`); REQ-S22-016, BEH-S22-008 y AC-S22-014 restan tres tablas (`Turno`, `Egreso`, `ArqueoLinea`); REQ-S22-007 y AC-S22-003 restan los repositorios de turno, egreso y arqueo; REQ-S22-009 y AC-S22-004 quitan esos tres repositorios de la prueba de humo.
+  - S-22: REQ-S22-002, BEH-S22-012 y AC-S22-001 restan tres enums (`EstadoTurno`, `MonedaEgreso` y `EstadoDeuda`); REQ-S22-016, BEH-S22-008 y AC-S22-014 restan cuatro tablas (`Turno`, `Egreso`, `ArqueoLinea` y `DeudaProducto`); REQ-S22-007 y AC-S22-003 restan los repositorios de turno, egreso, arqueo y deuda; REQ-S22-009 y AC-S22-004 quitan esos repositorios de la prueba de humo.
+  - S-03: la familia S-11 de la tabla de familias pierde `FiarProducto*`, `CobrarDeudas*`, `ListarDeudas*`, `RegistrarPagoConDeudas*` y `ModalCobrarDeudas*`; el puente de dinero deja de nombrarlos.
+  - S-05: SUP-S05-002 y REQ-S05-008 dejan de nombrar `DeudaProducto.sucursalId`.
+  - S-04: la aclaración de que `ModalCobrarDeudas.tsx` conserva términos de abono y la retirada de `RegistrarPagoConDeudas` quedan cumplidas por S-08.
   - `docs/06-modelo-datos-cambios.md`, `docs/00-indice.md` y `COBERTURA-RF.md`: nota de que S-08 quedó como registro continuo de cobros.
-- **Traspasos:** S-11 (ventas sin fiado, `ModalVenderProducto`, `ModalCobrarDeudas`, `cobros/productosActions.ts`), S-14 (reportes de morosos, ingresos por período e histórico imprimible), S-12 (tickets), S-23 (permisos y rol único; el reporte por usuario pierde valor con un solo rol) y S-10 (tasa y `Pago.montoBs`).
+- **Traspasos:** S-11 (catálogo de productos y venta con cobro inmediato, `ModalVenderProducto`, `cobros/productosActions.ts`), S-14 (reportes de morosos, ingresos por período e histórico imprimible), S-12 (tickets), S-23 (permisos y rol único; el reporte por usuario pierde valor con un solo rol) y S-10 (tasa y `Pago.montoBs`).
 - Reversión: antes del primer push, `git reset` del propietario; después, cada paso del plan es un commit independiente.
 
 ### 5.3 Riesgos
@@ -676,12 +783,11 @@ El código heredado organiza el dinero en torno a la caja con turnos: hay que ab
 - Un cobro anulado de un día ya revisado cambia ese total sin avisar; solo existe la marca «fecha pasada» y la lista de anulados. Mitigación: los anulados se listan con motivo y autor (REQ-S08-034).
 - La anulación solo alcanza al cobro más reciente de cada miembro (S-04): el operador puede no poder anular un cobro de un día anterior si el miembro tiene uno posterior (BEH-S08-010). Mitigación: el mensaje indica qué anular primero.
 - Eliminar a un miembro (ADR-013, S-09) puede borrar sus pagos y cambiar los totales de un día pasado. Mitigación: S-09 define que «Eliminar» conserva los pagos.
-- Una venta de producto con varias líneas puede listarse como varios cobros (`grupoPagoId`); S-11 la reduce a un cobro por venta.
+
 - Una inscripción con fecha de inscripción anterior se marca «fecha pasada» aunque sea normal (S-04); es una marca informativa.
 - Con la página abierta al cruzar la medianoche de Lima, «hoy» queda en el día anterior hasta recargar (SUP-S08-016).
 - 50 archivos cambian y `caja/` (25 archivos, 4 836 líneas) se mueve; el riesgo es una importación o un enlace que siga apuntando a `/caja`. Mitigación: el typecheck y la herramienta, que ahora detecta la ruta y el módulo.
 - Se pierden las pruebas del reporte viejo y las suites de contrato y de humo de S-22 de turno, egreso y arqueo, junto con esas capacidades, por decisión del propietario.
-- Los componentes de producto y de deudas se mueven y siguen con el código de fiado hasta S-11; si S-11 se pospone queda fiado funcionando sin turno.
 - Cualquier usuario autenticado con `PAGOS CREAR` puede registrar un cobro en cualquier momento; con un solo rol (S-23) la trazabilidad depende del usuario que inicia sesión.
 - Las cifras de 0.4 cambian cuando S-00 a S-07 modifiquen el árbol. Mitigación: se recuentan al empezar.
 
@@ -689,6 +795,8 @@ El código heredado organiza el dinero en torno a la caja con turnos: hay que ab
 - ¿El reporte diario por método y usuario es suficiente como control sin arqueo? Default: sí (SUP-S08-001, ADR-018).
 - ¿El reporte agrupa los cobros por fecha de pago, marcando los de fecha pasada? Default: sí (SUP-S08-002).
 - ¿La página se llama «Cobros» y la ruta es /cobros? Default: sí (SUP-S08-007).
+- ¿El fiado y las deudas se eliminan en S-08 y no en S-11? Default: sí (SUP-S08-017); confirmado por el propietario el 2026-11-12.
+- ¿La venta de productos se mantiene sin fiado? Default: sí (SUP-S08-018); confirmado por el propietario el 2026-11-12.
 - ¿El historial de /pagos admite hasta 366 días contando ambos extremos? Default: sí (SUP-S08-005, SUP-S08-013).
 - ¿El permiso para ver cobros e historial es `PAGOS VER`, hoy sin control? Default: sí (SUP-S08-006).
 
@@ -726,3 +834,6 @@ Todos los hallazgos se verificaron contra el Repo A y las specs y resultaron cie
 - Fila 10: el plan se rehízo en diez pasos con la herramienta en el paso 2, el remapeo de `CAJA` antes de quitar el valor, los llamadores de `SinTurnoAbiertoError` migrados en el mismo commit, el movimiento de `caja/` en un solo commit con todos los enlaces y las exenciones, y el borrado de las pruebas del reporte viejo declarado (SUP-S08-014); la herramienta busca cada término por separado y no hay topes porque no hay exenciones permanentes; el rango del día de Lima sale de `fechaLima`.
 - Fila 11 y 12: 5.3 suma los riesgos omitidos; 5.2 completa las enmiendas con los IDs del revisor (S-01, S-02, S-03, S-04, S-05, S-07 y S-22).
 - Lo que no se pudo verificar y queda marcado «no verificado»: el contenido de `ModalRegistrarPagoCaja.tsx` más allá de lo que citan S-04 y S-07.
+
+### Cambio posterior por orden del propietario (2026-11-12)
+Tras la conciliación, el propietario pidió validar que Efectivo siga siendo un método de pago y que no existan turnos, fiado ni deudas, «solo el cobro de membresías». Se verificó que Efectivo ya estaba conformado en S-03 (SUP-S03-005, sin número de operación) y se agregaron REQ-S08-050 y REQ-S08-051; el fiado y las deudas, que el borrador dejaba funcionando hasta S-11, pasan a eliminarse en S-08 (REQ-S08-052 a REQ-S08-055 y REQ-S08-057, SUP-S08-017); el cobro de la membresía de un miembro vencido queda explícito (REQ-S08-056). Ante la ambigüedad de «solo el cobro de membresías», el propietario respondió que la venta de productos se mantiene sin fiado (SUP-S08-018).

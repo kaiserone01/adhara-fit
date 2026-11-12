@@ -26,7 +26,7 @@ No estaban en los documentos 01 a 12: las agregué tras cruzar **todos los requi
 
 | Spec | Qué es, en simple | Por qué la propongo | De qué depende | Estado |
 |---|---|---|---|---|
-| **S-11 Productos (sin fiado)** | Vender productos (agua, guantes…) con cobro inmediato; **se elimina el fiado**; permisos propios; precios en soles. | RF-37 está en el MVP y no tenía spec. Decidiste: productos sí, fiado no. | S-01, S-03, S-08 | Propuesta |
+| **S-11 Productos (sin fiado)** | Vender productos (agua, guantes…) con cobro inmediato (Efectivo, Yape o transferencia); permisos propios; precios en soles. **El fiado y las deudas los elimina S-08** (decisión del propietario, 2026-11-12). | RF-37 está en el MVP y no tenía spec. Decidiste: productos sí, fiado no. | S-01, S-03, S-08 | Propuesta |
 | **S-12 Tickets y comprobantes de pago** | **Todo desarrollado y apagado** hasta que confirmes habilitarlo: ticket digital no fiscal por correo, ticket impreso no fiscal en ticketera y registro de comprobante tributario (boleta, factura). No emite a SUNAT. | RF-39, obligatorio en el MVP (ADR-006). | S-03, S-04 | Propuesta |
 | **S-13 Consentimiento y aviso legal** | Registrar que el miembro aceptó el tratamiento de sus datos (fecha y versión del texto), mostrar la política de privacidad y el aviso del Libro de Reclamaciones. | RF-15, RF-71 y RF-72: obligatorios en el MVP. Los textos legales los debe revisar un abogado. | S-06, S-09 | Propuesta |
 | **S-14 Reportes** | Morosos, por vencer (7 días), histórico de pagos imprimible, ingresos por método y período. | RF-62 y RF-36; reemplaza el arqueo como control. | S-04, S-12 | Propuesta |

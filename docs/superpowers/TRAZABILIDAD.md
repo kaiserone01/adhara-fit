@@ -785,6 +785,66 @@ Archivo: `S-15-linea-base-y-datos-iniciales.md` · REQ: 44 · BEH: 22 · INV: 4 
 | REQ-S15-043 | MUST | BEH-S15-021 | INV-S15-004 | AC-S15-015 (unitario) | pendiente |
 | REQ-S15-044 | MUST | BEH-S15-022 | — | AC-S15-016 (manual) | pendiente |
 
+## S-17 — Operación y despliegue: producción con TLS, respaldos, restauración, monitoreo y recuperación de acceso (en-revision)
+
+Archivo: `S-17-operacion-y-despliegue.md` · REQ: 53 · BEH: 28 · INV: 4 · AC: 19
+
+| REQ | Prioridad | BEH | INV | AC (método) | Test |
+|---|---|---|---|---|---|
+| REQ-S17-001 | MUST | BEH-S17-001 | — | AC-S17-001 (unitario) | pendiente |
+| REQ-S17-002 | MUST | BEH-S17-001 | — | AC-S17-001 (unitario) | pendiente |
+| REQ-S17-003 | MUST | BEH-S17-001 | — | AC-S17-001 (unitario) | pendiente |
+| REQ-S17-004 | MUST | BEH-S17-002 | — | AC-S17-002 (manual) | pendiente |
+| REQ-S17-005 | MUST | BEH-S17-002 | — | AC-S17-002 (manual) | pendiente |
+| REQ-S17-006 | MUST | BEH-S17-003 | — | AC-S17-002 (manual) | pendiente |
+| REQ-S17-007 | MUST | BEH-S17-001 | — | AC-S17-001 (unitario) | pendiente |
+| REQ-S17-008 | MUST | BEH-S17-004 | — | AC-S17-002 (manual) | pendiente |
+| REQ-S17-009 | MUST | BEH-S17-004 | — | AC-S17-002 (manual) | pendiente |
+| REQ-S17-010 | MUST | BEH-S17-005 | — | AC-S17-003 (integracion) | pendiente |
+| REQ-S17-011 | MUST | BEH-S17-006 | — | AC-S17-004 (unitario) | pendiente |
+| REQ-S17-012 | MUST | BEH-S17-007 | — | AC-S17-005 (integracion) | pendiente |
+| REQ-S17-013 | MUST | BEH-S17-008 | — | AC-S17-005 (integracion) | pendiente |
+| REQ-S17-014 | MUST | BEH-S17-009 | — | AC-S17-006 (integracion) | pendiente |
+| REQ-S17-015 | MUST | BEH-S17-010 | — | AC-S17-006 (integracion) | pendiente |
+| REQ-S17-016 | MUST | BEH-S17-007 | — | AC-S17-005 (integracion) | pendiente |
+| REQ-S17-017 | MUST | BEH-S17-011, BEH-S17-012, BEH-S17-028 | — | AC-S17-007 (integracion), AC-S17-008 (unitario), AC-S17-019 (integracion) | pendiente |
+| REQ-S17-018 | MUST | BEH-S17-011 | INV-S17-003 | AC-S17-007 (integracion) | pendiente |
+| REQ-S17-019 | MUST | BEH-S17-011 | — | AC-S17-007 (integracion) | pendiente |
+| REQ-S17-020 | MUST | BEH-S17-013, BEH-S17-028 | INV-S17-001 | AC-S17-009 (integracion), AC-S17-019 (integracion) | pendiente |
+| REQ-S17-021 | MUST | BEH-S17-014 | INV-S17-001 | AC-S17-009 (integracion) | pendiente |
+| REQ-S17-022 | MUST | BEH-S17-011 | — | AC-S17-007 (integracion) | pendiente |
+| REQ-S17-023 | MUST | BEH-S17-011 | INV-S17-003 | AC-S17-007 (integracion) | pendiente |
+| REQ-S17-024 | MUST | BEH-S17-015 | INV-S17-003 | AC-S17-007 (integracion), AC-S17-010 (unitario) | pendiente |
+| REQ-S17-025 | MUST | BEH-S17-016 | — | AC-S17-011 (integracion) | pendiente |
+| REQ-S17-026 | MUST | BEH-S17-016 | — | AC-S17-011 (integracion) | pendiente |
+| REQ-S17-027 | MUST | BEH-S17-016, BEH-S17-017 | — | AC-S17-011 (integracion) | pendiente |
+| REQ-S17-028 | MUST | BEH-S17-016, BEH-S17-017 | — | AC-S17-011 (integracion) | pendiente |
+| REQ-S17-029 | MUST | BEH-S17-018 | — | AC-S17-012 (integracion) | pendiente |
+| REQ-S17-030 | MUST | BEH-S17-016 | — | AC-S17-011 (integracion) | pendiente |
+| REQ-S17-031 | MUST | BEH-S17-019 | INV-S17-002 | AC-S17-013 (integracion) | pendiente |
+| REQ-S17-032 | MUST | BEH-S17-019 | INV-S17-002 | AC-S17-013 (integracion) | pendiente |
+| REQ-S17-033 | MUST | BEH-S17-019 | INV-S17-004 | AC-S17-013 (integracion), AC-S17-017 (unitario) | pendiente |
+| REQ-S17-034 | MUST | BEH-S17-020 | — | AC-S17-001 (unitario) | pendiente |
+| REQ-S17-035 | MUST | BEH-S17-001 | — | AC-S17-001 (unitario) | pendiente |
+| REQ-S17-036 | MUST | BEH-S17-021, BEH-S17-022 | — | AC-S17-014 (integracion) | pendiente |
+| REQ-S17-037 | MUST | BEH-S17-021, BEH-S17-022 | — | AC-S17-014 (integracion) | pendiente |
+| REQ-S17-038 | MUST | BEH-S17-021 | — | AC-S17-014 (integracion) | pendiente |
+| REQ-S17-039 | MUST | BEH-S17-021, BEH-S17-022 | — | AC-S17-014 (integracion) | pendiente |
+| REQ-S17-040 | MUST | BEH-S17-023, BEH-S17-024 | — | AC-S17-015 (integracion) | pendiente |
+| REQ-S17-041 | MUST | BEH-S17-023 | — | AC-S17-015 (integracion) | pendiente |
+| REQ-S17-042 | MUST | BEH-S17-023 | — | AC-S17-015 (integracion) | pendiente |
+| REQ-S17-043 | MUST | BEH-S17-023 | — | AC-S17-015 (integracion) | pendiente |
+| REQ-S17-044 | MUST | BEH-S17-024 | — | AC-S17-015 (integracion) | pendiente |
+| REQ-S17-045 | MUST | BEH-S17-025 | — | AC-S17-016 (unitario) | pendiente |
+| REQ-S17-046 | MUST | BEH-S17-025 | — | AC-S17-016 (unitario) | pendiente |
+| REQ-S17-047 | MUST | BEH-S17-026 | INV-S17-004 | AC-S17-017 (unitario) | pendiente |
+| REQ-S17-048 | MUST | BEH-S17-026 | INV-S17-004 | AC-S17-017 (unitario) | pendiente |
+| REQ-S17-049 | MUST | BEH-S17-026 | INV-S17-004 | AC-S17-017 (unitario) | pendiente |
+| REQ-S17-050 | MUST | BEH-S17-026 | — | AC-S17-017 (unitario) | pendiente |
+| REQ-S17-051 | MUST | BEH-S17-027 | — | AC-S17-018 (manual) | pendiente |
+| REQ-S17-052 | MUST | BEH-S17-001 | — | AC-S17-001 (unitario) | pendiente |
+| REQ-S17-053 | MUST | BEH-S17-001 | — | AC-S17-001 (unitario) | pendiente |
+
 ## S-18 — Entrenadores: personas del gimnasio sin credenciales, asignadas solo al miembro (aprobada)
 
 Archivo: `S-18-entrenadores.md` · REQ: 39 · BEH: 20 · INV: 4 · AC: 11

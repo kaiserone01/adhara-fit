@@ -34,3 +34,5 @@ Escritos tal como los dio el propietario, con mayúsculas normalizadas por mí (
 ## Dinero y cobros (aclaración del propietario, 2026-11-12)
 - Efectivo sigue siendo un método de pago permitido (junto con Yape y transferencias al BCP).
 - No existen turnos, fiado ni deudas; el sistema registra el cobro de membresías (también las de miembros vencidos) y la venta de productos con cobro inmediato.
+
+> Nota (2026-11-12): S-18 creó el registro de entrenadores (tabla `Entrenador` sin credenciales) y S-23 dejó un solo rol de administrador; el seed (S-15) carga los cuatro entrenadores en esa tabla.

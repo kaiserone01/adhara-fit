@@ -51,3 +51,6 @@ Media: cambiar de mecanismo de base efímera es barato; abandonar el test primer
 
 ## Referencias
 `docs/09-verificacion-contra-codigo.md` §1, §3.1, §3.3, V-01/V-02 · `docs/11-verificacion-documento-ingenieria.md` DI-01, DI-64, H-01 · `docs/07-plan-implementacion-roadmap.md` tareas 0.7, 0.10, 0.11 · `docs/10-prompt-claude-code.md` §2.A.
+
+## Enmiendas posteriores (2026-11-12, aprobación de S-23)
+- §3 (test de contrato de permisos) se lee con tres clases de ruta —pública, clave de kiosco y sesión— porque S-23 retira los permisos por módulo (ver la enmienda de ADR-012).

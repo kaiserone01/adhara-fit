@@ -45,9 +45,9 @@ Los 22 ADR están aceptados (001 a 022); ninguno queda propuesto ni retirado. AD
 | S-09 | **aprobada** (propietario, 2026-11-12, con los valores por defecto). 42 REQ, 26 BEH, 4 INV, 12 AC; `spec-lint`: 0 errores, 0 avisos. «Eliminar» con baja lógica (`BAJA`), «Restaurar», conserva pagos y datos; sin anonimización. Enmiendas en S-01, S-04, S-06, S-07, S-08, S-22, ADR-013, ADR-004 y documentos |
 | S-10 | **aprobada** (propietario, 2026-11-12, con el reloj de Lima conservado sin tasa). 34 REQ, 23 BEH, 5 INV, 11 AC; `spec-lint`: 0 errores, 0 avisos. Retira tasa, padrón, bolívares, «por regularizar» y la marca anterior de las apps web; las apps de TV quedan para S-20 y S-21. Enmiendas en S-00, S-02, S-03, S-04, S-05, S-06, S-07, S-08, S-22, ADR-003, ADR-004 y ADR-007 |
 
-| S-18 | **en revisión, veredicto conciliado** (espera «S-18 aprobada»). Entrenadores como tabla propia `Entrenador` sin credenciales; no se borran, se desactivan; 39 REQ, 20 BEH, 4 INV, 11 AC; `spec-lint`: 0 errores, 0 avisos |
-| S-23 | **en revisión, veredicto conciliado** (espera «S-23 aprobada»). Un solo rol: administrador con acceso total; retira roles, permisos y sus consultas; los administradores se desactivan, no se borran; enmienda a ADR-012 §3 y §4 pendiente de su aprobación; 36 REQ, 19 BEH, 4 INV, 12 AC; `spec-lint`: 0 errores, 0 avisos |
-| S-11 | **en revisión, veredicto conciliado** (espera «S-11 aprobada»). Productos: catálogo y venta de un producto con cobro inmediato (Efectivo, Yape o transferencia), sin fiado, carrito, fecha pasada ni tasa; 37 REQ, 21 BEH, 4 INV, 14 AC; `spec-lint`: 0 errores, 0 avisos |
+| S-18 | **aprobada** (propietario, 2026-11-12, con los valores por defecto). 39 REQ, 20 BEH, 4 INV, 11 AC; `spec-lint`: 0 errores, 0 avisos. Tabla `Entrenador` sin credenciales; se desactivan, no se borran. Enmiendas en S-01, S-05, S-07, S-08, S-22, docs/06 |
+| S-23 | **aprobada** (propietario, 2026-11-12, con los valores por defecto, incluida la enmienda a ADR-012 §3 y §4). 36 REQ, 19 BEH, 4 INV, 12 AC; `spec-lint`: 0 errores, 0 avisos. Un solo rol de administrador; enmiendas en S-01, S-04, S-05, S-07, S-08, S-09, S-18, S-22, ADR-012, ADR-016, docs/01, docs/02 |
+| S-11 | **aprobada** (propietario, 2026-11-12, con los valores por defecto). 37 REQ, 21 BEH, 4 INV, 14 AC; `spec-lint`: 0 errores, 0 avisos. Un producto por venta, cobro inmediato, sin fiado, carrito ni fecha pasada. Enmiendas en S-03, S-04, S-08, S-10, S-22 |
 | S-12, S-13, S-14, S-15, S-17, S-19, S-20, S-21 | **entran** (el propietario aprobó la lista completa el 2026-11-12: «aprobado todo, procede»); sin redactar todavía. S-16 (importador) descartada. Mapa en lenguaje simple: `docs/superpowers/BACKLOG-SPECS.md`; cruce técnico: `COBERTURA-RF.md` |
 
 - Defaults asumidos hasta ahora: ninguno de `docs/08`. Documentación v0.4 del zip: **importada íntegra** a `docs/` (40 archivos; `diff -r` vacío y manifiesto sha256 idéntico; el commit de importación solo contiene esos archivos).
@@ -136,6 +136,10 @@ Los 22 ADR están aceptados (001 a 022); ninguno queda propuesto ni retirado. AD
 - `docs/superpowers/specs/S-01-baseline-de-seguridad.md`: nueva, `en-revision`, con `## Revisión independiente`.
 - `docs/superpowers/specs/S-22-…md` ahora `aprobada`; `S-00-…md` con sección «Enmiendas posteriores» (Compose y listas de `packages/db`); `docs/adr/ADR-022-…md` con «Enmiendas posteriores»; `docs/adr/ADR-011-…md` con la directriz de montos del propietario.
 - Enmiendas por la aceptación de ADR-022: `docs/adr/ADR-001` (sección «Enmiendas posteriores»), `ADR-016` §2, `docs/constitution.md` C-21, `CLAUDE.md` (líneas 5 y 67), `docs/04` (líneas 27, 44, 82, 93), `docs/06` (nota y comandos de §4), `docs/00-indice.md` (nota). Los docs 01, 03, 10 y 12 quedan como históricos.
+- `docs/superpowers/specs/S-18-entrenadores.md`, `S-23-un-solo-rol-administrador.md`, `S-11-productos-sin-fiado.md`: redactadas, revisadas por el `spec-reviewer`, corregidas y aprobadas (2026-11-12).
+- `docs/superpowers/specs/S-01`, `S-03`, `S-04`, `S-05`, `S-07`, `S-08`, `S-09`, `S-10`, `S-22`: sección «Enmiendas posteriores» ampliada por la aprobación de S-11, S-18 y S-23.
+- `docs/adr/ADR-012-*.md` y `ADR-016-*.md`: enmienda por S-23 (sesión válida de un administrador activo; contrato de rutas en tres clases).
+- `docs/01-levantamiento-requerimientos.md` (RF-02, RF-34), `docs/02` (HU-40), `docs/06-modelo-datos-cambios.md`, `docs/datos-iniciales.md`, `docs/superpowers/COBERTURA-RF.md`, `docs/superpowers/BACKLOG-SPECS.md` y `docs/superpowers/TRAZABILIDAD.md` (regenerado): notas y estados.
 
 ## 4. Intentos fallidos
 - 2026-11-12: se intentó verificar la sintaxis de hooks, permisos y subagentes en la documentación oficial (`code.claude.com`); el host no resuelve desde la sesión. Resultado: la configuración de `.claude/` se escribió de memoria y queda **no verificada contra la documentación vigente**. No reintentar hasta que el propietario permita el host.
@@ -180,8 +184,7 @@ Los 22 ADR están aceptados (001 a 022); ninguno queda propuesto ni retirado. AD
 
 ## 5. Próximos pasos
 1. Leer handoff.md y ejecutar /preflight.
-2. Esperar «S-18 aprobada», «S-23 aprobada» y «S-11 aprobada» (veredictos ya conciliados; resumen de 10 líneas enviado). Al aprobar cada una: marcar `estado: aprobada`, registrar las enmiendas de su sección 5.2 (S-23 incluye la enmienda a ADR-012 §3 y §4), actualizar BACKLOG-SPECS y este handoff.
-3. Redactar, revisar y aprobar de una en una, en este orden: S-15 (línea base y datos iniciales), S-12 (tickets y comprobantes apagados), S-13 (consentimiento y libro de reclamaciones), S-14 (reportes), S-17 (operación), S-19 (diseño), S-20 (vitrina), S-21 (check-in en TV).
-4. Terminadas las specs, redactar el plan global (G6) en `docs/superpowers/plans/`: orden, dependencias y riesgos; decidir si S-08, S-10 y S-11 van antes de S-05 (S-05 edita archivos que ellas borran). G6 termina la sesión de diseño.
-5. Pedir al propietario: repo privado antes de cualquier push; originales del logotipo y tipografía; periodo de retención (P-20); revisión legal de la Ley 29733 (se descartó anonimizar).
-6. Solo con orden expresa y ADR por ADR: cambiar estados de ADR a `aceptado (confirmado por el propietario, AAAA-MM-DD)`.
+2. Redactar, revisar y aprobar de una en una, en este orden: S-15 (línea base y primer administrador), S-12 (tickets y comprobantes apagados), S-13 (consentimiento y libro de reclamaciones), S-14 (reportes), S-17 (operación), S-19 (diseño), S-20 (vitrina), S-21 (check-in en TV).
+3. Terminadas las specs, redactar el plan global (G6) en `docs/superpowers/plans/`: orden, dependencias y riesgos; decidir si S-08, S-10 y S-11 van antes de S-05 (S-05 edita archivos que ellas borran). G6 termina la sesión de diseño.
+4. Pedir al propietario: repo privado antes de cualquier push; originales del logotipo y tipografía; periodo de retención (P-20); revisión legal de la Ley 29733 (se descartó anonimizar).
+5. Solo con orden expresa y ADR por ADR: cambiar estados de ADR a `aceptado (confirmado por el propietario, AAAA-MM-DD)`.

@@ -63,7 +63,7 @@ Prioridad: **M** = Must (MVP), **S** = Should, **C** = Could (post-MVP). "Base" 
 | ID | Requerimiento | Pri | Base |
 |---|---|---|---|
 | RF-01 | Login con email y contraseña (bcrypt), sesión con token en cookie | M | Sí |
-| RF-02 | Roles `SOCIO`, `GERENTE`, `RECEPCION`, `ENTRENADOR` con permisos granulares por módulo y acción (VER/CREAR/EDITAR/ELIMINAR) | M | Sí |
+| RF-02 | Roles `SOCIO`, `GERENTE`, `RECEPCION`, `ENTRENADOR` con permisos granulares por módulo y acción (VER/CREAR/EDITAR/ELIMINAR) *(enmienda S-23, 2026-11-12: se retiran; queda un solo rol de administrador con acceso total)* | M | Sí |
 | RF-03 | Cambio de contraseña propio y por administrador | M | Sí |
 | RF-04 | Registro de auditoría de acciones sensibles | S | Parcial (`RegistroAuditoria` sin consumidores amplios) |
 
@@ -96,7 +96,7 @@ Prioridad: **M** = Must (MVP), **S** = Should, **C** = Could (post-MVP). "Base" 
 | RF-31 | Métodos de pago configurables: efectivo, Yape, Plin, tarjeta, transferencia, depósito | M | Sí (catálogo nuevo) |
 | RF-32 | N.º de operación para métodos no efectivo | M | Sí |
 | RF-33 | Pago con fecha pasada (hasta 90 días) fuera de turno | S | Sí |
-| RF-34 | Anulación de pago con motivo (solo SOCIO/GERENTE); nunca se borra | M | Sí |
+| RF-34 | Anulación de pago con motivo (solo SOCIO/GERENTE) *(enmienda S-23: cualquier administrador)*; nunca se borra | M | Sí |
 | RF-35 | Turnos de caja: apertura con fondo inicial en efectivo, egresos, cierre con arqueo por método y nota obligatoria si hay diferencia | M | Sí (quitar doble moneda) |
 | RF-36 | Histórico de pagos por rango/turno, imprimible | M | Sí |
 | RF-37 | Venta de productos (agua, guantes…) con cobro inmediato | S | Sí |

@@ -513,7 +513,7 @@ Archivo: `S-10-retirar-lo-venezolano.md` · REQ: 34 · BEH: 23 · INV: 5 · AC: 
 | REQ-S10-033 | MUST | BEH-S10-003, BEH-S10-022 | INV-S10-005 | AC-S10-011 (unitario) | pendiente |
 | REQ-S10-034 | MUST | BEH-S10-023 | — | AC-S10-011 (unitario) | pendiente |
 
-## S-11 — Productos: catálogo y venta con cobro inmediato, sin fiado (en-revision)
+## S-11 — Productos: catálogo y venta con cobro inmediato, sin fiado (aprobada)
 
 Archivo: `S-11-productos-sin-fiado.md` · REQ: 37 · BEH: 21 · INV: 4 · AC: 14
 
@@ -557,7 +557,7 @@ Archivo: `S-11-productos-sin-fiado.md` · REQ: 37 · BEH: 21 · INV: 4 · AC: 14
 | REQ-S11-036 | MUST | BEH-S11-020 | INV-S11-004 | AC-S11-012 (unitario), AC-S11-013 (unitario) | pendiente |
 | REQ-S11-037 | MUST | BEH-S11-021 | — | AC-S11-014 (manual) | pendiente |
 
-## S-18 — Entrenadores: personas del gimnasio sin credenciales, asignadas solo al miembro (en-revision)
+## S-18 — Entrenadores: personas del gimnasio sin credenciales, asignadas solo al miembro (aprobada)
 
 Archivo: `S-18-entrenadores.md` · REQ: 39 · BEH: 20 · INV: 4 · AC: 11
 
@@ -640,7 +640,7 @@ Archivo: `S-22-capa-de-datos-con-drizzle.md` · REQ: 30 · BEH: 27 · INV: 6 · 
 | REQ-S22-029 | MUST | BEH-S22-023 | — | AC-S22-023 (unitario) | pendiente |
 | REQ-S22-030 | MUST | BEH-S22-022 | — | AC-S22-022 (integracion) | pendiente |
 
-## S-23 — Un solo rol: el socio o administrador, con acceso total y sin permisos por módulo (en-revision)
+## S-23 — Un solo rol: el socio o administrador, con acceso total y sin permisos por módulo (aprobada)
 
 Archivo: `S-23-un-solo-rol-administrador.md` · REQ: 36 · BEH: 19 · INV: 4 · AC: 12
 

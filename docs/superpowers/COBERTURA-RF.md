@@ -56,7 +56,7 @@ Los IDs son estables: las specs nuevas continúan la numeración. Orden y depend
 | S-15 Baseline de BD y seed Adhara | plan 1.10, ADR-012 §6 | S-03, S-05, S-06, S-09 | Cierra la deuda de S-00 SUP-002 |
 | S-16 Importador CSV de miembros | HU-50, plan 2.4 | S-06, S-15 | Dry-run y `--confirm` | *Nota: S-16 descartada por el propietario (2026-11-12); S-10 retiró el padrón y lo venezolano.*
 | S-17 Operación: respaldo, observabilidad y despliegue | RNF-07…RNF-09, RF-70, plan 2.7-2.9 | S-00, S-01 | Staging y producción |
-| S-18 Entrenadores | P-22, H-07, RF-10 | S-01, S-06 | Default de `docs/08`: entidad sin credenciales |
+| S-18 Entrenadores (**aprobada**, 2026-11-12) | P-22, H-07, RF-10 | S-01, S-05, S-06, S-07, S-08, S-09, S-10, S-22 | Default de `docs/08`: entidad sin credenciales |
 | **S-19 Sistema de diseño y rebranding** (aprobada como ítem del backlog el 2026-11-12; su contenido aún no) | RNF-10, ADR-008, ADR-020, plan 0.9; tokens, tipografía, componentes, patrones y estados para panel, kiosco, kiosco en TV y vitrina; persistencia visual | S-10 | Faltan el logo vectorial, P-15 y la tipografía (se validan después) |
 | **S-20 Vitrina de TV** | **Heredar lo que resuelve la vitrina actual** (decisión del propietario): carteles de entrenador, promoción y producto con imagen o video, vigencia, orden, etiquetas, precio/oferta/descuento y sonido; sincronización y APK. Cambios: soles en lugar de dólares y bolívares, marca nueva (S-19). Base verificada en `apps/vitrina` (41 archivos) | S-03, S-19 | Entra al alcance por decisión del propietario (ADR-021, aceptado) |
 | **S-21 Check-in en smart-TV** | Kiosco en un **Android TV con teclado numérico USB conectado** (decisión del propietario). Base: el kiosco ya captura el DNI con `keydown` global sin `<input>` (`apps/kiosk/lib/useEntradaCedula.ts`), que es lo que emite un numpad USB; falta probarlo en un TV. APK Capacitor (`apps/kiosk-tv`) y su CI | S-05, S-06, S-19 | ADR-021, aceptado; `kiosk-host` (`.exe`) queda fuera del proyecto | *Nota S-06: el hook `useEntradaCedula` pasa a `useEntradaIdentificador`.*
@@ -120,3 +120,5 @@ Siguen abiertos: aceptación de ADR-018 (ahora también sin egresos ni fiado)
 | 5 | Subirá los PNG del logotipo a una carpeta del repositorio | Carpeta indicada: `docs/design/origen-logotipo/` (ver nota de publicación en el handoff) |
 | 6 | Autoriza clonar el Repo A | Clonado en solo lectura; hechos verificados en `docs/09` §8 |
 
+
+> Nota (2026-11-12): S-11 (RF-37, productos sin fiado), S-18 (P-22, H-07) y S-23 (RF-02, RF-34, HU-40: un solo rol de administrador) quedaron aprobadas por el propietario.

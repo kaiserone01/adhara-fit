@@ -1,10 +1,10 @@
 ---
 id: S-18
-estado: en-revision
+estado: aprobada
 adrs: ADR-012, ADR-016, ADR-022
 depende_de: S-00, S-01, S-05, S-06, S-07, S-08, S-09, S-10, S-22
-aprobada_por:
-fecha_aprobacion:
+aprobada_por: propietario
+fecha_aprobacion: 2026-11-12
 ---
 # S-18 — Entrenadores: personas del gimnasio sin credenciales, asignadas solo al miembro
 
@@ -577,6 +577,10 @@ En el código heredado un entrenador es un `UsuarioAdmin` con rol `ENTRENADOR`, 
 - ¿Las listas de entrenadores se ordenan por nombre ascendente? Default: sí (SUP-S18-008).
 - ¿La foto del entrenador admite JPG, PNG o WebP de hasta 2 MB? Default: sí (SUP-S18-007).
 - ¿Desactivar a un inactivo o reactivar a un activo no es un error? Default: no es un error (SUP-S18-010).
+
+## Enmiendas posteriores (2026-11-12)
+*Derivadas de la aprobación de otras specs. El texto anterior se conserva; donde choca, rige esta sección.*
+- Por la aprobación de S-23: REQ-S18-019, REQ-S18-022, REQ-S18-030 y SUP-S18-005 (permisos `USUARIOS`) se leen como «sesión válida de un administrador activo»; la restricción CHECK de REQ-S18-005 se retira junto con la columna `UsuarioAdmin.rol`.
 
 ## Revisión independiente
 

@@ -99,7 +99,7 @@ Formato: *Como [rol] quiero [acción] para [beneficio]* · Criterios de aceptaci
   - CA: cola IndexedDB; sin duplicados al reintentar.
 
 ### Administración
-- **HU-40** Como SOCIO quiero crear usuarios y asignar permisos por módulo/acción.
+- **HU-40** Como SOCIO quiero crear usuarios y asignar permisos por módulo/acción. *(Enmienda S-23, 2026-11-12: se crean administradores sin rol ni permisos.)*
 - **HU-41** Como gerente quiero configurar métodos de pago (Yape, Plin, bancos con su N.º de cuenta/CCI) para mostrarlos en el cobro.
 - **HU-42** Como gerente quiero definir los días de gracia (solo mensuales).
 

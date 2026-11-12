@@ -124,3 +124,13 @@ Se eliminan en dominio `ReglaAbono.ts`, `CobrarAbonoPendiente`, `ListarAbonosPen
 - `Pago(turnoId)`, `Pago(miembroId, fechaPago)`, `Pago(fechaPago)` para históricos.
 - `CheckIn(sucursalId, fechaHora)` (existe) y `CheckIn(miembroId, fechaHora)`.
 - `Suscripcion(miembroId, estado)`.
+
+## Cambios por S-11, S-18 y S-23 (2026-11-12)
+| Tabla | Acción | Detalle |
+|---|---|---|
+| **Nuevo** `Entrenador` | Crear (S-18) | `id`, `nombre` (2–80), `telefono` opcional, `fotoUrl` opcional, `activo` (por defecto verdadero); sin correo, contraseña, rol ni permisos. No se borra, se desactiva |
+| `Miembro` | Adaptar (S-18) | `entrenadorId` apunta a `Entrenador` (opcional, sin cascada) y deja de apuntar a `UsuarioAdmin` |
+| `UsuarioAdmin` | Adaptar (S-18, S-23) | S-18: CHECK que rechaza el rol `ENTRENADOR` y se retira `miembrosEntrenados`. S-23: se retira `rol` (y con él el CHECK); los administradores se desactivan, no se borran |
+| `PermisoUsuario`, enums `RolUsuario`, `ModuloPermiso`, `AccionPermiso` | **Eliminar** (S-23) | Un solo rol: administrador con acceso total |
+| `Producto` | Adaptar (S-11) | `costo` (`numeric(12,2)`) guarda el precio de venta; índice único sobre el nombre normalizado |
+| `Pago` (ventas de producto) | Sin columnas nuevas (S-11) | una venta es un solo producto y un solo pago de un solo método, con `cobroId`; `miembroId` nulo |

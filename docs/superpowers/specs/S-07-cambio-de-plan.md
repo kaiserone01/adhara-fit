@@ -890,6 +890,8 @@ El código heredado cambia el plan de un miembro por tres caminos que dan result
 - Por la aprobación de S-08: REQ-S07-057 deja de tener la exención de la familia S-08 en `caja/`, que pasa a `cobros/`; REQ-S07-060 se cumple al terminar S-08; los tres archivos de `caja/` que adapta S-07 pasan a `cobros/`.
 - Por la aprobación de S-09: SUP-S07-016 deja de admitir cambio de plan de un miembro eliminado; REQ-S07-016 (orden de validación) y REQ-S07-021 (errores) suman `MiembroEliminadoError` (REQ-S09-026, REQ-S09-027).
 - Por la aprobación de S-10: las ramas `vieneDelExcel` de `ActualizarMiembro` que S-07 dejó a S-10 (0.3) quedan retiradas y el cambio de plan se comporta como con `vieneDelExcel` falso (REQ-S10-017).
+- Por la aprobación de S-18: la nota de 0.3 («`Miembro.entrenadorId` queda como está») cambia de destino de la clave (de `UsuarioAdmin` a `Entrenador`); REQ-S07-041 se aplica sobre `Entrenador`.
+- Por la aprobación de S-23: REQ-S07-013 (permiso `PAGOS CREAR`) se lee como «sesión válida de un administrador activo».
 
 ## Revisión independiente
 

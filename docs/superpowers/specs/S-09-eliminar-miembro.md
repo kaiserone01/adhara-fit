@@ -647,6 +647,10 @@ El código heredado tiene dos formas de sacar a un miembro: un interruptor «Dar
 - ¿El motivo de eliminar y restaurar es opcional, con máximo de 200 caracteres? Default: sí (SUP-S09-004).
 - ¿Qué plazo de retención fijan el contador o el abogado para borrar físicamente (P-20)? Default: sin plazo hasta que se defina (SUP-S09-007).
 
+## Enmiendas posteriores (2026-11-12)
+*Derivadas de la aprobación de otras specs. El texto anterior se conserva; donde choca, rige esta sección.*
+- Por la aprobación de S-23: REQ-S09-005, REQ-S09-006, REQ-S09-023 y REQ-S09-039 (permiso `MIEMBROS ELIMINAR`) se leen como «sesión válida de un administrador activo».
+
 ## Revisión independiente
 
 Revisor: subagente `spec-reviewer` (solo lectura), que recibió únicamente la ruta y la lista de comprobación. Veredicto sobre la versión `a8506df` (la segunda: la primera, con anonimización, se descartó por orden del propietario antes de su revisión); cada fila se resume y el veredicto global se conserva tal como lo entregó. El revisor usó `Read`, `Grep` y `Glob`, reprodujo los conteos de 0.4 y no encontró «TBD», «por definir» ni «etc.».

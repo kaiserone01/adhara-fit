@@ -606,6 +606,8 @@ El código heredado está pensado para varias organizaciones con varias sedes ca
 - Por la aprobación de S-07: la línea de 0.2 que agrupa a `CambioPlanAuditoria` entre las tablas que otras specs retiran después se lee así: la tabla se conserva, sin `organizacionId`, con la estructura de S-07.
 - Por la aprobación de S-08: `Turno.sucursalId` y `DeudaProducto.sucursalId` desaparecen con sus tablas; REQ-S05-008, SUP-S05-002, SUP-S05-005, INV-S05-004, 0.2 y 0.3 dejan de nombrar `Turno` y `DeudaProducto`.
 - Por la aprobación de S-10: SUP-S05-002, SUP-S05-005 y 0.3 dejan de nombrar `Sucursal.tasaCambioUSD` y la familia S-10; el nombre visible de encabezado, kiosco y vitrina es `ConfiguracionNegocio.nombre` (REQ-S10-021).
+- Por la aprobación de S-23: REQ-S05-030, con su BEH y su AC (un `GERENTE` no puede rotar la clave), se leen como «cualquier administrador autenticado puede rotarla»; SUP-S05-009 y la retirada de `SUCURSALES` quedan cumplidas.
+- Por la aprobación de S-18: S-05 no cambia; `ListarEntrenadores` e `IEntrenadorRepository` (con su filtro de sede) los reemplaza S-18.
 
 ## Revisión independiente
 

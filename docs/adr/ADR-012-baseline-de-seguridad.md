@@ -40,3 +40,8 @@ Antes de las funcionalidades de Fase 1, se ejecuta una **Fase 0.5** con estos cr
 
 ## Dependencias
 *(Pase formal F.)* ADR-005 (secretos), ADR-007 (scripts), ADR-009 (CORS del kiosco), ADR-002 (API key), ADR-003 (`RegistrarTasaManual`), ADR-016 (contrato de permisos). Hallazgos abiertos de la revisión G3: ver `REVISION-ADR.md` §4, §7 y §8.4.
+
+## Enmiendas posteriores (2026-11-12, aprobación de S-23 por el propietario)
+*El texto anterior se conserva; donde choca, rige esta sección.*
+- §3 (la rotación de la clave del kiosco exige el permiso de socio) y §4 (todo caso de uso verifica `tienePermiso` y un test falla si una ruta no declara permiso) quedan reemplazados por: **una sesión válida de un administrador activo da acceso a todas las funciones**; no hay roles ni permisos por módulo (S-23). La autorización ya no se verifica dentro de los casos de uso; la guarda es `exigirSesion` en cada acción y ruta no pública, y el test de contrato de rutas las clasifica en pública, clave de kiosco o sesión.
+- Motivo: el propietario indicó que en Adhara solo inicia sesión el socio o administrador. Reversibilidad baja: reintroducir roles exigiría una spec nueva.

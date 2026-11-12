@@ -1,10 +1,10 @@
 ---
 id: S-23
-estado: en-revision
+estado: aprobada
 adrs: ADR-012, ADR-016, ADR-022
 depende_de: S-00, S-01, S-04, S-05, S-07, S-08, S-09, S-18, S-22
-aprobada_por:
-fecha_aprobacion:
+aprobada_por: propietario
+fecha_aprobacion: 2026-11-12
 ---
 # S-23 — Un solo rol: el socio o administrador, con acceso total y sin permisos por módulo
 

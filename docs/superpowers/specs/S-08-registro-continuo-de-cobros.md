@@ -804,6 +804,9 @@ El código heredado organiza el dinero en torno a la caja con turnos: hay que ab
 *Derivadas de la aprobación de S-09. El texto anterior se conserva; donde choca, rige esta sección.*
 - Por la aprobación de S-09: el riesgo sobre ADR-013 de 5.3 queda resuelto (eliminar conserva los pagos) y el selector de miembro de `/cobros` excluye a los eliminados (REQ-S09-021); el reporte incluye los pagos de los eliminados (REQ-S09-030).
 - Por la aprobación de S-10: la nota de 0.3 sobre `Pago.montoBs` y la tasa se lee como cumplida.
+- Por la aprobación de S-18: `cobros/` deja de cargar la lista de entrenadores y `EntrenadorParaCambio` (REQ-S18-034).
+- Por la aprobación de S-11: el reporte de cobros trata cada venta como un solo producto (SUP-S08-010 y BEH-S08-008 siguen válidos); las ventas con varios productos o varias líneas ya no existen.
+- Por la aprobación de S-23: REQ-S08-009 y REQ-S08-010, con sus BEH y AC de «permisos por defecto» y de «pantalla de permisos», y los permisos `PAGOS VER`, `CREAR` y `ELIMINAR` (REQ-S08-042) se leen como «sesión válida de un administrador activo».
 
 ## Revisión independiente
 

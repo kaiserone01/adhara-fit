@@ -585,6 +585,10 @@ El código heredado nació para otro negocio, en Venezuela: convierte dólares a
 - ¿Las apps de TV conservan su marca anterior hasta S-20 y S-21? Default: sí, con una exención cerrada (SUP-S10-009).
 - ¿Se retiran las pruebas de lo que se elimina (tasa, padrón, bolívares)? Default: sí (SUP-S10-011).
 
+## Enmiendas posteriores (2026-11-12)
+*Derivadas de la aprobación de otras specs. El texto anterior se conserva; donde choca, rige esta sección.*
+- Por la aprobación de S-11: `productos/tasaActual.ts` se elimina entero y no solo la tasa.
+
 ## Revisión independiente
 
 Revisor: subagente `spec-reviewer` (solo lectura), que recibió únicamente la ruta y la lista de comprobación. Veredicto sobre la versión `22cfc6f`; cada fila se resume y el veredicto global se conserva tal como lo entregó. El revisor usó `Read`, `Grep` y `Glob`, reprodujo los conteos de 0.4 (70 de tasa, 28 de padrón, 24 de «Por regularizar», 25 de Caracas) y comprobó que los demás archivos citados existen.

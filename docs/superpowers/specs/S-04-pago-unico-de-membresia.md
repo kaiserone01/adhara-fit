@@ -928,6 +928,8 @@ Todas las decisiones de negocio de S-04 fueron respondidas por el propietario el
 - Por la aprobación de S-08: SUP-S04-011, 0.2, 0.3 (la línea sobre turnos y la del cambio de `caja/`), REQ-S04-045 y los dos riesgos que remiten a S-08 se leen como cumplidos por S-08; la aclaración de que `ModalCobrarDeudas.tsx` conserva términos de abono y la retirada de `RegistrarPagoConDeudas` quedan cumplidas porque el fiado y las deudas se eliminan en S-08; los tres archivos de `caja/` que adaptan S-04 y S-07 pasan a `cobros/`.
 - Por la aprobación de S-09: REQ-S04-005 suma `MiembroEliminadoError` a los errores de `registrarPago`; la secuencia de `registrarPago` de 5.1 sitúa su rechazo después de resolver el `cobroId` ya registrado y antes de validar el plan, el monto y el método (REQ-S09-027); REQ-S04-032 e `IUnidadDeTrabajo` exponen el puerto de auditoría (REQ-S09-014); `anularPago` permite anular los pagos de un miembro eliminado (REQ-S09-029).
 - Por la aprobación de S-10: SUP-S04-011, 0.3 y 0.4 se leen como cumplidos (`Pago.tasaCambio`, `Pago.montoBs` y el aviso «Por regularizar» se retiran).
+- Por la aprobación de S-11: SUP-S04-009 (`Pago.cobroId` «nula en los pagos de otras specs») se lee con que la venta de producto también la escribe; SUP-S04-014 y la nota de `resolverCobroPasado*` quedan cumplidas por su retiro.
+- Por la aprobación de S-23: REQ-S04-006 y REQ-S04-040 se leen como «sesión válida de un administrador activo».
 
 ## Revisión independiente
 

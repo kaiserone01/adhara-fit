@@ -148,6 +148,44 @@ Archivo: `S-03-dinero-y-metodos-de-pago.md` · REQ: 32 · BEH: 25 · INV: 6 · A
 | REQ-S03-031 | MUST | BEH-S03-025 | INV-S03-006 | AC-S03-019 (unitario) | pendiente |
 | REQ-S03-032 | MUST | BEH-S03-021 | — | AC-S03-016 (unitario) | pendiente |
 
+## S-04 — Pago único de membresía: cobro atómico, una sola fecha de vencimiento y anulación que la revierte (en-revision)
+
+Archivo: `S-04-pago-unico-de-membresia.md` · REQ: 31 · BEH: 26 · INV: 5 · AC: 18
+
+| REQ | Prioridad | BEH | INV | AC (método) | Test |
+|---|---|---|---|---|---|
+| REQ-S04-001 | MUST | BEH-S04-001, BEH-S04-004 | INV-S04-002 | AC-S04-001 (integracion), AC-S04-003 (integracion), AC-S04-004 (integracion) | pendiente |
+| REQ-S04-002 | MUST | BEH-S04-005 | INV-S04-002 | AC-S04-004 (integracion) | pendiente |
+| REQ-S04-003 | MUST | BEH-S04-004, BEH-S04-006 | — | AC-S04-003 (integracion) | pendiente |
+| REQ-S04-004 | MUST | BEH-S04-007 | — | AC-S04-004 (integracion) | pendiente |
+| REQ-S04-005 | MUST | BEH-S04-008 | — | AC-S04-005 (unitario) | pendiente |
+| REQ-S04-006 | MUST | BEH-S04-008 | — | AC-S04-005 (unitario) | pendiente |
+| REQ-S04-007 | MUST | BEH-S04-009 | INV-S04-003 | AC-S04-006 (integracion) | pendiente |
+| REQ-S04-008 | MUST | BEH-S04-010 | — | AC-S04-007 (integracion) | pendiente |
+| REQ-S04-009 | MUST | BEH-S04-011 | INV-S04-004 | AC-S04-008 (integracion) | pendiente |
+| REQ-S04-010 | MUST | BEH-S04-001, BEH-S04-002, BEH-S04-003, BEH-S04-004 | — | AC-S04-001 (integracion), AC-S04-002 (integracion), AC-S04-003 (integracion) | pendiente |
+| REQ-S04-011 | MUST | BEH-S04-012 | INV-S04-001 | AC-S04-001 (integracion), AC-S04-011 (integracion) | pendiente |
+| REQ-S04-012 | MUST | BEH-S04-013 | — | AC-S04-009 (unitario) | pendiente |
+| REQ-S04-013 | MUST | BEH-S04-013, BEH-S04-014 | — | AC-S04-009 (unitario) | pendiente |
+| REQ-S04-014 | MUST | BEH-S04-015 | — | AC-S04-010 (integracion) | pendiente |
+| REQ-S04-015 | MUST | BEH-S04-016 | — | AC-S04-010 (integracion) | pendiente |
+| REQ-S04-016 | MUST | BEH-S04-017 | — | AC-S04-011 (integracion) | pendiente |
+| REQ-S04-017 | MUST | BEH-S04-018 | — | AC-S04-012 (integracion) | pendiente |
+| REQ-S04-018 | MUST | BEH-S04-017, BEH-S04-019 | INV-S04-001, INV-S04-003 | AC-S04-001 (integracion), AC-S04-006 (integracion), AC-S04-011 (integracion) | pendiente |
+| REQ-S04-019 | MUST | BEH-S04-020 | — | AC-S04-011 (integracion) | pendiente |
+| REQ-S04-020 | MUST | BEH-S04-021 | — | AC-S04-013 (sql) | pendiente |
+| REQ-S04-021 | MUST | BEH-S04-022 | INV-S04-005 | AC-S04-014 (unitario) | pendiente |
+| REQ-S04-022 | MUST | BEH-S04-022 | INV-S04-005 | AC-S04-014 (unitario) | pendiente |
+| REQ-S04-023 | MUST | BEH-S04-021 | — | AC-S04-013 (sql) | pendiente |
+| REQ-S04-024 | MUST | BEH-S04-023 | — | AC-S04-015 (integracion) | pendiente |
+| REQ-S04-025 | MUST | BEH-S04-001 | — | AC-S04-001 (integracion), AC-S04-016 (unitario) | pendiente |
+| REQ-S04-026 | MUST | BEH-S04-024 | — | AC-S04-017 (manual) | pendiente |
+| REQ-S04-027 | MUST | BEH-S04-022 | INV-S04-005 | AC-S04-014 (unitario) | pendiente |
+| REQ-S04-028 | MUST | BEH-S04-025 | — | AC-S04-018 (manual) | pendiente |
+| REQ-S04-029 | MUST | BEH-S04-026 | — | AC-S04-013 (sql), AC-S04-016 (unitario) | pendiente |
+| REQ-S04-030 | MUST | BEH-S04-026 | — | AC-S04-013 (sql), AC-S04-016 (unitario) | pendiente |
+| REQ-S04-031 | MUST | BEH-S04-024 | — | AC-S04-017 (manual) | pendiente |
+
 ## S-22 — Capa de datos con Drizzle: esquema, repositorios, transacciones y retiro de Prisma (aprobada)
 
 Archivo: `S-22-capa-de-datos-con-drizzle.md` · REQ: 30 · BEH: 27 · INV: 6 · AC: 28

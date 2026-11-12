@@ -1,6 +1,6 @@
 # ADR-005: Estrategia de repositorio, licencia y limpieza de datos
 
-Estado: **propuesto** (2026-11-11) · P-01 resuelto: el repo es propio (12-nov-2026)
+Estado: **aceptado** (confirmado por el propietario, 2026-11-12) · propuesto el 2026-11-11 · P-01 resuelto: el repo es propio (12-nov-2026)
 
 ## Contexto
 `kaiserone01/gym-app` es **público**, **sin archivo de licencia** y con 732 commits. Contiene: `cookies.txt` versionado; `handoff.md` (273 KB) con nombres y cédulas de personas reales de otro gimnasio; un log JSON de migración de vencimientos; scripts específicos del cliente anterior; credenciales expuestas en chat, según su propio handoff, pendientes de rotar. Su `CLAUDE.md` exige commits en español, de una línea y sin firmas de IA.

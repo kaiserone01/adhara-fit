@@ -1,0 +1,212 @@
+{
+ "abono": {
+  "files": 78,
+  "lines": 1119,
+  "by_kind": {
+   "src": 53,
+   "db-script": 2,
+   "migracion": 1,
+   "test": 11,
+   "doc": 11
+  },
+  "by_area": {
+   "packages/infrastructure": 3,
+   "packages/db": 2,
+   "packages/domain": 28,
+   "apps/kiosk": 4,
+   "apps/web-admin": 29
+  }
+ },
+ "tasa_cambio_bcv": {
+  "files": 135,
+  "lines": 1072,
+  "by_kind": {
+   "doc": 42,
+   "src": 74,
+   "db-script": 3,
+   "migracion": 3,
+   "test": 13
+  },
+  "by_area": {
+   "(raíz)": 1,
+   "packages/infrastructure": 4,
+   "packages/ui": 1,
+   "packages/db": 3,
+   "packages/domain": 36,
+   "apps/kiosk": 3,
+   "apps/worker": 1,
+   "apps/web-admin": 38,
+   "apps/vitrina": 3
+  }
+ },
+ "bolivares": {
+  "files": 91,
+  "lines": 366,
+  "by_kind": {
+   "src": 50,
+   "db-script": 3,
+   "migracion": 4,
+   "test": 6,
+   "doc": 28
+  },
+  "by_area": {
+   "packages/infrastructure": 2,
+   "packages/ui": 2,
+   "packages/db": 3,
+   "packages/domain": 20,
+   "apps/kiosk": 1,
+   "apps/web-admin": 29,
+   "apps/vitrina": 2
+  }
+ },
+ "usd": {
+  "files": 156,
+  "lines": 979,
+  "by_kind": {
+   "src": 80,
+   "db-script": 9,
+   "migracion": 10,
+   "test": 20,
+   "doc": 37
+  },
+  "by_area": {
+   "packages/infrastructure": 8,
+   "packages/ui": 1,
+   "packages/db": 11,
+   "packages/domain": 50,
+   "apps/web-admin": 38,
+   "apps/vitrina": 1
+  }
+ },
+ "cedula": {
+  "files": 98,
+  "lines": 1024,
+  "by_kind": {
+   "doc": 34,
+   "src": 40,
+   "db-script": 10,
+   "migracion": 3,
+   "test": 11
+  },
+  "by_area": {
+   "packages/infrastructure": 2,
+   "packages/db": 13,
+   "packages/domain": 18,
+   "apps/kiosk": 8,
+   "apps/web-admin": 19,
+   "apps/kiosk-host": 1
+  }
+ },
+ "caracas_venezuela": {
+  "files": 47,
+  "lines": 201,
+  "by_kind": {
+   "src": 26,
+   "db-script": 1,
+   "test": 6,
+   "doc": 14
+  },
+  "by_area": {
+   "packages/infrastructure": 2,
+   "packages/ui": 2,
+   "packages/db": 1,
+   "packages/domain": 15,
+   "apps/worker": 1,
+   "apps/web-admin": 11,
+   "apps/vitrina": 1
+  }
+ },
+ "sucursal": {
+  "files": 256,
+  "lines": 3706,
+  "by_kind": {
+   "doc": 59,
+   "src": 154,
+   "db-script": 10,
+   "migracion": 14,
+   "test": 19
+  },
+  "by_area": {
+   "packages/infrastructure": 13,
+   "packages/ui": 1,
+   "packages/db": 10,
+   "packages/domain": 75,
+   ".github": 2,
+   "apps/kiosk-tv": 1,
+   "apps/kiosk": 9,
+   "apps/web-admin": 71,
+   "apps/vitrina": 1
+  }
+ },
+ "padron_excel": {
+  "files": 82,
+  "lines": 1127,
+  "by_kind": {
+   "doc": 15,
+   "src": 37,
+   "db-script": 11,
+   "migracion": 4,
+   "test": 15
+  },
+  "by_area": {
+   "packages/infrastructure": 3,
+   "packages/db": 14,
+   "packages/domain": 27,
+   "apps/web-admin": 19
+  }
+ },
+ "tenant_marca": {
+  "files": 67,
+  "lines": 385,
+  "by_kind": {
+   "doc": 27,
+   "db-script": 8,
+   "test": 3,
+   "src": 29
+  },
+  "by_area": {
+   "packages/db": 10,
+   "packages/theming": 2,
+   ".github": 2,
+   "apps/kiosk-tv": 5,
+   "apps/kiosk": 7,
+   "apps/web-admin": 4,
+   "apps/vitrina-tv": 6,
+   "apps/kiosk-host": 2,
+   "apps/vitrina": 2
+  }
+ },
+ "metodos_ve": {
+  "files": 25,
+  "lines": 73,
+  "by_kind": {
+   "db-script": 2,
+   "migracion": 1,
+   "test": 4,
+   "src": 9,
+   "doc": 9
+  },
+  "by_area": {
+   "packages/db": 2,
+   "packages/domain": 6,
+   "apps/web-admin": 7
+  }
+ },
+ "tz_local_getters": {
+  "files": 61,
+  "lines": 176,
+  "by_kind": {
+   "src": 35,
+   "db-script": 4,
+   "test": 1,
+   "doc": 21
+  },
+  "by_area": {
+   "packages/ui": 3,
+   "packages/db": 4,
+   "packages/domain": 8,
+   "apps/kiosk": 4,
+   "apps/web-admin": 21
+  }
+ }
+}

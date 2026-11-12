@@ -1,6 +1,6 @@
 # ADR-014: Identidad de autoría y firma de commits
 
-Estado: **propuesto** (2026-11-12)
+Estado: **aceptado** (confirmado por el propietario, 2026-11-12) · propuesto el 2026-11-12
 
 ## Contexto
 El propietario fijó cuatro reglas innegociables (literales en `CLAUDE.md` §1): los commits van firmados por él; jamás se atribuye coautor a Claude; commit y push usan sus credenciales y nunca las de los bots de Claude; y el handoff es requisito fundamental.

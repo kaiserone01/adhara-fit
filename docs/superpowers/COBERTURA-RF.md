@@ -57,7 +57,9 @@ Los IDs son estables: las specs nuevas continúan la numeración. Orden y depend
 | S-16 Importador CSV de miembros | HU-50, plan 2.4 | S-06, S-15 | Dry-run y `--confirm` |
 | S-17 Operación: respaldo, observabilidad y despliegue | RNF-07…RNF-09, RF-70, plan 2.7-2.9 | S-00, S-01 | Staging y producción |
 | S-18 Entrenadores | P-22, H-07, RF-10 | S-01, S-06 | Default de `docs/08`: entidad sin credenciales |
-| **S-19 Sistema de diseño y marca** | RNF-10, ADR-008, plan 0.9, kiosco legible a 2 m; tokens, tipografía, componentes, estados y patrones del panel y del kiosco | S-10 | Hoy solo existe ADR-008; faltan el logo (PDF fuera del repo), P-15 y el inventario de pantallas (ver §6) |
+| **S-19 Sistema de diseño y rebranding** (aprobada como ítem del backlog el 2026-11-12; su contenido aún no) | RNF-10, ADR-008, ADR-020, plan 0.9; tokens, tipografía, componentes, patrones y estados para panel, kiosco, kiosco en TV y vitrina; persistencia visual | S-10 | Faltan el logo vectorial, P-15 y la tipografía (se validan después) |
+| **S-20 Vitrina de TV** | Contenido, administración, PEN en lugar de Bs, SSE, APK y CI (ADR-021; doc 11 DI-77…DI-81) | S-03, S-19 | Entra al alcance por decisión del propietario |
+| **S-21 Check-in en smart-TV** | Kiosco en TV (`kiosk-tv`), entrada del DNI, APK y CI (ADR-021) | S-05, S-06, S-19 | Falta decidir cómo se digita el DNI en TV |
 
 ## 4. Decisiones que necesito del propietario
 | # | Decisión | Mi recomendación |
@@ -88,5 +90,15 @@ Pregunta abierta con default: **egresos**. Default: se conservan como registro d
 **No documentado:** inventario de pantallas y componentes del panel, escala tipográfica y de espaciado, patrones de navegación y de formularios, estados vacíos y de error, iconografía, comportamiento en tablet y celular, ni guía de contenido. La UI de `web-admin` (≈20 000 líneas, sin tests) no se leyó (doc 09 §1). **Ninguna spec instala la marca nueva** (REVISION-ADR T-14); S-10 solo retira la anterior.
 
 ## 7. Cambio de alcance: organización única (ADR-019, propuesto)
-El propietario aclaró que Adhara Fit no es un SaaS que atienda a varias organizaciones. Efecto: S-05 se amplía a «sede y organización únicas» y el seed (S-15) crea una sola fila de cada una. Default asumido, por validar: se conserva una fila `Organizacion` oculta (opción A de ADR-019).
+El propietario aclaró que Adhara Fit no es un SaaS que atienda a varias organizaciones. Decisión del propietario: **opción B, eliminar `Organizacion` y `organizacionId`** (ADR-019, pendiente de su orden de aceptación). Efecto: S-05 se amplía a «negocio y sede únicos»; S-06 fija las unicidades globales; el seed (S-15) crea una sola sede y una configuración. El alcance se mide primero con el inventario (REQ-S00-011).
+
+## 8. Segunda ronda de decisiones del propietario (2026-11-12)
+| # | Decisión | Efecto |
+|---|---|---|
+| 1 | Negocio único: eliminar `Organizacion` (ADR-019, opción B) | S-05 y S-06 ampliadas; medición previa del alcance; PRD renombrado a «negocio único» |
+| 2 | Rebranding total y sistema de diseño profesional y completo (ADR-020) | S-19 absorbe el plan 0.9; S-10 solo retira la marca anterior; la tipografía se valida después |
+| 3 | La vitrina entra en el alcance y el check-in también en smart-TV (ADR-021, enmienda a ADR-009) | Nuevas S-20 y S-21; S-00 importa cinco apps; `CLAUDE.md` §5, constitución C-24 y S-00 actualizados |
+| 4 | S-19 aprobada como ítem del backlog | Su contenido se redactará y aprobará como cualquier otra spec |
+
+Siguen abiertos: aceptación de ADR-018, ADR-019, ADR-020 y ADR-021; cómo se digita el DNI en el TV; qué muestra la vitrina; el fiado (P-06); `kiosk-host`; y qué specs de S-11 a S-18 se aprueban.
 

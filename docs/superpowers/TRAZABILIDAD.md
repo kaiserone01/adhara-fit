@@ -902,6 +902,71 @@ Archivo: `S-18-entrenadores.md` · REQ: 39 · BEH: 20 · INV: 4 · AC: 11
 | REQ-S18-038 | MUST | BEH-S18-020 | — | AC-S18-011 (manual) | pendiente |
 | REQ-S18-039 | MUST | BEH-S18-014 | INV-S18-003 | AC-S18-008 (integracion) | pendiente |
 
+## S-19 — Sistema de diseño y marca de Adhara Fit (en-revision)
+
+Archivo: `S-19-sistema-de-diseno-y-marca.md` · REQ: 58 · BEH: 26 · INV: 5 · AC: 18
+
+| REQ | Prioridad | BEH | INV | AC (método) | Test |
+|---|---|---|---|---|---|
+| REQ-S19-001 | MUST | BEH-S19-001 | — | AC-S19-001 (unitario) | pendiente |
+| REQ-S19-002 | MUST | BEH-S19-001 | — | AC-S19-001 (unitario) | pendiente |
+| REQ-S19-003 | MUST | BEH-S19-002 | INV-S19-003 | AC-S19-002 (unitario) | pendiente |
+| REQ-S19-004 | MUST | BEH-S19-002 | INV-S19-003 | AC-S19-002 (unitario) | pendiente |
+| REQ-S19-005 | MUST | BEH-S19-002 | INV-S19-003 | AC-S19-002 (unitario) | pendiente |
+| REQ-S19-006 | MUST | BEH-S19-003 | INV-S19-003 | AC-S19-002 (unitario) | pendiente |
+| REQ-S19-007 | MUST | BEH-S19-004 | — | AC-S19-003 (unitario) | pendiente |
+| REQ-S19-008 | MUST | BEH-S19-004 | — | AC-S19-003 (unitario) | pendiente |
+| REQ-S19-009 | MUST | BEH-S19-005 | — | AC-S19-003 (unitario) | pendiente |
+| REQ-S19-010 | MUST | BEH-S19-005 | — | AC-S19-003 (unitario) | pendiente |
+| REQ-S19-011 | MUST | BEH-S19-001 | — | AC-S19-001 (unitario) | pendiente |
+| REQ-S19-012 | MUST | BEH-S19-006 | — | AC-S19-004 (unitario) | pendiente |
+| REQ-S19-013 | MUST | BEH-S19-006 | — | AC-S19-004 (unitario) | pendiente |
+| REQ-S19-014 | MUST | BEH-S19-007 | — | AC-S19-004 (unitario) | pendiente |
+| REQ-S19-015 | MUST | BEH-S19-007 | — | AC-S19-004 (unitario) | pendiente |
+| REQ-S19-016 | MUST | BEH-S19-008 | — | AC-S19-005 (unitario) | pendiente |
+| REQ-S19-017 | MUST | BEH-S19-007 | — | AC-S19-004 (unitario) | pendiente |
+| REQ-S19-018 | MUST | BEH-S19-009 | — | AC-S19-006 (unitario) | pendiente |
+| REQ-S19-019 | MUST | BEH-S19-010 | — | AC-S19-007 (unitario) | pendiente |
+| REQ-S19-020 | MUST | BEH-S19-010 | — | AC-S19-007 (unitario) | pendiente |
+| REQ-S19-021 | MUST | BEH-S19-010 | INV-S19-002 | AC-S19-007 (unitario), AC-S19-012 (unitario) | pendiente |
+| REQ-S19-022 | MUST | BEH-S19-011 | — | AC-S19-008 (manual) | pendiente |
+| REQ-S19-023 | MUST | BEH-S19-011 | — | AC-S19-008 (manual) | pendiente |
+| REQ-S19-024 | MUST | BEH-S19-012 | INV-S19-005 | AC-S19-009 (unitario) | pendiente |
+| REQ-S19-025 | MUST | BEH-S19-012 | INV-S19-005 | AC-S19-009 (unitario) | pendiente |
+| REQ-S19-026 | MUST | BEH-S19-012 | INV-S19-005 | AC-S19-009 (unitario) | pendiente |
+| REQ-S19-027 | MUST | BEH-S19-012 | INV-S19-005 | AC-S19-009 (unitario) | pendiente |
+| REQ-S19-028 | MUST | BEH-S19-012 | INV-S19-005 | AC-S19-009 (unitario) | pendiente |
+| REQ-S19-029 | MUST | BEH-S19-013 | — | AC-S19-010 (manual) | pendiente |
+| REQ-S19-030 | MUST | BEH-S19-013 | — | AC-S19-010 (manual) | pendiente |
+| REQ-S19-031 | MUST | BEH-S19-014 | — | AC-S19-010 (manual) | pendiente |
+| REQ-S19-032 | MUST | BEH-S19-015, BEH-S19-016 | INV-S19-001 | AC-S19-011 (unitario) | pendiente |
+| REQ-S19-033 | MUST | BEH-S19-015 | INV-S19-001 | AC-S19-011 (unitario) | pendiente |
+| REQ-S19-034 | MUST | BEH-S19-015 | INV-S19-001 | AC-S19-011 (unitario) | pendiente |
+| REQ-S19-035 | MUST | BEH-S19-015 | — | AC-S19-011 (unitario), AC-S19-014 (manual) | pendiente |
+| REQ-S19-036 | MUST | BEH-S19-017 | INV-S19-002 | AC-S19-012 (unitario) | pendiente |
+| REQ-S19-037 | MUST | BEH-S19-017 | INV-S19-002 | AC-S19-012 (unitario) | pendiente |
+| REQ-S19-038 | MUST | BEH-S19-017 | INV-S19-002 | AC-S19-012 (unitario) | pendiente |
+| REQ-S19-039 | MUST | BEH-S19-017 | INV-S19-002 | AC-S19-012 (unitario) | pendiente |
+| REQ-S19-040 | MUST | BEH-S19-017 | INV-S19-002 | AC-S19-012 (unitario) | pendiente |
+| REQ-S19-041 | MUST | BEH-S19-018 | — | AC-S19-013 (unitario) | pendiente |
+| REQ-S19-042 | MUST | BEH-S19-019 | — | AC-S19-014 (manual) | pendiente |
+| REQ-S19-043 | MUST | BEH-S19-020 | INV-S19-004 | AC-S19-015 (unitario) | pendiente |
+| REQ-S19-044 | MUST | BEH-S19-020 | INV-S19-004 | AC-S19-015 (unitario) | pendiente |
+| REQ-S19-045 | MUST | BEH-S19-020 | INV-S19-004 | AC-S19-015 (unitario) | pendiente |
+| REQ-S19-046 | MUST | BEH-S19-020 | INV-S19-004 | AC-S19-014 (manual), AC-S19-015 (unitario) | pendiente |
+| REQ-S19-047 | MUST | BEH-S19-021 | — | AC-S19-016 (manual) | pendiente |
+| REQ-S19-048 | MUST | BEH-S19-021 | — | AC-S19-016 (manual) | pendiente |
+| REQ-S19-049 | MUST | BEH-S19-022 | — | AC-S19-016 (manual), AC-S19-017 (unitario) | pendiente |
+| REQ-S19-050 | MUST | BEH-S19-022 | — | AC-S19-016 (manual), AC-S19-017 (unitario) | pendiente |
+| REQ-S19-051 | MUST | BEH-S19-023 | — | AC-S19-017 (unitario) | pendiente |
+| REQ-S19-052 | MUST | BEH-S19-023 | — | AC-S19-017 (unitario) | pendiente |
+| REQ-S19-053 | MUST | BEH-S19-024 | — | AC-S19-018 (unitario) | pendiente |
+| REQ-S19-054 | MUST | BEH-S19-025 | — | AC-S19-018 (unitario) | pendiente |
+| REQ-S19-055 | MUST | BEH-S19-026 | — | AC-S19-018 (unitario) | pendiente |
+| REQ-S19-056 | MUST | BEH-S19-009 | — | AC-S19-006 (unitario) | pendiente |
+| REQ-S19-057 | MUST | BEH-S19-014 | — | AC-S19-010 (manual) | pendiente |
+| REQ-S19-058 | MUST | BEH-S19-009 | — | AC-S19-006 (unitario) | pendiente |
+
 ## S-22 — Capa de datos con Drizzle: esquema, repositorios, transacciones y retiro de Prisma (aprobada)
 
 Archivo: `S-22-capa-de-datos-con-drizzle.md` · REQ: 30 · BEH: 27 · INV: 6 · AC: 28

@@ -33,7 +33,7 @@ Cómo se cumplen:
 ### Excepción vigente (a revertir al pasar a sesión local)
 El propietario autorizó, en la sesión de diseño en la nube, hacer commits **sin coautor ni trailers**, usando la
 configuración git del entorno, y **sin push** hasta que el repo sea privado. La identidad/firma del entorno **no** son las del
-propietario; los commits de esa etapa deberán re-firmarse o rehacerse con su identidad. Está registrada en `handoff.md` y en ADR-014 (propuesto).
+propietario; los commits de esa etapa deberán re-firmarse o rehacerse con su identidad. Está registrada en `handoff.md` y en ADR-014 (aceptado).
 
 ## 2. Puertas de aprobación
 Al llegar a una puerta te detienes y esperas aprobación escrita. No encadenes etapas ni propongas saltarte una.
@@ -65,7 +65,7 @@ Antes de cada puerta entrega **qué comprobaste y qué no**, pegando la salida r
 
 ## 5. Prohibiciones
 - Borrar tests para que pasen, desactivar reglas de lint, `any` como atajo, `prisma migrate` contra una base real, imprimir secretos.
-- Fuera de alcance por ahora: SUNAT, WhatsApp, `kiosk-host`, sitio público, multi-sede visible. Dentro de alcance (decisión del propietario, ADR-021 propuesto): vitrina de TV y check-in en smart-TV.
+- Fuera de alcance por ahora: SUNAT, WhatsApp, `kiosk-host`, sitio público, multi-sede visible. Dentro de alcance (ADR-021, aceptado): vitrina de TV y check-in en smart-TV con teclado numérico USB; `kiosk-host` (`.exe`) no forma parte del proyecto.
 - Ninguna dependencia nueva sin justificarla en su spec. Cada afirmación sobre el código cita archivo y línea o dice "no verificado".
 - No importar código del Repo A hasta que la spec S-00 esté aprobada.
 

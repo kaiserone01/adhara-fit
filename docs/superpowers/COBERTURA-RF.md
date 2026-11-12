@@ -58,8 +58,8 @@ Los IDs son estables: las specs nuevas continúan la numeración. Orden y depend
 | S-17 Operación: respaldo, observabilidad y despliegue | RNF-07…RNF-09, RF-70, plan 2.7-2.9 | S-00, S-01 | Staging y producción |
 | S-18 Entrenadores | P-22, H-07, RF-10 | S-01, S-06 | Default de `docs/08`: entidad sin credenciales |
 | **S-19 Sistema de diseño y rebranding** (aprobada como ítem del backlog el 2026-11-12; su contenido aún no) | RNF-10, ADR-008, ADR-020, plan 0.9; tokens, tipografía, componentes, patrones y estados para panel, kiosco, kiosco en TV y vitrina; persistencia visual | S-10 | Faltan el logo vectorial, P-15 y la tipografía (se validan después) |
-| **S-20 Vitrina de TV** | Contenido, administración, PEN en lugar de Bs, SSE, APK y CI (ADR-021; doc 11 DI-77…DI-81) | S-03, S-19 | Entra al alcance por decisión del propietario |
-| **S-21 Check-in en smart-TV** | Kiosco en TV (`kiosk-tv`), entrada del DNI, APK y CI (ADR-021) | S-05, S-06, S-19 | Falta decidir cómo se digita el DNI en TV |
+| **S-20 Vitrina de TV** | **Heredar lo que resuelve la vitrina actual** (decisión del propietario): carteles de entrenador, promoción y producto con imagen o video, vigencia, orden, etiquetas, precio/oferta/descuento y sonido; sincronización y APK. Cambios: soles en lugar de dólares y bolívares, marca nueva (S-19). Base verificada en `apps/vitrina` (41 archivos) | S-03, S-19 | Entra al alcance por decisión del propietario (ADR-021, aceptado) |
+| **S-21 Check-in en smart-TV** | Kiosco en un **Android TV con teclado numérico USB conectado** (decisión del propietario). Base: el kiosco ya captura el DNI con `keydown` global sin `<input>` (`apps/kiosk/lib/useEntradaCedula.ts`), que es lo que emite un numpad USB; falta probarlo en un TV. APK Capacitor (`apps/kiosk-tv`) y su CI | S-05, S-06, S-19 | ADR-021, aceptado; `kiosk-host` (`.exe`) queda fuera del proyecto |
 
 ## 4. Decisiones que necesito del propietario
 | # | Decisión | Mi recomendación |
@@ -109,3 +109,14 @@ Siguen abiertos: aceptación de ADR-018 (ahora también sin egresos ni fiado)
 | 2 | Sin fiado | RF-38 retirado; se eliminan `DeudaProducto` y «Cobrar deudas»; P-06 respondida |
 | 3 | El sistema solo captura la recepción de pagos de membresías y de productos | S-08 queda como registro continuo de cobros; S-11 como ventas de productos sin fiado |
 | 4 | Kit de logotipo entregado | Colores `#231F20`, `#FFCB04` y `#FFFFFF` confirmados; el original no es vectorial (ADR-020); archivos originales en `docs/design/origen-logotipo/` |
+
+## 10. Cuarta ronda (2026-11-12)
+| # | Respuesta del propietario | Efecto |
+|---|---|---|
+| 1 | Acepta ADR-018, 019, 020 y 021 | Once ADR aceptados en total; S-00 puede entrar en revisión |
+| 2 | El DNI en el TV se digita con un **teclado numérico USB** conectado al Android TV | Define S-21; compatible con `useEntradaCedula.ts` (por probar en un TV real) |
+| 3 | La vitrina **hereda lo que la vitrina actual resuelve** | Define S-20 |
+| 4 | `kiosk-host` es un `.exe` y **no va en este proyecto** | Confirma que sigue fuera de alcance |
+| 5 | Subirá los PNG del logotipo a una carpeta del repositorio | Carpeta indicada: `docs/design/origen-logotipo/` (ver nota de publicación en el handoff) |
+| 6 | Autoriza clonar el Repo A | Clonado en solo lectura; hechos verificados en `docs/09` §8 |
+

@@ -50,7 +50,7 @@ Es breve a propósito: cada artículo dice qué se exige y **cómo se verifica**
 | # | Artículo | Se verifica con |
 |---|---|---|
 | C-23 | Ninguna dependencia nueva sin justificarla en su spec. | `spec-lint` (sección de riesgos), revisión del PR |
-| C-24 | Fuera de alcance por ahora: SUNAT, WhatsApp, `kiosk-host`, sitio público, multi-sede visible. Dentro de alcance: vitrina de TV y check-in en smart-TV (ADR-021, propuesto). | Revisión de specs (§0.3 «Fuera de alcance») |
+| C-24 | Fuera de alcance por ahora: SUNAT, WhatsApp, `kiosk-host`, sitio público, multi-sede visible. Dentro de alcance: vitrina de TV y check-in en smart-TV (ADR-021, aceptado). | Revisión de specs (§0.3 «Fuera de alcance») |
 | C-25 | El Repo A es de solo lectura y no se importa código de él hasta que la spec S-00 esté aprobada. | `spec-lint`, revisión del propietario |
 | C-26 | Nunca se imprimen ni se versionan secretos, correos, tokens, rutas del directorio personal ni URLs/IDs de sesión. | `pre-commit` (archivos y secretos), `check-handoff`, escaneo de secretos |
 

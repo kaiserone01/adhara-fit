@@ -1,6 +1,6 @@
 # ADR-019: Negocio único — Adhara Fit no es un SaaS multi-organización
 
-Estado: **propuesto** (2026-11-12) · Decisión de negocio del propietario del 2026-11-12: **opción B, eliminar `Organizacion`** (pendiente de su orden expresa de aceptación)
+Estado: **aceptado** (confirmado por el propietario, 2026-11-12) · propuesto el 2026-11-12 · Decisión de negocio del propietario del 2026-11-12: **opción B, eliminar `Organizacion`**
 
 ## Contexto
 El propietario aclaró que este proyecto **no es un SaaS de gimnasios** que atienda a distintas organizaciones: es el sistema de un único negocio, Adhara Fit (*single business*). Entre las opciones planteadas eligió **eliminar el concepto de organización del modelo**.

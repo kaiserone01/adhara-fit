@@ -48,9 +48,9 @@ Los 22 ADR están aceptados (001 a 022); ninguno queda propuesto ni retirado. AD
 | S-18 | **aprobada** (propietario, 2026-11-12, con los valores por defecto). 39 REQ, 20 BEH, 4 INV, 11 AC; `spec-lint`: 0 errores, 0 avisos. Tabla `Entrenador` sin credenciales; se desactivan, no se borran. Enmiendas en S-01, S-05, S-07, S-08, S-22, docs/06 |
 | S-23 | **aprobada** (propietario, 2026-11-12, con los valores por defecto, incluida la enmienda a ADR-012 §3 y §4). 36 REQ, 19 BEH, 4 INV, 12 AC; `spec-lint`: 0 errores, 0 avisos. Un solo rol de administrador; enmiendas en S-01, S-04, S-05, S-07, S-08, S-09, S-18, S-22, ADR-012, ADR-016, docs/01, docs/02 |
 | S-11 | **aprobada** (propietario, 2026-11-12, con los valores por defecto). 37 REQ, 21 BEH, 4 INV, 14 AC; `spec-lint`: 0 errores, 0 avisos. Un producto por venta, cobro inmediato, sin fiado, carrito ni fecha pasada. Enmiendas en S-03, S-04, S-08, S-10, S-22 |
-| S-15 | **en revisión, veredicto conciliado** (espera «S-15 aprobada»). Línea base (migración inicial), servicio `migrar` de Compose y seed repetible sin contraseñas fijas; 44 REQ, 22 BEH, 4 INV, 16 AC; `spec-lint`: 0 errores, 0 avisos |
-| S-12 | **en revisión, veredicto conciliado** (espera «S-12 aprobada»). Ticket de pago, envío por correo y registro de comprobantes, desarrollados y apagados; 62 REQ, 30 BEH, 5 INV, 22 AC; `spec-lint`: 0 errores, 0 avisos |
-| S-13 | **en revisión, veredicto conciliado** (espera «S-13 aprobada»). Textos legales versionados, consentimiento de datos, aviso del Libro de Reclamaciones y documento enmascarado en la lista; 51 REQ, 29 BEH, 5 INV, 20 AC; `spec-lint`: 0 errores, 0 avisos |
+| S-15 | **aprobada** (propietario, 2026-11-12, con los valores por defecto). 44 REQ, 22 BEH, 4 INV, 16 AC; `spec-lint`: 0 errores, 0 avisos. Baseline, servicio `migrar` y seed repetible. Enmiendas en S-00, S-01, S-05, S-06, S-11, S-22, S-23 |
+| S-12 | **aprobada** (propietario, 2026-11-12, con los valores por defecto). 62 REQ, 30 BEH, 5 INV, 22 AC; `spec-lint`: 0 errores, 0 avisos. Tickets y comprobantes apagados. Enmiendas en S-00, S-05, S-06, S-07, S-09, S-15, S-22 |
+| S-13 | **aprobada** (propietario, 2026-11-12, con los valores por defecto). 51 REQ, 29 BEH, 5 INV, 20 AC; `spec-lint`: 0 errores, 0 avisos. Consentimiento, textos legales, aviso de reclamaciones y documento enmascarado. Enmiendas en S-04, S-05, S-06, S-09, S-12, S-15, S-22 |
 | S-14, S-17, S-19, S-20, S-21 | **entran** (el propietario aprobó la lista completa el 2026-11-12: «aprobado todo, procede»); sin redactar todavía. S-16 (importador) descartada. Mapa en lenguaje simple: `docs/superpowers/BACKLOG-SPECS.md`; cruce técnico: `COBERTURA-RF.md` |
 
 - Defaults asumidos hasta ahora: ninguno de `docs/08`. Documentación v0.4 del zip: **importada íntegra** a `docs/` (40 archivos; `diff -r` vacío y manifiesto sha256 idéntico; el commit de importación solo contiene esos archivos).
@@ -144,6 +144,7 @@ Los 22 ADR están aceptados (001 a 022); ninguno queda propuesto ni retirado. AD
 - `docs/adr/ADR-012-*.md` y `ADR-016-*.md`: enmienda por S-23 (sesión válida de un administrador activo; contrato de rutas en tres clases).
 - `docs/01-levantamiento-requerimientos.md` (RF-02, RF-34), `docs/02` (HU-40), `docs/06-modelo-datos-cambios.md`, `docs/datos-iniciales.md`, `docs/superpowers/COBERTURA-RF.md`, `docs/superpowers/BACKLOG-SPECS.md` y `docs/superpowers/TRAZABILIDAD.md` (regenerado): notas y estados.
 - `docs/superpowers/specs/S-15-linea-base-y-datos-iniciales.md`, `S-12-tickets-y-comprobantes.md`, `S-13-consentimiento-y-aviso-legal.md`: redactadas, revisadas por el `spec-reviewer` y corregidas (2026-11-12); a la espera de aprobación.
+- `docs/superpowers/specs/S-15`, `S-12`, `S-13`: aprobadas (2026-11-12); `S-00`, `S-01`, `S-04`, `S-05`, `S-06`, `S-07`, `S-09`, `S-10`, `S-11`, `S-12`, `S-15`, `S-22`, `S-23`: «Enmiendas posteriores» ampliadas; `docs/06`, `docs/datos-iniciales.md`, `COBERTURA-RF.md` y `BACKLOG-SPECS.md`: notas y estados.
 
 ## 4. Intentos fallidos
 - 2026-11-12: se intentó verificar la sintaxis de hooks, permisos y subagentes en la documentación oficial (`code.claude.com`); el host no resuelve desde la sesión. Resultado: la configuración de `.claude/` se escribió de memoria y queda **no verificada contra la documentación vigente**. No reintentar hasta que el propietario permita el host.
@@ -189,7 +190,7 @@ Los 22 ADR están aceptados (001 a 022); ninguno queda propuesto ni retirado. AD
 
 ## 5. Próximos pasos
 1. Leer handoff.md y ejecutar /preflight.
-2. Esperar «S-15 aprobada», «S-12 aprobada» y «S-13 aprobada» (veredictos ya conciliados; resumen enviado). Al aprobar cada una: marcar `estado: aprobada`, registrar las enmiendas de su sección 5.2, actualizar BACKLOG-SPECS y este handoff. Después redactar, revisar y aprobar de una en una: S-14 (reportes), S-17 (operación), S-19 (diseño), S-20 (vitrina), S-21 (check-in en TV).
+2. Redactar, revisar y aprobar de una en una: S-14 (reportes), S-17 (operación), S-19 (diseño), S-20 (vitrina), S-21 (check-in en TV).
 3. Terminadas las specs, redactar el plan global (G6) en `docs/superpowers/plans/`: orden, dependencias y riesgos; decidir si S-08, S-10 y S-11 van antes de S-05 (S-05 edita archivos que ellas borran). G6 termina la sesión de diseño.
 4. Pedir al propietario: repo privado antes de cualquier push; originales del logotipo y tipografía; periodo de retención (P-20); revisión legal de la Ley 29733 (se descartó anonimizar).
 5. Solo con orden expresa y ADR por ADR: cambiar estados de ADR a `aceptado (confirmado por el propietario, AAAA-MM-DD)`.

@@ -930,6 +930,7 @@ Todas las decisiones de negocio de S-04 fueron respondidas por el propietario el
 - Por la aprobación de S-10: SUP-S04-011, 0.3 y 0.4 se leen como cumplidos (`Pago.tasaCambio`, `Pago.montoBs` y el aviso «Por regularizar» se retiran).
 - Por la aprobación de S-11: SUP-S04-009 (`Pago.cobroId` «nula en los pagos de otras specs») se lee con que la venta de producto también la escribe; SUP-S04-014 y la nota de `resolverCobroPasado*` quedan cumplidas por su retiro.
 - Por la aprobación de S-23: REQ-S04-006 y REQ-S04-040 se leen como «sesión válida de un administrador activo».
+- Por la aprobación de S-13: `IUnidadDeTrabajo` expone los repositorios de `TextoLegal`, `ConsentimientoMiembro` y `Miembro` para la transacción de `crearMiembro`.
 
 ## Revisión independiente
 

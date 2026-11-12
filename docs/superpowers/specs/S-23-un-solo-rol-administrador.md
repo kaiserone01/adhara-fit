@@ -561,6 +561,10 @@ El código heredado distingue cuatro roles (`SOCIO`, `GERENTE`, `RECEPCION` y `E
 - ¿Se enmienda ADR-012 §3 y §4 para decir «sesión válida de un administrador activo»? Default: sí (SUP-S23-011).
 - ¿Ningún administrador puede restablecer la contraseña de otro? Default: no se puede (SUP-S23-010).
 
+## Enmiendas posteriores (2026-11-12)
+*Derivadas de la aprobación de otras specs. El texto anterior se conserva; donde choca, rige esta sección.*
+- Por la aprobación de S-15: el seed crea el primer administrador con la contraseña inicial generada o dada por variable de entorno; la recuperación manual de la contraseña (SUP-S23-010) sigue sin dueño y pasa a S-17.
+
 ## Revisión independiente
 
 Revisor: subagente `spec-reviewer` (solo lectura, sin ejecutar `spec-lint`), 2026-11-12, sobre el primer borrador. Su definición trae 7 comprobaciones (subdivididas en 1b y 6b). Veredicto global: **REQUIERE CAMBIOS**. Resumen fiel:

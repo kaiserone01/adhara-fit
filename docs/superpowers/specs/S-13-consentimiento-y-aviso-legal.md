@@ -1,10 +1,10 @@
 ---
 id: S-13
-estado: en-revision
+estado: aprobada
 adrs: ADR-006, ADR-012, ADR-013, ADR-016, ADR-022
 depende_de: S-00, S-01, S-02, S-04, S-05, S-06, S-09, S-12, S-22, S-23
-aprobada_por:
-fecha_aprobacion:
+aprobada_por: propietario
+fecha_aprobacion: 2026-11-12
 ---
 # S-13 — Consentimiento de datos personales, política de privacidad y aviso del Libro de Reclamaciones
 

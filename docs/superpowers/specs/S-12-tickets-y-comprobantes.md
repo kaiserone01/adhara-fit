@@ -1,10 +1,10 @@
 ---
 id: S-12
-estado: en-revision
+estado: aprobada
 adrs: ADR-006, ADR-011, ADR-012, ADR-016, ADR-022
 depende_de: S-00, S-01, S-02, S-03, S-04, S-05, S-06, S-07, S-08, S-09, S-11, S-15, S-22, S-23
-aprobada_por:
-fecha_aprobacion:
+aprobada_por: propietario
+fecha_aprobacion: 2026-11-12
 ---
 # S-12 — Tickets de pago y registro de comprobantes, desarrollados y apagados
 
@@ -869,6 +869,10 @@ ADR-006 (aceptado el 2026-11-12) decidió que el sistema desarrolla por completo
 - ¿El número del ticket puede tener saltos? Default: sí (SUP-S12-002).
 - ¿Un ticket guarda una copia congelada de lo que muestra? Default: sí (SUP-S12-002).
 - ¿Los tres interruptores quedan apagados hasta que valides con tu contador? Default: sí (SUP-S12-001).
+
+## Enmiendas posteriores (2026-11-12)
+*Derivadas de la aprobación de otras specs. El texto anterior se conserva; donde choca, rige esta sección.*
+- Por la aprobación de S-13: guardar un correo con aceptación y `enviarTicketPorCorreo` rechazan con `ConsentimientoRevocadoError` a un miembro cuyo consentimiento está REVOCADO (REQ-S13-029); revocar el consentimiento pone en nulo `correoConsentidoEn`.
 
 ## Revisión independiente
 

@@ -801,3 +801,5 @@ No aplicado, con motivo:
 - Hasta que S-22 se ejecute, el árbol importado por S-00 conserva Prisma tal como está.
 - Por la aprobación de S-01: `tools/verificar-repo.mjs` agrega la regla de versión exacta para `zod`, y `.env.example` y `tools/verificar-env.mjs` agregan la variable `KIOSCO_ORIGENES_PERMITIDOS` (S-01, REQ-S01-017 y REQ-S01-023).
 - Por la aprobación de S-10: el aviso sobre `xlsx` de 0.4 (`packages/db/package.json:29`) queda cumplido; S-10 quita la dependencia de `package.json` y regenera `package-lock.json` (REQ-S10-026).
+- Por la aprobación de S-15: REQ-S00-017 (crear el esquema en Compose) se lee con el servicio de un solo uso `migrar` que ejecuta `db:migrar`; `.env.example` suma `ADMIN_NOMBRE`, `ADMIN_CORREO` y `ADMIN_CONTRASENA_INICIAL` sin valores; `bcryptjs` se declara en `packages/infrastructure`.
+- Por la aprobación de S-12: `.env.example` suma `SMTP_HOST`, `SMTP_PUERTO`, `SMTP_USUARIO`, `SMTP_CLAVE` y `CORREO_REMITENTE`, sin valores; la lista de dependencias suma `nodemailer` y `@types/nodemailer`.

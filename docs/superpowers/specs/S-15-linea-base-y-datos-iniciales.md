@@ -1,10 +1,10 @@
 ---
 id: S-15
-estado: en-revision
+estado: aprobada
 adrs: ADR-002, ADR-012, ADR-016, ADR-022
 depende_de: S-00, S-01, S-02, S-03, S-04, S-05, S-06, S-07, S-08, S-09, S-10, S-11, S-18, S-22, S-23
-aprobada_por:
-fecha_aprobacion:
+aprobada_por: propietario
+fecha_aprobacion: 2026-11-12
 ---
 # S-15 — Línea base de la base de datos y datos iniciales de Adhara Fit
 
@@ -654,6 +654,11 @@ Las specs S-01 a S-23 cambian el esquema y dejan a S-15 tres cosas: (1) la **lí
 - ¿Las migraciones se aplican con un paso aparte (servicio `migrar`) y no en el arranque del contenedor? Default: sí (SUP-S15-006).
 - ¿No hay datos de demostración ni miembros de prueba? Default: ninguno (SUP-S15-007).
 - ¿Los datos de cobro de Yape y del BCP se completan después, desde la administración? Default: sí (SUP-S15-008).
+
+## Enmiendas posteriores (2026-11-12)
+*Derivadas de la aprobación de otras specs. El texto anterior se conserva; donde choca, rige esta sección.*
+- Por la aprobación de S-12: el baseline incluye `TicketPago`, `EnvioTicket`, `ComprobantePago`, los enums `TipoComprobante` y `EstadoEnvio` y las columnas nuevas de `Miembro` y de `ConfiguracionNegocio`; el seed no cambia (los interruptores quedan apagados).
+- Por la aprobación de S-13: el baseline incluye `TextoLegal` con su disparador de inmutabilidad, `ConsentimientoMiembro` con su clave compuesta, CHECK y única parcial, y los campos del negocio; el seed no publica textos.
 
 ## Revisión independiente
 

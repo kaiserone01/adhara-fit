@@ -589,6 +589,10 @@ El gimnasio vende artículos (agua, bebidas, guantes) además de membresías. El
 - ¿El nombre del producto debe ser único por su forma normalizada? Default: sí (SUP-S11-003).
 - ¿El límite de foto es JPG, PNG o WebP de hasta 2 097 152 bytes, validado por su firma? Default: sí (SUP-S11-008).
 
+## Enmiendas posteriores (2026-11-12)
+*Derivadas de la aprobación de otras specs. El texto anterior se conserva; donde choca, rige esta sección.*
+- Por la aprobación de S-15: SUP-S11-003 y el índice único del nombre de producto fijan la expresión `lower(btrim(regexp_replace(nombre, '\s+', ' ', 'g')))`.
+
 ## Revisión independiente
 
 Revisor: subagente `spec-reviewer` (solo lectura, sin ejecutar `spec-lint`), 2026-11-12, sobre el primer borrador. Su definición trae 7 comprobaciones. Veredicto global: **REQUIERE CAMBIOS**. Resumen fiel:

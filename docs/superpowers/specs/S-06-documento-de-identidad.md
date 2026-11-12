@@ -722,6 +722,9 @@ El código heredado identifica al miembro por `cedula`, un texto libre que solo 
 ## Enmiendas posteriores (2026-11-12)
 *Derivadas de la aprobación de S-10. El texto anterior se conserva; donde choca, rige esta sección.*
 - Por la aprobación de S-10: SUP-S06-007, REQ-S06-030 y las exenciones de `verificar-documento` de la familia del padrón desaparecen porque sus archivos se retiran.
+- Por la aprobación de S-15: el plan B de los CHECK de documento con SQL en el baseline se aplica solo si `drizzle-kit` no los emite.
+- Por la aprobación de S-12: `Miembro` suma `correo` y `correoConsentidoEn`.
+- Por la aprobación de S-13: el traspaso de `GET api/miembros` queda cumplido; SUP-S06-008 se lee con la lista enmascarada (últimos 3 caracteres) y la búsqueda en el servidor.
 
 ## Revisión independiente
 

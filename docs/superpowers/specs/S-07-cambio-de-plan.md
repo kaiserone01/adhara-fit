@@ -892,6 +892,7 @@ El código heredado cambia el plan de un miembro por tres caminos que dan result
 - Por la aprobación de S-10: las ramas `vieneDelExcel` de `ActualizarMiembro` que S-07 dejó a S-10 (0.3) quedan retiradas y el cambio de plan se comporta como con `vieneDelExcel` falso (REQ-S10-017).
 - Por la aprobación de S-18: la nota de 0.3 («`Miembro.entrenadorId` queda como está») cambia de destino de la clave (de `UsuarioAdmin` a `Entrenador`); REQ-S07-041 se aplica sobre `Entrenador`.
 - Por la aprobación de S-23: REQ-S07-013 (permiso `PAGOS CREAR`) se lee como «sesión válida de un administrador activo».
+- Por la aprobación de S-12: el cobro más reciente no anulado por `Pago.creadoEn` se reutiliza para decidir si el ticket muestra plan y vigencia.
 
 ## Revisión independiente
 

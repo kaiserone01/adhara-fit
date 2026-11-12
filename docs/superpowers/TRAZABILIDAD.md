@@ -557,7 +557,7 @@ Archivo: `S-11-productos-sin-fiado.md` · REQ: 37 · BEH: 21 · INV: 4 · AC: 14
 | REQ-S11-036 | MUST | BEH-S11-020 | INV-S11-004 | AC-S11-012 (unitario), AC-S11-013 (unitario) | pendiente |
 | REQ-S11-037 | MUST | BEH-S11-021 | — | AC-S11-014 (manual) | pendiente |
 
-## S-12 — Tickets de pago y registro de comprobantes, desarrollados y apagados (en-revision)
+## S-12 — Tickets de pago y registro de comprobantes, desarrollados y apagados (aprobada)
 
 Archivo: `S-12-tickets-y-comprobantes.md` · REQ: 62 · BEH: 30 · INV: 5 · AC: 22
 
@@ -626,7 +626,7 @@ Archivo: `S-12-tickets-y-comprobantes.md` · REQ: 62 · BEH: 30 · INV: 5 · AC:
 | REQ-S12-061 | MUST | BEH-S12-029 | INV-S12-004 | AC-S12-020 (unitario) | pendiente |
 | REQ-S12-062 | MUST | BEH-S12-030 | — | AC-S12-022 (manual) | pendiente |
 
-## S-13 — Consentimiento de datos personales, política de privacidad y aviso del Libro de Reclamaciones (en-revision)
+## S-13 — Consentimiento de datos personales, política de privacidad y aviso del Libro de Reclamaciones (aprobada)
 
 Archivo: `S-13-consentimiento-y-aviso-legal.md` · REQ: 51 · BEH: 29 · INV: 5 · AC: 20
 
@@ -684,7 +684,7 @@ Archivo: `S-13-consentimiento-y-aviso-legal.md` · REQ: 51 · BEH: 29 · INV: 5 
 | REQ-S13-050 | MUST | BEH-S13-010 | — | AC-S13-007 (integracion) | pendiente |
 | REQ-S13-051 | MUST | BEH-S13-016 | — | AC-S13-010 (integracion) | pendiente |
 
-## S-15 — Línea base de la base de datos y datos iniciales de Adhara Fit (en-revision)
+## S-15 — Línea base de la base de datos y datos iniciales de Adhara Fit (aprobada)
 
 Archivo: `S-15-linea-base-y-datos-iniciales.md` · REQ: 44 · BEH: 22 · INV: 4 · AC: 16
 

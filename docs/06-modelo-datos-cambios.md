@@ -134,3 +134,15 @@ Se eliminan en dominio `ReglaAbono.ts`, `CobrarAbonoPendiente`, `ListarAbonosPen
 | `PermisoUsuario`, enums `RolUsuario`, `ModuloPermiso`, `AccionPermiso` | **Eliminar** (S-23) | Un solo rol: administrador con acceso total |
 | `Producto` | Adaptar (S-11) | `costo` (`numeric(12,2)`) guarda el precio de venta; índice único sobre el nombre normalizado |
 | `Pago` (ventas de producto) | Sin columnas nuevas (S-11) | una venta es un solo producto y un solo pago de un solo método, con `cobroId`; `miembroId` nulo |
+
+## Cambios por S-12, S-13 y S-15 (2026-11-12)
+| Tabla | Acción | Detalle |
+|---|---|---|
+| `ConfiguracionNegocio` | Adaptar (S-12, S-13) | S-12: `ticketCorreoActivo`, `ticketImpresionActiva`, `comprobantesRegistroActivo` (falso por defecto). S-13: `razonSocial`, `ruc`, `direccion` opcionales |
+| **Nuevo** `TicketPago` | Crear (S-12) | un ticket por pago, número correlativo y copia congelada de lo que muestra |
+| **Nuevo** `EnvioTicket` | Crear (S-12) | cada intento de envío del ticket por correo (ENVIADO o FALLIDO) |
+| **Nuevo** `ComprobantePago` | Crear (S-12) | como máximo uno por pago: tipo, serie, número, RUC y razón social; único por tipo, serie y número |
+| `Miembro` | Adaptar (S-12) | `correo` opcional y `correoConsentidoEn` |
+| **Nuevo** `TextoLegal` | Crear (S-13) | versiones inmutables de consentimiento, política de privacidad y aviso de reclamaciones |
+| **Nuevo** `ConsentimientoMiembro` | Crear (S-13) | aceptación con versión, medio, fecha y revocación; única parcial sobre las no revocadas |
+| Migración inicial y seed | Crear (S-15) | primera migración versionada en `packages/db/drizzle/`; el seed crea sede «Local», negocio «Adhara Fit», 3 planes, 3 métodos de pago, 4 entrenadores, la clave del kiosco y el primer administrador |

@@ -608,6 +608,9 @@ El código heredado está pensado para varias organizaciones con varias sedes ca
 - Por la aprobación de S-10: SUP-S05-002, SUP-S05-005 y 0.3 dejan de nombrar `Sucursal.tasaCambioUSD` y la familia S-10; el nombre visible de encabezado, kiosco y vitrina es `ConfiguracionNegocio.nombre` (REQ-S10-021).
 - Por la aprobación de S-23: REQ-S05-030, con su BEH y su AC (un `GERENTE` no puede rotar la clave), se leen como «cualquier administrador autenticado puede rotarla»; SUP-S05-009 y la retirada de `SUCURSALES` quedan cumplidas.
 - Por la aprobación de S-18: S-05 no cambia; `ListarEntrenadores` e `IEntrenadorRepository` (con su filtro de sede) los reemplaza S-18.
+- Por la aprobación de S-15: el plan B de los CHECK y únicos de `unica` con SQL en el baseline se aplica solo si `drizzle-kit` no los emite.
+- Por la aprobación de S-12: `ConfiguracionNegocio` suma `ticketCorreoActivo`, `ticketImpresionActiva` y `comprobantesRegistroActivo`, apagadas por defecto.
+- Por la aprobación de S-13: `ConfiguracionNegocio` suma `razonSocial`, `ruc` y `direccion` (REQ-S05-003).
 
 ## Revisión independiente
 

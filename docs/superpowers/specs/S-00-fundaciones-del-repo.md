@@ -1,7 +1,7 @@
 ---
 id: S-00
-estado: en-revision
-adrs: ADR-001, ADR-005, ADR-009, ADR-012, ADR-014, ADR-016, ADR-017
+estado: borrador
+adrs: ADR-001, ADR-005, ADR-009, ADR-012, ADR-014, ADR-016, ADR-017, ADR-021
 depende_de: ninguna
 aprobada_por:
 fecha_aprobacion:
@@ -15,7 +15,7 @@ Adhara Fit parte de una copia del Repo A (`gym-app` @ `b4352a0`), que es públic
 
 ### 0.2 Dentro de alcance
 - Importar el árbol de trabajo de `b4352a0` como un único commit, sin historia del Repo A, aplicando la lista cerrada de exclusión de abajo.
-- Limitar la copia inicial a las apps `web-admin` y `kiosk` y a los workspaces que estas requieren (ADR-009).
+- Limitar la copia inicial a las apps `web-admin`, `kiosk`, `kiosk-tv`, `vitrina` y `vitrina-tv` y a los workspaces que estas requieren (ADR-009 enmendado por ADR-021).
 - Registrar la línea base del Repo A (tests, lint, tipos, build y `npm audit`) antes de aplicar exclusiones (plan 0.7, ADR-016 §4).
 - `.env.example`, `LICENSE`, `.gitignore`, README de arranque, `docker-compose.yml` (PostgreSQL y `web-admin`) y CI de calidad (lint, tipos, tests, build, `npm audit`, gitleaks).
 - Verificaciones automáticas en un script único `tools/verificar-repo.mjs` (exclusiones, apps y workspaces, migraciones, archivos obligatorios, `.gitignore`, historia) y `tools/verificar-env.mjs`; helper de base efímera para pruebas de integración.
@@ -27,18 +27,19 @@ Adhara Fit parte de una copia del Repo A (`gym-app` @ `b4352a0`), que es públic
   - Todas las migraciones de Prisma del Repo A (hasta la marca `20261016000000`) y `migration_lock.toml`.
   - El seed del Repo A (`prisma/seed.ts`) y cualquier archivo que contenga las contraseñas `admin1234` o `entrenador1234`.
   - En `packages/db`, todo script de mantenimiento: solo se admiten los archivos de la lista de permitidos que apruebe el propietario en el informe de importación (el árbol real no está verificado).
-  - Las apps `worker`, `kiosk-tv`, `kiosk-host`, `vitrina` y `vitrina-tv`; los workflows `apk-*.yml` y `verificar-vitrina.yml`; y todo `.github/` del Repo A (los workflows permitidos son los de este repositorio).
+  - Las apps `worker` y `kiosk-host`; los workflows `apk-*.yml` y `verificar-vitrina.yml`; y todo `.github/` del Repo A (los workflows permitidos son los de este repositorio).
   - El `docs/` del Repo A completo, su `README.md` y su `CLAUDE.md` (colisionan con los de este repositorio).
 
 ### 0.3 Fuera de alcance
 - Cambios de comportamiento o de modelo de datos: moneda, sede única, documento, tiempo y abonos pertenecen a S-02…S-10.
 - Baseline de seguridad: S-01. Retirada del código de padrón Excel, de lo específico de Venezuela y de la marca anterior: S-10 (la exclusión de los **archivos** de datos y scripts de ADR-005 §3 sí es de S-00; ADR-007 no se cita porque sigue propuesto).
-- Branding mínimo (plan 0.9: nombre, logo, favicon, paleta): se traslada a S-10 junto con ADR-008 (SUP-S00-008).
+- Sistema de diseño y rebranding completos (tokens, componentes, tipografía y marca; absorben el plan 0.9): spec S-19 (ADR-020). S-00 no aplica ninguna marca (SUP-S00-008).
 - Generar el baseline de migraciones de Prisma y el seed de Adhara: ocurren cuando el esquema deje de cambiar (SUP-S00-002).
 - Rotar o crear credenciales nuevas (plan 0.8): tarea operativa del propietario; esta spec solo exige que no haya credenciales del Repo A en el árbol.
 - Hacer privado o depurar el Repo A (plan 0.1) y configurar la protección de `main` en GitHub: acciones del propietario (`docs/ops/github-setup.md`), fuera de este repositorio.
 - Funcionalidades de productos (venta con cobro inmediato, RF-37, y fiado, RF-38): se copian tal como están en el Repo A y no se modifican aquí; su adaptación se propone como spec aparte en `docs/superpowers/COBERTURA-RF.md`, pendiente de aprobación del propietario.
-- SUNAT, WhatsApp, vitrina/TV, `kiosk-host`, sitio público y multi-sede visible.
+- SUNAT, WhatsApp, `kiosk-host`, sitio público y multi-sede visible.
+- Adaptación de la vitrina y del kiosco en TV (PEN, contenido, claves de Android, APK y su CI): specs S-20 y S-21, propuestas; S-00 solo las importa sin cambios.
 
 ### 0.4 Comportamiento actual verificado
 > No hay copia local del Repo A en esta sesión: todo lo siguiente proviene de `docs/09` y `docs/11`, que citan archivo y línea, y queda como no re-verificado.
@@ -50,19 +51,20 @@ Adhara Fit parte de una copia del Repo A (`gym-app` @ `b4352a0`), que es públic
 - Hay 36 migraciones (de `20260913024831` a `20261016000000`) y el entrypoint ejecuta `migrate deploy` al arrancar el contenedor, de modo que un fallo bloquea el servicio (doc 11 DI-15, DI-83; doc 09 §4.2); no re-verificado.
 - Hay tres workflows en `.github/workflows`: `apk-kiosco.yml`, `apk-vitrina.yml` y `verificar-vitrina.yml` (doc 11 DI-13); no re-verificado.
 - `kiosk` y `vitrina` son export estático en producción; el puerto 3001 es solo el del script `dev` (doc 11 DI-02, `apps/kiosk/package.json:6`); no re-verificado.
+- La vitrina muestra precios en Bs y su emisor SSE vive en memoria, por lo que exige un solo contenedor (ADR-009 consecuencias; doc 11 DI-78); no re-verificado.
 - El `docs/` del Repo A contiene `docs/adr/ADR-001-gym-app-sesion.md` (doc 11 DI-92, línea 5), que repite el número ADR-001 de este repositorio; no re-verificado.
 - `packages/domain-custom`, `design-system` y `config` están vacíos o casi vacíos (doc 11 DI-05); no re-verificado.
 - La suite de tests nunca se ejecutó en el análisis: no hay `node_modules` ni red (doc 09 §1); no verificado.
 
 ### 0.5 Supuestos
-- SUP-S00-001: las apps diferidas y los workflows `apk-*.yml` y `verificar-vitrina.yml` se omiten de la copia en lugar de moverse a `_diferido/` (decisión D3). Default: omitirlas y reincorporarlas desde `b4352a0` si se aprueban; asumido, por validar.
+- SUP-S00-001: `worker`, `kiosk-host` y los workflows `apk-*.yml` y `verificar-vitrina.yml` se omiten de la copia; `kiosk-tv`, `vitrina` y `vitrina-tv` se importan sin modificar y se adaptan en S-20 y S-21 (ADR-021, decisión D3). Default: ese reparto; asumido, por validar.
 - SUP-S00-002: las migraciones heredadas se excluyen y el baseline se genera después de las specs que cambian el esquema (decisión D12); mientras tanto la base desechable de Compose usa `prisma db push`. Default: ese comportamiento; asumido, por validar.
 - SUP-S00-003: gitleaks se adopta como binario de versión fija en CI y como comprobación opcional en `pre-commit` (decisión D13). Default: sí; asumido, por validar.
 - SUP-S00-004: `npm audit` falla el pipeline ante vulnerabilidades de severidad high o critical que no figuren en la línea base. Default: ese umbral; asumido, por validar.
 - SUP-S00-005: el aviso legal es `Copyright (c) 2026 Adhara Fit. Todos los derechos reservados.` Default: ese texto; asumido, por validar.
 - SUP-S00-006: esta spec incluye la comprobación del workflow `politica` (decisión D19). Default: incluirla; asumido, por validar.
 - SUP-S00-007: la base de `docker compose` es desechable (su volumen se puede borrar) y la de las pruebas es efímera (se crea y se destruye en cada ejecución); son distintas y solo la segunda cumple ADR-016. Default: mantener esa distinción; asumido, por validar.
-- SUP-S00-008: el branding mínimo del plan 0.9 se ejecuta en S-10. Default: trasladarlo; asumido, por validar.
+- SUP-S00-008: el rebranding y el sistema de diseño completos, que absorben el plan 0.9, se ejecutan en S-19. Default: trasladarlos; asumido, por validar.
 - SUP-S00-009: el repo base expone los scripts `lint`, `typecheck`, `test` y `build` en `package.json` (no verificado). Default: si los nombres reales difieren se adaptan y se documentan en el README; asumido, por validar.
 - SUP-S00-010: con cero migraciones `prisma migrate deploy` no crea tablas (no verificado), por lo que Compose ejecuta `prisma db push` antes de arrancar `web-admin`. Default: ese arranque; asumido, por validar.
 - SUP-S00-011: el seed del Repo A no se importa y el usuario inicial llega con la spec de baseline y seed (ver COBERTURA-RF). Default: la pantalla de inicio de sesión basta para validar S-00; asumido, por validar.
@@ -95,8 +97,8 @@ Adhara Fit parte de una copia del Repo A (`gym-app` @ `b4352a0`), que es públic
 ### REQ-S00-004
 - tipo: ubicuo
 - prioridad: MUST
-- origen: ADR-009
-- texto: La copia inicial deberá contener solo las apps web-admin y kiosk y los workspaces que estas dos apps requieren de forma transitiva en sus package.json.
+- origen: ADR-009, ADR-021
+- texto: La copia inicial deberá contener solo las apps web-admin, kiosk, kiosk-tv, vitrina y vitrina-tv y los workspaces que estas requieren de forma transitiva en sus package.json.
 
 ### REQ-S00-005
 - tipo: ubicuo
@@ -138,7 +140,7 @@ Adhara Fit parte de una copia del Repo A (`gym-app` @ `b4352a0`), que es públic
 - tipo: ubicuo
 - prioridad: MUST
 - origen: ADR-016, ADR-001
-- texto: Antes de aplicar cualquier exclusión, el procedimiento deberá registrar en docs/linea-base-tests.md el SHA completo del Repo A, el número de tests por workspace, los fallos preexistentes y el resultado de lint, tipos, build y npm audit.
+- texto: Antes de aplicar cualquier exclusión, el procedimiento deberá registrar en docs/linea-base-tests.md el SHA completo del Repo A, el número de tests por workspace, los fallos preexistentes, el resultado de lint, tipos, build y npm audit y el conteo de archivos que mencionan organización.
 
 ### REQ-S00-012
 - tipo: ubicuo
@@ -237,7 +239,7 @@ Adhara Fit parte de una copia del Repo A (`gym-app` @ `b4352a0`), que es públic
 - categoria: feliz
 - dado: una copia local del Repo A en el commit b4352a0, la línea base ya registrada y el repositorio remoto privado
 - cuando: se ejecuta el procedimiento de importación con la lista cerrada de exclusión
-- entonces: se crea un único commit de importación con solo web-admin, kiosk y sus workspaces, sin migraciones ni seed, con docs/informe-importacion.md, y npm ci, los tipos y el build no tienen errores nuevos
+- entonces: se crea un único commit de importación con solo las cinco apps del alcance y sus workspaces, sin migraciones ni seed, con docs/informe-importacion.md, y npm ci, los tipos y el build no tienen errores nuevos
 
 ### BEH-S00-002
 - cubre: REQ-S00-007, REQ-S00-008, REQ-S00-013, REQ-S00-016, REQ-S00-020
@@ -412,7 +414,7 @@ Adhara Fit parte de una copia del Repo A (`gym-app` @ `b4352a0`), que es públic
 - protege: REQ-S00-001
 
 ### INV-S00-006
-- propiedad: las apps y los workspaces del árbol son exactamente web-admin, kiosk y el cierre transitivo de sus dependencias internas
+- propiedad: las apps y los workspaces del árbol son exactamente web-admin, kiosk, kiosk-tv, vitrina, vitrina-tv y el cierre transitivo de sus dependencias internas
 - mecanismo: lint
 - deteccion: tools/verificar-repo.mjs calcula el cierre desde los package.json y termina con código distinto de 0 si sobra o falta un directorio, o si existe una migración con marca igual o anterior a 20261016000000
 - protege: REQ-S00-004, REQ-S00-005
@@ -436,7 +438,7 @@ Adhara Fit parte de una copia del Repo A (`gym-app` @ `b4352a0`), que es públic
 ### AC-S00-003
 - enlaza: REQ-S00-004, INV-S00-006
 - metodo: unitario
-- procedimiento: ejecutar la verificación de apps y workspaces sobre un árbol de prueba con apps/web-admin, apps/kiosk y un workspace requerido, y repetirla añadiendo apps/worker
+- procedimiento: ejecutar la verificación de apps y workspaces sobre un árbol de prueba con apps/web-admin, apps/kiosk, apps/kiosk-tv, apps/vitrina, apps/vitrina-tv y un workspace requerido, y repetirla añadiendo apps/worker
 - esperado: el primer caso termina con código 0 y el segundo con código 1 nombrando apps/worker
 - test: tools/verificar-repo.test.mjs
 
@@ -478,8 +480,8 @@ Adhara Fit parte de una copia del Repo A (`gym-app` @ `b4352a0`), que es públic
 ### AC-S00-009
 - enlaza: REQ-S00-011, BEH-S00-007, BEH-S00-001
 - metodo: manual
-- procedimiento: comprobar que docs/linea-base-tests.md existe con el SHA completo, el número de tests por workspace, los fallos preexistentes, el resultado de lint, tipos, build y npm audit, el tiempo y los archivos de web-admin con tests, y que su commit precede al de importación en git log
-- esperado: el archivo contiene los siete datos y su commit es anterior al de importación
+- procedimiento: comprobar que docs/linea-base-tests.md existe con el SHA completo, el número de tests por workspace, los fallos preexistentes, el resultado de lint, tipos, build y npm audit, el tiempo, los archivos de web-admin con tests y el conteo de archivos con «organización», y que su commit precede al de importación en git log
+- esperado: el archivo contiene los ocho datos y su commit es anterior al de importación
 - test: pendiente
 
 ### AC-S00-010
@@ -555,12 +557,12 @@ Adhara Fit parte de una copia del Repo A (`gym-app` @ `b4352a0`), que es públic
 
 ### 5.2 Migración
 - Condición previa: una copia local del Repo A en `b4352a0`, proporcionada por el propietario, y el repositorio remoto privado; sin ellas el procedimiento se detiene (BEH-S00-007, BEH-S00-016).
-- Procedimiento: (1) `git rev-parse b4352a0` en la copia para obtener el SHA completo y ejecutar la línea base sobre la copia intacta, y registrarlo todo en `docs/linea-base-tests.md`; (2) exportar el árbol con `git archive b4352a0` (sin `.git`) a un directorio nuevo; (3) aplicar la lista cerrada de exclusión y omitir las apps diferidas; (4) recortar los workspaces y regenerar `package-lock.json` (SUP-S00-012); (5) ejecutar gitleaks sobre el árbol y escribir `docs/informe-importacion.md` para aprobación del propietario; (6) copiar al repositorio conservando los archivos propios en las colisiones y crear el commit de importación; (7) ejecutar `tools/verificar-repo.mjs`, el build y gitleaks.
+- Procedimiento: (1) `git rev-parse b4352a0` en la copia para obtener el SHA completo y ejecutar la línea base sobre la copia intacta, y registrarlo todo en `docs/linea-base-tests.md`; (2) exportar el árbol con `git archive b4352a0` (sin `.git`) a un directorio nuevo; (3) aplicar la lista cerrada de exclusión y omitir las apps fuera del alcance (`worker`, `kiosk-host`); (4) recortar los workspaces y regenerar `package-lock.json` (SUP-S00-012); (5) ejecutar gitleaks sobre el árbol y escribir `docs/informe-importacion.md` para aprobación del propietario; (6) copiar al repositorio conservando los archivos propios en las colisiones y crear el commit de importación; (7) ejecutar `tools/verificar-repo.mjs`, el build y gitleaks.
 - «Cambio mínimo» al corregir un build roto significa editar solo archivos de configuración de workspaces (`package.json`, `tsconfig*.json`, `turbo.json`) y nunca código de `src/`.
 - Reversión: antes del primer push, el commit de importación se descarta con `git reset` del propietario; no hay datos que revertir.
 - Corrección al plan: la tarea 0.2 del doc 07 espera «un solo commit inicial» en el repositorio, pero este ya tiene los commits del arnés y la documentación; el criterio pasa a ser «un solo commit de importación sin historia del Repo A».
 - Corrección al plan: el criterio de la tarea 0.3 («búsqueda de cédula/Adrenalina/zip sin hallazgos») no puede cumplirse en S-00, porque el código aún contiene esos términos (doc 09 §5: 40 archivos con *cédula*, 29 con marca anterior); se limita a los archivos de datos y scripts excluidos, y el resto se retira en S-06 y S-10.
-- Corrección al plan: la tarea 0.9 (branding mínimo) pasa a S-10 por depender de P-15 y del logo; la tarea 0.8 (credenciales nuevas) es del propietario y no se verifica en el árbol más que por la ausencia de secretos.
+- Corrección al plan: la tarea 0.9 (branding mínimo) pasa a S-19 (sistema de diseño y rebranding completos, ADR-020) por depender de P-15, del logo y de la tipografía; la tarea 0.8 (credenciales nuevas) es del propietario y no se verifica en el árbol más que por la ausencia de secretos.
 
 ### 5.3 Riesgos
 - Un workspace conservado puede importar una app omitida y romper el build (no verificado); mitigación: el procedimiento no genera el commit y registra el error (BEH-S00-009).
@@ -570,6 +572,8 @@ Adhara Fit parte de una copia del Repo A (`gym-app` @ `b4352a0`), que es públic
 - Puede haber PII fuera de la lista de exclusión (comentarios, fixtures o archivos de datos); mitigación: gitleaks sobre el árbol y revisión del propietario de la lista de archivos de datos conservados (REQ-S00-021).
 - Los falsos positivos de gitleaks bloquearían pull requests; mitigación: allowlist en `.gitleaks.toml` con motivo, visible en el diff del pull request para su revisión (BEH-S00-014).
 - La línea base puede mostrar fallos y vulnerabilidades preexistentes; mitigación: se registran y los criterios de S-00 se miden contra ellos, no contra cero.
+- Las apps de TV (Capacitor y Android) no se compilan en el CI de S-00 y, sin `debug.keystore`, Gradle debería generar el suyo (no verificado); mitigación: se trata en S-20 y S-21 y no se versiona ninguna clave de firma.
+- La vitrina conserva precios en Bs y un emisor SSE en memoria hasta S-10 y S-20; mitigación: no se despliega antes de adaptarla.
 - Dependencia nueva: gitleaks (binario de CI). Justificación: ADR-005 §4 y ADR-012 §7 lo exigen; protege el árbol importado y los pull requests futuros (el repositorio no tiene historia del Repo A) y la alternativa de expresiones regulares locales no cubre formatos de proveedores. La versión de gitleaks y la versión mayor de PostgreSQL se fijan, sin `latest`, en `.github/workflows/ci.yml` y `docker-compose.yml`, y la de PostgreSQL debe coincidir en ambos.
 
 ### 5.4 Preguntas abiertas
@@ -578,6 +582,7 @@ Adhara Fit parte de una copia del Repo A (`gym-app` @ `b4352a0`), que es públic
 - ¿Se activa Dependabot (doc 04 §Seguridad)? Default: no entra en S-00; se evalúa en el plan global.
 - ¿Qué puerto usa `web-admin` en `docker compose`? Default: el que fije `docker-compose.yml` tras leer la configuración del Repo A (no verificado).
 - ¿Cuál es la razón social para el aviso de copyright? Default: «Adhara Fit».
+- ¿Se compilan las apps de TV en el CI de S-00? Default: no; se compilan en S-20 y S-21.
 
 ## Revisión independiente
 
@@ -619,3 +624,6 @@ No aplicado, con motivo:
 - **Valores concretos de versión de gitleaks y PostgreSQL:** no los afirmo porque no puedo verificarlos desde esta sesión; la spec exige fijarlos y que la de PostgreSQL coincida en Compose y CI.
 - **Colisión del ID S-11:** la sugerencia de REVISION-ADR D10 (S-11 = importador) queda sustituida por `docs/superpowers/COBERTURA-RF.md` (el importador pasa a S-16).
 - La versión corregida **no se volvió a pasar por el revisor**.
+
+### Cambio de alcance posterior a la revisión (2026-11-12)
+Decisiones del propietario posteriores al veredicto anterior: la vitrina y el check-in en smart-TV entran en el alcance (ADR-021, enmienda a ADR-009); el negocio es único y se elimina `Organizacion` (ADR-019), por lo que la línea base cuenta los archivos que la mencionan; y el rebranding completo pasa a S-19 (ADR-020). Por eso la spec vuelve a `borrador` hasta que ADR-021 esté aceptado, y esta versión **no ha sido revisada**: el veredicto de arriba describe el alcance anterior.

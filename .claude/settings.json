@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/claude-code-settings.json",
+  "attribution": { "commit": "", "pr": "" },
+  "permissions": {
+    "deny": [
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git push --force-with-lease:*)",
+      "Bash(git commit --no-verify:*)",
+      "Bash(git commit --no-gpg-sign:*)",
+      "Bash(git commit --author:*)",
+      "Bash(git commit --reset-author:*)",
+      "Bash(git config user.:*)",
+      "Bash(git config --global:*)",
+      "Bash(git config commit.gpgsign:*)",
+      "Bash(git config gpg.:*)",
+      "Bash(git config credential.:*)",
+      "Bash(git config adhara.:*)",
+      "Bash(gh auth token:*)",
+      "Bash(gh auth login:*)",
+      "Bash(ssh-keygen:*)",
+      "Bash(printenv:*)",
+      "Read(~/.ssh/**)",
+      "Read(~/.gnupg/**)",
+      "Read(~/.git-credentials)",
+      "Read(~/.config/gh/**)",
+      "Read(./.env)",
+      "Read(./.env.local)",
+      "Read(./.env.production)",
+      "Read(./.env.development)",
+      "Read(./.env.test)",
+      "Read(**/*.pem)",
+      "Read(**/*.keystore)",
+      "Read(**/cookies.txt)",
+      "Edit(./.claude/settings.local.json)",
+      "Write(./.claude/settings.local.json)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-bash.mjs\""
+          }
+        ]
+      }
+    ]
+  }
+}

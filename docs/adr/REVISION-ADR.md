@@ -286,3 +286,144 @@ A las diez de §5 se suman las que levantó el revisor:
 | D20 | Copia local del Repo A para la línea base (ADR-016) | Proporcionarla cuando puedas; sin ella S-04 queda condicionada |
 
 **Ningún ADR cambia de estado hasta que lo ordenes en el chat, ADR por ADR.**
+
+## 9. Revisión de ADR-022 (Drizzle reemplaza a Prisma)
+
+### 9.1 Veredicto de `adr-reviewer` (texto íntegro, sin editar)
+
+# Revisión independiente: ADR-022 (Drizzle reemplaza a Prisma)
+
+Archivo revisado: `/home/user/adhara-fit/docs/adr/ADR-022-drizzle-reemplaza-prisma.md`. Solo lectura, no edité nada. Además de `docs/`, comprobé los hechos contra el clon de solo lectura del Repo A en `/home/user/kaiserone01/gym-app`, con las herramientas de búsqueda que tengo. No tengo acceso a npm, así que las versiones y licencias de `drizzle-orm` y `drizzle-kit` quedan **no re-verificadas**.
+
+## Tabla de veredictos
+
+| ADR | Secciones | Respaldo | Reversible | Dependencias/contradicciones | Protección | Veredicto |
+|---|---|---|---|---|---|---|
+| ADR-022 | Completas: contexto, factores, opciones A-D, decisión, consecuencias, cómo se valida, reversibilidad, dependencias, referencias y preguntas con default. | Parcial. Las citas a `docs/04` y `docs/linea-base-tests.md` §3 son correctas. El conteo de archivos no cuadra consigo mismo (H1) y está mal acotado (H2). El criterio de paridad no tiene prueba que lo respalde (H3). | Sí, pero sin costo medido. "Alta ahora, baja tras S-22" es plausible. | Enmienda ADR-001 y ADR-016 §2 de forma explícita. Tensión con ADR-018/019 y con SUP-S00-002 (H4, H5). Omite ADR-012, ADR-011 y ADR-021 en sus dependencias (H6). La lista de enmiendas es incompleta (H7). | S-22 existe solo como fila del backlog (`docs/superpowers/BACKLOG-SPECS.md:40`). Sus invariantes están "a fijar" y dos no son verificables tal como están escritos (H8). | **Requiere cambios** |
+
+Estado: coherente. Está como **propuesto** y no se presenta como aceptado en ningún sitio. `handoff.md` (líneas 51 y 100) y el backlog también lo tratan como propuesto. La frase "indicación del propietario" se declara correctamente como origen y no como aceptación.
+
+Veredicto global: **Requiere cambios.** No encontré una pregunta que bloquee, porque las cuatro preguntas abiertas tienen default. Los hallazgos H1 a H5 son correcciones de texto o de alcance que el redactor puede hacer sin consultar al propietario.
+
+## Hallazgos (ordenados por gravedad)
+
+**H1. El conteo de archivos es incoherente (Respaldo, Hecho).**
+- El ADR dice "44 archivos", pero desglosa 16 + 24 + 8 + 1, que suman 49.
+- Con el patrón del propio ADR sobre el clon, el sub-conteo `packages/db`, `packages/infrastructure`, `apps/web-admin` y `apps/worker` da 15, 24, 7 y 1, es decir 47 archivos.
+- Las cifras de `$transaction`/`$queryRaw`/`$executeRaw` (20 usos en 14 archivos), de los 23 archivos `Prisma*` y de `package.json:6-8, 27, 28, 32` sí coinciden con el clon.
+- Corregir el conteo, o explicar qué patrón produce 44 y marcarlo como hecho verificado.
+
+**H2. El alcance real está sobrestimado y mal atribuido (Respaldo).**
+- Casi todo `packages/db` se excluye en S-00: 14 scripts de mantenimiento (ADR-005 §3) y el seed (SUP-S00-011). Según mi conteo, el código de `packages/db` que se porta queda en cero archivos.
+- El worker se omite por ADR-009 y SUP-S00-001, no solo por ADR-003 como dice el ADR.
+- 5 repositorios corresponden a modelos que desaparecen: `PrismaTurno`, `PrismaArqueo`, `PrismaEgreso`, `PrismaDeudaProducto` y `PrismaTasaCambio`. Además, `PrismaClientOrTx.ts` es un helper y no un repositorio.
+- Efecto: el esfuerzo de S-22 es menor que "≈44 archivos". Es probable que la opción A cueste menos de lo que el ADR admite. Pero el ADR sigue diciendo "esfuerzo sin medir". Conviene ajustar el texto y medir lo que sobrevive.
+- Dato que reduce riesgo: en el esquema, `Json` solo aparece en dos campos de los modelos del padrón Excel (`schema.prisma:646` y `:663`), que ADR-007 retira.
+- Puntos calientes de SQL crudo o transacciones: `PrismaVitrinaRepository` (4 usos), `PrismaMemberRepository`, `PrismaUsuarioAdminRepository`, `PrismaPermisoRepository`, `caja/actions.ts` (3) y `pagos/actions.ts` (2).
+
+**H3. El criterio de paridad no tiene prueba que lo respalde (el más importante).**
+- La Opción A afirma "se verifica con las pruebas heredadas intactas". La Decisión §6 exige que pasen "las de integración de cada repositorio".
+- Según `docs/linea-base-tests.md` §1, `packages/infrastructure` y `apps/web-admin` tienen **0 tests**.
+- Las 390 pruebas de dominio no importan el ORM (`docs/04:27`, y el propio ADR lo dice). Pasarán igual con cualquier ORM.
+- Las 72 de `packages/db` están en directorios excluidos por S-00.
+- No existen pruebas heredadas de repositorios. S-22 tendría que escribir primero pruebas de caracterización de unos 18 a 23 repositorios sobre PostgreSQL efímero, por ADR-016 §1 y §5 (test primero). Ese trabajo no está dimensionado en el ADR y es el mayor costo oculto.
+- Cambio pedido: reescribir la Opción A y el §6 sin la frase de "pruebas heredadas". Declarar las pruebas de caracterización como parte de S-22. Estimar con el conteo de H2.
+
+**H4. Tensión entre los factores y la opción elegida, y con ADR-019 (Dependencias).**
+- El factor "conviene no portar lo que va a desaparecer" (ADR-018/019/003) lo incumple la opción A. El ADR lo admite en los "contras" pero no lo cuantifica.
+- ADR-019 dice que la cirugía de `organizacionId` (175 archivos según `linea-base-tests.md` §6) se hace "junto con el baseline nuevo para no acumular migraciones". S-22 portaría `organizacionId` a Drizzle para que S-05 lo quite después. Es doble manejo de lo mismo.
+- Sugerencia: cuantificar con H2 (cuántos modelos y repositorios sobreviven) para que la comparación entre A y D sea de verdad. Opción faltante que vale la pena considerar: coexistencia por repositorio, donde cada spec porta los repositorios que ya toca. Tiene costo de dos herramientas de migración.
+
+**H5. Ambigüedad sobre el baseline de migraciones (Decisión §3 y §4 frente a SUP-S00-002/D12).**
+- S-00 (aprobada) fija que el baseline se genera después de las specs que cambian el esquema. Mientras tanto, Compose usa `prisma db push` (SUP-S00-010, REQ-S00-017).
+- El ADR dice en §4 que "el baseline se genera una sola vez con Drizzle". En §3 manda `drizzle-kit generate` y, según la opción A, se porta el esquema tal cual antes de S-05 y S-08.
+- Debe decir qué hace S-22 mientras tanto. Opción coherente: las bases efímeras y de Compose se crean con `drizzle-kit push` (permitido solo en bases desechables) y no se versionan migraciones hasta el baseline final.
+- Sin eso, el repo acumularía una migración "tal cual" que luego se descarta. Eso contradice el principio de ADR-019 de no acumular migraciones.
+- S-22 modificará comportamiento ya aprobado en S-00 (SUP-S00-010 y REQ-S00-017). El ADR dice que "S-00 no cambia" y que sigue válido hasta S-22. Está bien, pero S-22 debe enmendarlo de forma explícita.
+
+**H6. Dependencias y reglas de otros ADR no tratadas.**
+- **ADR-012 (aceptado).** S-22 antecede a S-01 y retrasa las correcciones de seguridad. No es una contradicción, porque S-22 es un refactor y no una funcionalidad. Pero el ADR debe decirlo y listar a ADR-012 como dependencia. ADR-012 criterios 1 y 3 piden nuevos métodos de repositorio y una columna con hash, y se escribirán sobre Drizzle. Una cuestión relacionada: el criterio 4 de ADR-012 (todo caso de uso verifica permisos) no cambia con el ORM.
+- **ADR-011 (propuesto) y `docs/04` §4 y §5.** Los montos son `Decimal(10,2)`/`(14,2)` en la BD y se convierten a céntimos en la frontera del repositorio. Las fechas son instantes UTC y fechas de calendario a las 00:00 `America/Lima`. El ADR no fija cómo se mapearán `numeric` y `timestamp` en Drizzle ni cómo se convierten (no verificado; tengo la impresión de que `numeric` llega como cadena, a confirmar en S-22). Eso afecta invariantes de ADR-011 y de S-02 y S-03. Añadir a los criterios de S-22 el mapeo de `numeric`, `timestamp`, enums y transacciones, con sus pruebas.
+- **ADR-010 y ADR-016.** `RegistrarPago` es transaccional y se prueba con concurrencia real (ADR-016 §5). La semántica de `db.transaction` frente a `$transaction` interactivo es un riesgo no tratado. Falta una prueba de concurrencia de paridad.
+- **ADR-021.** La vitrina entró al alcance y `PrismaVitrinaRepository` es de los más cargados de SQL crudo. Mencionarlo.
+- **ADR-001 (aceptado).** Su Decisión dice "conservando stack, arquitectura y convenciones" y su valor viene de reutilizar infraestructura (doc 11 DI-06: `persistence/prisma`). Reescribir ~18 repositorios erosiona esa ventaja y el estimado de 7 a 9 semanas, y ADR-022 no lo re-estima. La enmienda debe tocar la Decisión de ADR-001 y su estimado de tiempo, no solo una "nota". El patrón de "Enmiendas posteriores" de ADR-003 y ADR-011 sirve de modelo.
+- **ADR-003, ADR-002 y ADR-004** siguen *propuestos*. ADR-022 se apoya en ellos como motivos (modelos que desaparecen) sin ser la base de la decisión. Aun así, por la regla de `CLAUDE.md` §3, S-22 no debería entrar en revisión mientras ADR-022 esté propuesto. Y el efecto práctico es que S-01 a S-21 dependen de S-22: eso no figura en el backlog (S-22 solo depende de S-00, y las otras specs no la listan).
+
+**H7. La lista de enmiendas "solo al aceptarlo" es incompleta.** Faltan referencias a Prisma en estos archivos:
+- `docs/06-modelo-datos-cambios.md`: título, bloques ```prisma, línea 113 (`prisma migrate diff`) y líneas 116 y 117 (`prisma migrate dev`, `validate`, `diff`). Es el documento que define la estrategia de baseline.
+- `docs/01-levantamiento-requerimientos.md:179`.
+- `docs/03-analisis-repo-base.md` líneas 12, 33, 34 y 137.
+- `docs/10-prompt-claude-code.md` líneas 9 y 24.
+- `docs/12-prompt-inicial-claude-code.md` líneas 22 y 51.
+- `docs/00-indice.md:16`.
+- El patrón de `tools/spec-lint.mjs:51` incluye la extensión `.prisma` (menor).
+- `docs/linea-base-tests.md` y `docs/11` DI-01 son históricos y no se editan.
+- Además, la constitución afirma que C-21 se verifica con `guard-bash`, pero no hay en `.claude` ninguna regla sobre `migrate`, `db push` o `drop` (búsqueda sin resultados). El ADR lo señala bien, pero conviene proponer la regla nueva para `drizzle-kit migrate|push|drop` y el cambio de arnés que requiere la aprobación del propietario.
+
+**H8. Protección: invariantes poco verificables.**
+- "Ninguna consulta usa `sql.raw` con entrada externa": no es comprobable con grep ni con lint, porque "entrada externa" no se detecta mecánicamente. Proponer prohibir `sql.raw` por completo, con una lista cerrada de excepciones.
+- "Generar de nuevo no produce cambios" está marcado como no verificado. Es un criterio útil, pero hay que probarlo en un experimento previo.
+- "No contiene `prisma` ni `@prisma/*`" sí es verificable (`package.json` y lockfile). Añadir `schema.prisma` y el directorio `prisma/`.
+- Falta un invariante de paridad transaccional y de mapeo de tipos (ver H6).
+- Falta una verificación previa barata: portar un repositorio representativo antes de aceptar. `PrismaPagoRepository` es el más cargado de transacciones y consultas. Esto ayudaría a acotar el riesgo del 0.x.
+
+## Observaciones menores
+
+- `docs/superpowers/BACKLOG-SPECS.md:12` aún muestra S-00 "En revisión". `handoff.md:35` y el encabezado de la spec dicen "aprobada". ADR-022 acierta al decir que está aprobada. Es un desfase del backlog, no del ADR.
+- `handoff.md` dice "Siete ADR están aceptados" (línea 31) y enumera 11 (línea 7). Es un desfase preexistente.
+- `docs/constitution.md:62` dice que los artículos C-17 a C-21 son provisionales porque los ADR siguen propuestos. ADR-016 y ADR-017 ya están aceptados. También es preexistente.
+- La opción B queda descartada solo por "contradice la decisión del propietario". Es válido como factor, pero conviene que figure entre los factores y no solo en la tabla.
+
+## Decisión que se necesita del propietario (ADR-022)
+
+Después de que el redactor corrija H1 a H8:
+1. Confirmar si acepta S-22 como spec propia entre S-00 y S-01 (opción A), aceptando que S-01 queda detrás de ella. Sin esa respuesta no se puede fijar el orden de G6.
+2. Aceptar o cambiar cuatro defaults: versión estable 0.45.4 fijada exacta, driver `pg`, migrador de ejecución al arrancar el contenedor, y la forma de crear la base durante S-22 (propuesta en H5: `push` solo sobre bases desechables, sin migraciones hasta el baseline final).
+3. Confirmar que acepta que el esfuerzo incluya las pruebas de caracterización de repositorios, porque no existen pruebas heredadas que sirvan de paridad (H3).
+4. Si quiere probar viabilidad antes de aceptar, autorizar un experimento con un repositorio representativo.
+5. Aprobar por separado las enmiendas del arnés y de `CLAUDE.md` (líneas 5 y 67) y de ADR-001/016 y C-21, que solo se aplican tras aceptar el ADR.
+
+La aceptación debe darla el propietario en el chat, registrada como `aceptado (confirmado por el propietario, AAAA-MM-DD)`.
+
+## Grafo de dependencias (texto)
+
+```
+ADR-001 (aceptado, raíz: adaptar gym-app, "conservar stack")
+  ^ enmienda de ADR-022
+ADR-016 §2 (aceptado, Postgres efímero y agente sin migrate contra base real)
+  ^ enmienda de ADR-022 (comando de migración)
+ADR-022 (propuesto)
+  <- motivos: ADR-018 (aceptado) / ADR-019 (aceptado) / ADR-003 (propuesto): modelos que desaparecen
+  <- relacionados, sin listar en el ADR: ADR-012 (aceptado), ADR-011 (propuesto), ADR-010 (propuesto), ADR-021 (aceptado), ADR-009 (aceptado, worker)
+  -> S-22 (propuesta, depende de S-00 aprobada)
+        -> S-01 ... S-21 (dependencia implícita no registrada en el backlog; orden final en G6)
+  -> amenda S-00 aprobada solo en SUP-S00-010 y REQ-S00-017 (en S-22)
+  -> documentos a enmendar: constitución C-21, CLAUDE.md, docs/04, 06, 01, 03, 10, 12, 00-indice
+```
+
+Archivos relevantes:
+- `/home/user/adhara-fit/docs/adr/ADR-022-drizzle-reemplaza-prisma.md`
+- `/home/user/adhara-fit/docs/superpowers/BACKLOG-SPECS.md`
+- `/home/user/adhara-fit/docs/superpowers/specs/S-00-fundaciones-del-repo.md`
+- `/home/user/adhara-fit/docs/linea-base-tests.md`
+- `/home/user/adhara-fit/docs/06-modelo-datos-cambios.md`
+- `/home/user/adhara-fit/docs/04-arquitectura-objetivo.md`
+
+### 9.2 Conciliación (autor)
+Verifiqué cada hallazgo contra el clon antes de corregir.
+
+| Hallazgo | Resultado de mi verificación | Acción |
+|---|---|---|
+| H1 | **Cierto**: mi «44» era un error; el patrón da 16 + 24 + 8 + 1 = **49** (el revisor obtuvo 47 con otro desglose; la diferencia es de método, y uno de los 8 de `web-admin` es `tsconfig.tsbuildinfo`) | Corregido: 49, con el patrón escrito en el ADR |
+| H2 | **Cierto**: de `packages/db` no sobrevive ningún archivo de código tras S-00; 5 repositorios son de modelos que desaparecen; el worker sale también por ADR-009 | Contexto reescrito: quedan unos 17 repositorios, el ayudante y 4 archivos de `web-admin` |
+| H3 | **Cierto**: 0 pruebas en `packages/infrastructure` y `apps/web-admin` (verificado con `find`) | Opción A y Decisión §6 reescritas: S-22 escribe primero pruebas de caracterización |
+| H4 | Cierto y admitido; se agregó la opción E (coexistencia) y el factor de ADR-019 | Aplicado |
+| H5 | Cierto | Decisión §3-§4: `drizzle-kit push` solo en bases desechables y baseline único; S-22 enmienda SUP-S00-010 y REQ-S00-017 |
+| H6 | Cierto | Dependencias ampliadas (ADR-012, 011, 010, 016, 021, 001, 009); S-01 a S-21 dependen de S-22 |
+| H7 | Cierto | Lista de enmiendas ampliada |
+| H8 | Cierto | `sql.raw` prohibido por completo con lista cerrada; invariantes ampliados; experimento previo como pregunta 6 |
+| Observaciones menores | El desfase del backlog (S-00 «En revisión») era real | Corregido en `BACKLOG-SPECS.md`; los otros dos desfases (constitución C-17 a C-21; «siete ADR» en el handoff) quedan anotados para corregir sin cambiar estados |
+
+El revisor no tuvo acceso a npm; yo sí confirmé con `npm view` el 2026-11-12: `drizzle-orm` 0.45.4 (Apache-2.0) y `drizzle-kit` 0.31.11 (MIT).
+
+**Veredicto del autor tras las correcciones:** *Requiere decisión del propietario* (opción A y defaults 1 a 6 del ADR). No cambio ningún estado.

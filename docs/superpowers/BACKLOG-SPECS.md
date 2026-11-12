@@ -9,7 +9,7 @@ Vienen del documento 10 (§2.C). Convierten el código heredado en el sistema de
 
 | Spec | Qué es, en simple | Estado |
 |---|---|---|
-| **S-00 Fundaciones** | Traer el código del Repo A **sin su historia, sin datos de otro negocio, sin claves**; dejar listo Docker, la verificación automática (CI) y el control de secretos. Es la primera: sin ella no hay código. | **En revisión** |
+| **S-00 Fundaciones** | Traer el código del Repo A **sin su historia, sin datos de otro negocio, sin claves**; dejar listo Docker, la verificación automática (CI) y el control de secretos. Es la primera: sin ella no hay código. | **Aprobada** (2026-11-12) |
 | S-01 Seguridad base | Las cuentas desactivadas no entran; límite de intentos de login; la clave del kiosco se guarda cifrada y se puede cambiar; cada operación comprueba permisos; ningún script destructivo. | Por redactar |
 | S-02 Hora de Lima | Hoy el sistema usa la hora de Caracas (UTC-4). Pasa a la de Lima (UTC-5) en todas partes y a formato peruano. | Por redactar |
 | S-03 Dinero y métodos de pago | Todo en soles y en céntimos enteros (sin errores de redondeo); métodos de Perú: efectivo, Yape/Plin, tarjeta, transferencia, depósito. Sin dólares ni bolívares. | Por redactar |
@@ -37,7 +37,7 @@ No estaban en los documentos 01 a 12: las agregué tras cruzar **todos los requi
 | **S-19 Sistema de diseño y rebranding** | Identidad completa de Adhara Fit: colores, tipografía, componentes, estados y patrones, iguales en panel, kiosco, kiosco en TV y vitrina. | Tu decisión (ADR-020). **Aprobada como ítem**; su contenido aún no. | S-10 | **Ítem aprobado** |
 | **S-20 Vitrina de TV** | Heredar lo que resuelve la vitrina actual: carteles de entrenador, promoción y producto, con imagen o video, vigencia, orden y precios; adaptada a soles y a la marca nueva. | Entra al alcance por tu decisión (ADR-021). | S-03, S-19 | Propuesta |
 | **S-21 Check-in en smart-TV** | El kiosco funcionando en un Android TV, con **teclado numérico USB** conectado. | Entra al alcance por tu decisión (ADR-021). | S-05, S-06, S-19 | Propuesta |
-| **S-22 Capa de datos con Drizzle** | Reemplazar Prisma por Drizzle en el acceso a la base de datos, sin cambiar el comportamiento; se hace justo después de S-00 y antes de S-01. | Tu indicación del 2026-11-12; ADR-022 (propuesto, espera tu aceptación). | S-00 | Propuesta |
+| **S-22 Capa de datos con Drizzle** | Reemplazar Prisma por Drizzle en el acceso a la base de datos, sin cambiar el comportamiento; se hace justo después de S-00 y antes de S-01. | Tu indicación del 2026-11-12; ADR-022 (propuesto, espera tu aceptación). Incluye pruebas de los repositorios, que hoy no existen. S-01 a S-21 dependerían de ella. | S-00 | Propuesta |
 
 ## C. Qué decides tú
 1. Si entran todas las de la sección B (o cuáles).

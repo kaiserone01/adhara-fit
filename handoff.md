@@ -28,7 +28,7 @@ Construir **Adhara Fit** (gimnasio en Perú, un local, PEN, sistema web interno)
 | ADR-015 | **propuesto** (el revisor pidió cambios menores; ya corregidos) |
 | ADR-018, 019, 020, 021 | **aceptado (confirmado por el propietario, 2026-11-12)**: 018 sin turnos, arqueo, egresos ni fiado; 019 negocio único (opción B, eliminar `Organizacion`); 020 sistema de diseño y rebranding; 021 vitrina y check-in en smart-TV (enmienda la tabla de ADR-009) |
 
-Siete ADR están aceptados (001, 005, 009, 012, 014, 016, 017). Solo el propietario cambia un estado, ADR por ADR, registrándolo como `aceptado (confirmado por el propietario, AAAA-MM-DD)`.
+Once ADR están aceptados (001, 005, 009, 012, 014, 016, 017, 018, 019, 020, 021). Solo el propietario cambia un estado, ADR por ADR, registrándolo como `aceptado (confirmado por el propietario, AAAA-MM-DD)`.
 
 | Spec | Estado |
 |---|---|
@@ -97,7 +97,8 @@ Siete ADR están aceptados (001, 005, 009, 012, 014, 016, 017). Solo el propieta
 - `docs/superpowers/BACKLOG-SPECS.md`: mapa de specs en lenguaje simple (entregado al propietario en el zip).
 - `docs/superpowers/specs/S-00-fundaciones-del-repo.md`: marcada `aprobada` (`aprobada_por: propietario`, `fecha_aprobacion: 2026-11-12`); `TRAZABILIDAD.md` regenerada.
 - `handoff.md`: actualizado tras la aprobación de S-00.
-- `docs/adr/ADR-022-drizzle-reemplaza-prisma.md`: nuevo, *propuesto*; opciones A a D, decisión propuesta, enmiendas que arrastra (ADR-001, ADR-016 §2, constitución C-21, `CLAUDE.md`, `docs/04`) y 4 preguntas con default.
+- `docs/adr/ADR-022-drizzle-reemplaza-prisma.md`: nuevo, *propuesto*; opciones A a E, decisión propuesta, enmiendas que arrastra (ADR-001, ADR-016 §2, constitución C-21, `CLAUDE.md` y los docs 00, 01, 03, 04, 06, 10, 12) y 6 preguntas con default. Corregido tras la revisión independiente: el conteo de archivos con Prisma es 49 (no 44) y no existen pruebas de repositorios heredadas, de modo que S-22 las escribe primero.
+- `docs/adr/REVISION-ADR.md` §9: veredicto íntegro de `adr-reviewer` sobre ADR-022 (*Requiere cambios*) y conciliación del autor. Queda anotado, sin editar la constitución aprobada, que su aviso de «C-17 a C-21 provisionales» ya no es exacto para ADR-016 y ADR-017.
 - `docs/superpowers/BACKLOG-SPECS.md`: añadida la fila S-22 (propuesta).
 
 ## 4. Intentos fallidos

@@ -423,15 +423,15 @@ Archivo: `S-08-registro-continuo-de-cobros.md` · REQ: 57 · BEH: 29 · INV: 4 �
 | REQ-S08-056 | MUST | BEH-S08-028 | — | AC-S08-015 (integracion) | pendiente |
 | REQ-S08-057 | MUST | BEH-S08-022, BEH-S08-029 | — | AC-S08-011 (unitario) | pendiente |
 
-## S-09 — Eliminar miembro (conserva los pagos) y anonimización de sus datos personales (en-revision)
+## S-09 — Eliminar miembro: la baja lógica que oculta al miembro y conserva sus pagos (borrador)
 
-Archivo: `S-09-eliminar-miembro-y-anonimizacion.md` · REQ: 37 · BEH: 24 · INV: 5 · AC: 10
+Archivo: `S-09-eliminar-miembro.md` · REQ: 27 · BEH: 19 · INV: 4 · AC: 9
 
 | REQ | Prioridad | BEH | INV | AC (método) | Test |
 |---|---|---|---|---|---|
 | REQ-S09-001 | MUST | BEH-S09-001 | — | AC-S09-001 (sql) | pendiente |
 | REQ-S09-002 | MUST | BEH-S09-001 | — | AC-S09-001 (sql) | pendiente |
-| REQ-S09-003 | MUST | BEH-S09-001 | — | AC-S09-001 (sql) | pendiente |
+| REQ-S09-003 | MUST | BEH-S09-001 | INV-S09-002 | AC-S09-001 (sql) | pendiente |
 | REQ-S09-004 | MUST | BEH-S09-002 | — | AC-S09-002 (integracion) | pendiente |
 | REQ-S09-005 | MUST | BEH-S09-003, BEH-S09-004 | — | AC-S09-003 (integracion) | pendiente |
 | REQ-S09-006 | MUST | BEH-S09-003 | INV-S09-001 | AC-S09-003 (integracion) | pendiente |
@@ -439,33 +439,23 @@ Archivo: `S-09-eliminar-miembro-y-anonimizacion.md` · REQ: 37 · BEH: 24 · INV
 | REQ-S09-008 | MUST | BEH-S09-005 | — | AC-S09-003 (integracion) | pendiente |
 | REQ-S09-009 | MUST | BEH-S09-006 | — | AC-S09-003 (integracion) | pendiente |
 | REQ-S09-010 | MUST | BEH-S09-007 | — | AC-S09-003 (integracion) | pendiente |
-| REQ-S09-011 | MUST | BEH-S09-008 | — | AC-S09-003 (integracion) | pendiente |
-| REQ-S09-012 | MUST | BEH-S09-009 | INV-S09-004 | AC-S09-004 (integracion) | pendiente |
-| REQ-S09-013 | MUST | BEH-S09-009 | INV-S09-004 | AC-S09-004 (integracion) | pendiente |
-| REQ-S09-014 | MUST | BEH-S09-009, BEH-S09-010 | — | AC-S09-004 (integracion) | pendiente |
-| REQ-S09-015 | MUST | BEH-S09-011, BEH-S09-012 | INV-S09-004 | AC-S09-004 (integracion) | pendiente |
-| REQ-S09-016 | MUST | BEH-S09-011 | — | AC-S09-004 (integracion) | pendiente |
-| REQ-S09-017 | MUST | BEH-S09-009 | INV-S09-001 | AC-S09-003 (integracion), AC-S09-004 (integracion) | pendiente |
-| REQ-S09-018 | MUST | BEH-S09-013, BEH-S09-014, BEH-S09-015 | INV-S09-003 | AC-S09-005 (integracion), AC-S09-006 (integracion) | pendiente |
+| REQ-S09-011 | MUST | BEH-S09-008, BEH-S09-009, BEH-S09-010 | INV-S09-003 | AC-S09-004 (integracion), AC-S09-005 (integracion) | pendiente |
+| REQ-S09-012 | MUST | BEH-S09-011 | — | AC-S09-005 (integracion) | pendiente |
+| REQ-S09-013 | MUST | BEH-S09-011 | — | AC-S09-005 (integracion) | pendiente |
+| REQ-S09-014 | MUST | BEH-S09-012 | INV-S09-003 | AC-S09-004 (integracion), AC-S09-005 (integracion) | pendiente |
+| REQ-S09-015 | MUST | BEH-S09-009, BEH-S09-013 | INV-S09-003 | AC-S09-004 (integracion), AC-S09-005 (integracion) | pendiente |
+| REQ-S09-016 | MUST | BEH-S09-014 | — | AC-S09-005 (integracion) | pendiente |
+| REQ-S09-017 | MUST | BEH-S09-014 | — | AC-S09-005 (integracion) | pendiente |
+| REQ-S09-018 | MUST | BEH-S09-015 | — | AC-S09-005 (integracion) | pendiente |
 | REQ-S09-019 | MUST | BEH-S09-016 | — | AC-S09-006 (integracion) | pendiente |
 | REQ-S09-020 | MUST | BEH-S09-016 | — | AC-S09-006 (integracion) | pendiente |
-| REQ-S09-021 | MUST | BEH-S09-017 | INV-S09-003 | AC-S09-005 (integracion), AC-S09-006 (integracion) | pendiente |
-| REQ-S09-022 | MUST | BEH-S09-014, BEH-S09-018 | INV-S09-003 | AC-S09-005 (integracion), AC-S09-006 (integracion) | pendiente |
-| REQ-S09-023 | MUST | BEH-S09-019 | — | AC-S09-006 (integracion) | pendiente |
-| REQ-S09-024 | MUST | BEH-S09-019 | — | AC-S09-006 (integracion) | pendiente |
-| REQ-S09-025 | MUST | BEH-S09-020 | — | AC-S09-006 (integracion) | pendiente |
-| REQ-S09-026 | MUST | BEH-S09-021 | — | AC-S09-007 (integracion) | pendiente |
-| REQ-S09-027 | MUST | BEH-S09-021 | — | AC-S09-007 (integracion) | pendiente |
-| REQ-S09-028 | MUST | BEH-S09-022 | — | AC-S09-008 (manual) | pendiente |
-| REQ-S09-029 | MUST | BEH-S09-022 | — | AC-S09-008 (manual) | pendiente |
-| REQ-S09-030 | MUST | BEH-S09-022 | — | AC-S09-008 (manual) | pendiente |
-| REQ-S09-031 | MUST | BEH-S09-002 | — | AC-S09-002 (integracion) | pendiente |
-| REQ-S09-032 | MUST | BEH-S09-023 | INV-S09-005 | AC-S09-009 (unitario) | pendiente |
-| REQ-S09-033 | MUST | BEH-S09-023 | INV-S09-005 | AC-S09-009 (unitario) | pendiente |
-| REQ-S09-034 | MUST | BEH-S09-024 | — | AC-S09-010 (manual) | pendiente |
-| REQ-S09-035 | MUST | BEH-S09-001 | INV-S09-002 | AC-S09-001 (sql) | pendiente |
-| REQ-S09-036 | MUST | BEH-S09-001 | INV-S09-002 | AC-S09-001 (sql) | pendiente |
-| REQ-S09-037 | MUST | BEH-S09-022 | — | AC-S09-008 (manual) | pendiente |
+| REQ-S09-021 | MUST | BEH-S09-017 | — | AC-S09-007 (manual) | pendiente |
+| REQ-S09-022 | MUST | BEH-S09-017 | — | AC-S09-007 (manual) | pendiente |
+| REQ-S09-023 | MUST | BEH-S09-017 | — | AC-S09-007 (manual) | pendiente |
+| REQ-S09-024 | MUST | BEH-S09-002 | — | AC-S09-002 (integracion) | pendiente |
+| REQ-S09-025 | MUST | BEH-S09-018 | INV-S09-004 | AC-S09-008 (unitario) | pendiente |
+| REQ-S09-026 | MUST | BEH-S09-018 | INV-S09-004 | AC-S09-008 (unitario) | pendiente |
+| REQ-S09-027 | MUST | BEH-S09-019 | — | AC-S09-009 (manual) | pendiente |
 
 ## S-22 — Capa de datos con Drizzle: esquema, repositorios, transacciones y retiro de Prisma (aprobada)
 

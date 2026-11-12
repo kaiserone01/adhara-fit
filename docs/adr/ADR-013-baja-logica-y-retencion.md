@@ -49,3 +49,6 @@ Estado: **aceptado** (confirmado por el propietario, 2026-11-12) · propuesto el
 - **Denominación:** en pantalla la acción se llama **«Eliminar»** y el estado «Eliminado»; «dar de baja» deja de usarse. Por dentro el comportamiento es el de la Decisión 1: el miembro deja de aparecer en listados y kiosco y **conserva sus pagos y suscripciones**; el nombre técnico del estado puede seguir siendo `BAJA`. La confirmación de la pantalla debe decir que los pagos se conservan.
 - La Decisión 4 sigue válida: el permiso `ELIMINAR` de `MIEMBROS` es el que autoriza esta acción.
 - La anonimización a pedido (Decisión 2) sigue siendo el único modo de quitar los datos personales.
+
+## Enmiendas posteriores (2026-11-12, orden del propietario)
+- **Anonimización descartada:** el propietario indicó que no se necesita anonimizar datos. La Decisión 2 (`AnonimizarMiembro`) y la Decisión 5 (check-ins solo agregados al anonimizar) quedan sin efecto; un miembro eliminado conserva todos sus datos, incluidos los personales. Siguen vigentes la baja lógica con la denominación «Eliminar», la conservación de pagos y suscripciones, el permiso `ELIMINAR` de `MIEMBROS` y la restauración. El borrado físico por retención (Decisión 3) sigue pendiente de P-20 y no se implementa.

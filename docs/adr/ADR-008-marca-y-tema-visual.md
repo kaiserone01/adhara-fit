@@ -5,6 +5,12 @@ Estado: **propuesto** (2026-11-11) · Confirmar P-15
 ## Contexto
 El base usa el tema "Adrenalina Xtreme": verde `#93e83a` sobre negro verdoso, con tokens `--gx-*` en `packages/theming/tokens.ts`. El logo de Adhara Fit (PDF recibido): rectángulo negro, kettlebell **amarillo** con una "A" negra y el texto "ADHARA FIT" en blanco.
 
+## Factores de decisión
+*Sección añadida en el pase formal F (2026-11-12, autorizado por el propietario). Derivada del texto del ADR y de los docs 09/11; no cambia la decisión ni el estado.*
+- Identidad de marca de Adhara Fit (colores medidos del PDF recibido; P-15 por confirmar).
+- Accesibilidad: contraste AA y no depender solo del color (RNF-10).
+- El tema es fijo, no dinámico por organización.
+
 ## Decisión
 Reemplazar los tokens por la paleta de marca (colores **medidos** del PDF; confirmar con manual de marca):
 
@@ -25,7 +31,26 @@ Reemplazar los tokens por la paleta de marca (colores **medidos** del PDF; confi
 - El logo se incorpora como SVG/PNG en `apps/*/public/branding/`; vectorizar desde el PDF.
 - Tipografía: mantener la del base; el logo usa una sans humanista. Evaluar `Open Sans`/similar.
 
+## Alternativas
+*Sección añadida en el pase formal F; alternativas inferidas del texto del ADR.*
+| Alternativa | Pros | Contras |
+|---|---|---|
+| **A. Reemplazar los tokens por la paleta de marca (elegida)** | Identidad coherente con el local | El estado "activo" amarillo es menos intuitivo que verde |
+| B. Mantener el tema "Adrenalina Xtreme" | Cero trabajo | Es la identidad del cliente anterior |
+| C. Paleta de marca, pero verde solo para el "OK" semántico | Estado más intuitivo | Mezcla dos acentos; el ADR la deja como alternativa a validar en pruebas de usabilidad |
+
 ## Consecuencias
 - (+) Identidad coherente con el local.
 - (−) El estado "activo" amarillo es menos intuitivo que verde: validar en pruebas de usabilidad del kiosco; alternativa: mantener verde solo para "OK" semántico.
 - El tema sigue **fijo** (no dinámico por organización) como en el base (`TemaOrganizacion` sin consumidor).
+
+## Cómo se valida
+*(Pase formal F.)*
+- **Spec:** S-10 solo cubre retirar la marca anterior; instalar la nueva no tiene spec propia (ver `REVISION-ADR.md` §7).
+- **Criterio a fijar:** contraste ≥ 4,5:1 calculado por script para cada par texto/fondo usado. En la revisión G3, `--gx-bad` sobre `--gx-surface-2` dio 4,08:1.
+
+## Reversibilidad
+*(Pase formal F.)* Alta: son tokens de diseño.
+
+## Dependencias
+*(Pase formal F.)* ADR-009 (qué apps llevan marca), ADR-010 (estados activo/gracia/vencido). Pendiente P-15. Hallazgos abiertos de la revisión G3: ver `REVISION-ADR.md` §4, §7 y §8.4.

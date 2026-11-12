@@ -557,6 +557,56 @@ Archivo: `S-11-productos-sin-fiado.md` · REQ: 37 · BEH: 21 · INV: 4 · AC: 14
 | REQ-S11-036 | MUST | BEH-S11-020 | INV-S11-004 | AC-S11-012 (unitario), AC-S11-013 (unitario) | pendiente |
 | REQ-S11-037 | MUST | BEH-S11-021 | — | AC-S11-014 (manual) | pendiente |
 
+## S-12 — Tickets de pago y registro de comprobantes, desarrollados y apagados (en-revision)
+
+Archivo: `S-12-tickets-y-comprobantes.md` · REQ: 43 · BEH: 20 · INV: 4 · AC: 13
+
+| REQ | Prioridad | BEH | INV | AC (método) | Test |
+|---|---|---|---|---|---|
+| REQ-S12-001 | MUST | BEH-S12-001 | — | AC-S12-001 (integracion) | pendiente |
+| REQ-S12-002 | MUST | BEH-S12-002 | — | AC-S12-002 (integracion) | pendiente |
+| REQ-S12-003 | MUST | BEH-S12-002 | — | AC-S12-002 (integracion) | pendiente |
+| REQ-S12-004 | MUST | BEH-S12-003 | INV-S12-001 | AC-S12-001 (integracion) | pendiente |
+| REQ-S12-005 | MUST | BEH-S12-003 | INV-S12-001 | AC-S12-001 (integracion) | pendiente |
+| REQ-S12-006 | MUST | BEH-S12-003 | INV-S12-001 | AC-S12-001 (integracion) | pendiente |
+| REQ-S12-007 | MUST | BEH-S12-001 | INV-S12-001 | AC-S12-001 (integracion) | pendiente |
+| REQ-S12-008 | MUST | BEH-S12-004 | INV-S12-002 | AC-S12-003 (integracion), AC-S12-010 (integracion) | pendiente |
+| REQ-S12-009 | MUST | BEH-S12-004 | — | AC-S12-003 (integracion) | pendiente |
+| REQ-S12-010 | MUST | BEH-S12-005 | INV-S12-002 | AC-S12-003 (integracion), AC-S12-010 (integracion) | pendiente |
+| REQ-S12-011 | MUST | BEH-S12-004 | — | AC-S12-003 (integracion) | pendiente |
+| REQ-S12-012 | MUST | BEH-S12-006 | — | AC-S12-004 (unitario) | pendiente |
+| REQ-S12-013 | MUST | BEH-S12-006 | — | AC-S12-004 (unitario) | pendiente |
+| REQ-S12-014 | MUST | BEH-S12-006 | — | AC-S12-004 (unitario) | pendiente |
+| REQ-S12-015 | MUST | BEH-S12-006 | — | AC-S12-004 (unitario) | pendiente |
+| REQ-S12-016 | MUST | BEH-S12-007 | — | AC-S12-005 (manual) | pendiente |
+| REQ-S12-017 | MUST | BEH-S12-008 | — | AC-S12-006 (integracion) | pendiente |
+| REQ-S12-018 | MUST | BEH-S12-008 | — | AC-S12-006 (integracion) | pendiente |
+| REQ-S12-019 | MUST | BEH-S12-008 | — | AC-S12-006 (integracion) | pendiente |
+| REQ-S12-020 | MUST | BEH-S12-009 | INV-S12-003 | AC-S12-007 (integracion) | pendiente |
+| REQ-S12-021 | MUST | BEH-S12-010 | — | AC-S12-008 (integracion) | pendiente |
+| REQ-S12-022 | MUST | BEH-S12-010 | — | AC-S12-008 (integracion) | pendiente |
+| REQ-S12-023 | MUST | BEH-S12-010 | — | AC-S12-008 (integracion) | pendiente |
+| REQ-S12-024 | MUST | BEH-S12-010 | — | AC-S12-008 (integracion) | pendiente |
+| REQ-S12-025 | MUST | BEH-S12-011 | — | AC-S12-008 (integracion) | pendiente |
+| REQ-S12-026 | MUST | BEH-S12-011 | — | AC-S12-008 (integracion) | pendiente |
+| REQ-S12-027 | MUST | BEH-S12-012 | INV-S12-002 | AC-S12-003 (integracion), AC-S12-009 (integracion), AC-S12-010 (integracion) | pendiente |
+| REQ-S12-028 | MUST | BEH-S12-012 | INV-S12-002 | AC-S12-003 (integracion), AC-S12-009 (integracion), AC-S12-010 (integracion) | pendiente |
+| REQ-S12-029 | MUST | BEH-S12-012, BEH-S12-013 | — | AC-S12-009 (integracion) | pendiente |
+| REQ-S12-030 | MUST | BEH-S12-014 | — | AC-S12-009 (integracion) | pendiente |
+| REQ-S12-031 | MUST | BEH-S12-014 | — | AC-S12-009 (integracion) | pendiente |
+| REQ-S12-032 | MUST | BEH-S12-015 | — | AC-S12-010 (integracion) | pendiente |
+| REQ-S12-033 | MUST | BEH-S12-016 | INV-S12-002 | AC-S12-003 (integracion), AC-S12-010 (integracion) | pendiente |
+| REQ-S12-034 | MUST | BEH-S12-017 | — | AC-S12-010 (integracion) | pendiente |
+| REQ-S12-035 | MUST | BEH-S12-017 | — | AC-S12-010 (integracion) | pendiente |
+| REQ-S12-036 | MUST | BEH-S12-018 | INV-S12-004 | AC-S12-011 (integracion), AC-S12-012 (unitario) | pendiente |
+| REQ-S12-037 | MUST | BEH-S12-018 | — | AC-S12-011 (integracion) | pendiente |
+| REQ-S12-038 | MUST | BEH-S12-019 | INV-S12-004 | AC-S12-012 (unitario) | pendiente |
+| REQ-S12-039 | MUST | BEH-S12-019 | INV-S12-004 | AC-S12-012 (unitario) | pendiente |
+| REQ-S12-040 | MUST | BEH-S12-020 | — | AC-S12-013 (manual) | pendiente |
+| REQ-S12-041 | MUST | BEH-S12-006 | — | AC-S12-004 (unitario) | pendiente |
+| REQ-S12-042 | MUST | BEH-S12-007 | — | AC-S12-005 (manual) | pendiente |
+| REQ-S12-043 | MUST | BEH-S12-011 | — | AC-S12-008 (integracion) | pendiente |
+
 ## S-15 — Línea base de la base de datos y datos iniciales de Adhara Fit (en-revision)
 
 Archivo: `S-15-linea-base-y-datos-iniciales.md` · REQ: 31 · BEH: 20 · INV: 4 · AC: 14

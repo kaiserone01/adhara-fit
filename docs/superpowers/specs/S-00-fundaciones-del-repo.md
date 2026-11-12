@@ -37,7 +37,7 @@ Adhara Fit parte de una copia del Repo A (`gym-app` @ `b4352a0`), que es públic
 - Generar el baseline de migraciones de Prisma y el seed de Adhara: ocurren cuando el esquema deje de cambiar (SUP-S00-002).
 - Rotar o crear credenciales nuevas (plan 0.8): tarea operativa del propietario; esta spec solo exige que no haya credenciales del Repo A en el árbol.
 - Hacer privado o depurar el Repo A (plan 0.1) y configurar la protección de `main` en GitHub: acciones del propietario (`docs/ops/github-setup.md`), fuera de este repositorio.
-- Funcionalidades de productos (venta con cobro inmediato, RF-37, y fiado, RF-38): se copian tal como están en el Repo A y no se modifican aquí; su adaptación se propone como spec aparte en `docs/superpowers/COBERTURA-RF.md`, pendiente de aprobación del propietario.
+- Funcionalidades de productos (venta con cobro inmediato, RF-37): se copian tal como están y no se modifican aquí; el fiado (RF-38), los egresos y los turnos de caja quedan retirados por decisión del propietario (ADR-018) y se eliminan en las specs de productos y de pagos, no en S-00. La spec de productos se propone en `docs/superpowers/COBERTURA-RF.md`.
 - SUNAT, WhatsApp, `kiosk-host`, sitio público y multi-sede visible.
 - Adaptación de la vitrina y del kiosco en TV (PEN, contenido, claves de Android, APK y su CI): specs S-20 y S-21, propuestas; S-00 solo las importa sin cambios.
 

@@ -24,7 +24,7 @@ Leyenda: ✅ cubierto por la spec indicada · ◐ cubierto en parte · ⚪ hered
 | RF-35 | ~~Turnos de caja y arqueo~~ **Retirado** (ADR-018 propuesto: sin turnos ni arqueo) | S-08 reformulada | S-08 pasa a cubrir el registro continuo de cobros y el reporte diario por método y usuario |
 | RF-36 | Histórico de pagos imprimible | ⚪ (ajuste de PEN en S-03/S-10) | Impresión: sin criterio propio |
 | **RF-37** | **Venta de productos con cobro inmediato (S)** | ❌ | **Sin spec** |
-| **RF-38** | **Fiado de productos y cobro de deudas (C, P-06 sin respuesta)** | ❌ | **Sin spec; default de `docs/08`: conservado pero oculto** |
+| ~~RF-38~~ | ~~Fiado de productos y cobro de deudas~~ **Retirado** (decisión del propietario 2026-11-12: sin fiado; P-06 respondida) | — | Se elimina en la spec de productos (S-11); ver ADR-018 |
 | **RF-39** | **Tipo y n.º de comprobante por pago (M, nuevo)** | ◐ S-03 solo el catálogo de métodos | Plan 2.1 sin spec (ADR-006) |
 | RF-50…RF-55, RF-57 | Kiosco, check-in, cola offline, En sala, reposo | ✅ S-05, S-06 / ⚪ | — |
 | RF-60, RF-61 | Configuración de métodos y gracia; usuarios y permisos | ✅ S-03, S-05, S-01 | — |
@@ -49,7 +49,7 @@ Los IDs son estables: las specs nuevas continúan la numeración. Orden y depend
 
 | Spec propuesta | Cubre | Depende de (specs) | Nota |
 |---|---|---|---|
-| **S-11 Productos y fiado** | RF-37, RF-38, tarea 1.12; permisos de productos (DI-57), vender sin turno (ADR-018; DI-69 deja de aplicar), precios en PEN | S-01, S-03, S-08 | Decisión P-06: ver §4 |
+| **S-11 Productos (sin fiado)** | RF-37; elimina el fiado (RF-38 retirado, la tarea 1.12 pierde sentido); permisos de productos (DI-57); vender sin turno (ADR-018) y precios en PEN | S-01, S-03, S-08 | P-06 respondida: productos sí, fiado no |
 | S-12 Comprobantes de pago | RF-39, plan 2.1, ADR-006 | S-03, S-04 | Registro, no emisión |
 | S-13 Consentimiento y aviso legal | RF-15, RF-72, RF-71, plan 2.2 y 2.3 | S-06, S-09 | Textos legales a revisar por abogado |
 | S-14 Reportes | RF-62, RF-36, plan 2.5 | S-04, S-12 | Morosos, por vencer, ingresos por método |
@@ -66,7 +66,7 @@ Los IDs son estables: las specs nuevas continúan la numeración. Orden y depend
 |---|---|---|
 | E1 | ¿Aprobar S-11…S-18 como ampliación del backlog (o elegir cuáles)? | Aprobar S-11 ya; el resto, ordenadas por el plan global |
 | E2 | **Productos:** ¿se venden productos en Adhara (RF-37)? | Sí (RF-37 está en el MVP) |
-| E3 | **Fiado (P-06, sin respuesta):** ¿el fiado se usa (RF-38)? Default de `docs/08`: «conservado pero oculto». Ojo: ADR-010 decidió **borrar, no ocultar**, los abonos; ocultar el fiado deja código y pantallas muertos | Decidir: **eliminar el fiado** del MVP (como los abonos) o conservarlo visible. Si no hay respuesta, aplico el default de `docs/08` y lo marco «asumido, por validar» |
+| E3 | ~~Fiado (P-06)~~ **Respondida el 2026-11-12: sin fiado** | Aplicado en ADR-018 y en S-11 |
 | E4 | ¿Se necesita un ADR para fiado/productos? | Solo si decides eliminar el fiado (decisión de producto con consecuencias en datos) |
 | E5 | ¿Cuáles de S-12…S-18 son MVP y cuáles post-MVP? | PRD Release 1 incluye comprobante, consentimiento, reportes y despliegue: todas MVP salvo lo que decidas diferir |
 
@@ -83,7 +83,7 @@ El propietario decidió el 2026-11-12 que no habrá turnos de caja y que el arqu
 | Plan (doc 07) | Pierden vigencia las tareas 1.16 (traspaso) y el criterio de turno de 1.3b; 0.11 deja de probar `CerrarTurno` |
 | ADR propuestos | Enmiendas en ADR-002, 003, 010 y 011 cuando el propietario acepte ADR-018 (detalle en el propio ADR) |
 
-Pregunta abierta con default: **egresos**. Default: se conservan como registro de gasto con fecha y usuario, sin turno (asumido, por validar).
+**Egresos:** respondida el 2026-11-12: **sin egresos**. El sistema solo captura la recepción de pagos de membresías y productos (ADR-018).
 
 ## 6. Sistema de diseño: lo documentado y lo que falta
 **Documentado:** ADR-008 (paleta de marca con tokens `--gx-*`, contrastes calculados, estado «activo» con icono y texto, tema fijo, logo como SVG/PNG en `apps/*/public/branding/`, tipografía «mantener la del base»), `docs/03` (paquetes `ui`, `theming` y `design-system`, algunos vacíos), `docs/11` DI-05 (`design-system` y `config` solo con `.gitkeep` y `package.json`), RNF-10, P-15 (colores y tipografía sin confirmar), plan 0.9 (branding mínimo) y, para el kiosco, DI-48, DI-50 y DI-51 (caras de estado, umbral `por_vencer` de 5 días, reposo).
@@ -100,5 +100,12 @@ El propietario aclaró que Adhara Fit no es un SaaS que atienda a varias organiz
 | 3 | La vitrina entra en el alcance y el check-in también en smart-TV (ADR-021, enmienda a ADR-009) | Nuevas S-20 y S-21; S-00 importa cinco apps; `CLAUDE.md` §5, constitución C-24 y S-00 actualizados |
 | 4 | S-19 aprobada como ítem del backlog | Su contenido se redactará y aprobará como cualquier otra spec |
 
-Siguen abiertos: aceptación de ADR-018, ADR-019, ADR-020 y ADR-021; cómo se digita el DNI en el TV; qué muestra la vitrina; el fiado (P-06); `kiosk-host`; y qué specs de S-11 a S-18 se aprueban.
+Siguen abiertos: aceptación de ADR-018 (ahora también sin egresos ni fiado)
 
+## 9. Tercera ronda de decisiones del propietario (2026-11-12)
+| # | Decisión | Efecto |
+|---|---|---|
+| 1 | Sin egresos | Se eliminan `Egreso`, `RegistrarEgreso` y HU-21 (ADR-018) |
+| 2 | Sin fiado | RF-38 retirado; se eliminan `DeudaProducto` y «Cobrar deudas»; P-06 respondida |
+| 3 | El sistema solo captura la recepción de pagos de membresías y de productos | S-08 queda como registro continuo de cobros; S-11 como ventas de productos sin fiado |
+| 4 | Kit de logotipo entregado | Colores `#231F20`, `#FFCB04` y `#FFFFFF` confirmados; el original no es vectorial (ADR-020); archivos originales en `docs/design/origen-logotipo/` |

@@ -5,6 +5,12 @@ Estado: **propuesto** (2026-11-11) · P-01 resuelto: el repo es propio (12-nov-2
 ## Contexto
 `kaiserone01/gym-app` es **público**, **sin archivo de licencia** y con 732 commits. Contiene: `cookies.txt` versionado; `handoff.md` (273 KB) con nombres y cédulas de personas reales de otro gimnasio; un log JSON de migración de vencimientos; scripts específicos del cliente anterior; credenciales expuestas en chat, según su propio handoff, pendientes de rotar. Su `CLAUDE.md` exige commits en español, de una línea y sin firmas de IA.
 
+## Factores de decisión
+*Sección añadida en el pase formal F (2026-11-12, autorizado por el propietario). Derivada del texto del ADR y de los docs 09/11; no cambia la decisión ni el estado.*
+- El Repo A es público, sin licencia, con 732 commits que incluyen PII de personas reales y credenciales (doc 11 DI-88).
+- Titularidad confirmada: el repo es propio; el tema pasa a ser de higiene.
+- Evitar arrastrar historial y secretos.
+
 ## Decisión
 1. **Titularidad confirmada:** el repo es propio. Se añade aviso de copyright/licencia privativa al repo nuevo. Crear un repo nuevo sin historial deja de ser un tema legal y pasa a ser de higiene (PII y credenciales en el historial).
 2. **Repo nuevo y privado** `adhara-fit`, creado como **copia del árbol de trabajo** del commit `b4352a0`, **sin historial**, no como fork. Esto evita arrastrar PII y credenciales históricas.
@@ -24,3 +30,14 @@ Estado: **propuesto** (2026-11-11) · P-01 resuelto: el repo es propio (12-nov-2
 - (+) Repo limpio y legalmente trazable.
 - (−) Se pierde `git blame` histórico (aceptable; el ADR-001 del origen y los docs preservan el porqué).
 - (+) Como el repo original es propio y **público**, se puede hacerlo privado o depurar su historial para retirar la PII de personas reales expuesta: recomendado y urgente.
+
+## Cómo se valida
+*(Pase formal F.)*
+- **Spec:** S-00.
+- **Invariantes a fijar:** ningún archivo de la lista de exclusión (§3) existe en el repo (CI y escaneo de secretos); `.env.example` no contiene secretos.
+
+## Reversibilidad
+*(Pase formal F.)* Media: la lista de exclusión se revierte archivo a archivo, pero la historia no copiada (`git blame`) no se recupera.
+
+## Dependencias
+*(Pase formal F.)* ADR-001. ADR-014 aclara su §6. Se solapa con ADR-007 y ADR-012 (scripts y secretos). ADR-017 condiciona la decisión de gitleaks (§4). Hallazgos abiertos de la revisión G3 (C1, C3, C4, C5): ver `REVISION-ADR.md` §4, §7 y §8.4.

@@ -54,3 +54,10 @@ El repo base permite **abonos**: el miembro paga una parte y entra hasta una fec
 
 ## Notas del propietario (2026-11-12)
 - Confirmó en el chat: «pago único de membresía es un criterio decidido». Aceptado por el propietario el 2026-11-12.
+
+## Enmiendas posteriores (2026-11-12, decisiones del propietario)
+- **P-16 respondida:** no se reparte un cobro entre métodos; cada cobro es un pago completo con un solo método.
+- **P-18 respondida:** los días de gracia se **desincorporan** del proyecto (se retira RF-25); el acceso queda en dos estados, activo y vencido. La Decisión «el acceso queda en tres estados» se sustituye por esta.
+- **Pago con fecha pasada:** sin límite de antigüedad y nunca con fecha futura; la Decisión «≤ 90 d» se sustituye por esto.
+- Un mes dura 30 días corridos y el día de vencimiento todavía tiene acceso (inclusive).
+- No hay cobros de cortesía de S/ 0.00; las anulaciones y los reintegros se prevén como anulación con motivo (S-04).

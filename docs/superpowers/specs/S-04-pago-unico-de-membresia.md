@@ -16,13 +16,14 @@ El cobro heredado (`registrarPago`, 511 líneas) mezcla el pago de la membresía
 ### 0.2 Dentro de alcance
 - `registrarPago` reescrito: un cobro por membresía, con el precio acordado exacto por los meses pagados (de 1 a 6), en una transacción que abre el propio caso de uso a través de un puerto de unidad de trabajo, con bloqueo de la fila del miembro, relectura tras el bloqueo y un identificador de cobro obligatorio que evita duplicados.
 - Una sola fecha de vencimiento: `Miembro.fechaVencimiento` y `Suscripcion.fin` siempre iguales, escritas por una sola función `fijarVencimiento` que usan el cobro, la anulación y la edición de la ficha del miembro (`ActualizarMiembro`).
-- Función única del estado de acceso (`activo`, `en_gracia`, `vencido`) con días de gracia para todos los planes, comparada por día de Lima, y retiro de `abono_vencido` también del kiosco (`apps/kiosk/lib/cara.ts`, `apps/kiosk/lib/api.ts`, `apps/kiosk/components/AccessCard.tsx` y `apps/kiosk/lib/cara.test.ts`).
-- Pago con fecha pasada de hasta 90 días.
+- Función única del estado de acceso (`activo` y `vencido`), sin días de gracia, comparada por día de Lima; retiro de `abono_vencido` y de `en_gracia` también del kiosco (`apps/kiosk/lib/cara.ts`, `apps/kiosk/lib/api.ts`, `apps/kiosk/components/AccessCard.tsx` y `apps/kiosk/lib/cara.test.ts`).
+- Pago con fecha pasada de cualquier antigüedad y nunca con fecha futura.
+- Retiro de los días de gracia: `Sucursal.diasGracia`, `diasGraciaParaPlan`, el estado `en_gracia` y su lectura en `ListarEnSala` y `RegistrarCheckIn`.
 - `anularPago` que anula el cobro completo, solo el último vigente de un miembro con vencimiento anterior registrado, y restaura el vencimiento y la fecha del último pago; los pagos sin vencimiento anterior (cambio de plan y ventas de otras specs) se siguen anulando sin tocar el vencimiento.
 - Retiro del código de abonos: `ReglaAbono*`, `CobrarAbonoPendiente*`, `ListarAbonosPendientes*`, `proyeccionAbono.ts`, `RegistrarPagoConDeudas*` y su rama `incluirDeudas`, la pantalla de reglas de abono, las columnas `Plan.permitePagoParcial`, `Plan.minimoAbonoTipo`, `Plan.minimoAbonoValor`, `Suscripcion.fechaLimiteAbono` y `Miembro.saldoAFavorUSD` (hoy `saldoAFavor`), la tabla `ReglaAbonoPorFrecuencia`, el estado `abono_vencido` y la tolerancia.
 - Formularios de cobro de membresía sin abono, saldo ni excedente, con vista previa del precio total y del vencimiento: `apps/web-admin/app/(panel)/pagos/FormularioPago.tsx` y el cobro de membresía de `caja/ModalRegistrarPagoCaja.tsx` (S-08 reconstruye el resto de la caja).
 - Ediciones de `packages/domain/entities/Pago.ts` fuera de las que ya hizo S-03: `pagosVigentesDelCiclo`, `totalPagado`, `toleranciaDiferenciaPagoUSD` y las constantes de días atrás; de `Plan.ts`, `Suscripcion.ts`, `CheckIn.ts` y `Miembro.ts` los campos que se retiran; y de los repositorios de pago, suscripción y miembro los métodos nuevos (`bloquearPorId`, `fijarVencimiento`, `buscarVigentePorMiembro`).
-- Esquema: columnas `Pago.vencimientoAnterior` y `Pago.ordenLinea`, con restricción única sobre `grupoPagoId` y `ordenLinea` cuando ambos existen.
+- Esquema: columnas `Pago.vencimientoAnterior` y `Pago.cobroId` (única, nula en los pagos de otras specs) y retiro de `Sucursal.diasGracia`.
 - Pruebas de caracterización de lo que se conserva, escritas antes de reescribir.
 - `tools/verificar-pagos.mjs` con sus pruebas, ejecutada en el CI.
 - Quitar del puente de dinero (S-03) y de las listas de exenciones de S-02 y S-03 todos los archivos de la familia S-04.
@@ -32,7 +33,7 @@ El cobro heredado (`registrarPago`, 511 líneas) mezcla el pago de la membresía
 - Turnos, arqueo y egresos (columna `Pago.turnoId` y modelos): S-08. Tasa de cambio y las columnas `Pago.tasaCambio` y `Pago.montoBs`: S-10; S-04 deja de llenarlas.
 - Ventas de producto, fiado y las tablas de deuda: S-11 y ADR-018; S-04 solo retira el puente que combina una membresía con deudas.
 - Sede única y `sucursal_incorrecta`: S-05. Dar de baja miembros: S-09. Tickets: S-12. Reportes de morosos: S-14.
-- Registro retroactivo de miembros del padrón Excel y el aviso «Por regularizar»: S-10. Un miembro inscrito hace más de 90 días se registra y se cobra con la fecha de hoy. El alta del miembro y su primer cobro siguen siendo dos pasos no atómicos (`miembros/actions.ts:151-187`). La anulación no revierte `planId` ni `precioPlan`.
+- Registro retroactivo de miembros del padrón Excel y el aviso «Por regularizar»: S-10. Un miembro inscrito antes de hoy se registra y su primer cobro puede llevar cualquier fecha pasada. El alta del miembro y su primer cobro siguen siendo dos pasos no atómicos (`miembros/actions.ts:151-187`). La anulación no revierte `planId` ni `precioPlan`.
 - `resolverCobroPasado*` pasa a la familia de S-11 (enmienda de la tabla de familias de S-03, porque solo lo usan las ventas y el cobro de deudas): el cobro de membresía deja de usarlo. `CambiarPlanConPago.ts` (S-07), los archivos de `caja/` (S-08) y `ModalCobrarDeudas.tsx` (S-11) conservan términos de abono y quedan en la lista de exenciones de `verificar-pagos`.
 
 ### 0.4 Comportamiento actual verificado
@@ -54,24 +55,25 @@ El cobro heredado (`registrarPago`, 511 líneas) mezcla el pago de la membresía
 - **Alta y primer cobro:** `crearMiembroAction` crea el miembro y después cobra, con `fechaPago = fechaInscripcion` y `primerPagoDeInscripcion: true` (`apps/web-admin/app/(panel)/miembros/actions.ts:151-187` y `:203-206`); `Pago.grupoPagoId` lo usan además `VenderProducto.ts:82`, `CobrarDeudasMiembro.ts:90` y `CambiarPlanConPago.ts:193`.
 - **`completarCicloAbierto` y `resolverCobroPasado`:** `completarCicloAbierto` lo pasan solo `RegistrarPagoConDeudas.ts:57` y `CobrarAbonoPendiente.ts:73`; `resolverCobroPasado` lo usan también `VenderProducto.ts:65` y `CobrarDeudasMiembro.ts:80` (verificado con `grep -n resolverCobroPasado`).
 - **Kiosco:** `abono_vencido` aparece en `apps/kiosk/lib/cara.ts:11`, `apps/kiosk/lib/api.ts:4`, `apps/kiosk/components/AccessCard.tsx:29`, `:130` y `:134` y `apps/kiosk/lib/cara.test.ts:40` y `:51` (verificado con `grep -n abono_vencido`).
-- **Documentación:** RF-25 pide días de gracia «solo para planes mensuales» y globales (`docs/01-levantamiento-requerimientos.md:89`) y P-21 fija por defecto un pago de una sola línea (`docs/08-decisiones-pendientes.md:18`); S-04 se aparta de ambos puntos (SUP-S04-001 y SUP-S04-004).
+- **Documentación:** RF-25 pide días de gracia «solo para planes mensuales» y globales (`docs/01-levantamiento-requerimientos.md:89`) y P-21 fija por defecto un pago de una sola línea (`docs/08-decisiones-pendientes.md:18`); el propietario retiró los días de gracia y decidió un cobro de una sola línea (SUP-S04-001 y SUP-S04-004).
 - No verificado: cuántos miembros pagan hoy por partes.
 
 ### 0.5 Supuestos
-- SUP-S04-001: «pago único» significa que la membresía se paga completa en un solo cobro, que puede repartirse entre varios métodos (por ejemplo Efectivo y Yape) como hoy y como acepta S-03 (REQ-S03-020). Responde P-16 y se aparta del valor por defecto de P-21 (una sola línea). Default: se permite repartir; asumido, por validar.
-- SUP-S04-002: cada mes del plan dura el `diasCiclo` del plan en días corridos (30 días para un mes), como hoy, y el vencimiento es un día de calendario de Lima (S-02). Default: días corridos; asumido, por validar.
-- SUP-S04-003: el último día con acceso es el día de vencimiento (inclusive); un cobro de 30 días hecho el 12 de noviembre vence el 12 de diciembre y da acceso del 12 de noviembre al 12 de diciembre, 31 días en el primer período; los días de gracia cuentan desde el día siguiente. Default: ese criterio; asumido, por validar.
-- SUP-S04-004: los días de gracia son un solo valor del negocio (`diasGracia`, por defecto 0, hoy en `Sucursal.diasGracia` hasta que S-05 lo mueva a la configuración global) y valen para todos los planes. Responde P-18 y se aparta de RF-25, que los limitaba a los planes mensuales, porque los planes de Adhara son de 1, 2 y 3 meses y la distinción «mensual» deja de existir. Default: gracia para todos, con 0 hasta que el propietario indique otro valor; asumido, por validar.
+- SUP-S04-001: el propietario decidió el 2026-11-12 que **no se reparte un cobro entre métodos**: cada cobro es un solo pago completo con un solo método. Responde P-16 y confirma el valor por defecto de P-21 (una sola línea). Decisión confirmada por el propietario; asumido, por validar solo su alcance en otros flujos (S-03 REQ-S03-020 conserva la suma exacta de varias líneas para ventas de otras specs). Default: la decisión del propietario; asumido, por validar.
+- SUP-S04-002: cada mes del plan dura el `diasCiclo` del plan en días corridos (30 días para un mes) y el vencimiento es un día de calendario de Lima (S-02). Duración confirmada por el propietario el 2026-11-12; asumido, por validar su aplicación a los planes de 2 y 3 meses (60 y 90 días). Default: la decisión del propietario; asumido, por validar.
+- SUP-S04-003: el último día con acceso es el día de vencimiento (inclusive); un cobro de 30 días hecho el 12 de noviembre vence el 12 de diciembre y da acceso del 12 de noviembre al 12 de diciembre, 31 días en el primer período. Confirmado por el propietario el 2026-11-12; asumido, por validar su cómputo de días. Default: la decisión del propietario; asumido, por validar.
+- SUP-S04-004: **no hay días de gracia**: el propietario decidió el 2026-11-12 desincorporar esa función. Responde P-18 y retira RF-25; el acceso tiene dos estados, `activo` y `vencido`, y `sucursal_incorrecta` hasta S-05. Decisión confirmada por el propietario; asumido, por validar su efecto en los reportes de morosos (S-14). Default: la decisión del propietario; asumido, por validar.
 - SUP-S04-005: el precio a cobrar es el precio acordado del miembro (`Miembro.precioPlan`) cuando el cobro es del plan actual, y el precio del plan cuando el miembro no tiene un vencimiento vigente y elige otro; con un vencimiento vigente el cobro de otro plan se rechaza y es materia de S-07. No hay excedente ni saldo a favor. Default: ese cálculo; asumido, por validar.
-- SUP-S04-006: un cobro de S/ 0.00 solo se acepta cuando el precio acordado total es S/ 0.00; se registra como una sola línea de 0.00 con método Efectivo y sin número de operación. Default: ese criterio; asumido, por validar.
+- SUP-S04-006: no hay cobros de cortesía: el propietario indicó que el cobro de S/ 0.00 «no aplica». El monto de un cobro debe ser mayor que S/ 0.00. Default: ese criterio; asumido, por validar.
 - SUP-S04-007: se puede anular únicamente el cobro vigente más reciente de un miembro (el de mayor fin de ciclo); para anular uno anterior hay que anular antes los posteriores. Default: ese criterio; asumido, por validar.
-- SUP-S04-008: un pago con fecha pasada acepta hasta 90 días hacia atrás, sin excepciones por «Por regularizar» ni por primer pago de inscripción; el límite de 365 días y el aviso se retiran. Default: 90 días; asumido, por validar.
-- SUP-S04-009: el identificador de cobro (`cobroId`) es obligatorio; la pantalla lo genera como un UUID y se guarda en `Pago.grupoPagoId` de todas las líneas, con `ordenLinea` nulo en los pagos de otras specs. Default: ese mecanismo; asumido, por validar.
+- SUP-S04-008: un pago puede registrarse con cualquier fecha pasada, sin límite de antigüedad, y nunca con fecha futura, por decisión del propietario del 2026-11-12; el límite de 90 días, el de 365, el aviso «Por regularizar» y la excepción del primer pago de inscripción se retiran. Decisión confirmada por el propietario; asumido, por validar su efecto en los vencimientos de pagos muy antiguos. Default: la decisión del propietario; asumido, por validar.
+- SUP-S04-009: el identificador de cobro (`cobroId`) es obligatorio; la pantalla lo genera como un UUID y se guarda en la columna nueva `Pago.cobroId`, única y nula en los pagos de otras specs; un cobro es exactamente un pago. Default: ese mecanismo; asumido, por validar.
 - SUP-S04-010: cada cobro guarda el vencimiento anterior del miembro en `Pago.vencimientoAnterior`; para un miembro sin vencimiento previo se guarda el día anterior al cobro, de modo que restaurarlo lo deja vencido. Los pagos de otras specs (cambio de plan, ventas) tienen el campo nulo y su anulación no toca el vencimiento. Default: ese criterio; asumido, por validar.
 - SUP-S04-011: la columna `Pago.turnoId` y las columnas `tasaCambio` y `montoBs` quedan sin llenar hasta que S-08 y S-10 las retiren. Default: se dejan nulas; asumido, por validar.
 - SUP-S04-012: bajo el aislamiento predeterminado de PostgreSQL (SUP-S22-004), `registrarPago` y `anularPago` toman el bloqueo de la fila del miembro y releen miembro, suscripción y cobro antes de validar; el tiempo límite de la transacción es de 20 segundos, como el cobro heredado, y el de espera del bloqueo es de 5 segundos. Default: esos valores; asumido, por validar.
 - SUP-S04-013: «suscripción vigente» es la suscripción `ACTIVA` del miembro cuyo día de Lima de `fin` es igual o posterior al día de Lima de hoy, sin distinguir plan; todas las fechas de calendario del cobro (`Suscripcion.inicio` y `fin`, `Miembro.fechaVencimiento` y `fechaUltimoPago`, `Pago.fechaInicioCiclo`, `fechaFinCiclo` y `vencimientoAnterior`) se guardan a las 05:00:00.000Z y `Pago.fechaPago` es un instante. Default: esa representación; asumido, por validar.
 - SUP-S04-014: S-04 enmienda la tabla de familias de S-03 para que `resolverCobroPasado*` figure en S-11 y deja la lista de exenciones de `verificar-pagos` con las familias S-07, S-08 y S-11. Default: ese reparto; asumido, por validar.
+- SUP-S04-015: la anulación sirve para corregir un error y también para un reintegro al miembro; el motivo libre distingue ambos. El propietario pidió prever anulaciones y reintegros el 2026-11-12. El sistema no registra el desembolso del reintegro porque no hay egresos (ADR-018). Default: ese alcance; asumido, por validar.
 
 ## 1. Requisitos
 
@@ -79,13 +81,13 @@ El cobro heredado (`registrarPago`, 511 líneas) mezcla el pago de la membresía
 - tipo: ubicuo
 - prioridad: MUST
 - origen: ADR-010
-- texto: El cobro de una membresía deberá cubrir en un solo acto el precio acordado multiplicado por los meses pagados.
+- texto: El cobro de una membresía deberá cubrir en un solo acto, con un solo pago de un solo método, el precio acordado multiplicado por los meses pagados.
 
 ### REQ-S04-002
 - tipo: si-entonces
 - prioridad: MUST
 - origen: ADR-010
-- texto: Si la suma de las líneas del cobro difiere en un céntimo o más del precio total acordado entonces registrarPago deberá rechazarlo sin escribir nada.
+- texto: Si el monto del pago difiere en un céntimo o más del precio total acordado entonces registrarPago deberá rechazarlo sin escribir nada.
 
 ### REQ-S04-003
 - tipo: si-entonces
@@ -127,7 +129,7 @@ El cobro heredado (`registrarPago`, 511 líneas) mezcla el pago de la membresía
 - tipo: cuando
 - prioridad: MUST
 - origen: SUP-S04-009
-- texto: Cuando registrarPago recibe un cobroId ya registrado con el mismo miembro, plan, meses e importe, deberá devolver los pagos originales sin crear otros ni mover el vencimiento.
+- texto: Cuando registrarPago recibe un cobroId ya registrado con el mismo miembro, plan, meses e importe, deberá devolver el pago original sin crear otro ni mover el vencimiento.
 
 ### REQ-S04-010
 - tipo: ubicuo
@@ -145,31 +147,31 @@ El cobro heredado (`registrarPago`, 511 líneas) mezcla el pago de la membresía
 - tipo: ubicuo
 - prioridad: MUST
 - origen: ADR-010
-- texto: La función estadoDeAcceso deberá devolver activo hasta el día de vencimiento inclusive, en_gracia durante los días de gracia siguientes y vencido después.
+- texto: La función estadoDeAcceso deberá devolver activo hasta el día de vencimiento inclusive y vencido después.
 
 ### REQ-S04-013
 - tipo: ubicuo
 - prioridad: MUST
-- origen: ADR-010
-- texto: Los días de gracia deberán ser un valor único del negocio que vale para todos los planes.
+- origen: SUP-S04-004
+- texto: El sistema no deberá tener días de gracia: ni la columna Sucursal.diasGracia, ni diasGraciaParaPlan, ni el estado en_gracia.
 
 ### REQ-S04-014
 - tipo: cuando
 - prioridad: MUST
-- origen: ADR-010
-- texto: Cuando el cobro trae una fecha de pago pasada de hasta 90 días, registrarPago deberá guardarla como fecha del pago y usar su día de Lima en la fórmula de la base.
+- origen: SUP-S04-008
+- texto: Cuando el cobro trae una fecha de pago pasada, de cualquier antigüedad, registrarPago deberá guardarla como fecha del pago y usar su día de Lima en la fórmula de la base.
 
 ### REQ-S04-015
 - tipo: si-entonces
 - prioridad: MUST
-- origen: ADR-010
-- texto: Si la fecha de pago es posterior a hoy o anterior a 90 días antes de hoy entonces registrarPago deberá rechazar el cobro.
+- origen: SUP-S04-008
+- texto: Si el día de Lima de la fecha de pago es posterior al día de Lima de hoy entonces registrarPago deberá rechazar el cobro.
 
 ### REQ-S04-016
 - tipo: cuando
 - prioridad: MUST
 - origen: ADR-010
-- texto: Cuando se anula un pago con un motivo no vacío, anularPago deberá anular todas las líneas del mismo cobro.
+- texto: Cuando se anula un pago con un motivo no vacío, anularPago deberá anular el pago del cobro.
 
 ### REQ-S04-017
 - tipo: si-entonces
@@ -199,7 +201,7 @@ El cobro heredado (`registrarPago`, 511 líneas) mezcla el pago de la membresía
 - tipo: ubicuo
 - prioridad: MUST
 - origen: ADR-010
-- texto: Los archivos de apps y packages que no figuran en la lista de exenciones no deberán contener los términos abono, saldoAFavor, toleranciaDiferenciaPago, permitePagoParcial, minimoAbono, fechaLimiteAbono, abono_vencido, completarCicloAbierto ni excedenteASaldoAFavor.
+- texto: Los archivos de apps y packages que no figuran en la lista de exenciones no deberán contener los términos abono, saldoAFavor, toleranciaDiferenciaPago, permitePagoParcial, minimoAbono, fechaLimiteAbono, abono_vencido, completarCicloAbierto, excedenteASaldoAFavor, diasGracia, diasGraciaParaPlan ni en_gracia.
 
 ### REQ-S04-022
 - tipo: ubicuo
@@ -211,7 +213,7 @@ El cobro heredado (`registrarPago`, 511 líneas) mezcla el pago de la membresía
 - tipo: ubicuo
 - prioridad: MUST
 - origen: ADR-010
-- texto: EstadoCheckIn y el kiosco deberán usar solo los valores activo, en_gracia, vencido y sucursal_incorrecta, sin abono_vencido.
+- texto: EstadoCheckIn y el kiosco deberán usar solo los valores activo, vencido y sucursal_incorrecta, sin abono_vencido ni en_gracia.
 
 ### REQ-S04-024
 - tipo: ubicuo
@@ -286,22 +288,22 @@ El cobro heredado (`registrarPago`, 511 líneas) mezcla el pago de la membresía
 - texto: Si el cobro es de un plan distinto al del miembro y el miembro tiene un vencimiento vigente entonces registrarPago deberá rechazarlo indicando que el cambio de plan es otra operación.
 
 ### REQ-S04-036
-- tipo: cuando
+- tipo: si-entonces
 - prioridad: MUST
 - origen: SUP-S04-006
-- texto: Cuando el precio acordado total es 0.00, registrarPago deberá aceptar una sola línea de 0.00 con método Efectivo y sin número de operación.
+- texto: Si el monto del pago no es mayor que 0.00 entonces registrarPago deberá rechazar el cobro.
 
 ### REQ-S04-037
 - tipo: si-entonces
 - prioridad: MUST
 - origen: SUP-S04-009
-- texto: Si registrarPago recibe un cobroId ausente, o ya registrado con otro miembro, plan, meses o importe, entonces deberá rechazarlo con un error de conflicto y no crear pagos.
+- texto: Si registrarPago recibe un cobroId ausente, o ya registrado con otro miembro, plan, meses o importe, entonces deberá rechazarlo con un error de conflicto y no crear el pago.
 
 ### REQ-S04-038
 - tipo: si-entonces
 - prioridad: MUST
 - origen: SUP-S04-009
-- texto: Si registrarPago recibe el cobroId de un cobro anulado entonces deberá rechazarlo con un error y no devolver los pagos anulados.
+- texto: Si registrarPago recibe el cobroId de un cobro anulado entonces deberá rechazarlo con un error y no devolver el pago anulado.
 
 ### REQ-S04-039
 - tipo: si-entonces
@@ -355,13 +357,19 @@ El cobro heredado (`registrarPago`, 511 líneas) mezcla el pago de la membresía
 - tipo: ubicuo
 - prioridad: MUST
 - origen: SUP-S04-010
-- texto: Pago deberá tener las columnas vencimientoAnterior y ordenLinea, con una restricción única sobre grupoPagoId y ordenLinea cuando ambos tienen valor.
+- texto: Pago deberá tener las columnas vencimientoAnterior y cobroId, con una restricción única sobre cobroId.
 
 ### REQ-S04-048
 - tipo: ubicuo
 - prioridad: MUST
 - origen: SUP-S04-013
 - texto: Las comparaciones de vigencia, de estado de acceso y de fecha de pago deberán hacerse por día de Lima con fechaLima.
+
+### REQ-S04-049
+- tipo: si-entonces
+- prioridad: MUST
+- origen: SUP-S04-001
+- texto: Si el cobro trae más de una línea de pago entonces registrarPago deberá rechazarlo sin escribir nada.
 
 ## 2. Comportamiento
 
@@ -390,8 +398,8 @@ El cobro heredado (`registrarPago`, 511 líneas) mezcla el pago de la membresía
 - cubre: REQ-S04-001, REQ-S04-003, REQ-S04-010
 - categoria: borde
 - dado: el plan «1 mes» de S/ 120.00 y hoy 2026-11-12
-- cuando: se cobran 3 meses con líneas "200.00" (Efectivo) y "160.00" (Yape, número "55124")
-- entonces: se acepta porque la suma es "360.00", se crean 2 líneas con el mismo cobroId y el vencimiento es el 2027-02-10
+- cuando: se cobran 3 meses con una sola línea de "360.00" por Yape con número de operación "55124"
+- entonces: se acepta, se crea un solo pago con el cobroId y el vencimiento es el 2027-02-10
 
 ### BEH-S04-005
 - cubre: REQ-S04-002
@@ -424,9 +432,9 @@ El cobro heredado (`registrarPago`, 511 líneas) mezcla el pago de la membresía
 ### BEH-S04-009
 - cubre: REQ-S04-007
 - categoria: error
-- dado: un cobro con 2 líneas y un fallo forzado al crear la segunda
+- dado: un cobro de una línea y un fallo forzado al crear el pago, después de actualizar la suscripción y el miembro
 - cuando: se ejecuta registrarPago
-- entonces: no existe ningún pago, la suscripción y el vencimiento del miembro quedan como antes y el error llega al llamador
+- entonces: no existe el pago, la suscripción y el vencimiento del miembro quedan como antes y el error llega al llamador
 
 ### BEH-S04-010
 - cubre: REQ-S04-008
@@ -450,18 +458,18 @@ El cobro heredado (`registrarPago`, 511 líneas) mezcla el pago de la membresía
 - entonces: ambos tienen vencimiento 2026-12-12
 
 ### BEH-S04-013
-- cubre: REQ-S04-012, REQ-S04-013
+- cubre: REQ-S04-012
 - categoria: borde
-- dado: un miembro con vencimiento 2026-11-10 y diasGracia = 3
-- cuando: se calcula el estado el 10, el 11, el 13 y el 14 de noviembre de 2026 (Lima)
-- entonces: el 10 es activo, el 11 y el 13 son en_gracia y el 14 es vencido
+- dado: un miembro con vencimiento 2026-11-10
+- cuando: se calcula el estado el 9, el 10 y el 11 de noviembre de 2026 (Lima)
+- entonces: el 9 y el 10 son activo y el 11 es vencido
 
 ### BEH-S04-014
 - cubre: REQ-S04-013
-- categoria: borde
-- dado: un plan semanal y un plan de 3 meses con vencimiento 2026-11-10 y diasGracia = 3
-- cuando: se calcula el estado el 2026-11-12
-- entonces: ambos están en_gracia, porque la gracia vale para todos los planes
+- categoria: feliz
+- dado: el esquema y los tipos finales
+- cuando: se buscan Sucursal.diasGracia, diasGraciaParaPlan y en_gracia
+- entonces: no existen; el miembro vencido el 2026-11-10 está vencido el 2026-11-11 sin período intermedio
 
 ### BEH-S04-015
 - cubre: REQ-S04-014
@@ -471,18 +479,18 @@ El cobro heredado (`registrarPago`, 511 líneas) mezcla el pago de la membresía
 - entonces: la fecha del pago es el 2026-10-20 a las 05:00Z de su día, la base es esa fecha y el vencimiento es el 2026-11-19
 
 ### BEH-S04-016
-- cubre: REQ-S04-015
-- categoria: error
-- dado: hoy 2026-11-12
-- cuando: se cobra con fecha de pago 2026-08-14, 2026-08-13 y 2026-11-13
-- entonces: la primera se acepta (90 días), la segunda se rechaza por 91 días y la tercera se rechaza por ser futura
+- cubre: REQ-S04-014, REQ-S04-015
+- categoria: borde
+- dado: hoy 2026-11-12 (Lima)
+- cuando: se cobra con fecha de pago 2024-01-15, con la de hoy y con la de mañana 2026-11-13
+- entonces: las dos primeras se aceptan sin límite de antigüedad y la tercera se rechaza por ser futura
 
 ### BEH-S04-017
 - cubre: REQ-S04-016, REQ-S04-018
 - categoria: feliz
-- dado: un miembro con dos cobros vigentes, el primero con vencimiento anterior nulo y fin 2026-12-12, y el segundo con vencimiento anterior 2026-12-12 y fin 2027-01-11, cada uno con 2 líneas
-- cuando: se anula el segundo con el motivo «cobro duplicado»
-- entonces: las 2 líneas del segundo quedan anuladas, el vencimiento del miembro y de la suscripción vuelve al 2026-12-12 y el primero sigue vigente
+- dado: un miembro con dos cobros vigentes de un pago cada uno: el primero con vencimiento anterior 2026-11-11 y fin 2026-12-12, y el segundo con vencimiento anterior 2026-12-12 y fin 2027-01-11
+- cuando: se anula el pago del segundo con el motivo «cobro duplicado»
+- entonces: el pago del segundo queda anulado, el vencimiento del miembro y de la suscripción vuelve al 2026-12-12 y el primer cobro sigue vigente
 
 ### BEH-S04-018
 - cubre: REQ-S04-017
@@ -576,11 +584,11 @@ El cobro heredado (`registrarPago`, 511 líneas) mezcla el pago de la membresía
 - entonces: el primero se rechaza indicando que el cambio de plan es otra operación y el segundo se acepta con una suscripción nueva y su plan y precio actualizados
 
 ### BEH-S04-031
-- cubre: REQ-S04-036, REQ-S04-002
-- categoria: borde
-- dado: un miembro con precio acordado "0.00" y otro con "120.00"
-- cuando: se cobra una línea de "0.00" Efectivo sin número a cada uno
-- entonces: el primero se acepta y el segundo se rechaza por el importe distinto del precio
+- cubre: REQ-S04-036
+- categoria: error
+- dado: un miembro con precio acordado "120.00"
+- cuando: se cobra una línea de "0.00" y otra de "-1.00"
+- entonces: ambas se rechazan por monto no mayor que 0.00 y no se crea ningún pago
 
 ### BEH-S04-032
 - cubre: REQ-S04-037, REQ-S04-038
@@ -652,6 +660,13 @@ El cobro heredado (`registrarPago`, 511 líneas) mezcla el pago de la membresía
 - cuando: se ejecuta tools/verificar-pagos.mjs y se consulta el esquema
 - entonces: la herramienta falla en las tres primeras y acepta la cuarta; el esquema no tiene la tabla ReglaAbonoPorFrecuencia y Pago tiene vencimientoAnterior y ordenLinea con la restricción única
 
+### BEH-S04-042
+- cubre: REQ-S04-049
+- categoria: error
+- dado: un cobro de "360.00" repartido en dos líneas de "200.00" Efectivo y "160.00" Yape
+- cuando: se ejecuta registrarPago
+- entonces: se rechaza sin escribir nada y se indica que el cobro admite una sola línea
+
 ## 3. Invariantes
 
 ### INV-S04-001
@@ -661,7 +676,7 @@ El cobro heredado (`registrarPago`, 511 líneas) mezcla el pago de la membresía
 - protege: REQ-S04-011, REQ-S04-018
 
 ### INV-S04-002
-- propiedad: toda suma de líneas de un cobro vigente es igual al precio acordado por los meses del cobro
+- propiedad: el monto de todo cobro vigente es igual al precio acordado por los meses del cobro
 - mecanismo: asercion-dominio
 - deteccion: registrarPago lanza un error ante cualquier diferencia; la prueba intenta diferencias de un céntimo por encima y por debajo
 - protege: REQ-S04-001, REQ-S04-002
@@ -707,10 +722,10 @@ El cobro heredado (`registrarPago`, 511 líneas) mezcla el pago de la membresía
 - test: pendiente
 
 ### AC-S04-003
-- enlaza: REQ-S04-001, REQ-S04-003, BEH-S04-004, BEH-S04-006
+- enlaza: REQ-S04-001, REQ-S04-003, REQ-S04-049, BEH-S04-004, BEH-S04-006, BEH-S04-042
 - metodo: integracion
-- procedimiento: cobrar 3 meses con líneas "200.00" y "160.00"; intentar con meses 0, 7, 1.5 y -1
-- esperado: el primero se acepta con 2 líneas del mismo cobroId y vencimiento 2027-02-10; los otros cuatro se rechazan con el error de meses
+- procedimiento: cobrar 3 meses con una línea de "360.00"; intentar el mismo cobro con dos líneas de "200.00" y "160.00"; intentar con meses 0, 7, 1.5 y -1
+- esperado: el primero se acepta con un pago y vencimiento 2027-02-10; el de dos líneas se rechaza sin escribir nada; los cuatro de meses se rechazan con el error de meses
 - test: pendiente
 
 ### AC-S04-004
@@ -730,7 +745,7 @@ El cobro heredado (`registrarPago`, 511 líneas) mezcla el pago de la membresía
 ### AC-S04-006
 - enlaza: REQ-S04-007, BEH-S04-009, INV-S04-003
 - metodo: integracion
-- procedimiento: con un repositorio de pagos con inyección de fallos, forzar un fallo en cada uno de los pasos de la secuencia de 5.1 de un cobro de 2 líneas y consultar pagos, suscripción y miembro
+- procedimiento: con un repositorio de pagos con inyección de fallos, forzar un fallo en cada paso de la secuencia de 5.1 de un cobro de una línea y consultar pagos, suscripción y miembro
 - esperado: en todos los pasos no queda ningún pago ni cambio en la suscripción ni en el miembro y el error llega al llamador
 - test: pendiente
 
@@ -751,22 +766,22 @@ El cobro heredado (`registrarPago`, 511 líneas) mezcla el pago de la membresía
 ### AC-S04-009
 - enlaza: REQ-S04-012, REQ-S04-013, BEH-S04-013, BEH-S04-014
 - metodo: unitario
-- procedimiento: ejecutar estadoDeAcceso con vencimiento 2026-11-10 y diasGracia 3 para los días 10, 11, 13 y 14 de noviembre de 2026, y con planes semanal y de 3 meses el día 12
-- esperado: activo, en_gracia, en_gracia y vencido; ambos planes en_gracia el día 12
+- procedimiento: ejecutar estadoDeAcceso con vencimiento 2026-11-10 para los días 9, 10 y 11 de noviembre de 2026, y buscar Sucursal.diasGracia, diasGraciaParaPlan y en_gracia en el esquema y el código
+- esperado: activo, activo y vencido; los tres términos no existen
 - test: pendiente
 
 ### AC-S04-010
 - enlaza: REQ-S04-014, REQ-S04-015, BEH-S04-015, BEH-S04-016
 - metodo: integracion
-- procedimiento: con hoy 2026-11-12, cobrar con fecha de pago 2026-10-20 a un miembro vencido desde 2026-10-01; luego con fechas 2026-08-14, 2026-08-13 y 2026-11-13
-- esperado: la primera da vencimiento 2026-11-19; 2026-08-14 se acepta, 2026-08-13 y 2026-11-13 se rechazan
+- procedimiento: con hoy 2026-11-12, cobrar con fecha de pago 2026-10-20 a un miembro vencido desde 2026-10-01; cobrar con fecha 2024-01-15 y con la de hoy; cobrar con la fecha de mañana 2026-11-13
+- esperado: la primera da vencimiento 2026-11-19; 2024-01-15 y hoy se aceptan; mañana se rechaza
 - test: pendiente
 
 ### AC-S04-011
 - enlaza: REQ-S04-016, REQ-S04-018, REQ-S04-041, BEH-S04-017, BEH-S04-019, BEH-S04-036, INV-S04-001
 - metodo: integracion
-- procedimiento: con los dos cobros de BEH-S04-017, anular el segundo; con un miembro de un solo cobro, anularlo; ejecutar la consulta de INV-S04-001
-- esperado: el vencimiento vuelve a 2026-12-12 y las 2 líneas quedan anuladas; la fecha del último pago es la del primer cobro; el miembro de un solo cobro queda con vencimiento el día anterior al cobro y estado vencido; la consulta devuelve 0 filas
+- procedimiento: con los dos cobros de BEH-S04-017, anular el pago del segundo; con un miembro de un solo cobro, anularlo; ejecutar la consulta de INV-S04-001
+- esperado: el vencimiento vuelve a 2026-12-12 y el pago queda anulado; la fecha del último pago es la del primer cobro; el miembro de un solo cobro queda con vencimiento el día anterior al cobro y estado vencido; la consulta devuelve 0 filas
 - test: pendiente
 
 ### AC-S04-012
@@ -828,8 +843,8 @@ El cobro heredado (`registrarPago`, 511 líneas) mezcla el pago de la membresía
 ### AC-S04-020
 - enlaza: REQ-S04-035, REQ-S04-036, BEH-S04-030, BEH-S04-031
 - metodo: integracion
-- procedimiento: cobrar el plan de 3 meses a un miembro con vencimiento vigente y a otro vencido; cobrar una línea de "0.00" Efectivo a un miembro con precio acordado "0.00" y a otro con "120.00"
-- esperado: el primero se rechaza, el segundo se acepta con plan y precio actualizados; la línea de 0.00 se acepta con precio acordado 0.00 y se rechaza con 120.00
+- procedimiento: cobrar el plan de 3 meses a un miembro con vencimiento vigente y a otro vencido; cobrar una línea de "0.00" y otra de "-1.00" a un miembro con precio acordado "120.00"
+- esperado: el primero se rechaza, el segundo se acepta con plan y precio actualizados; las dos líneas no positivas se rechazan sin crear pagos
 - test: pendiente
 
 ### AC-S04-021
@@ -864,20 +879,20 @@ El cobro heredado (`registrarPago`, 511 líneas) mezcla el pago de la membresía
 - enlaza: REQ-S04-045, REQ-S04-046, REQ-S04-047, BEH-S04-041, INV-S04-006
 - metodo: unitario
 - procedimiento: ejecutar las pruebas de tools/verificar-pagos.mjs con una exención de archivo inexistente, otra sin spec, una que asigna CambiarPlanConPago.ts a S-11 y otra a S-07; consultar el esquema final por la tabla y las columnas
-- esperado: falla en las tres primeras y acepta la cuarta; el esquema no tiene ReglaAbonoPorFrecuencia y Pago tiene vencimientoAnterior y ordenLinea con la restricción única
+- esperado: falla en las tres primeras y acepta la cuarta; el esquema no tiene ReglaAbonoPorFrecuencia ni Sucursal.diasGracia y Pago tiene vencimientoAnterior y cobroId con la restricción única
 - test: pendiente
 
 ## 5. Plan de pruebas, migración, riesgos y preguntas abiertas
 
 ### 5.1 Plan de pruebas
 - Orden (ADR-016 §1 y tarea 0.11 de ADR-010, pruebas primero, un commit por paso): (1) pruebas de caracterización de la implementación heredada para el vencimiento con 1 y 3 meses, la fecha pasada de hasta 90 días, el pago con varias líneas y la anulación, en verde contra el código heredado; (2) pruebas nuevas del cobro, de `estadoDeAcceso`, de la anulación y de la concurrencia, en rojo; (3) migración del esquema (columnas retiradas y la columna `vencimientoAnterior`, `cobroId` único); (4) `registrarPago` y `anularPago` reescritos con `dinero.ts` y `fechaLima`; (5) retiro del código de abonos, de `RegistrarPagoConDeudas` y de la pantalla de reglas de abono; (6) formulario de cobro; (7) `tools/verificar-pagos.mjs` con sus pruebas; (8) quitar la familia S-04 de las listas de exenciones; (9) paso del CI.
-- **Secuencia de la transacción** (abierta por el caso de uso con `IUnidadDeTrabajo`; el bloqueo es `bloquearPorId` del repositorio de miembros, que en Drizzle usa `.for("update")` sin `sql.raw`): (1) abrir la transacción con tiempo límite de 20 segundos y espera de bloqueo de 5; (2) bloquear la fila del miembro; (3) releer miembro, plan, suscripción vigente y, si hay `cobroId`, sus pagos; (4) validar permiso, meses, importe, fecha de pago y plan; (5) calcular la base y el fin; (6) crear o extender la suscripción con `fijarVencimiento`; (7) crear las líneas con el mismo `cobroId`, su `ordenLinea` y `vencimientoAnterior`; (8) actualizar `Miembro.fechaUltimoPago`; (9) confirmar.
-- **Anulación:** dentro de una transacción con el mismo bloqueo, tomado sobre el miembro del pago que se lee primero, releer el pago y el miembro, comprobar el permiso, que no esté anulado, que sea el vigente más reciente y que su fin de ciclo coincida con el vencimiento actual; anular todas las líneas del cobro, restaurar `vencimientoAnterior` con `fijarVencimiento` y la fecha del último pago. La suscripción no cambia de estado: su vigencia se deduce de su `fin`. Los pagos sin `vencimientoAnterior` solo se anulan.
+- **Secuencia de la transacción** (abierta por el caso de uso con `IUnidadDeTrabajo`; el bloqueo es `bloquearPorId` del repositorio de miembros, que en Drizzle usa `.for("update")` sin `sql.raw`): (1) abrir la transacción con tiempo límite de 20 segundos y espera de bloqueo de 5; (2) bloquear la fila del miembro; (3) releer miembro, plan, suscripción vigente y, si hay `cobroId`, sus pagos; (4) validar permiso, meses, importe, fecha de pago y plan; (5) calcular la base y el fin; (6) crear o extender la suscripción con `fijarVencimiento`; (7) crear el pago con su `cobroId` y su `vencimientoAnterior`; (8) actualizar `Miembro.fechaUltimoPago`; (9) confirmar.
+- **Anulación:** dentro de una transacción con el mismo bloqueo, tomado sobre el miembro del pago que se lee primero, releer el pago y el miembro, comprobar el permiso, que no esté anulado, que sea el vigente más reciente y que su fin de ciclo coincida con el vencimiento actual; anular el pago del cobro, restaurar `vencimientoAnterior` con `fijarVencimiento` y la fecha del último pago. La suscripción no cambia de estado: su vigencia se deduce de su `fin`. Los pagos sin `vencimientoAnterior` solo se anulan.
 - Las pruebas de propiedad y de concurrencia usan generadores con semilla fija; no hay dependencias nuevas.
 
 ### 5.2 Migración
 - No hay datos que migrar: el baseline se genera en S-15. Mientras tanto la base se crea con `drizzle-kit push` (S-22).
-- Cambios de esquema: se retiran `Plan.permitePagoParcial`, `Plan.minimoAbonoTipo`, `Plan.minimoAbonoValor`, `Suscripcion.fechaLimiteAbono`, `Miembro.saldoAFavorUSD` y la tabla `ReglaAbonoPorFrecuencia` con su puerto y su repositorio; se agregan `Pago.vencimientoAnterior` (fecha) y `Pago.ordenLinea` (entero, nulo en los pagos de otras specs) con una restricción única sobre `grupoPagoId` y `ordenLinea`.
+- Cambios de esquema: se retiran `Plan.permitePagoParcial`, `Plan.minimoAbonoTipo`, `Plan.minimoAbonoValor`, `Suscripcion.fechaLimiteAbono`, `Miembro.saldoAFavorUSD` y la tabla `ReglaAbonoPorFrecuencia` con su puerto y su repositorio; se retira `Sucursal.diasGracia`; se agregan `Pago.vencimientoAnterior` (fecha) y `Pago.cobroId` (UUID, nulo en los pagos de otras specs) con una restricción única sobre `cobroId`.
 - **Enmiendas que se registran al aprobar S-04:** en S-22 y S-01, el recuento pasa de 26 a 25 tablas y se mantienen 15 enums, 21 repositorios y 16 suites de contrato (sin `ReglaAbonoPorFrecuencia`); en S-03, `resolverCobroPasado*` pasa a la familia de S-11; en S-02, la lista de exenciones deja los archivos de la familia S-04 convertidos aquí.
 - Reversión: antes del primer push, `git reset` del propietario; después, cada paso del plan es un commit independiente.
 
@@ -889,19 +904,19 @@ El cobro heredado (`registrarPago`, 511 líneas) mezcla el pago de la membresía
 - `CambiarPlanConPago.ts` y la ficha comparten vencimiento con el cobro sin la misma transacción hasta S-07; INV-S04-001 se garantiza en las rutas de S-04 y en la ficha, que usan `fijarVencimiento`.
 - Anular solo el último cobro puede estorbar a quien se equivocó dos cobros atrás. Mitigación: SUP-S04-007 y el mensaje de la anulación; lo decide el propietario.
 - Cambiar el vencimiento de instante con hora a día de calendario puede mover un día los vencimientos que se calculan hoy con hora. Mitigación: SUP-S04-003 y las pruebas de borde de BEH-S04-013.
-- Si el propietario quiere que el mes sea de calendario y no de 30 días, cambia `diasCiclo`; la función de fin está aislada.
+- El propietario confirmó los 30 días corridos por mes; si más adelante prefiere meses de calendario, cambia `diasCiclo`, que está aislado en la función de fin.
 - `RegistrarPagoConDeudas` se borra aquí aunque el fiado es de S-11; el efecto es que, entre S-04 y S-11, no se cobran deudas junto con la membresía. Mitigación: ADR-018 elimina el fiado.
 - El identificador de cobro exige que la pantalla lo genere; un cliente que no lo envíe recibe un identificador generado por el servidor y pierde la protección contra el doble clic. Mitigación: el servidor genera uno si falta y la pantalla siempre lo envía.
 
 ### 5.4 Preguntas abiertas
-- ¿Se puede repartir un cobro entre varios métodos (P-16, que se aparta de P-21)? Default: sí (SUP-S04-001).
-- ¿Los días de gracia valen para todos los planes (se aparta de RF-25, solo mensuales)? Default: sí (SUP-S04-004).
-- ¿El día del vencimiento todavía tiene acceso (31 días en el primer período)? Default: sí (SUP-S04-003).
-- ¿El mes dura 30 días corridos o es de calendario (P-17 no, esto es nuevo)? Default: 30 días corridos (SUP-S04-002).
-- ¿Cuántos días de gracia (P-18)? Default: se mantiene, con 0 hasta que el propietario indique otro valor (SUP-S04-004).
-- ¿Se acepta anular solo el último cobro de un miembro? Default: sí (SUP-S04-007).
-- ¿Se acepta un cobro de S/ 0.00 solo si el precio acordado es S/ 0.00? Default: sí (SUP-S04-006).
-- ¿Es suficiente un límite de 90 días para registrar un pago con fecha pasada? Default: sí (SUP-S04-008).
+Todas las decisiones de negocio de S-04 fueron respondidas por el propietario el 2026-11-12:
+- ¿Se puede repartir un cobro entre varios métodos (P-16)? Default: no, un solo método por cobro (SUP-S04-001); confirmado.
+- ¿El mes dura 30 días corridos? Default: sí (SUP-S04-002); confirmado.
+- ¿El día del vencimiento todavía tiene acceso? Default: sí, inclusive (SUP-S04-003); confirmado.
+- ¿Hay días de gracia (P-18)? Default: no, la función se desincorpora (SUP-S04-004); confirmado.
+- ¿Hay cobros de cortesía de S/ 0.00? Default: no aplica (SUP-S04-006); confirmado.
+- ¿Se prevén anulaciones y reintegros? Default: sí, con el alcance de SUP-S04-015; confirmado.
+- ¿Hay límite de antigüedad para un pago con fecha pasada? Default: no, y nunca con fecha futura (SUP-S04-008); confirmado.
 
 ## Revisión independiente
 
@@ -964,3 +979,6 @@ Verifiqué los hallazgos contra el Repo A antes de corregir: la ubicación de la
 | Fila 17 (riesgos y lint) | Riesgos agregados a 5.3; `spec-lint` ejecutado |
 
 Tras las correcciones S-04 pasó de 31 a 48 REQ, de 26 a 41 BEH, de 5 a 6 INV y de 18 a 25 AC. Sigue en `en-revision` hasta que el propietario escriba «S-04 aprobada» sobre este texto corregido y responda las tres decisiones de negocio con valor por defecto (pago repartido, gracia en todos los planes y día de vencimiento inclusivo).
+
+### Cambios posteriores a la revisión (2026-11-12)
+El propietario respondió las decisiones de negocio y se aplicaron sobre el texto ya corregido: **sin pagos repartidos entre métodos** (un cobro es un solo pago; se agrega REQ-S04-049 y `Pago.cobroId` sustituye a `ordenLinea`); **se desincorporan los días de gracia** (REQ-S04-013 pasa a prohibirlos y el acceso tiene dos estados); **no hay cobros de cortesía** (REQ-S04-036 exige un monto mayor que 0.00); **pagos con fecha pasada sin límite de antigüedad y nunca futura** (REQ-S04-014 y REQ-S04-015); y se confirmaron los 30 días por mes y el día de vencimiento inclusive. S-04 queda con 49 REQ, 42 BEH, 6 INV y 25 AC. Sigue en `en-revision` hasta que el propietario escriba «S-04 aprobada» sobre este texto.

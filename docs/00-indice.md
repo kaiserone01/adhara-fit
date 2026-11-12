@@ -6,7 +6,7 @@ Sistema de gestión de gimnasio con control de accesos para **Adhara Fit** (Per�
 
 ## Cómo leer este paquete
 
-> **Nota ADR-022 (2026-11-12):** donde los documentos 01, 03, 10 y 12 nombran Prisma (pila del repo base, adaptadores, prompts históricos), rige ADR-022: el ORM pasa a Drizzle. Son documentos históricos y no se reescriben.
+> **Nota ADR-022 (2026-11-12):** donde los documentos 01, 03, 10 y 12 nombran Prisma (pila del repo base, adaptadores, prompts históricos), rige ADR-022: el ORM pasa a Drizzle. Son documentos históricos y no se reescriben. Tampoco rige RF-25 (días de gracia): el propietario los desincorporó el 2026-11-12.
 
 | # | Documento | Para qué sirve |
 |---|---|---|

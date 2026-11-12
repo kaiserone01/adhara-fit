@@ -25,7 +25,7 @@ Es breve a propósito: cada artículo dice qué se exige y **cómo se verifica**
 |---|---|---|---|
 | C-09 | Toda spec tiene los cuatro pilares con IDs estables (`REQ`, `BEH`, `INV`, `AC`) y cobertura: todo REQ → ≥ 1 BEH; todo REQ MUST → ≥ 1 AC; todo INV → mecanismo y ≥ 1 AC. | 015 | `tools/spec-lint.mjs` y `TRAZABILIDAD.md` |
 | C-10 | Una spec solo entra en revisión si todos los ADR que cita están aceptados; una spec aprobada no contiene «TBD», «por definir», «etc.» ni adjetivos sin medida. | 015 | `spec-lint` (A01, A02, T01, T02) |
-| C-11 | Toda afirmación sobre el código cita `archivo:línea` o dice «no verificado»; se distingue siempre hecho, decisión (ADR) y supuesto («asumido, por validar», con default). | 015 | `spec-lint` (T03, T04), revisión independiente |
+| C-11 | Toda afirmación sobre el código cita `archivo:línea`, da su evidencia con «verificado con `comando`» (hechos de existencia o conteo) o dice «no verificado»; se distingue siempre hecho, decisión (ADR) y supuesto («asumido, por validar», con default). | 015 | `spec-lint` (T03, T04), revisión independiente |
 | C-12 | La revisión de specs y ADR la hace un subagente de solo lectura que recibe solo la ruta y la lista de comprobación; su veredicto lo decide el propietario. | 015, 017 | `.claude/agents/*` (solo `Read`, `Grep`, `Glob`), `harness-selftest` |
 
 ## III. Arquitectura y dominio

@@ -26,7 +26,7 @@ fecha_aprobacion:
 - <Lo que esta spec no toca y dónde se trata (otra spec o backlog).>
 
 ### 0.4 Comportamiento actual verificado
-> Cada punto cita `archivo:línea` del Repo A (p. ej. `RegistrarPago.ts:384`) o dice «no verificado» / «no re-verificado, ver doc 09 §…».
+> Cada punto cita `archivo:línea` del Repo A (p. ej. `RegistrarPago.ts:384`), o da la evidencia de un hecho de existencia o de conteo con «verificado con `comando`», o dice «no verificado» / «no re-verificado, ver doc 09 §…».
 - <Comportamiento actual (`ruta/archivo.ts:123`).>
 - <Lo que no se pudo comprobar: no verificado.>
 

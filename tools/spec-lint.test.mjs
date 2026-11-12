@@ -192,6 +192,9 @@ test('supuestos, comportamiento actual y preguntas abiertas', () => {
   assert.ok(reglas(lint(sustituir(BUENA, 'Default: se usa la hora local de Lima; asumido, por validar.', 'Se usa la hora local.'))).includes('T03'));
   assert.ok(reglas(lint(sustituir(BUENA, 'Default: no se cuentan.', 'Pendiente.'))).includes('T03'));
   assert.ok(reglas(lint(sustituir(BUENA, '(`packages/domain/visitas.ts:12`)', ''))).includes('T04'));
+  // Un hecho de existencia o de conteo se acepta con evidencia explícita, pero no con un «verificado» a secas.
+  assert.ok(!reglas(lint(sustituir(BUENA, '(`packages/domain/visitas.ts:12`)', '(verificado con `ls packages`)'))).includes('T04'));
+  assert.ok(reglas(lint(sustituir(BUENA, '(`packages/domain/visitas.ts:12`)', '(verificado)'))).includes('T04'));
 });
 test('aprobada exige el bloque "Revisión independiente"', () => {
   assert.ok(reglas(lint(BUENA.replace(/## Revisión independiente[\s\S]*$/, ''))).includes('T05'));

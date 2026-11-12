@@ -50,6 +50,8 @@ export const ADJETIVOS_VAGOS = [
 const RE_VAGO = new RegExp(`(?<![\\p{L}])(${ADJETIVOS_VAGOS.join('|')})(?![\\p{L}])`, 'iu');
 const RE_ARCHIVO_LINEA = /[\w./-]+\.(ts|tsx|js|mjs|prisma|sql|json|md|yml|yaml|cs|kt|sh):\d+/;
 const RE_NO_VERIFICADO = /no (re-)?verificado/i;
+// Evidencia explícita para hechos de existencia o de conteo, que no tienen línea: «verificado con `ls raíz`».
+const RE_VERIFICADO_CON = /verificado (?:con|por) `[^`]+`/i;
 
 // ---------------------------------------------------------------- análisis
 function marcarFences(lines) {
@@ -276,7 +278,7 @@ export function validarSpec(spec, { archivo, adrs, specIds }) {
   const sub = (num) => spec.headings.find((h) => h.nivel === 3 && h.texto.startsWith(`${num} `));
   const items = (h) => (h ? spec.lines.slice(h.idx + 1, h.fin).map((l, k) => ({ l, line: h.idx + 2 + k })).filter((x) => /^-\s+\S/.test(x.l) && !spec.fence[x.line - 1]) : []);
   for (const it of items(sub('0.4'))) {
-    if (!RE_ARCHIVO_LINEA.test(it.l) && !RE_NO_VERIFICADO.test(it.l)) d('T04', it.line, 'comportamiento actual sin archivo:línea ni "no verificado"');
+    if (!RE_ARCHIVO_LINEA.test(it.l) && !RE_NO_VERIFICADO.test(it.l) && !RE_VERIFICADO_CON.test(it.l)) d('T04', it.line, 'comportamiento actual sin archivo:línea, sin "verificado con `comando`" ni "no verificado"');
   }
   for (const it of items(sub('0.5'))) {
     if (!/default\s*:/i.test(it.l) || !/asumido, por validar/i.test(it.l)) d('T03', it.line, 'un supuesto debe traer "default:" y la marca "asumido, por validar"');

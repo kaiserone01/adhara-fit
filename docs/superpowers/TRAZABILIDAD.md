@@ -244,6 +244,46 @@ Archivo: `S-05-negocio-y-sede-unicos.md` · REQ: 33 · BEH: 25 · INV: 5 · AC: 
 | REQ-S05-032 | MUST | BEH-S05-025 | — | AC-S05-017 (integracion) | pendiente |
 | REQ-S05-033 | MUST | BEH-S05-025 | — | AC-S05-017 (integracion) | pendiente |
 
+## S-06 — Documento de identidad: DNI, carné de extranjería o pasaporte, y código de socio (en-revision)
+
+Archivo: `S-06-documento-de-identidad.md` · REQ: 33 · BEH: 30 · INV: 6 · AC: 17
+
+| REQ | Prioridad | BEH | INV | AC (método) | Test |
+|---|---|---|---|---|---|
+| REQ-S06-001 | MUST | BEH-S06-001 | — | AC-S06-001 (sql) | pendiente |
+| REQ-S06-002 | MUST | BEH-S06-001 | INV-S06-001 | AC-S06-001 (sql), AC-S06-005 (integracion) | pendiente |
+| REQ-S06-003 | MUST | BEH-S06-001 | INV-S06-002 | AC-S06-001 (sql), AC-S06-002 (sql), AC-S06-007 (integracion) | pendiente |
+| REQ-S06-004 | MUST | BEH-S06-002 | INV-S06-003 | AC-S06-002 (sql) | pendiente |
+| REQ-S06-005 | MUST | BEH-S06-003 | INV-S06-004 | AC-S06-003 (unitario) | pendiente |
+| REQ-S06-006 | MUST | BEH-S06-004 | INV-S06-004 | AC-S06-003 (unitario) | pendiente |
+| REQ-S06-007 | MUST | BEH-S06-005 | INV-S06-003 | AC-S06-002 (sql), AC-S06-004 (integracion) | pendiente |
+| REQ-S06-008 | MUST | BEH-S06-006 | INV-S06-001 | AC-S06-004 (integracion), AC-S06-005 (integracion) | pendiente |
+| REQ-S06-009 | MUST | BEH-S06-007 | INV-S06-001 | AC-S06-005 (integracion) | pendiente |
+| REQ-S06-010 | MUST | BEH-S06-008 | INV-S06-002 | AC-S06-002 (sql), AC-S06-006 (integracion), AC-S06-007 (integracion) | pendiente |
+| REQ-S06-011 | MUST | BEH-S06-008, BEH-S06-011 | — | AC-S06-006 (integracion) | pendiente |
+| REQ-S06-012 | MUST | BEH-S06-009 | INV-S06-002 | AC-S06-002 (sql), AC-S06-007 (integracion) | pendiente |
+| REQ-S06-013 | MUST | BEH-S06-010 | — | AC-S06-006 (integracion) | pendiente |
+| REQ-S06-014 | MUST | BEH-S06-008 | — | AC-S06-006 (integracion) | pendiente |
+| REQ-S06-015 | MUST | BEH-S06-012 | INV-S06-003 | AC-S06-002 (sql), AC-S06-004 (integracion) | pendiente |
+| REQ-S06-016 | MUST | BEH-S06-013, BEH-S06-014 | — | AC-S06-004 (integracion) | pendiente |
+| REQ-S06-017 | MUST | BEH-S06-015 | — | AC-S06-008 (integracion) | pendiente |
+| REQ-S06-018 | MUST | BEH-S06-016 | — | AC-S06-009 (integracion) | pendiente |
+| REQ-S06-019 | MUST | BEH-S06-017 | INV-S06-005 | AC-S06-003 (unitario), AC-S06-010 (integracion) | pendiente |
+| REQ-S06-020 | MUST | BEH-S06-018 | INV-S06-005 | AC-S06-003 (unitario), AC-S06-010 (integracion) | pendiente |
+| REQ-S06-021 | MUST | BEH-S06-019 | — | AC-S06-011 (integracion) | pendiente |
+| REQ-S06-022 | MUST | BEH-S06-020 | — | AC-S06-011 (integracion) | pendiente |
+| REQ-S06-023 | MUST | BEH-S06-021 | — | AC-S06-012 (integracion) | pendiente |
+| REQ-S06-024 | MUST | BEH-S06-022 | — | AC-S06-004 (integracion) | pendiente |
+| REQ-S06-025 | MUST | BEH-S06-023 | — | AC-S06-013 (e2e) | pendiente |
+| REQ-S06-026 | MUST | BEH-S06-024 | — | AC-S06-013 (e2e) | pendiente |
+| REQ-S06-027 | MUST | BEH-S06-025 | — | AC-S06-013 (e2e) | pendiente |
+| REQ-S06-028 | MUST | BEH-S06-026 | — | AC-S06-014 (unitario) | pendiente |
+| REQ-S06-029 | MUST | BEH-S06-027 | — | AC-S06-015 (unitario) | pendiente |
+| REQ-S06-030 | MUST | BEH-S06-028 | INV-S06-006 | AC-S06-016 (unitario) | pendiente |
+| REQ-S06-031 | MUST | BEH-S06-029 | INV-S06-006 | AC-S06-016 (unitario) | pendiente |
+| REQ-S06-032 | MUST | BEH-S06-030 | — | AC-S06-017 (manual) | pendiente |
+| REQ-S06-033 | MUST | BEH-S06-015 | — | AC-S06-008 (integracion) | pendiente |
+
 ## S-22 — Capa de datos con Drizzle: esquema, repositorios, transacciones y retiro de Prisma (aprobada)
 
 Archivo: `S-22-capa-de-datos-con-drizzle.md` · REQ: 30 · BEH: 27 · INV: 6 · AC: 28

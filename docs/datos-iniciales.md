@@ -23,3 +23,9 @@ Escritos tal como los dio el propietario, con mayúsculas normalizadas por mí (
 - José Montesino
 - Joa Bonillo
 - Jesús Bonillo
+
+## Formato de montos
+- Convención del propietario: **S/ 120.00** (formato habitual de Perú) en precios y en todos los registros transaccionales; sin conversión entre monedas.
+- Reglas: prefijo `S/`, punto decimal, siempre 2 decimales, coma para miles (`S/ 1,200.00`), negativos `-S/ 50.25`, sin redondeo del monto cobrado.
+- Detalle técnico, que el usuario no ve: la base guarda el valor exacto con 2 decimales y el cálculo interno puede usar enteros para evitar errores de coma flotante (ADR-011, propuesto).
+

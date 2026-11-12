@@ -156,3 +156,33 @@ Lectura: el acoplamiento más profundo es **sucursal** (transversal) y el cluste
 | 14 | 11 (nuevo) | Verificación completa del documento de ingeniería; 7 hallazgos nuevos |
 | 15 | 07 tarea 0.2 (S-00) | El criterio «`git log` muestra un solo commit inicial» no aplica: este repositorio ya contiene el arnés y la documentación. El criterio pasa a ser «un solo commit de importación, sin historia del Repo A» (spec S-00, REQ-S00-001) |
 | 16 | 07 tarea 0.3 (S-00) | El criterio «búsqueda de cédula/Adrenalina/zip sin hallazgos» no puede cumplirse en la Fase 0: el código aún contiene esos términos (§5: 40 archivos con *cédula*, 29 con marca anterior). Se limita a los archivos de datos y scripts excluidos; el resto se retira en S-06 y S-10 (spec S-00 §5.2) |
+
+## 8. Re-verificación contra el clon del Repo A (2026-11-12)
+
+Clon de solo lectura de `kaiserone01/gym-app` en `b4352a0398933cf2665a3e7b82dc84049697e10c`. Sustituye al «no re-verificado» de los puntos que se indican. Las rutas son del Repo A.
+
+### 8.1 Confirmado
+| Afirmación | Evidencia |
+|---|---|
+| 7 apps y 8 directorios en `packages` | `ls apps`, `ls packages` (`domain-custom` solo tiene `.gitkeep`; `config` y `design-system` tienen `.gitkeep` y `package.json`) |
+| 36 migraciones (de `20260913024831_organizacion_sucursal_plan_suscripcion` a `20261016000000_vitrina_sonido`) y `migration_lock.toml` (DI-15) | `packages/db/prisma/migrations` |
+| `schema.prisma`: 723 líneas, 25 modelos y 14 enums (DI-14) | `packages/db/prisma/schema.prisma` |
+| 3 workflows (DI-13); sin `.env.example`; sin `LICENSE`; `cookies.txt` (254 bytes) y `handoff.md` (707 líneas, DI-11) versionados; 2 `debug.keystore` (DI-88) | `ls`, `find` |
+| Seed con contraseñas fijas (DI-88) | `packages/db/prisma/seed.ts:41`, `:50`, `:55` |
+| 12 variables `process.env` (DI-85) | `grep -rhoE "process\.env\.[A-Z_0-9]+" apps packages` |
+| `TZ=America/Caracas` (DI-07); `PORT=3000` y `EXPOSE 3000` | `Dockerfile:42`, `:40`, `:70` |
+| `migrate deploy` al arrancar (DI-83) y `output: "standalone"` en `web-admin` (resuelve el ⚠️ de DI-83); `kiosk` y `vitrina` en `output: "export"` (DI-02) | `docker-entrypoint.sh:11`; `apps/web-admin/next.config.ts:7`, `apps/kiosk/next.config.ts:9`, `apps/vitrina/next.config.ts:6`; `dev` en 3001 y 3002 (`apps/kiosk/package.json:6`, `apps/vitrina/package.json:6`) |
+| El inventario oficial reproduce las cifras del §5. «abono» son **78** archivos: 53 de código + 11 tests + 2 scripts + **1 migración** + 11 documentos (la tabla del §5 omitía la columna de migración: se resuelve la duda 77/78) | `generar_inventario.py` sobre el clon |
+
+### 8.2 Correcciones y hallazgos nuevos
+| # | Hallazgo | Evidencia | Consecuencia |
+|---|---|---|---|
+| R-01 | El `package.json` raíz **no tiene `test` ni `typecheck`**: solo `dev`, `build`, `lint`, `start` y `actualizar-tasa`. `test` existe en `apps/kiosk`, `apps/vitrina`, `packages/db` y `packages/domain`; `web-admin` no tiene `test`. Solo `web-admin`, `kiosk` y `vitrina` tienen `tsconfig.json` propio | `package.json` de cada workspace; `turbo.json` define la tarea `test` | S-00 añade `typecheck` donde haya `tsconfig.json` (SUP-S00-009) |
+| R-02 | `packages/db` tiene más scripts de mantenimiento de los listados en ADR-005: `backfillPermisos*.ts`, `clonarZipGym/`, `diagnosticoVencimientos.ts`, `limpiarCajaPrueba.ts`, `limpiarMiembros.ts`, `marcarAjustarFecha.ts`, `productos-prueba/`, `quitarPermisosEntrenadores.ts`, `resetVencimientosPrueba.ts`, `sembrarMiembrosPrueba.ts`, `Dockerfile.migrate`, `prisma7*.config.ts`, entre otros | `ls packages/db` | Lista de permitidos explícita en S-00 §0.2 |
+| R-03 | `admin1234` aparece también en 7 documentos de `docs/superpowers/plans/` del Repo A | `grep -rl admin1234` | El `docs/` del Repo A no se importa |
+| R-04 | El `docs/adr/` del Repo A tiene `ADR-001-gym-app-sesion.md`, `ADR-001-gym-app-sesion-v2.md` y `ADR-002-vitrina-importa-dominio-puro.md`: colisión de numeración confirmada | `ls docs/adr` | Idem |
+| R-05 | Alcance de `organizacionId`: **175 archivos** (144 de código fuente) y 13 modelos (`Sucursal`, `UsuarioAdmin`, `Miembro`, `Plan`, `ReglaAbonoPorFrecuencia`, `Producto`, `DeudaProducto`, `CambioPlanAuditoria`, `Turno`, `MetodoPago`, `TemaOrganizacion`, `MiembroReferencia`, `PadronHoja`). **73 archivos** solo se tocan por `organizacionId`; los otros 102 se eliminan o se reescriben por otras decisiones (turnos, egresos, fiado, abonos, padrón, tasa, tema) | `grep` por patrón sobre `apps` y `packages` | Mide el costo real de ADR-019 (opción B): entre 73 y 175 archivos |
+| R-06 | Alcance de lo que ADR-018 elimina (archivos de `apps` y `packages`): `turno` 78 (66 de código), `arqueo` 24, `egreso` 22 (19 de código), `deudaProducto`/fiado 46 (22 de código) | `grep` por patrón | Dimensiona S-08 y S-11 |
+| R-07 | El kiosco captura el DNI con un `keydown` global de dígitos, Enter y Escape, **sin `<input>`** (para no abrir el teclado en pantalla): es compatible con un numpad USB; no se probó en un TV | `apps/kiosk/lib/useEntradaCedula.ts:29`, `:106`, `:131-132` | Base de S-21 (check-in en smart-TV) |
+| R-08 | La vitrina maneja carteles de tres tipos (`ENTRENADOR`, `PROMO`, `PRODUCTO`) con imagen o video, duración, vigencia, orden, etiquetas, precio, oferta, descuento y sonido; guarda `precioUSD`, `ofertaUSD` y `mostrarEquivalenteBs`. 41 archivos, 7 de ellos tests. El APK exige Android System WebView ≥ 111 y lleva la API key de la sede dentro | `packages/db/prisma/schema.prisma:684`; `apps/vitrina`; `apps/vitrina-tv/README.md` | Base de S-20 («heredamos lo que la vitrina resuelve») |
+| R-09 | Los workspaces `packages/db`, `domain`, `infrastructure`, `ui` y `theming` no tienen `tsconfig.json` propio; el cierre de dependencias de las cinco apps del alcance es `db`, `domain`, `infrastructure`, `theming` y `ui` | `package.json` de cada workspace | S-00 REQ-S00-004; `design-system` se conserva por ADR-020 |

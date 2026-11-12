@@ -1,6 +1,6 @@
 # ADR-001: Adoptar `gym-app` como base de Adhara Fit
 
-Estado: **propuesto** (2026-11-11) · P-01 resuelto (repo propio, 12-nov-2026)
+Estado: **aceptado** (confirmado por el propietario, 2026-11-12) · propuesto el 2026-11-11 · P-01 resuelto (repo propio, 12-nov-2026)
 
 ## Contexto
 Adhara Fit necesita gestión de membresías, caja y control de acceso en Perú. Existe `kaiserone01/gym-app`: monorepo Next.js 16 + Prisma 7 con dominio hexagonal, caja con turnos y arqueo, abonos, kiosco offline y roles granulares, probado en producción por otro gimnasio (≈ 41 000 líneas, 732 commits). Está acoplado a Venezuela (USD/Bs/BCV, cédula, Caracas) y a multi-sede.

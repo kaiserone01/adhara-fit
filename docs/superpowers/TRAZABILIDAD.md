@@ -42,6 +42,38 @@ Archivo: `S-00-fundaciones-del-repo.md` · REQ: 31 · BEH: 27 · INV: 6 · AC: 2
 | REQ-S00-030 | MUST | BEH-S00-001, BEH-S00-024 | — | AC-S00-020 (integracion), AC-S00-023 (unitario) | tools/importar-repo-a.test.mjs; tools/verificar-repo.test.mjs |
 | REQ-S00-031 | MUST | BEH-S00-001, BEH-S00-007, BEH-S00-009 | — | AC-S00-020 (integracion) | tools/importar-repo-a.test.mjs |
 
+## S-01 — Baseline de seguridad: cuentas, intentos de login, clave del kiosco, permisos, validación, cabeceras y CORS (en-revision)
+
+Archivo: `S-01-baseline-de-seguridad.md` · REQ: 25 · BEH: 23 · INV: 7 · AC: 18
+
+| REQ | Prioridad | BEH | INV | AC (método) | Test |
+|---|---|---|---|---|---|
+| REQ-S01-001 | MUST | BEH-S01-001 | — | AC-S01-001 (integracion) | pendiente |
+| REQ-S01-002 | MUST | BEH-S01-001 | — | AC-S01-001 (integracion) | pendiente |
+| REQ-S01-003 | MUST | BEH-S01-002 | INV-S01-001 | AC-S01-002 (integracion), AC-S01-003 (integracion) | pendiente |
+| REQ-S01-004 | MUST | BEH-S01-003, BEH-S01-004 | INV-S01-001 | AC-S01-002 (integracion), AC-S01-003 (integracion) | pendiente |
+| REQ-S01-005 | MUST | BEH-S01-005 | — | AC-S01-004 (integracion) | pendiente |
+| REQ-S01-006 | MUST | BEH-S01-005, BEH-S01-006, BEH-S01-008 | INV-S01-002 | AC-S01-004 (integracion), AC-S01-005 (unitario), AC-S01-006 (integracion) | pendiente |
+| REQ-S01-007 | MUST | BEH-S01-007 | INV-S01-002 | AC-S01-006 (integracion) | pendiente |
+| REQ-S01-008 | MUST | BEH-S01-009 | INV-S01-003, INV-S01-004 | AC-S01-007 (integracion), AC-S01-010 (integracion) | pendiente |
+| REQ-S01-009 | MUST | BEH-S01-009 | INV-S01-003 | AC-S01-007 (integracion) | pendiente |
+| REQ-S01-010 | MUST | BEH-S01-010, BEH-S01-013 | INV-S01-004 | AC-S01-007 (integracion), AC-S01-008 (integracion), AC-S01-010 (integracion) | pendiente |
+| REQ-S01-011 | MUST | BEH-S01-011 | — | AC-S01-009 (unitario) | pendiente |
+| REQ-S01-012 | MUST | BEH-S01-014, BEH-S01-015 | INV-S01-006 | AC-S01-011 (unitario) | pendiente |
+| REQ-S01-013 | MUST | BEH-S01-014 | INV-S01-006 | AC-S01-011 (unitario) | pendiente |
+| REQ-S01-014 | MUST | BEH-S01-016 | INV-S01-005 | AC-S01-012 (unitario) | pendiente |
+| REQ-S01-015 | MUST | BEH-S01-017 | INV-S01-005 | AC-S01-012 (unitario) | pendiente |
+| REQ-S01-016 | MUST | BEH-S01-018 | — | AC-S01-013 (integracion) | pendiente |
+| REQ-S01-017 | MUST | BEH-S01-019 | — | AC-S01-014 (unitario) | pendiente |
+| REQ-S01-018 | MUST | BEH-S01-020 | INV-S01-007 | AC-S01-015 (integracion) | pendiente |
+| REQ-S01-019 | MUST | BEH-S01-020 | — | AC-S01-015 (integracion) | pendiente |
+| REQ-S01-020 | MUST | BEH-S01-020 | INV-S01-007 | AC-S01-015 (integracion) | pendiente |
+| REQ-S01-021 | MUST | BEH-S01-021 | — | AC-S01-016 (unitario) | pendiente |
+| REQ-S01-022 | MUST | BEH-S01-021 | — | AC-S01-016 (unitario) | pendiente |
+| REQ-S01-023 | MUST | BEH-S01-022 | — | AC-S01-017 (unitario) | pendiente |
+| REQ-S01-024 | MUST | BEH-S01-012 | — | AC-S01-008 (integracion) | pendiente |
+| REQ-S01-025 | MUST | BEH-S01-023 | — | AC-S01-018 (unitario) | pendiente |
+
 ## S-22 — Capa de datos con Drizzle: esquema, repositorios, transacciones y retiro de Prisma (aprobada)
 
 Archivo: `S-22-capa-de-datos-con-drizzle.md` · REQ: 30 · BEH: 27 · INV: 6 · AC: 28

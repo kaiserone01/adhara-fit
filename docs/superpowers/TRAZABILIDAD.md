@@ -42,7 +42,7 @@ Archivo: `S-00-fundaciones-del-repo.md` · REQ: 31 · BEH: 27 · INV: 6 · AC: 2
 | REQ-S00-030 | MUST | BEH-S00-001, BEH-S00-024 | — | AC-S00-020 (integracion), AC-S00-023 (unitario) | tools/importar-repo-a.test.mjs; tools/verificar-repo.test.mjs |
 | REQ-S00-031 | MUST | BEH-S00-001, BEH-S00-007, BEH-S00-009 | — | AC-S00-020 (integracion) | tools/importar-repo-a.test.mjs |
 
-## S-22 — Capa de datos con Drizzle: esquema, repositorios, transacciones y retiro de Prisma (en-revision)
+## S-22 — Capa de datos con Drizzle: esquema, repositorios, transacciones y retiro de Prisma (aprobada)
 
 Archivo: `S-22-capa-de-datos-con-drizzle.md` · REQ: 30 · BEH: 27 · INV: 6 · AC: 28
 

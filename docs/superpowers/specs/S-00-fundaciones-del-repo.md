@@ -793,3 +793,9 @@ No aplicado, con motivo:
 - Fusión de `.gitignore`: no se hizo REQ propio; queda como regla de 5.2 (unión de reglas), verificada por REQ-024.
 - Los AC e2e siguen pendientes de ejecutar por el propietario (5.1).
 - La versión corregida **no se ha vuelto a pasar por el revisor**.
+
+## Enmiendas posteriores (2026-11-12)
+*Derivadas de la aprobación de S-22 (ADR-022). El texto anterior se conserva; donde choca, rige esta sección.*
+- SUP-S00-002, SUP-S00-010, REQ-S00-017, AC-S00-008 y AC-S00-022: la creación del esquema en Compose pasa de `prisma db push` a un servicio `esquema` con `drizzle-kit push` (S-22, REQ-S22-016).
+- §0.2, REQ-S00-003 y REQ-S00-028: la lista de permitidos de `packages/db` pasa a `package.json`, `drizzle.config.ts` y `src/` (S-22, REQ-S22-029).
+- Hasta que S-22 se ejecute, el árbol importado por S-00 conserva Prisma tal como está.

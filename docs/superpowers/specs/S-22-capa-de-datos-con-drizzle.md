@@ -1,10 +1,10 @@
 ---
 id: S-22
-estado: en-revision
+estado: aprobada
 adrs: ADR-001, ADR-016, ADR-022
 depende_de: S-00
-aprobada_por:
-fecha_aprobacion:
+aprobada_por: propietario
+fecha_aprobacion: 2026-11-12
 ---
 # S-22 — Capa de datos con Drizzle: esquema, repositorios, transacciones y retiro de Prisma
 
@@ -759,4 +759,4 @@ Verifiqué cada hallazgo contra el clon (y contra los paquetes de Drizzle instal
 | Fila 10 (`peerDependencies`) | **Cierto y bloqueante**: `drizzle-orm@0.45.4` declara `@prisma/client` y `prisma` como opcionales y el lockfile contiene la cadena 3 veces sin instalar ningún paquete de Prisma | REQ-027, BEH-024 y AC-024: el lockfile se comprueba por rutas de paquete, no por texto |
 | Fila 11 (lint) | Ejecuté `node tools/spec-lint.mjs --write` tras las correcciones: 0 errores, 0 avisos | — |
 
-Tras las correcciones S-22 pasó de 23 a 30 REQ, de 20 a 27 BEH y de 20 a 28 AC (6 INV). Sigue en `en-revision` hasta que el propietario confirme el texto corregido y las dos desviaciones de ADR-022.
+Tras las correcciones S-22 pasó de 23 a 30 REQ, de 20 a 27 BEH y de 20 a 28 AC (6 INV). El propietario aprobó el texto corregido el 2026-11-12 («S-22 aprobada con el texto corregido, confirmo las dos desviaciones») y confirmó las dos desviaciones de ADR-022 (SUP-S22-014); la spec pasó a `aprobada`.

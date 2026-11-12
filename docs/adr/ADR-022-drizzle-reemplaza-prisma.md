@@ -77,3 +77,9 @@ Cada una con su default; si no respondes, se aplica y queda marcada como asumida
 4. ¿Cómo se crea la base mientras el esquema cambia y cómo se aplican las migraciones en producción? Default: `drizzle-kit push` solo en bases desechables y migrador de ejecución de `drizzle-orm` para producción.
 5. ¿Aceptas que S-22 incluya las pruebas de caracterización de repositorios (no existen pruebas heredadas)? Default: sí.
 6. ¿Autorizas el experimento previo con `PrismaPagoRepository`? Default: no se hace; la prueba de viabilidad queda dentro de S-22.
+
+## Enmiendas posteriores (2026-11-12)
+*Confirmadas por el propietario al aprobar S-22 («confirmo las dos desviaciones»). El texto anterior se conserva; donde choca, rige esta sección.*
+- **§6 (montos):** S-22 conserva los importes como número, igual que antes; el mapeo de `numeric` a céntimos enteros lo hace S-03 (ADR-011).
+- **§4 (migraciones al arrancar el contenedor):** no se fija en S-22; sin baseline no hay migraciones, y el mecanismo llega con S-15 y S-17. Mientras tanto el esquema se crea con `drizzle-kit push` solo en bases desechables.
+- **Alcance medido:** el cambio toca 49 archivos con el patrón del ADR y 75 archivos de `web-admin` que mencionan Prisma (S-22 §0.4); la cifra «44» del texto original era un error de recuento.

@@ -423,39 +423,54 @@ Archivo: `S-08-registro-continuo-de-cobros.md` · REQ: 57 · BEH: 29 · INV: 4 �
 | REQ-S08-056 | MUST | BEH-S08-028 | — | AC-S08-015 (integracion) | pendiente |
 | REQ-S08-057 | MUST | BEH-S08-022, BEH-S08-029 | — | AC-S08-011 (unitario) | pendiente |
 
-## S-09 — Eliminar miembro: la baja lógica que oculta al miembro y conserva sus pagos (borrador)
+## S-09 — Eliminar miembro: la baja lógica que oculta al miembro y conserva sus pagos (en-revision)
 
-Archivo: `S-09-eliminar-miembro.md` · REQ: 27 · BEH: 19 · INV: 4 · AC: 9
+Archivo: `S-09-eliminar-miembro.md` · REQ: 42 · BEH: 26 · INV: 4 · AC: 12
 
 | REQ | Prioridad | BEH | INV | AC (método) | Test |
 |---|---|---|---|---|---|
 | REQ-S09-001 | MUST | BEH-S09-001 | — | AC-S09-001 (sql) | pendiente |
 | REQ-S09-002 | MUST | BEH-S09-001 | — | AC-S09-001 (sql) | pendiente |
 | REQ-S09-003 | MUST | BEH-S09-001 | INV-S09-002 | AC-S09-001 (sql) | pendiente |
-| REQ-S09-004 | MUST | BEH-S09-002 | — | AC-S09-002 (integracion) | pendiente |
-| REQ-S09-005 | MUST | BEH-S09-003, BEH-S09-004 | — | AC-S09-003 (integracion) | pendiente |
-| REQ-S09-006 | MUST | BEH-S09-003 | INV-S09-001 | AC-S09-003 (integracion) | pendiente |
-| REQ-S09-007 | MUST | BEH-S09-003, BEH-S09-004, BEH-S09-006 | — | AC-S09-003 (integracion) | pendiente |
-| REQ-S09-008 | MUST | BEH-S09-005 | — | AC-S09-003 (integracion) | pendiente |
-| REQ-S09-009 | MUST | BEH-S09-006 | — | AC-S09-003 (integracion) | pendiente |
-| REQ-S09-010 | MUST | BEH-S09-007 | — | AC-S09-003 (integracion) | pendiente |
-| REQ-S09-011 | MUST | BEH-S09-008, BEH-S09-009, BEH-S09-010 | INV-S09-003 | AC-S09-004 (integracion), AC-S09-005 (integracion) | pendiente |
-| REQ-S09-012 | MUST | BEH-S09-011 | — | AC-S09-005 (integracion) | pendiente |
-| REQ-S09-013 | MUST | BEH-S09-011 | — | AC-S09-005 (integracion) | pendiente |
-| REQ-S09-014 | MUST | BEH-S09-012 | INV-S09-003 | AC-S09-004 (integracion), AC-S09-005 (integracion) | pendiente |
-| REQ-S09-015 | MUST | BEH-S09-009, BEH-S09-013 | INV-S09-003 | AC-S09-004 (integracion), AC-S09-005 (integracion) | pendiente |
-| REQ-S09-016 | MUST | BEH-S09-014 | — | AC-S09-005 (integracion) | pendiente |
-| REQ-S09-017 | MUST | BEH-S09-014 | — | AC-S09-005 (integracion) | pendiente |
-| REQ-S09-018 | MUST | BEH-S09-015 | — | AC-S09-005 (integracion) | pendiente |
-| REQ-S09-019 | MUST | BEH-S09-016 | — | AC-S09-006 (integracion) | pendiente |
-| REQ-S09-020 | MUST | BEH-S09-016 | — | AC-S09-006 (integracion) | pendiente |
-| REQ-S09-021 | MUST | BEH-S09-017 | — | AC-S09-007 (manual) | pendiente |
-| REQ-S09-022 | MUST | BEH-S09-017 | — | AC-S09-007 (manual) | pendiente |
-| REQ-S09-023 | MUST | BEH-S09-017 | — | AC-S09-007 (manual) | pendiente |
-| REQ-S09-024 | MUST | BEH-S09-002 | — | AC-S09-002 (integracion) | pendiente |
-| REQ-S09-025 | MUST | BEH-S09-018 | INV-S09-004 | AC-S09-008 (unitario) | pendiente |
-| REQ-S09-026 | MUST | BEH-S09-018 | INV-S09-004 | AC-S09-008 (unitario) | pendiente |
-| REQ-S09-027 | MUST | BEH-S09-019 | — | AC-S09-009 (manual) | pendiente |
+| REQ-S09-004 | MUST | BEH-S09-001 | — | AC-S09-001 (sql) | pendiente |
+| REQ-S09-005 | MUST | BEH-S09-002 | — | AC-S09-002 (integracion) | pendiente |
+| REQ-S09-006 | MUST | BEH-S09-002 | — | AC-S09-002 (integracion) | pendiente |
+| REQ-S09-007 | MUST | BEH-S09-003 | — | AC-S09-002 (integracion) | pendiente |
+| REQ-S09-008 | MUST | BEH-S09-004 | — | AC-S09-003 (integracion) | pendiente |
+| REQ-S09-009 | MUST | BEH-S09-005 | — | AC-S09-003 (integracion) | pendiente |
+| REQ-S09-010 | MUST | BEH-S09-004 | INV-S09-001 | AC-S09-003 (integracion) | pendiente |
+| REQ-S09-011 | MUST | BEH-S09-004, BEH-S09-007 | INV-S09-001 | AC-S09-003 (integracion) | pendiente |
+| REQ-S09-012 | MUST | BEH-S09-004, BEH-S09-007 | — | AC-S09-003 (integracion) | pendiente |
+| REQ-S09-013 | MUST | BEH-S09-004 | — | AC-S09-003 (integracion) | pendiente |
+| REQ-S09-014 | MUST | BEH-S09-026 | — | AC-S09-004 (integracion) | pendiente |
+| REQ-S09-015 | MUST | BEH-S09-006 | — | AC-S09-003 (integracion) | pendiente |
+| REQ-S09-016 | MUST | BEH-S09-007 | — | AC-S09-003 (integracion) | pendiente |
+| REQ-S09-017 | MUST | BEH-S09-008 | — | AC-S09-003 (integracion) | pendiente |
+| REQ-S09-018 | MUST | BEH-S09-009, BEH-S09-010, BEH-S09-011, BEH-S09-012 | INV-S09-003 | AC-S09-005 (integracion), AC-S09-007 (integracion) | pendiente |
+| REQ-S09-019 | MUST | BEH-S09-013 | — | AC-S09-005 (integracion) | pendiente |
+| REQ-S09-020 | MUST | BEH-S09-014 | — | AC-S09-006 (integracion) | pendiente |
+| REQ-S09-021 | MUST | BEH-S09-014 | — | AC-S09-006 (integracion) | pendiente |
+| REQ-S09-022 | MUST | BEH-S09-014 | — | AC-S09-006 (integracion) | pendiente |
+| REQ-S09-023 | MUST | BEH-S09-014 | — | AC-S09-006 (integracion) | pendiente |
+| REQ-S09-024 | MUST | BEH-S09-015 | — | AC-S09-006 (integracion) | pendiente |
+| REQ-S09-025 | MUST | BEH-S09-010, BEH-S09-016 | INV-S09-003 | AC-S09-005 (integracion), AC-S09-007 (integracion) | pendiente |
+| REQ-S09-026 | MUST | BEH-S09-011, BEH-S09-016 | INV-S09-003 | AC-S09-005 (integracion), AC-S09-007 (integracion) | pendiente |
+| REQ-S09-027 | MUST | BEH-S09-016 | — | AC-S09-007 (integracion) | pendiente |
+| REQ-S09-028 | MUST | BEH-S09-017 | — | AC-S09-007 (integracion) | pendiente |
+| REQ-S09-029 | MUST | BEH-S09-018 | — | AC-S09-007 (integracion) | pendiente |
+| REQ-S09-030 | MUST | BEH-S09-018 | — | AC-S09-007 (integracion) | pendiente |
+| REQ-S09-031 | MUST | BEH-S09-019 | — | AC-S09-007 (integracion) | pendiente |
+| REQ-S09-032 | MUST | BEH-S09-020 | — | AC-S09-008 (integracion) | pendiente |
+| REQ-S09-033 | MUST | BEH-S09-021 | — | AC-S09-009 (integracion) | pendiente |
+| REQ-S09-034 | MUST | BEH-S09-021 | INV-S09-001 | AC-S09-003 (integracion), AC-S09-009 (integracion) | pendiente |
+| REQ-S09-035 | MUST | BEH-S09-022 | — | AC-S09-009 (integracion) | pendiente |
+| REQ-S09-036 | MUST | BEH-S09-023 | — | AC-S09-010 (manual) | pendiente |
+| REQ-S09-037 | MUST | BEH-S09-023 | — | AC-S09-010 (manual) | pendiente |
+| REQ-S09-038 | MUST | BEH-S09-023 | — | AC-S09-010 (manual) | pendiente |
+| REQ-S09-039 | MUST | BEH-S09-002 | — | AC-S09-002 (integracion) | pendiente |
+| REQ-S09-040 | MUST | BEH-S09-024 | INV-S09-004 | AC-S09-011 (unitario) | pendiente |
+| REQ-S09-041 | MUST | BEH-S09-024 | INV-S09-004 | AC-S09-011 (unitario) | pendiente |
+| REQ-S09-042 | MUST | BEH-S09-025 | — | AC-S09-012 (manual) | pendiente |
 
 ## S-10 — Retirar lo venezolano: tasa de cambio, padrón de Excel, bolívares, hora de Caracas y la marca anterior (en-revision)
 

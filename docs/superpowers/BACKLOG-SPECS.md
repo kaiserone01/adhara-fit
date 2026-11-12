@@ -17,7 +17,7 @@ Vienen del documento 10 (§2.C). Convierten el código heredado en el sistema de
 | S-05 Negocio y sede únicos | Quitar el concepto de organización y de sucursales: Adhara Fit es un solo negocio con un solo local (ADR-019, ADR-002). | **Aprobada** (2026-11-12) |
 | S-06 Documento de identidad | DNI, carné de extranjería o pasaporte; código numérico corto para quien no tiene DNI. | **Aprobada** (2026-11-12) |
 | S-07 Cambio de plan | Unificar las tres formas de cambiar de plan; sin saldo a favor; ya no distingue planes con y sin entrenador. | **Aprobada** (2026-11-12) |
-| S-08 Registro continuo de cobros | **Reformulada por tu decisión:** sin turnos ni arqueo. Registra cada cobro (quién, cuándo, método) y da el reporte diario por método y usuario. | Por redactar |
+| S-08 Registro continuo de cobros | **Reformulada por tu decisión:** sin turnos ni arqueo. Registra cada cobro (quién, cuándo, método) y da el reporte diario por método y usuario. | **Aprobada** (2026-11-12) |
 | S-09 Eliminar miembro y anonimización | «Eliminar» a un miembro (en pantalla se llama así; por dentro conserva sus pagos) sin borrar sus pagos; anonimizar sus datos si lo pide. | Por redactar |
 | S-10 Retirar lo venezolano | Quitar tasa BCV, el worker, el padrón Excel, los scripts del otro cliente y su marca. | Por redactar |
 

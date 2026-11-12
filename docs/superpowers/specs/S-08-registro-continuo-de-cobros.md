@@ -1,10 +1,10 @@
 ---
 id: S-08
-estado: en-revision
+estado: aprobada
 adrs: ADR-002, ADR-010, ADR-011, ADR-016, ADR-018, ADR-019, ADR-022
 depende_de: S-00, S-01, S-02, S-03, S-04, S-05, S-06, S-07, S-22
-aprobada_por:
-fecha_aprobacion:
+aprobada_por: propietario
+fecha_aprobacion: 2026-11-12
 ---
 # S-08 — Registro continuo de cobros: sin turnos, arqueo ni egresos, con reporte diario por método y usuario
 
@@ -837,3 +837,4 @@ Todos los hallazgos se verificaron contra el Repo A y las specs y resultaron cie
 
 ### Cambio posterior por orden del propietario (2026-11-12)
 Tras la conciliación, el propietario pidió validar que Efectivo siga siendo un método de pago y que no existan turnos, fiado ni deudas, «solo el cobro de membresías». Se verificó que Efectivo ya estaba conformado en S-03 (SUP-S03-005, sin número de operación) y se agregaron REQ-S08-050 y REQ-S08-051; el fiado y las deudas, que el borrador dejaba funcionando hasta S-11, pasan a eliminarse en S-08 (REQ-S08-052 a REQ-S08-055 y REQ-S08-057, SUP-S08-017); el cobro de la membresía de un miembro vencido queda explícito (REQ-S08-056). Ante la ambigüedad de «solo el cobro de membresías», el propietario respondió que la venta de productos se mantiene sin fiado (SUP-S08-018).
+- Aprobación: el propietario escribió «S-08 aprobada» el 2026-11-12 sobre el texto ya corregido y ampliado, con el veredicto pegado; la aprobación incluye los valores por defecto de las cinco preguntas de 5.4.

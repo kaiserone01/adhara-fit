@@ -359,7 +359,7 @@ Archivo: `S-07-cambio-de-plan.md` · REQ: 61 · BEH: 38 · INV: 5 · AC: 15
 | REQ-S07-060 | MUST | BEH-S07-038 | — | AC-S07-015 (unitario) | pendiente |
 | REQ-S07-061 | MUST | BEH-S07-026 | — | AC-S07-008 (integracion) | pendiente |
 
-## S-08 — Registro continuo de cobros: sin turnos, arqueo ni egresos, con reporte diario por método y usuario (en-revision)
+## S-08 — Registro continuo de cobros: sin turnos, arqueo ni egresos, con reporte diario por método y usuario (aprobada)
 
 Archivo: `S-08-registro-continuo-de-cobros.md` · REQ: 57 · BEH: 29 · INV: 4 · AC: 15
 

@@ -885,6 +885,10 @@ El código heredado cambia el plan de un miembro por tres caminos que dan result
 - ¿Un cambio de plan sin pago se puede deshacer? Default: no, se corrige con otro cambio (0.3).
 - ¿La duración del plan se escribe en días, entre 1 y 365? Default: sí (SUP-S07-004).
 
+## Enmiendas posteriores (2026-11-12)
+*Derivadas de la aprobación de S-08. El texto anterior se conserva; donde choca, rige esta sección.*
+- Por la aprobación de S-08: REQ-S07-057 deja de tener la exención de la familia S-08 en `caja/`, que pasa a `cobros/`; REQ-S07-060 se cumple al terminar S-08; los tres archivos de `caja/` que adapta S-07 pasan a `cobros/`.
+
 ## Revisión independiente
 
 Revisor: subagente `spec-reviewer` (solo lectura), que recibió únicamente la ruta y la lista de comprobación. Veredicto sobre la versión `700e4f6`; cada fila se resume y el veredicto global se conserva tal como lo entregó. El revisor solo pudo usar `Read`, `Grep` y `Glob`: reprodujo los 12 conteos de 0.4 y comprobó a mano la aritmética de los cinco ejemplos, que es correcta.

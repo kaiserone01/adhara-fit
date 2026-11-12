@@ -604,6 +604,7 @@ El código heredado está pensado para varias organizaciones con varias sedes ca
 - REQ-S05-007, BEH-S05-006, BEH-S05-023, INV-S05-003 y AC-S05-004: la «cédula» pasa a `numeroDocumento` (único global, sin incluir el tipo); SUP-S05-006 y SUP-S05-015 quedan cumplidos por S-06.
 - REQ-S05-031 y las pruebas de caracterización de `api/checkin` y `api/miembros`: el cuerpo pasa de `cedula` a `identificador`, `tipoDocumento` y `numeroDocumento`.
 - Por la aprobación de S-07: la línea de 0.2 que agrupa a `CambioPlanAuditoria` entre las tablas que otras specs retiran después se lee así: la tabla se conserva, sin `organizacionId`, con la estructura de S-07.
+- Por la aprobación de S-08: `Turno.sucursalId` y `DeudaProducto.sucursalId` desaparecen con sus tablas; REQ-S05-008, SUP-S05-002, SUP-S05-005, INV-S05-004, 0.2 y 0.3 dejan de nombrar `Turno` y `DeudaProducto`.
 
 ## Revisión independiente
 

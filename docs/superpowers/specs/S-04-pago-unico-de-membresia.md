@@ -925,6 +925,7 @@ Todas las decisiones de negocio de S-04 fueron respondidas por el propietario el
 - Por la aprobación de S-07 (cambio de plan): SUP-S04-007 y REQ-S04-017 definen el cobro anulable como el pago no anulado de mayor `Pago.creadoEn` (a igualdad, el de mayor identificador) y no el de mayor fin de ciclo, porque un cambio de plan con cobro puede dejar un fin menor que el del cobro anterior; el requisito de columnas de `Pago` suma `creadoEn`.
 - Por S-07: SUP-S04-010, REQ-S04-043, BEH-S04-038 y AC-S04-023 dejan de decir que el pago de un cambio de plan no guarda `vencimientoAnterior`: lo guarda, y su anulación restaura el vencimiento y también el plan, el precio acordado y el plan de la suscripción desde `CambioPlanAuditoria` (REQ-S07-039). REQ-S04-035 remite a `cambiarPlan` como la operación que corresponde al rechazar un plan distinto con vencimiento vigente. 0.2, 0.3, 5.1 y los dos riesgos sobre cambio de plan se leen con esta enmienda; SUP-S04-014 y REQ-S04-045 admiten a S-07 como familia.
 - Por S-07: `IUnidadDeTrabajo` expone además los repositorios de planes y de auditoría de cambio de plan.
+- Por la aprobación de S-08: SUP-S04-011, 0.2, 0.3 (la línea sobre turnos y la del cambio de `caja/`), REQ-S04-045 y los dos riesgos que remiten a S-08 se leen como cumplidos por S-08; la aclaración de que `ModalCobrarDeudas.tsx` conserva términos de abono y la retirada de `RegistrarPagoConDeudas` quedan cumplidas porque el fiado y las deudas se eliminan en S-08; los tres archivos de `caja/` que adaptan S-04 y S-07 pasan a `cobros/`.
 
 ## Revisión independiente
 

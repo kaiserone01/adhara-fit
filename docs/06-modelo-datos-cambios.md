@@ -20,7 +20,7 @@ Versión 0.1 · 2026-11-11. Diff **conceptual** sobre `packages/db/prisma/schema
 | `Suscripcion` | Adaptar | **Eliminar** `fechaLimiteAbono` |
 | `Pago` | Adaptar | **Eliminar** `tasaCambio`, `montoBs`; renombrar `metodo` (snapshot) se mantiene; añadir `tipoComprobante`, `serieComprobante`, `numeroComprobante`, `rucCliente?`, `razonSocialCliente?` |
 | `Producto` / `DeudaProducto` | Adaptar | Precios en S/ (nombre de campo `precio`) |
-| `Turno` | Adaptar | `fondoInicialEfectivoUSD` + `fondoInicialEfectivoBs` → `fondoInicialEfectivo` |
+| `Turno` | Adaptar | `fondoInicialEfectivoUSD` + `fondoInicialEfectivoBs` → `fondoInicialEfectivo` | *Enmienda S-08 (2026-11-12): `Turno`, `Egreso`, `ArqueoLinea` y `DeudaProducto` se eliminan; `Pago` pierde `turnoId`.*
 | `Egreso` | Adaptar | **Eliminar** `moneda`, `tasaCambio`, `montoUSD`; enum `MonedaEgreso` eliminado |
 | `ArqueoLinea` | Conservar | |
 | `CheckIn` | Conservar | |

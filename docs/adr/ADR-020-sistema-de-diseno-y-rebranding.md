@@ -55,4 +55,4 @@ Media: los tokens y componentes son reemplazables; la adopción en todas las pan
 `docs/adr/ADR-008-marca-y-tema-visual.md` · `docs/03-analisis-repo-base.md` línea 35 · `docs/11` DI-01, DI-05 · `docs/01` RNF-10 · `docs/07` tarea 0.9 · `docs/superpowers/COBERTURA-RF.md` §6.
 
 ## Enmiendas posteriores (2026-11-12)
-- ADR-008 fue **retirado** por orden del propietario; rige ADR-020. La Decisión 7 («se conserva ADR-008») se entiende como conservar su paleta medida como registro histórico, no como decisión vigente.
+- ADR-008 **no está retirado**: se había marcado así por un error mío y se restauró como *propuesto* el 2026-11-12. ADR-008 fija la paleta de marca (carbón `#231F20`, amarillo `#FFCB04`, blanco `#FFFFFF`, tokens `--gx-*` y contrastes) y ADR-020 la amplía a un sistema de diseño completo; los dos coexisten. La Decisión 7 se entiende en ese sentido.

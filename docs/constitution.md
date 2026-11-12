@@ -59,5 +59,5 @@ Solo el propietario la modifica, por escrito, y el cambio se registra en `handof
 
 ### Pendientes conocidos (no verificados todavía)
 - C-13: la regla de lint de dependencias entre paquetes no existe aún; se define en S-00.
-- Un artículo con ADR en la columna es provisional mientras ese ADR siga *propuesto*. El 2026-11-12 no queda ningún ADR propuesto: ADR-008 se retiró y los demás están aceptados. C-16 se apoya en `docs/09` §3.3, que no se ha re-verificado contra el código.
+- Un artículo con ADR en la columna es provisional mientras ese ADR siga *propuesto*. El 2026-11-12 solo sigue propuesto ADR-008 (marca y tema visual); los demás están aceptados.
 - La referencia legal de C-19 (Ley 29733 y plazos) no está verificada (ver `docs/adr/REVISION-ADR.md` T-13).

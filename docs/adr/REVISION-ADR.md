@@ -436,3 +436,6 @@ Aceptados: ADR-002 («Sin selector confirmado»), 003 («Aceptado»), 004 («Ace
 
 ## 11. Aceptaciones del propietario del 2026-11-12 (cuarta ronda)
 Aceptados: ADR-006 (versión 3: tickets no fiscales y comprobantes desarrollados y apagados), ADR-013 (con la denominación «Eliminar» en pantalla, conservando los pagos) y ADR-015 (con la precisión de apoyarse en superpowers). **Retirado:** ADR-008, sustituido por ADR-020. Con esto no queda ningún ADR propuesto: 21 aceptados y 1 retirado.
+
+## 12. Corrección del 2026-11-12: ADR-008 no se retira
+La §11 registró ADR-008 como retirado, tomando una frase que yo mismo había propuesto y que el propietario pegó de vuelta. Fue un error mío: ADR-008 fija la paleta de marca y no puede retirarse (el propietario lo señaló). Se restauró como *propuesto*, a la espera de su «acepto ADR-008». Con esto hay 21 ADR aceptados y 1 propuesto (ADR-008).

@@ -1,6 +1,6 @@
 # ADR-008: Marca y tema visual de Adhara Fit
 
-Estado: **propuesto** (2026-11-11) · Confirmar P-15
+Estado: **retirado** (por orden del propietario, 2026-11-12) · propuesto el 2026-11-11 · lo sustituye ADR-020; este archivo queda como registro histórico de la paleta medida
 
 ## Contexto
 El base usa el tema "Adrenalina Xtreme": verde `#93e83a` sobre negro verdoso, con tokens `--gx-*` en `packages/theming/tokens.ts`. El logo de Adhara Fit (PDF recibido): rectángulo negro, kettlebell **amarillo** con una "A" negra y el texto "ADHARA FIT" en blanco.

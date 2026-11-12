@@ -433,3 +433,6 @@ El 2026-11-12 el propietario escribió «acepto ADR-022, S-22 va después de S-0
 
 ## 10. Aceptaciones del propietario del 2026-11-12 (tercera ronda)
 Aceptados: ADR-002 («Sin selector confirmado»), 003 («Aceptado»), 004 («Aceptado»), 007 («decisión curada, no volver a preguntar»), 010 («Pago único aceptado») y 011 («Política monetaria aceptada»). Pendientes: ADR-006 (reescrito a pedido: comprobantes previstos y apagados), ADR-008 (propuesto retirarlo, sin respuesta), ADR-013 (aceptado con la salvedad de llamarla «Eliminar»; requiere confirmar) y ADR-015 (descrito como flujo natural con la skill superpowers; falta su «acepto»).
+
+## 11. Aceptaciones del propietario del 2026-11-12 (cuarta ronda)
+Aceptados: ADR-006 (versión 3: tickets no fiscales y comprobantes desarrollados y apagados), ADR-013 (con la denominación «Eliminar» en pantalla, conservando los pagos) y ADR-015 (con la precisión de apoyarse en superpowers). **Retirado:** ADR-008, sustituido por ADR-020. Con esto no queda ningún ADR propuesto: 21 aceptados y 1 retirado.

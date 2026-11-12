@@ -799,3 +799,4 @@ No aplicado, con motivo:
 - SUP-S00-002, SUP-S00-010, REQ-S00-017, AC-S00-008 y AC-S00-022: la creación del esquema en Compose pasa de `prisma db push` a un servicio `esquema` con `drizzle-kit push` (S-22, REQ-S22-016).
 - §0.2, REQ-S00-003 y REQ-S00-028: la lista de permitidos de `packages/db` pasa a `package.json`, `drizzle.config.ts` y `src/` (S-22, REQ-S22-029).
 - Hasta que S-22 se ejecute, el árbol importado por S-00 conserva Prisma tal como está.
+- Por la aprobación de S-01: `tools/verificar-repo.mjs` agrega la regla de versión exacta para `zod`, y `.env.example` y `tools/verificar-env.mjs` agregan la variable `KIOSCO_ORIGENES_PERMITIDOS` (S-01, REQ-S01-017 y REQ-S01-023).

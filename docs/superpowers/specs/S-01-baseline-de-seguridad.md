@@ -1,10 +1,10 @@
 ---
 id: S-01
-estado: en-revision
+estado: aprobada
 adrs: ADR-012, ADR-016, ADR-018, ADR-021, ADR-022
 depende_de: S-00, S-22
-aprobada_por:
-fecha_aprobacion:
+aprobada_por: propietario
+fecha_aprobacion: 2026-11-12
 ---
 # S-01 — Baseline de seguridad: cuentas, intentos de login, clave del kiosco, permisos, validación, cabeceras y CORS
 
@@ -804,4 +804,4 @@ Verifiqué cada hallazgo contra el clon (y contra el lockfile) antes de corregir
 | Fila 12 (permisos) | Tabla de permisos por ruta y método en 5.1 (REQ-029, AC-019) y por caso de uso; las piezas de retiro llevan guarda en vez de excepción |
 | Fila 13 (riesgos) | 5 riesgos agregados a 5.3 |
 
-Tras las correcciones S-01 pasó de 25 a 33 REQ, de 23 a 29 BEH, de 18 a 22 AC (7 INV). Sigue en `en-revision` hasta que el propietario confirme las desviaciones de ADR-012 (SUP-S01-014 y SUP-S01-016) y apruebe el texto.
+Tras las correcciones S-01 pasó de 25 a 33 REQ, de 23 a 29 BEH, de 18 a 22 AC (7 INV). El propietario confirmó las desviaciones de ADR-012 (SUP-S01-014 y SUP-S01-016) y escribió «S-01 aprobada» el 2026-11-12; la spec pasó a `aprobada`.

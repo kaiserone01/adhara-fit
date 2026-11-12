@@ -1,6 +1,6 @@
 # ADR-015: Flujo Spec-Driven Development, puertas de aprobación y trazabilidad
 
-Estado: **propuesto** (2026-11-12)
+Estado: **aceptado** (confirmado por el propietario, 2026-11-12) · propuesto el 2026-11-12 · Aceptado con la precisión de apoyarse en la skill superpowers
 
 ## Contexto
 El trabajo sigue Spec-Driven Development: ninguna funcionalidad se implementa sin una spec aprobada por el propietario. El doc 10 (v0.3) y el doc 12 (v0.4) describen el flujo; el doc 10 declara que desde v0.4 el mensaje de apertura es el doc 12.
@@ -51,4 +51,7 @@ Media: cambiar la nomenclatura de IDs una vez creadas las specs obliga a renombr
 `docs/10-prompt-claude-code.md` (cabecera, §2.C) · `docs/12-prompt-inicial-claude-code.md` · `docs/01-levantamiento-requerimientos.md` §7 · `docs/08-decisiones-pendientes.md` · `CLAUDE.md` §2–§3.
 
 ## Notas del propietario (2026-11-12)
-- Respuesta en el chat: «Flujo natural del desarrollo, impulsado por la Skill superpowers con las convenciones de rigor». **No cambia el estado todavía**: falta confirmar que se acepta el ADR con esa precisión (el flujo se apoya en las skills `brainstorming`, `writing-plans` y `using-superpowers`, con las puertas y convenciones de este repositorio).
+- Respuesta en el chat: «Flujo natural del desarrollo, impulsado por la Skill superpowers con las convenciones de rigor». Confirmado el 2026-11-12: «ADR-015 aceptado con superpowers».
+
+## Enmiendas posteriores (2026-11-12)
+- El flujo se apoya en las skills de superpowers (`brainstorming` antes de diseñar, `writing-plans` para el plan global y `using-superpowers` para usarlas), con las puertas, las convenciones de rigor y las reglas de este repositorio, que prevalecen sobre cualquier skill.

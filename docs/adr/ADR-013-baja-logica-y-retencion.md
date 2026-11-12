@@ -1,6 +1,6 @@
 # ADR-013: Baja lógica de miembros y retención de datos
 
-Estado: **propuesto** (2026-11-12) · Origen: `EliminarMiembro` borra pagos e historial (doc 09 §3.5)
+Estado: **aceptado** (confirmado por el propietario, 2026-11-12) · propuesto el 2026-11-12 · Aceptado con la denominación «Eliminar» en pantalla
 
 ## Contexto
 `eliminarConHistorial` borra en una transacción check-ins, auditoría de cambios de plan, deudas, pagos, suscripciones y el miembro. Los pagos borrados desaparecen de caja y reportes. Esto contradice la regla de que un pago se anula con motivo y autor, destruye evidencia contable y no distingue entre dar de baja a un socio y atender una solicitud de supresión de datos personales (derechos ARCO, Ley 29733).
@@ -42,4 +42,10 @@ Estado: **propuesto** (2026-11-12) · Origen: `EliminarMiembro` borra pagos e hi
 - La entidad `DeudaProducto`, que `eliminarConHistorial` borraba, se elimina (ADR-018). La decisión de baja lógica y anonimización no cambia.
 
 ## Notas del propietario (2026-11-12)
-- Respuesta en el chat: «Baja de miembros: Aceptado, solo que la denominación será "Eliminar"; dar de baja no es el término correcto. Requiere confirmar». **No cambia el estado todavía**: falta confirmar que en la pantalla la acción se llame «Eliminar» aunque el sistema conserve los pagos y solo oculte al miembro (baja lógica), con la anonimización a pedido.
+- Respuesta en el chat: «Baja de miembros: Aceptado, solo que la denominación será "Eliminar"; dar de baja no es el término correcto. Requiere confirmar». Confirmado el 2026-11-12: «ADR-013 aceptado con "Eliminar" (conserva los pagos y oculta al miembro)».
+
+## Enmiendas posteriores (2026-11-12)
+*Confirmadas por el propietario. El texto anterior se conserva; donde choca, rige esta sección.*
+- **Denominación:** en pantalla la acción se llama **«Eliminar»** y el estado «Eliminado»; «dar de baja» deja de usarse. Por dentro el comportamiento es el de la Decisión 1: el miembro deja de aparecer en listados y kiosco y **conserva sus pagos y suscripciones**; el nombre técnico del estado puede seguir siendo `BAJA`. La confirmación de la pantalla debe decir que los pagos se conservan.
+- La Decisión 4 sigue válida: el permiso `ELIMINAR` de `MIEMBROS` es el que autoriza esta acción.
+- La anonimización a pedido (Decisión 2) sigue siendo el único modo de quitar los datos personales.

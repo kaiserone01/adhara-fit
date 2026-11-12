@@ -53,3 +53,6 @@ Media: los tokens y componentes son reemplazables; la adopción en todas las pan
 
 ## Referencias
 `docs/adr/ADR-008-marca-y-tema-visual.md` · `docs/03-analisis-repo-base.md` línea 35 · `docs/11` DI-01, DI-05 · `docs/01` RNF-10 · `docs/07` tarea 0.9 · `docs/superpowers/COBERTURA-RF.md` §6.
+
+## Enmiendas posteriores (2026-11-12)
+- ADR-008 fue **retirado** por orden del propietario; rige ADR-020. La Decisión 7 («se conserva ADR-008») se entiende como conservar su paleta medida como registro histórico, no como decisión vigente.

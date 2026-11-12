@@ -1,6 +1,6 @@
 # ADR-006: Métodos de pago peruanos; ticket no fiscal (correo e impresión) y registro de comprobantes, desarrollados y apagados
 
-Estado: **propuesto** (2026-11-11) · Versión 3 (2026-11-12): el propietario pidió prever los comprobantes sin activarlos y sumar un ticket digital por correo y un ticket impreso, ambos no fiscales, «desarrollar pero apagar»; espera su «acepto ADR-006» · P-07 sigue abierta
+Estado: **aceptado** (confirmado por el propietario, 2026-11-12) · propuesto el 2026-11-11 · Versión 3 (tickets no fiscales y comprobantes, desarrollados y apagados) · P-07 sigue abierta
 
 ## Contexto
 El base modela métodos venezolanos (pago móvil, BioPago, Punto Banesco, Zelle, Binance) y no tiene concepto de comprobante tributario. En Perú se usan efectivo, Yape, Plin, tarjetas (POS), transferencias/depósitos con CCI, y los comprobantes electrónicos (boleta/factura) se emiten por sistemas SUNAT (SEE-SOL, SEE-Facturador SUNAT, OSE o sistema propio). Las reglas de designación de emisores electrónicos cambiaron en 2026 (R.S. 000075-2026/SUNAT) **[VERIFICAR con contador]**.
@@ -45,3 +45,6 @@ El base modela métodos venezolanos (pago móvil, BioPago, Punto Banesco, Zelle,
 
 ## Dependencias
 *(Pase formal F.)* ADR-003 (PEN y catálogo, solapados), ADR-011 (importes e IGV). Pendiente P-07. Hallazgos abiertos de la revisión G3: ver `REVISION-ADR.md` §4, §7 y §8.4.
+
+## Notas del propietario (2026-11-12)
+- Respuesta en el chat: «ADR-006 aceptado (versión 3)». Los tickets (correo e impresión) y el registro de comprobantes se desarrollan y se entregan apagados hasta que el propietario confirme habilitarlos.

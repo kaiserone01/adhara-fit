@@ -760,3 +760,8 @@ Verifiqué cada hallazgo contra el clon (y contra los paquetes de Drizzle instal
 | Fila 11 (lint) | Ejecuté `node tools/spec-lint.mjs --write` tras las correcciones: 0 errores, 0 avisos | — |
 
 Tras las correcciones S-22 pasó de 23 a 30 REQ, de 20 a 27 BEH y de 20 a 28 AC (6 INV). El propietario aprobó el texto corregido el 2026-11-12 («S-22 aprobada con el texto corregido, confirmo las dos desviaciones») y confirmó las dos desviaciones de ADR-022 (SUP-S22-014); la spec pasó a `aprobada`.
+
+## Enmiendas posteriores (2026-11-12)
+*Derivadas de la aprobación de S-01. El texto anterior se conserva; donde choca, rige esta sección.*
+- REQ-S22-016, BEH-S22-008 y AC-S22-014 (25 tablas y 14 enums) valen al terminar S-22; tras S-01 son 26 tablas y 15 enums (`IntentoLogin` y el enum de su resultado).
+- REQ-S22-004: la columna `apiKey` con valor generado por la aplicación se reemplaza por `apiKeyHash` y `apiKeyPrefijo` (S-01, REQ-S01-008).

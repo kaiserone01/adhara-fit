@@ -82,28 +82,32 @@ Archivo: `S-01-baseline-de-seguridad.md` · REQ: 33 · BEH: 29 · INV: 7 · AC: 
 | REQ-S01-032 | MUST | BEH-S01-017 | — | AC-S01-012 (unitario) | pendiente |
 | REQ-S01-033 | MUST | BEH-S01-027 | — | AC-S01-013 (integracion) | pendiente |
 
-## S-02 — Hora de Lima: un solo módulo de fechas, sin depender del huso del proceso y con formato peruano (en-revision)
+## S-02 — Hora de Lima: un solo módulo de fechas, sin depender del huso del proceso y con formato peruano (aprobada)
 
-Archivo: `S-02-hora-de-lima.md` · REQ: 16 · BEH: 12 · INV: 4 · AC: 10
+Archivo: `S-02-hora-de-lima.md` · REQ: 20 · BEH: 17 · INV: 5 · AC: 13
 
 | REQ | Prioridad | BEH | INV | AC (método) | Test |
 |---|---|---|---|---|---|
 | REQ-S02-001 | MUST | BEH-S02-001 | — | AC-S02-001 (unitario) | pendiente |
-| REQ-S02-002 | MUST | BEH-S02-012 | INV-S02-001 | AC-S02-002 (unitario) | pendiente |
+| REQ-S02-002 | MUST | BEH-S02-014 | INV-S02-001 | AC-S02-002 (unitario) | pendiente |
 | REQ-S02-003 | MUST | BEH-S02-004 | INV-S02-001 | AC-S02-002 (unitario) | pendiente |
 | REQ-S02-004 | MUST | BEH-S02-001, BEH-S02-002 | INV-S02-002 | AC-S02-001 (unitario) | pendiente |
 | REQ-S02-005 | MUST | BEH-S02-005 | INV-S02-004 | AC-S02-004 (integracion) | pendiente |
-| REQ-S02-006 | MUST | BEH-S02-006 | — | AC-S02-005 (unitario) | pendiente |
-| REQ-S02-007 | MUST | BEH-S02-007 | — | AC-S02-006 (unitario) | pendiente |
-| REQ-S02-008 | MUST | BEH-S02-008 | INV-S02-003 | AC-S02-007 (unitario) | pendiente |
-| REQ-S02-009 | MUST | BEH-S02-008 | INV-S02-003 | AC-S02-007 (unitario) | pendiente |
-| REQ-S02-010 | MUST | BEH-S02-009 | — | AC-S02-008 (unitario) | pendiente |
-| REQ-S02-011 | MUST | BEH-S02-009 | — | AC-S02-008 (unitario) | pendiente |
-| REQ-S02-012 | MUST | BEH-S02-011 | — | AC-S02-010 (unitario) | pendiente |
-| REQ-S02-013 | MUST | BEH-S02-008 | INV-S02-003 | AC-S02-007 (unitario) | pendiente |
-| REQ-S02-014 | MUST | BEH-S02-010 | — | AC-S02-009 (e2e) | pendiente |
-| REQ-S02-015 | MUST | BEH-S02-008 | INV-S02-003 | AC-S02-007 (unitario) | pendiente |
-| REQ-S02-016 | MUST | BEH-S02-003 | — | AC-S02-003 (unitario) | pendiente |
+| REQ-S02-006 | MUST | BEH-S02-006, BEH-S02-007 | — | AC-S02-005 (unitario) | pendiente |
+| REQ-S02-007 | MUST | BEH-S02-008 | — | AC-S02-006 (unitario) | pendiente |
+| REQ-S02-008 | MUST | BEH-S02-009 | INV-S02-003 | AC-S02-007 (unitario) | pendiente |
+| REQ-S02-009 | MUST | BEH-S02-010 | INV-S02-003 | AC-S02-007 (unitario) | pendiente |
+| REQ-S02-010 | MUST | BEH-S02-011 | — | AC-S02-008 (unitario) | pendiente |
+| REQ-S02-011 | MUST | BEH-S02-011 | — | AC-S02-008 (unitario) | pendiente |
+| REQ-S02-012 | MUST | BEH-S02-013 | — | AC-S02-010 (unitario) | pendiente |
+| REQ-S02-013 | MUST | BEH-S02-009 | INV-S02-003 | AC-S02-007 (unitario) | pendiente |
+| REQ-S02-014 | MUST | BEH-S02-012 | — | AC-S02-009 (unitario) | pendiente |
+| REQ-S02-015 | MUST | BEH-S02-009, BEH-S02-010 | INV-S02-003 | AC-S02-007 (unitario) | pendiente |
+| REQ-S02-016 | MUST | BEH-S02-015 | — | AC-S02-011 (manual) | pendiente |
+| REQ-S02-017 | MUST | BEH-S02-002, BEH-S02-003 | — | AC-S02-001 (unitario), AC-S02-003 (unitario) | pendiente |
+| REQ-S02-018 | MUST | BEH-S02-016 | — | AC-S02-012 (unitario) | pendiente |
+| REQ-S02-019 | MUST | BEH-S02-017 | — | AC-S02-013 (unitario) | pendiente |
+| REQ-S02-020 | MUST | BEH-S02-016 | INV-S02-005 | AC-S02-012 (unitario) | pendiente |
 
 ## S-22 — Capa de datos con Drizzle: esquema, repositorios, transacciones y retiro de Prisma (aprobada)
 

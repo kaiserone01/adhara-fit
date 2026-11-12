@@ -805,3 +805,7 @@ Verifiqué cada hallazgo contra el clon (y contra el lockfile) antes de corregir
 | Fila 13 (riesgos) | 5 riesgos agregados a 5.3 |
 
 Tras las correcciones S-01 pasó de 25 a 33 REQ, de 23 a 29 BEH, de 18 a 22 AC (7 INV). El propietario confirmó las desviaciones de ADR-012 (SUP-S01-014 y SUP-S01-016) y escribió «S-01 aprobada» el 2026-11-12; la spec pasó a `aprobada`.
+
+## Enmiendas posteriores (2026-11-12)
+*Derivadas de la aprobación de S-04. El texto anterior se conserva; donde choca, rige esta sección.*
+- Recuentos: por la aprobación de S-04, `ReglaAbonoPorFrecuencia` desaparece; tras S-04 el esquema tiene 25 tablas y 15 enums (S-01 había fijado 26 y 15).

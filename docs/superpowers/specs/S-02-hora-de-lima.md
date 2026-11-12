@@ -519,3 +519,7 @@ Verifiqué cada hallazgo contra el Repo A y con Node antes de corregir. **Todos 
 | Fila 20 (19:00 Lima) | Caso `2026-11-12T00:00:00Z` agregado a REQ-017, BEH-002 y AC-001 |
 
 Tras las correcciones S-02 pasó de 16 a 20 REQ, de 12 a 17 BEH, de 4 a 5 INV y de 10 a 13 AC. El propietario escribió «S-02 aprobada» el 2026-11-12, al mismo tiempo que confirmó el formato de 12 horas para las interfaces orientadas al público, y se le informó de estas correcciones en el mismo mensaje en que se le entregó el resumen.
+
+## Enmiendas posteriores (2026-11-12)
+*Derivadas de la aprobación de S-04. El texto anterior se conserva; donde choca, rige esta sección.*
+- Por la aprobación de S-04: los archivos asignados a S-04 en la lista de exenciones de `verificar-fechas` (`RegistrarPago.ts`, `CalcularVencimientoPlan.ts`, `resolverCobroPasado.ts` según su familia, `pagos/actions.ts`, `CampoFechaCobro.tsx`, `proyeccionRenovacion.ts`, `vencimiento.tsx` y los que reescribe S-04) se convierten a `fechaLima` en S-04, que vacía esa parte de la lista (REQ-S04-029).

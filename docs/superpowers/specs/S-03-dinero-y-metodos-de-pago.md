@@ -708,3 +708,4 @@ Verifiqué cada hallazgo contra el Repo A antes de corregir. **Todos eran cierto
 | Fila 14 (concurrencia) | Motivo ampliado |
 
 Tras las correcciones S-03 pasó de 24 a 32 REQ, de 18 a 25 BEH y de 16 a 19 AC (6 INV). El propietario escribió «S-03 aprobada» el 2026-11-12 sobre este texto corregido y confirmó el efectivo como método de cobro; la spec pasó a `aprobada`.
+- Por la aprobación de S-04: `resolverCobroPasado*` pasa a la familia de S-11 en la tabla de familias de 5.1 (solo lo usan las ventas y el cobro de deudas), y los archivos de la familia S-04 salen de la lista de exenciones de `verificar-dinero` y del uso del puente (REQ-S04-029).

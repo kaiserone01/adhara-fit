@@ -1,10 +1,10 @@
 ---
 id: S-04
-estado: en-revision
+estado: aprobada
 adrs: ADR-010, ADR-011, ADR-016, ADR-018, ADR-022
 depende_de: S-00, S-01, S-02, S-03, S-22
-aprobada_por:
-fecha_aprobacion:
+aprobada_por: propietario
+fecha_aprobacion: 2026-11-12
 ---
 # S-04 — Pago único de membresía: cobro atómico, una sola fecha de vencimiento y anulación que la revierte
 
@@ -981,4 +981,4 @@ Verifiqué los hallazgos contra el Repo A antes de corregir: la ubicación de la
 Tras las correcciones S-04 pasó de 31 a 48 REQ, de 26 a 41 BEH, de 5 a 6 INV y de 18 a 25 AC. Sigue en `en-revision` hasta que el propietario escriba «S-04 aprobada» sobre este texto corregido y responda las tres decisiones de negocio con valor por defecto (pago repartido, gracia en todos los planes y día de vencimiento inclusivo).
 
 ### Cambios posteriores a la revisión (2026-11-12)
-El propietario respondió las decisiones de negocio y se aplicaron sobre el texto ya corregido: **sin pagos repartidos entre métodos** (un cobro es un solo pago; se agrega REQ-S04-049 y `Pago.cobroId` sustituye a `ordenLinea`); **se desincorporan los días de gracia** (REQ-S04-013 pasa a prohibirlos y el acceso tiene dos estados); **no hay cobros de cortesía** (REQ-S04-036 exige un monto mayor que 0.00); **pagos con fecha pasada sin límite de antigüedad y nunca futura** (REQ-S04-014 y REQ-S04-015); y se confirmaron los 30 días por mes y el día de vencimiento inclusive. S-04 queda con 49 REQ, 42 BEH, 6 INV y 25 AC. Sigue en `en-revision` hasta que el propietario escriba «S-04 aprobada» sobre este texto.
+El propietario respondió las decisiones de negocio y se aplicaron sobre el texto ya corregido: **sin pagos repartidos entre métodos** (un cobro es un solo pago; se agrega REQ-S04-049 y `Pago.cobroId` sustituye a `ordenLinea`); **se desincorporan los días de gracia** (REQ-S04-013 pasa a prohibirlos y el acceso tiene dos estados); **no hay cobros de cortesía** (REQ-S04-036 exige un monto mayor que 0.00); **pagos con fecha pasada sin límite de antigüedad y nunca futura** (REQ-S04-014 y REQ-S04-015); y se confirmaron los 30 días por mes y el día de vencimiento inclusive. S-04 queda con 49 REQ, 42 BEH, 6 INV y 25 AC. El propietario escribió «S-04 aprobada» el 2026-11-12 sobre este texto; la spec pasó a `aprobada`.

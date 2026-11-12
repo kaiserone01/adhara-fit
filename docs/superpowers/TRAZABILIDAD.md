@@ -148,7 +148,7 @@ Archivo: `S-03-dinero-y-metodos-de-pago.md` · REQ: 32 · BEH: 25 · INV: 6 · A
 | REQ-S03-031 | MUST | BEH-S03-025 | INV-S03-006 | AC-S03-019 (unitario) | pendiente |
 | REQ-S03-032 | MUST | BEH-S03-021 | — | AC-S03-016 (unitario) | pendiente |
 
-## S-04 — Pago único de membresía: cobro atómico, una sola fecha de vencimiento y anulación que la revierte (en-revision)
+## S-04 — Pago único de membresía: cobro atómico, una sola fecha de vencimiento y anulación que la revierte (aprobada)
 
 Archivo: `S-04-pago-unico-de-membresia.md` · REQ: 49 · BEH: 42 · INV: 6 · AC: 25
 

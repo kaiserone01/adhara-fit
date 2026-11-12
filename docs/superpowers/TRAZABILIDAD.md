@@ -41,3 +41,33 @@ Archivo: `S-00-fundaciones-del-repo.md` · REQ: 31 · BEH: 27 · INV: 6 · AC: 2
 | REQ-S00-029 | MUST | BEH-S00-022 | — | AC-S00-021 (unitario) | tools/verificar-repo.test.mjs |
 | REQ-S00-030 | MUST | BEH-S00-001, BEH-S00-024 | — | AC-S00-020 (integracion), AC-S00-023 (unitario) | tools/importar-repo-a.test.mjs; tools/verificar-repo.test.mjs |
 | REQ-S00-031 | MUST | BEH-S00-001, BEH-S00-007, BEH-S00-009 | — | AC-S00-020 (integracion) | tools/importar-repo-a.test.mjs |
+
+## S-22 — Capa de datos con Drizzle: esquema, repositorios, transacciones y retiro de Prisma (en-revision)
+
+Archivo: `S-22-capa-de-datos-con-drizzle.md` · REQ: 23 · BEH: 20 · INV: 6 · AC: 20
+
+| REQ | Prioridad | BEH | INV | AC (método) | Test |
+|---|---|---|---|---|---|
+| REQ-S22-001 | MUST | BEH-S22-020 | — | AC-S22-001 (integracion), AC-S22-020 (integracion) | pendiente |
+| REQ-S22-002 | MUST | BEH-S22-012 | INV-S22-001 | AC-S22-001 (integracion) | pendiente |
+| REQ-S22-003 | MUST | BEH-S22-011, BEH-S22-012 | INV-S22-001 | AC-S22-001 (integracion), AC-S22-002 (unitario) | pendiente |
+| REQ-S22-004 | MUST | BEH-S22-006 | INV-S22-006 | AC-S22-009 (integracion) | pendiente |
+| REQ-S22-005 | MUST | BEH-S22-007 | — | AC-S22-010 (integracion) | pendiente |
+| REQ-S22-006 | MUST | BEH-S22-020 | — | AC-S22-020 (integracion) | pendiente |
+| REQ-S22-007 | MUST | BEH-S22-001 | — | AC-S22-003 (integracion), AC-S22-020 (integracion) | pendiente |
+| REQ-S22-008 | MUST | BEH-S22-001 | — | AC-S22-003 (integracion) | pendiente |
+| REQ-S22-009 | MUST | BEH-S22-016 | — | AC-S22-004 (integracion) | pendiente |
+| REQ-S22-010 | MUST | BEH-S22-002 | — | AC-S22-005 (integracion) | pendiente |
+| REQ-S22-011 | MUST | BEH-S22-003 | — | AC-S22-006 (integracion) | pendiente |
+| REQ-S22-012 | MUST | BEH-S22-004 | INV-S22-004 | AC-S22-007 (integracion) | pendiente |
+| REQ-S22-013 | MUST | BEH-S22-005 | — | AC-S22-008 (integracion) | pendiente |
+| REQ-S22-014 | MUST | BEH-S22-010 | INV-S22-003 | AC-S22-011 (unitario) | pendiente |
+| REQ-S22-015 | MUST | BEH-S22-014 | INV-S22-002 | AC-S22-012 (sql) | pendiente |
+| REQ-S22-016 | MUST | BEH-S22-008 | — | AC-S22-014 (e2e) | pendiente |
+| REQ-S22-017 | MUST | BEH-S22-017 | — | AC-S22-015 (unitario) | pendiente |
+| REQ-S22-018 | MUST | BEH-S22-013 | — | AC-S22-016 (integracion) | pendiente |
+| REQ-S22-019 | MUST | BEH-S22-013 | — | AC-S22-016 (integracion) | pendiente |
+| REQ-S22-020 | MUST | BEH-S22-015 | — | AC-S22-017 (unitario) | pendiente |
+| REQ-S22-021 | MUST | BEH-S22-018 | — | AC-S22-018 (unitario) | pendiente |
+| REQ-S22-022 | MUST | BEH-S22-009 | — | AC-S22-019 (unitario) | pendiente |
+| REQ-S22-023 | MUST | BEH-S22-019 | INV-S22-005 | AC-S22-013 (unitario) | pendiente |

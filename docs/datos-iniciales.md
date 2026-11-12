@@ -29,5 +29,4 @@ Escritos tal como los dio el propietario, con mayúsculas normalizadas por mí (
 - Solo registros contables; el cálculo tributario y las transacciones fiscales están fuera de alcance.
 
 ## Métodos de pago
-- Conformados por el propietario (2026-11-12): **Yape** y **transferencias al BCP**. El catálogo queda abierto para agregar Efectivo, Plin, Tarjeta o Depósito desde la administración. Falta confirmar si se cobra en efectivo en el local.
-
+- Conformados por el propietario (2026-11-12): **Yape**, **transferencias al BCP** y **Efectivo** (los cobros en efectivo también son una opción). El catálogo queda abierto para agregar Plin, Tarjeta o Depósito desde la administración. El redondeo de efectivo del BCRP sigue apagado (ADR-011).

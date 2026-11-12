@@ -765,3 +765,4 @@ Tras las correcciones S-22 pasó de 23 a 30 REQ, de 20 a 27 BEH y de 20 a 28 AC 
 *Derivadas de la aprobación de S-01. El texto anterior se conserva; donde choca, rige esta sección.*
 - REQ-S22-016, BEH-S22-008 y AC-S22-014 (25 tablas y 14 enums) valen al terminar S-22; tras S-01 son 26 tablas y 15 enums (`IntentoLogin` y el enum de su resultado).
 - REQ-S22-004: la columna `apiKey` con valor generado por la aplicación se reemplaza por `apiKeyHash` y `apiKeyPrefijo` (S-01, REQ-S01-008).
+- Por la aprobación de S-03: REQ-S22-010, SUP-S22-014, BEH-S22-002, AC-S22-005 y las aserciones de montos de las suites de contrato (REQ-S22-008 y REQ-S22-028) pasan de «number» a «cadena decimal de dos decimales», con el modo `string` de `numeric` de Drizzle; `docs/superpowers/specs/S-03-dinero-y-metodos-de-pago.md` §5.2 y SUP-S03-011.

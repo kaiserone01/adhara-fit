@@ -109,7 +109,7 @@ Archivo: `S-02-hora-de-lima.md` · REQ: 20 · BEH: 17 · INV: 5 · AC: 13
 | REQ-S02-019 | MUST | BEH-S02-017 | — | AC-S02-013 (unitario) | pendiente |
 | REQ-S02-020 | MUST | BEH-S02-016 | INV-S02-005 | AC-S02-012 (unitario) | pendiente |
 
-## S-03 — Dinero en soles con dos decimales exactos y catálogo de métodos de pago de Perú (en-revision)
+## S-03 — Dinero en soles con dos decimales exactos y catálogo de métodos de pago de Perú (aprobada)
 
 Archivo: `S-03-dinero-y-metodos-de-pago.md` · REQ: 32 · BEH: 25 · INV: 6 · AC: 19
 

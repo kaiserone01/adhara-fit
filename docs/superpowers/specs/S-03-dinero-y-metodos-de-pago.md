@@ -1,10 +1,10 @@
 ---
 id: S-03
-estado: en-revision
+estado: aprobada
 adrs: ADR-003, ADR-006, ADR-010, ADR-011, ADR-016, ADR-022
 depende_de: S-00, S-01, S-22
-aprobada_por:
-fecha_aprobacion:
+aprobada_por: propietario
+fecha_aprobacion: 2026-11-12
 ---
 # S-03 — Dinero en soles con dos decimales exactos y catálogo de métodos de pago de Perú
 
@@ -51,7 +51,7 @@ El código heredado maneja el dinero como `number` de JavaScript, con redondeos 
 - SUP-S03-002: `numeric(12,2)` basta para todos los importes del negocio (máximo 9,999,999,999.99). Default: `numeric(12,2)`; asumido, por validar.
 - SUP-S03-003: una cadena de monto de entrada son dígitos con hasta dos decimales, con punto decimal y sin separador de miles, sin signo, sin espacios y sin notación exponencial; se normaliza a dos decimales. Default: ese formato; asumido, por validar.
 - SUP-S03-004: el campo de dinero de la interfaz acepta además comas de miles solo en grupos de exactamente tres dígitos (`1,234.56`); una coma seguida de un número distinto de tres dígitos (`120,50`) se rechaza, para que nadie escriba `120,50` y obtenga `12050.00`. Default: esa gramática; asumido, por validar.
-- SUP-S03-005: los métodos de pago conformados por el propietario el 2026-11-12 son Yape y transferencias al BCP; el seed (S-15) crea esos dos como activos y el catálogo queda abierto para agregar Efectivo, Plin, Tarjeta o Depósito desde la administración. Default: esos dos activos; asumido, por validar (falta confirmar si se cobra en efectivo).
+- SUP-S03-005: los métodos de pago conformados por el propietario el 2026-11-12 son Yape, transferencias al BCP y Efectivo (confirmó que los cobros en efectivo también son una opción); el seed (S-15) crea esos tres como activos y el catálogo queda abierto para agregar Plin, Tarjeta o Depósito desde la administración. Default: esos tres activos; asumido, por validar (confirmados por el propietario).
 - SUP-S03-006: el CCI es opcional; si se informa, se valida como exactamente 20 dígitos numéricos, sin espacios ni guiones. Default: ese criterio; asumido, por validar.
 - SUP-S03-007: el número de operación es un texto no vacío tras quitar espacios, de 1 a 40 caracteres; la validación de cuatro dígitos del Repo A es una convención del pago móvil venezolano y se retira. Default: ese criterio; asumido, por validar.
 - SUP-S03-008: la política `bcrp` de redondeo de efectivo no se implementa hasta validar el texto vigente de la norma; S-03 entrega la política `ninguna` y la interfaz para inyectar otra. Default: solo `ninguna`; asumido, por validar.
@@ -652,7 +652,7 @@ El código heredado maneja el dinero como `number` de JavaScript, con redondeos 
 - No se verificó que el CCI tenga 20 dígitos ni el formato del número de operación de Yape y de las transferencias al BCP (SUP-S03-006 y SUP-S03-007).
 
 ### 5.4 Preguntas abiertas
-- ¿Se cobra en efectivo en el local? Default: no está en el seed; se agrega desde la administración si hace falta (SUP-S03-005).
+- ¿Se cobra en efectivo en el local? Default: sí, el efectivo está en el seed como método activo, según la respuesta del propietario del 2026-11-12 (SUP-S03-005).
 - ¿Hay un importe máximo menor que S/ 9,999,999,999.99 para el negocio? Default: ese máximo técnico (SUP-S03-002).
 - ¿El número de operación tiene un formato fijo (por ejemplo solo dígitos)? Default: texto de 1 a 40 caracteres (SUP-S03-007).
 
@@ -707,4 +707,4 @@ Verifiqué cada hallazgo contra el Repo A antes de corregir. **Todos eran cierto
 | Fila 13 (lint) | Ejecuté `node tools/spec-lint.mjs`: 0 errores y 0 avisos |
 | Fila 14 (concurrencia) | Motivo ampliado |
 
-Tras las correcciones S-03 pasó de 24 a 32 REQ, de 18 a 25 BEH y de 16 a 19 AC (6 INV). Sigue en `en-revision` hasta que el propietario escriba «S-03 aprobada» sobre este texto.
+Tras las correcciones S-03 pasó de 24 a 32 REQ, de 18 a 25 BEH y de 16 a 19 AC (6 INV). El propietario escribió «S-03 aprobada» el 2026-11-12 sobre este texto corregido y confirmó el efectivo como método de cobro; la spec pasó a `aprobada`.

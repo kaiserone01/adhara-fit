@@ -579,3 +579,31 @@ Archivo: `S-22-capa-de-datos-con-drizzle.md` · REQ: 30 · BEH: 27 · INV: 6 · 
 | REQ-S22-028 | MUST | BEH-S22-026 | — | AC-S22-026 (integracion) | pendiente |
 | REQ-S22-029 | MUST | BEH-S22-023 | — | AC-S22-023 (unitario) | pendiente |
 | REQ-S22-030 | MUST | BEH-S22-022 | — | AC-S22-022 (integracion) | pendiente |
+
+## S-23 — Un solo rol: el socio o administrador, con acceso total y sin permisos por módulo (en-revision)
+
+Archivo: `S-23-un-solo-rol-administrador.md` · REQ: 21 · BEH: 13 · INV: 4 · AC: 8
+
+| REQ | Prioridad | BEH | INV | AC (método) | Test |
+|---|---|---|---|---|---|
+| REQ-S23-001 | MUST | BEH-S23-001 | INV-S23-002 | AC-S23-001 (sql) | pendiente |
+| REQ-S23-002 | MUST | BEH-S23-001 | INV-S23-002 | AC-S23-001 (sql) | pendiente |
+| REQ-S23-003 | MUST | BEH-S23-002 | — | AC-S23-002 (unitario) | pendiente |
+| REQ-S23-004 | MUST | BEH-S23-002 | — | AC-S23-002 (unitario) | pendiente |
+| REQ-S23-005 | MUST | BEH-S23-003 | — | AC-S23-003 (integracion) | pendiente |
+| REQ-S23-006 | MUST | BEH-S23-004 | INV-S23-003 | AC-S23-003 (integracion) | pendiente |
+| REQ-S23-007 | MUST | BEH-S23-004 | INV-S23-003 | AC-S23-003 (integracion) | pendiente |
+| REQ-S23-008 | MUST | BEH-S23-005 | — | AC-S23-004 (unitario) | pendiente |
+| REQ-S23-009 | MUST | BEH-S23-006 | — | AC-S23-003 (integracion) | pendiente |
+| REQ-S23-010 | MUST | BEH-S23-001 | — | AC-S23-001 (sql) | pendiente |
+| REQ-S23-011 | MUST | BEH-S23-007 | — | AC-S23-005 (manual) | pendiente |
+| REQ-S23-012 | MUST | BEH-S23-007 | — | AC-S23-005 (manual) | pendiente |
+| REQ-S23-013 | MUST | BEH-S23-008 | INV-S23-001 | AC-S23-006 (integracion) | pendiente |
+| REQ-S23-014 | MUST | BEH-S23-009 | INV-S23-001 | AC-S23-006 (integracion) | pendiente |
+| REQ-S23-015 | MUST | BEH-S23-010 | INV-S23-001 | AC-S23-006 (integracion) | pendiente |
+| REQ-S23-016 | MUST | BEH-S23-011 | — | AC-S23-002 (unitario) | pendiente |
+| REQ-S23-017 | MUST | BEH-S23-007 | — | AC-S23-005 (manual) | pendiente |
+| REQ-S23-018 | MUST | BEH-S23-007 | — | AC-S23-005 (manual) | pendiente |
+| REQ-S23-019 | MUST | BEH-S23-012 | INV-S23-004 | AC-S23-007 (unitario) | pendiente |
+| REQ-S23-020 | MUST | BEH-S23-012 | INV-S23-004 | AC-S23-007 (unitario) | pendiente |
+| REQ-S23-021 | MUST | BEH-S23-013 | — | AC-S23-008 (manual) | pendiente |

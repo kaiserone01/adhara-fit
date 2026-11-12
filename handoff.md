@@ -53,7 +53,7 @@ Los 22 ADR están aceptados (001 a 022); ninguno queda propuesto ni retirado. AD
 | S-13 | **aprobada** (propietario, 2026-11-12, con los valores por defecto). 51 REQ, 29 BEH, 5 INV, 20 AC; `spec-lint`: 0 errores, 0 avisos. Consentimiento, textos legales, aviso de reclamaciones y documento enmascarado. Enmiendas en S-04, S-05, S-06, S-09, S-12, S-15, S-22 |
 | S-14 | **en revisión, veredicto conciliado** (espera «S-14 aprobada»). Reportes: morosos, por vencer, ingresos por período e histórico imprimible; 54 REQ, 25 BEH, 4 INV, 17 AC; `spec-lint`: 0 errores, 0 avisos |
 | S-17 | **en revisión, veredicto conciliado** (espera «S-17 aprobada»). Operación: VPS con Docker, Caddy (TLS), respaldos cifrados con `age`, restauración, `/api/salud`, registros JSON, despliegue y `admin:restablecer`; 78 REQ, 33 BEH, 5 INV, 24 AC; `spec-lint`: 0 errores, 0 avisos |
-| S-19 | **en revisión** (revisor independiente en curso). Sistema de diseño y marca: tokens, tipografías propias, componentes, galería, contraste y marca; 58 REQ, 26 BEH, 5 INV, 18 AC; `spec-lint`: 0 errores, 0 avisos |
+| S-19 | **en revisión, veredicto conciliado** (espera «S-19 aprobada»). Sistema de diseño y marca: tokens, tipografías propias, componentes, galería, contraste y marca; 76 REQ, 33 BEH, 5 INV, 22 AC; `spec-lint`: 0 errores, 0 avisos |
 | S-20, S-21 | **entran** (el propietario aprobó la lista completa el 2026-11-12); sin redactar todavía. S-16 (importador) descartada. Mapa en lenguaje simple: `docs/superpowers/BACKLOG-SPECS.md`; cruce técnico: `COBERTURA-RF.md` |
 
 - Defaults asumidos hasta ahora: ninguno de `docs/08`. Documentación v0.4 del zip: **importada íntegra** a `docs/` (40 archivos; `diff -r` vacío y manifiesto sha256 idéntico; el commit de importación solo contiene esos archivos).
@@ -195,7 +195,8 @@ Los 22 ADR están aceptados (001 a 022); ninguno queda propuesto ni retirado. AD
 
 ## 5. Próximos pasos
 1. Leer handoff.md y ejecutar /preflight.
-2. Esperar «S-14 aprobada» y «S-17 aprobada» (veredictos conciliados; resumen enviado) y el veredicto del revisor de S-19; conciliar S-19 y enviar su resumen. Al aprobar cada una: marcar `estado: aprobada`, registrar las enmiendas de su sección 5.2, actualizar BACKLOG-SPECS y este handoff. Después redactar, revisar y aprobar S-20 (vitrina de TV) y S-21 (check-in en TV).
+2. Esperar «S-14 aprobada», «S-17 aprobada» y «S-19 aprobada» (veredictos conciliados; resumen enviado). Al aprobar cada una: marcar `estado: aprobada`, registrar las enmiendas de su sección 5.2, actualizar BACKLOG-SPECS y este handoff. Después redactar, revisar y aprobar S-20 (vitrina de TV) y S-21 (check-in en TV).
 3. Terminadas las specs, redactar el plan global (G6) en `docs/superpowers/plans/`: orden, dependencias y riesgos; decidir si S-08, S-10 y S-11 van antes de S-05 (S-05 edita archivos que ellas borran). G6 termina la sesión de diseño.
 4. Pedir al propietario: repo privado antes de cualquier push; originales del logotipo y tipografía; periodo de retención (P-20); revisión legal de la Ley 29733 (se descartó anonimizar).
-5. Solo con orden expresa y ADR por ADR: cambiar estados de ADR a `aceptado (confirmado por el propietario, AAAA-MM-DD)`.
+5. **Push pendiente:** el propietario pidió publicar el avance (2026-11-12), pero el pre-flight dio FAIL en visibilidad (repo público); esperar «ya es privado» y empujar solo la rama de la plataforma `claude/gracious-faraday-0j7ziu` (no a `main`, que está protegida).
+6. Solo con orden expresa y ADR por ADR: cambiar estados de ADR a `aceptado (confirmado por el propietario, AAAA-MM-DD)`.

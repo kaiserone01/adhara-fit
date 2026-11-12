@@ -1,8 +1,10 @@
 # CLAUDE.md — Adhara Fit
 
 Gimnasio en Perú, un solo local, moneda PEN. Sistema web **interno** en un subdominio, sin sitio público.
-Trabajamos con **Spec-Driven Development (SDD)**. Estamos en **diseño y fundaciones**: no se escribe código de producto
-(ni `create-next-app`, ni Turborepo, ni el ORM Drizzle, ADR-022) hasta que el propietario apruebe por escrito la spec correspondiente.
+Trabajamos con **Spec-Driven Development (SDD)**. El diseño se cerró con el plan global (`docs/superpowers/plans/2026-11-12-refactor-fundaciones.md`)
+y el propietario ordenó el 2026-11-12 empezar el desarrollo cuanto antes. El código de producto de una spec (también `create-next-app`, Turborepo y el ORM
+Drizzle, ADR-022) se escribe solo si el propietario la aprobó por escrito; hoy están aprobadas S-00 a S-15, S-17, S-18, S-19, S-22 y S-23. Se implementa en el
+orden del plan, un commit por paso de la sección 5.1 de cada spec.
 Todo en español. Fechas con zona `America/Lima`.
 
 ## Al iniciar cualquier sesión

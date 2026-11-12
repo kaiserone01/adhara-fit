@@ -1,6 +1,6 @@
 # ADR-009: Alcance de apps del monorepo en el MVP
 
-Estado: **propuesto** (2026-11-11) · P-05: smart-TV no previsto, no descartado (12-nov-2026)
+Estado: **aceptado** (confirmado por el propietario, 2026-11-12) · propuesto el 2026-11-11 · P-05: smart-TV no previsto, no descartado (12-nov-2026)
 
 ## Contexto
 El monorepo incluye 7 apps: `web-admin`, `kiosk`, `kiosk-tv` (Capacitor), `kiosk-host` (WinForms/.NET 8), `vitrina`, `vitrina-tv` (Capacitor) y `worker`. Cada una añade CI, despliegue, dependencias de plataforma (Android/Gradle, .NET) y mantenimiento.

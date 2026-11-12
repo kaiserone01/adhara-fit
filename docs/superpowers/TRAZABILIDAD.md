@@ -607,6 +607,49 @@ Archivo: `S-12-tickets-y-comprobantes.md` · REQ: 43 · BEH: 20 · INV: 4 · AC:
 | REQ-S12-042 | MUST | BEH-S12-007 | — | AC-S12-005 (manual) | pendiente |
 | REQ-S12-043 | MUST | BEH-S12-011 | — | AC-S12-008 (integracion) | pendiente |
 
+## S-13 — Consentimiento de datos personales, política de privacidad y aviso del Libro de Reclamaciones (en-revision)
+
+Archivo: `S-13-consentimiento-y-aviso-legal.md` · REQ: 36 · BEH: 22 · INV: 4 · AC: 14
+
+| REQ | Prioridad | BEH | INV | AC (método) | Test |
+|---|---|---|---|---|---|
+| REQ-S13-001 | MUST | BEH-S13-001 | INV-S13-002 | AC-S13-001 (integracion), AC-S13-003 (integracion) | pendiente |
+| REQ-S13-002 | MUST | BEH-S13-002 | — | AC-S13-002 (unitario) | pendiente |
+| REQ-S13-003 | MUST | BEH-S13-001 | INV-S13-002 | AC-S13-001 (integracion), AC-S13-003 (integracion) | pendiente |
+| REQ-S13-004 | MUST | BEH-S13-003 | — | AC-S13-001 (integracion) | pendiente |
+| REQ-S13-005 | MUST | BEH-S13-004 | INV-S13-002 | AC-S13-003 (integracion) | pendiente |
+| REQ-S13-006 | MUST | BEH-S13-005 | — | AC-S13-004 (manual) | pendiente |
+| REQ-S13-007 | MUST | BEH-S13-006 | — | AC-S13-004 (manual) | pendiente |
+| REQ-S13-008 | MUST | BEH-S13-006 | — | AC-S13-004 (manual) | pendiente |
+| REQ-S13-009 | MUST | BEH-S13-006 | — | AC-S13-004 (manual) | pendiente |
+| REQ-S13-010 | MUST | BEH-S13-007 | — | AC-S13-005 (manual) | pendiente |
+| REQ-S13-011 | MUST | BEH-S13-008 | INV-S13-001 | AC-S13-006 (integracion) | pendiente |
+| REQ-S13-012 | MUST | BEH-S13-008 | — | AC-S13-006 (integracion) | pendiente |
+| REQ-S13-013 | MUST | BEH-S13-009 | — | AC-S13-006 (integracion) | pendiente |
+| REQ-S13-014 | MUST | BEH-S13-010 | — | AC-S13-004 (manual), AC-S13-006 (integracion) | pendiente |
+| REQ-S13-015 | MUST | BEH-S13-009 | — | AC-S13-006 (integracion) | pendiente |
+| REQ-S13-016 | MUST | BEH-S13-011 | — | AC-S13-007 (integracion) | pendiente |
+| REQ-S13-017 | MUST | BEH-S13-012 | INV-S13-001 | AC-S13-006 (integracion), AC-S13-007 (integracion) | pendiente |
+| REQ-S13-018 | MUST | BEH-S13-013 | INV-S13-001 | AC-S13-006 (integracion), AC-S13-007 (integracion) | pendiente |
+| REQ-S13-019 | MUST | BEH-S13-014 | INV-S13-003 | AC-S13-008 (integracion) | pendiente |
+| REQ-S13-020 | MUST | BEH-S13-015 | — | AC-S13-008 (integracion) | pendiente |
+| REQ-S13-021 | MUST | BEH-S13-014 | INV-S13-003 | AC-S13-008 (integracion) | pendiente |
+| REQ-S13-022 | MUST | BEH-S13-014 | — | AC-S13-008 (integracion) | pendiente |
+| REQ-S13-023 | MUST | BEH-S13-016 | — | AC-S13-009 (integracion) | pendiente |
+| REQ-S13-024 | MUST | BEH-S13-016 | — | AC-S13-009 (integracion) | pendiente |
+| REQ-S13-025 | MUST | BEH-S13-010 | — | AC-S13-004 (manual), AC-S13-006 (integracion) | pendiente |
+| REQ-S13-026 | MUST | BEH-S13-017 | — | AC-S13-010 (integracion) | pendiente |
+| REQ-S13-027 | MUST | BEH-S13-018 | — | AC-S13-010 (integracion), AC-S13-011 (manual) | pendiente |
+| REQ-S13-028 | MUST | BEH-S13-018 | — | AC-S13-010 (integracion), AC-S13-011 (manual) | pendiente |
+| REQ-S13-029 | MUST | BEH-S13-019 | — | AC-S13-012 (integracion) | pendiente |
+| REQ-S13-030 | MUST | BEH-S13-020 | INV-S13-004 | AC-S13-013 (integracion) | pendiente |
+| REQ-S13-031 | MUST | BEH-S13-020 | INV-S13-004 | AC-S13-013 (integracion) | pendiente |
+| REQ-S13-032 | MUST | BEH-S13-020 | INV-S13-004 | AC-S13-013 (integracion) | pendiente |
+| REQ-S13-033 | MUST | BEH-S13-021 | — | AC-S13-012 (integracion) | pendiente |
+| REQ-S13-034 | MUST | BEH-S13-022 | — | AC-S13-014 (unitario) | pendiente |
+| REQ-S13-035 | MUST | BEH-S13-020 | — | AC-S13-013 (integracion) | pendiente |
+| REQ-S13-036 | MUST | BEH-S13-022 | — | AC-S13-014 (unitario) | pendiente |
+
 ## S-15 — Línea base de la base de datos y datos iniciales de Adhara Fit (en-revision)
 
 Archivo: `S-15-linea-base-y-datos-iniciales.md` · REQ: 31 · BEH: 20 · INV: 4 · AC: 14

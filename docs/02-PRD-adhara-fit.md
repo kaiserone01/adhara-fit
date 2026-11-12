@@ -4,13 +4,13 @@ Versión 0.1 · 2026-11-11 · Estado: borrador para validación
 
 ## 1. Resumen del producto
 
-**Adhara Fit Platform** es el sistema de gestión y control de acceso del gimnasio Adhara Fit. Permite al personal inscribir miembros, cobrar membresías en Soles, cerrar caja por turno y saber en tiempo real quién tiene acceso, y permite al miembro validar su ingreso en un kiosco con su DNI.
+**Adhara Fit** es un sistema de **negocio único** (*single business*): el sistema de gestión y control de acceso del gimnasio Adhara Fit, sin soporte para otras organizaciones (ADR-019). Permite al personal inscribir miembros, cobrar membresías en Soles, cerrar caja por turno y saber en tiempo real quién tiene acceso, y permite al miembro validar su ingreso en un kiosco con su DNI.
 
 **Propuesta de valor:** menos morosidad y menos cuadernos. Una sola fuente de verdad para vencimientos, cobros y asistencia.
 
 ## 2. Problema
 
-| Hoy (supuesto, **[PREGUNTA P-08]**) | Con la plataforma |
+| Hoy (supuesto, **[PREGUNTA P-08]**) | Con el sistema |
 |---|---|
 | Vencimientos y pagos en cuaderno/Excel | Estado de acceso calculado automáticamente |
 | Cierre de caja manual, propenso a descuadres | Turno con arqueo por método y diferencia explícita |

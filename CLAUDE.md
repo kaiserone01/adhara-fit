@@ -65,7 +65,7 @@ Antes de cada puerta entrega **qué comprobaste y qué no**, pegando la salida r
 
 ## 5. Prohibiciones
 - Borrar tests para que pasen, desactivar reglas de lint, `any` como atajo, `prisma migrate` contra una base real, imprimir secretos.
-- Fuera de alcance por ahora: SUNAT, WhatsApp, vitrina/TV, `kiosk-host`, sitio público, multi-sede visible.
+- Fuera de alcance por ahora: SUNAT, WhatsApp, `kiosk-host`, sitio público, multi-sede visible. Dentro de alcance (decisión del propietario, ADR-021 propuesto): vitrina de TV y check-in en smart-TV.
 - Ninguna dependencia nueva sin justificarla en su spec. Cada afirmación sobre el código cita archivo y línea o dice "no verificado".
 - No importar código del Repo A hasta que la spec S-00 esté aprobada.
 

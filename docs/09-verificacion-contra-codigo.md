@@ -154,3 +154,5 @@ Lectura: el acoplamiento más profundo es **sucursal** (transversal) y el cluste
 | 12 | 02 HU-20 · 01 regla 7 | El turno obligatorio para cobrar membresías no existe en el dominio del base (V-16): se exige en el nuevo |
 | 13 | 09 V-06 | "Los casos de uso validan permisos" pasa de ⚠️ a ❌ con lista exacta (doc 11) |
 | 14 | 11 (nuevo) | Verificación completa del documento de ingeniería; 7 hallazgos nuevos |
+| 15 | 07 tarea 0.2 (S-00) | El criterio «`git log` muestra un solo commit inicial» no aplica: este repositorio ya contiene el arnés y la documentación. El criterio pasa a ser «un solo commit de importación, sin historia del Repo A» (spec S-00, REQ-S00-001) |
+| 16 | 07 tarea 0.3 (S-00) | El criterio «búsqueda de cédula/Adrenalina/zip sin hallazgos» no puede cumplirse en la Fase 0: el código aún contiene esos términos (§5: 40 archivos con *cédula*, 29 con marca anterior). Se limita a los archivos de datos y scripts excluidos; el resto se retira en S-06 y S-10 (spec S-00 §5.2) |

@@ -1,6 +1,6 @@
 ---
 id: S-00
-estado: borrador
+estado: en-revision
 adrs: ADR-001, ADR-005, ADR-009, ADR-012, ADR-014, ADR-016, ADR-017, ADR-020, ADR-021
 depende_de: ninguna
 aprobada_por:
@@ -626,4 +626,4 @@ No aplicado, con motivo:
 - La versión corregida **no se volvió a pasar por el revisor**.
 
 ### Cambio de alcance posterior a la revisión (2026-11-12)
-Decisiones del propietario posteriores al veredicto anterior: la vitrina y el check-in en smart-TV entran en el alcance (ADR-021, enmienda a ADR-009); el negocio es único y se elimina `Organizacion` (ADR-019), por lo que la línea base cuenta los archivos que la mencionan; y el rebranding completo pasa a S-19 (ADR-020). Por eso la spec vuelve a `borrador` hasta que ADR-021 esté aceptado, y esta versión **no ha sido revisada**: el veredicto de arriba describe el alcance anterior.
+Decisiones del propietario posteriores al veredicto anterior (2026-11-12): la vitrina y el check-in en smart-TV entran en el alcance (ADR-021, enmienda a ADR-009); el negocio es único y se elimina `Organizacion` (ADR-019), por lo que la línea base cuenta los archivos que la mencionan; el rebranding completo pasa a S-19 (ADR-020); y no hay egresos ni fiado (ADR-018). ADR-018 a ADR-021 fueron aceptados ese día. Además se verificó el Repo A con un clon de solo lectura y se sustituyeron los «no re-verificado» por hechos con evidencia. Esta versión **no ha sido revisada** y el veredicto de arriba describe el alcance anterior.

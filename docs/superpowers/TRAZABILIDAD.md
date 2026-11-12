@@ -1010,6 +1010,57 @@ Archivo: `S-19-sistema-de-diseno-y-marca.md` · REQ: 76 · BEH: 32 · INV: 5 · 
 | REQ-S19-075 | MUST | BEH-S19-006 | — | AC-S19-004 (unitario) | pendiente |
 | REQ-S19-076 | SHOULD | BEH-S19-032 | — | AC-S19-018 (unitario) | pendiente |
 
+## S-21 — Check-in en smart-TV: entrada con teclado numérico USB, enmascarado, límite de intentos y APK (en-revision)
+
+Archivo: `S-21-checkin-en-smart-tv.md` · REQ: 44 · BEH: 20 · INV: 4 · AC: 15
+
+| REQ | Prioridad | BEH | INV | AC (método) | Test |
+|---|---|---|---|---|---|
+| REQ-S21-001 | MUST | BEH-S21-001 | INV-S21-001 | AC-S21-001 (unitario), AC-S21-015 (manual) | pendiente |
+| REQ-S21-002 | MUST | BEH-S21-001 | INV-S21-001 | AC-S21-001 (unitario) | pendiente |
+| REQ-S21-003 | MUST | BEH-S21-002 | INV-S21-004 | AC-S21-002 (unitario), AC-S21-013 (unitario) | pendiente |
+| REQ-S21-004 | MUST | BEH-S21-003 | — | AC-S21-003 (unitario) | pendiente |
+| REQ-S21-005 | MUST | BEH-S21-001 | INV-S21-001 | AC-S21-001 (unitario) | pendiente |
+| REQ-S21-006 | MUST | BEH-S21-004 | INV-S21-001 | AC-S21-001 (unitario), AC-S21-002 (unitario), AC-S21-015 (manual) | pendiente |
+| REQ-S21-007 | MUST | BEH-S21-004 | — | AC-S21-002 (unitario) | pendiente |
+| REQ-S21-008 | MUST | BEH-S21-005 | — | AC-S21-003 (unitario) | pendiente |
+| REQ-S21-009 | MUST | BEH-S21-006 | — | AC-S21-004 (integracion) | pendiente |
+| REQ-S21-010 | MUST | BEH-S21-006 | INV-S21-002 | AC-S21-004 (integracion), AC-S21-005 (integracion) | pendiente |
+| REQ-S21-011 | MUST | BEH-S21-007 | INV-S21-002 | AC-S21-005 (integracion) | pendiente |
+| REQ-S21-012 | MUST | BEH-S21-007 | INV-S21-002 | AC-S21-005 (integracion) | pendiente |
+| REQ-S21-013 | MUST | BEH-S21-008 | INV-S21-002 | AC-S21-005 (integracion) | pendiente |
+| REQ-S21-014 | MUST | BEH-S21-009 | — | AC-S21-004 (integracion) | pendiente |
+| REQ-S21-015 | MUST | BEH-S21-010 | — | AC-S21-006 (unitario), AC-S21-015 (manual) | pendiente |
+| REQ-S21-016 | MUST | BEH-S21-011 | INV-S21-003 | AC-S21-007 (integracion), AC-S21-015 (manual) | pendiente |
+| REQ-S21-017 | MUST | BEH-S21-011 | — | AC-S21-007 (integracion) | pendiente |
+| REQ-S21-018 | MUST | BEH-S21-011 | — | AC-S21-007 (integracion) | pendiente |
+| REQ-S21-019 | MUST | BEH-S21-012 | — | AC-S21-008 (unitario) | pendiente |
+| REQ-S21-020 | MUST | BEH-S21-012 | — | AC-S21-008 (unitario), AC-S21-015 (manual) | pendiente |
+| REQ-S21-021 | MUST | BEH-S21-012 | — | AC-S21-008 (unitario) | pendiente |
+| REQ-S21-022 | MUST | BEH-S21-002 | — | AC-S21-002 (unitario) | pendiente |
+| REQ-S21-023 | MUST | BEH-S21-013 | — | AC-S21-009 (unitario) | pendiente |
+| REQ-S21-024 | MUST | BEH-S21-014 | — | AC-S21-009 (unitario) | pendiente |
+| REQ-S21-025 | MUST | BEH-S21-014 | — | AC-S21-009 (unitario) | pendiente |
+| REQ-S21-026 | MUST | BEH-S21-013 | — | AC-S21-009 (unitario) | pendiente |
+| REQ-S21-027 | MUST | BEH-S21-013 | — | AC-S21-009 (unitario) | pendiente |
+| REQ-S21-028 | MUST | BEH-S21-015 | — | AC-S21-010 (unitario) | pendiente |
+| REQ-S21-029 | MUST | BEH-S21-015 | — | AC-S21-010 (unitario) | pendiente |
+| REQ-S21-030 | MUST | BEH-S21-016 | INV-S21-004 | AC-S21-011 (unitario), AC-S21-013 (unitario) | pendiente |
+| REQ-S21-031 | MUST | BEH-S21-016 | — | AC-S21-011 (unitario) | pendiente |
+| REQ-S21-032 | MUST | BEH-S21-017 | — | AC-S21-011 (unitario) | pendiente |
+| REQ-S21-033 | MUST | BEH-S21-017 | — | AC-S21-011 (unitario) | pendiente |
+| REQ-S21-034 | MUST | BEH-S21-017 | — | AC-S21-011 (unitario) | pendiente |
+| REQ-S21-035 | MUST | BEH-S21-018 | — | AC-S21-012 (unitario) | pendiente |
+| REQ-S21-036 | MUST | BEH-S21-019 | INV-S21-004 | AC-S21-013 (unitario) | pendiente |
+| REQ-S21-037 | MUST | BEH-S21-019 | INV-S21-004 | AC-S21-013 (unitario) | pendiente |
+| REQ-S21-038 | MUST | BEH-S21-019 | INV-S21-004 | AC-S21-013 (unitario) | pendiente |
+| REQ-S21-039 | MUST | BEH-S21-020 | — | AC-S21-014 (manual) | pendiente |
+| REQ-S21-040 | MUST | BEH-S21-004 | — | AC-S21-001 (unitario), AC-S21-002 (unitario) | pendiente |
+| REQ-S21-041 | MUST | BEH-S21-007 | — | AC-S21-005 (integracion) | pendiente |
+| REQ-S21-042 | MUST | BEH-S21-012 | — | AC-S21-008 (unitario) | pendiente |
+| REQ-S21-043 | MUST | BEH-S21-015 | — | AC-S21-010 (unitario) | pendiente |
+| REQ-S21-044 | MUST | BEH-S21-017 | — | AC-S21-011 (unitario) | pendiente |
+
 ## S-22 — Capa de datos con Drizzle: esquema, repositorios, transacciones y retiro de Prisma (aprobada)
 
 Archivo: `S-22-capa-de-datos-con-drizzle.md` · REQ: 30 · BEH: 27 · INV: 6 · AC: 28

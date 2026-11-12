@@ -2,7 +2,7 @@
 
 Gimnasio en Perú, un solo local, moneda PEN. Sistema web **interno** en un subdominio, sin sitio público.
 Trabajamos con **Spec-Driven Development (SDD)**. Estamos en **diseño y fundaciones**: no se escribe código de producto
-(ni `create-next-app`, ni Turborepo, ni Prisma) hasta que el propietario apruebe por escrito la spec correspondiente.
+(ni `create-next-app`, ni Turborepo, ni el ORM Drizzle, ADR-022) hasta que el propietario apruebe por escrito la spec correspondiente.
 Todo en español. Fechas con zona `America/Lima`.
 
 ## Al iniciar cualquier sesión
@@ -64,7 +64,7 @@ Antes de cada puerta entrega **qué comprobaste y qué no**, pegando la salida r
 - Hooks versionados en `.githooks/` (`bash scripts/setup-hooks.sh` en cada clon). La política única vive en `tools/commit-policy.mjs`.
 
 ## 5. Prohibiciones
-- Borrar tests para que pasen, desactivar reglas de lint, `any` como atajo, `prisma migrate` contra una base real, imprimir secretos.
+- Borrar tests para que pasen, desactivar reglas de lint, `any` como atajo, `drizzle-kit migrate|push|drop` (antes `prisma migrate`, ADR-022) contra una base real, imprimir secretos.
 - Fuera de alcance por ahora: SUNAT, WhatsApp, `kiosk-host`, sitio público, multi-sede visible. Dentro de alcance (ADR-021, aceptado): vitrina de TV y check-in en smart-TV con teclado numérico USB; `kiosk-host` (`.exe`) no forma parte del proyecto.
 - Ninguna dependencia nueva sin justificarla en su spec. Cada afirmación sobre el código cita archivo y línea o dice "no verificado".
 - No importar código del Repo A hasta que la spec S-00 esté aprobada.

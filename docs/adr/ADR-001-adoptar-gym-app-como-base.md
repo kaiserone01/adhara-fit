@@ -38,3 +38,8 @@ Construir sobre `gym-app`, **adaptándolo** (no reescribiéndolo), conservando s
 
 ## Dependencias
 *(Pase formal F.)* Raíz del grafo. Lo ejecuta ADR-005; ADR-002 mitiga su acoplamiento. La línea base exige una copia local del Repo A (ADR-016). Hallazgos abiertos de la revisión G3: ver `REVISION-ADR.md` §4, §7 y §8.4.
+
+## Enmiendas posteriores (2026-11-12)
+*Derivadas de decisiones aceptadas por el propietario (ADR-022). El texto anterior se conserva; donde choca, rige esta sección.*
+- La Decisión «conservando stack, arquitectura y convenciones» ya no incluye el ORM: **Drizzle reemplaza a Prisma 7** (ADR-022). Se conservan Next.js 16, React 19, Node 22, Tailwind 4, npm workspaces y Turborepo.
+- La reutilización de la infraestructura de persistencia heredada (`persistence/prisma`) se pierde para unos 17 repositorios; el estimado de 7 a 9 semanas **no se ha re-estimado** (el esfuerzo de S-22 no está medido). Se re-estima en el plan global (G6).

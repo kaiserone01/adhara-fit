@@ -1,4 +1,6 @@
-# 06 — Cambios al modelo de datos (Prisma)
+# 06 — Cambios al modelo de datos (Prisma; ORM sustituido por Drizzle, ADR-022)
+
+> **Enmienda ADR-022 (2026-11-12):** el ORM pasa a Drizzle. Los bloques ```prisma son **notación conceptual** del diff; el esquema real se escribe en TypeScript con Drizzle (S-22). Los comandos `prisma …` de §4 se sustituyen así: baseline con `drizzle-kit generate`, bases desechables con `drizzle-kit push`, aplicación en producción con el migrador de ejecución de `drizzle-orm`, y detección de drift generando de nuevo sin cambios (no verificado). Nunca contra una base real desde el agente.
 
 Versión 0.1 · 2026-11-11. Diff **conceptual** sobre `packages/db/prisma/schema.prisma` (723 líneas, 39 entre modelos y enums en el base). La implementación real se hace en Fase 1 sobre un **baseline único** (ver §4).
 
@@ -110,11 +112,11 @@ Se eliminan en dominio `ReglaAbono.ts`, `CobrarAbonoPendiente`, `ListarAbonosPen
 
 ## 4. Estrategia de migración
 
-1. **Baseline único.** Se genera `0001_baseline` con `prisma migrate diff --from-empty --to-schema` sobre el schema adaptado. No se arrastran las 36 migraciones del base (contienen historia de renombres, datos de Excel y backfills del cliente anterior).
+1. **Baseline único.** Se genera `0001_baseline` con `drizzle-kit generate` sobre el esquema adaptado (antes `prisma migrate diff`, ADR-022). No se arrastran las 36 migraciones del base (contienen historia de renombres, datos de Excel y backfills del cliente anterior).
 2. **Seed Adhara** (`seed.ts`): `Organizacion` "Adhara Fit" (slug `adhara-fit`), `Sucursal` "Local" con `apiKey` generada, `ConfiguracionOrganizacion`, usuario SOCIO inicial (contraseña por variable de entorno, forzar cambio), métodos de pago base, planes de ejemplo, reglas de abono.
 3. **Sin datos que migrar** del cliente anterior. Para miembros existentes de Adhara: importador CSV (HU-50, Release 1.1) con `numeroDocumento`, nombre, plan, fecha de vencimiento.
-4. **Entornos:** BD local en Docker Compose; `prisma migrate dev` solo local; `migrate deploy` en CI/CD hacia staging/producción.
-5. **Verificación:** `prisma validate`, `prisma migrate diff` en CI para detectar drift, y test de integración que arranca Postgres efímero y corre el seed.
+4. **Entornos:** BD local en Docker Compose; `drizzle-kit push` solo en bases desechables locales; el migrador de ejecución en CI/CD hacia staging/producción (antes `prisma migrate dev`/`deploy`, ADR-022).
+5. **Verificación:** comprobación en CI de que generar de nuevo no produce cambios (antes `prisma validate` y `migrate diff`, ADR-022), y test de integración que arranca Postgres efímero y corre el seed.
 
 ## 5. Índices recomendados (revisión)
 

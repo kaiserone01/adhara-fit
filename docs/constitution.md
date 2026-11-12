@@ -43,7 +43,7 @@ Es breve a propósito: cada artículo dice qué se exige y **cómo se verifica**
 | # | Artículo | ADR | Se verifica con |
 |---|---|---|---|
 | C-20 | **Test primero:** cada AC tiene su test (o consulta SQL / pasos manuales declarados) antes del código que lo satisface. | 016 | Columna «Test» de `TRAZABILIDAD.md`; revisión del PR |
-| C-21 | **Integración sobre PostgreSQL efímero**, creado por ejecución y destruido al terminar; `prisma migrate` solo contra la base efímera y nunca por el agente contra una real. | 016 | Helper de pruebas que aborta si `DATABASE_URL` no es la efímera; `guard-bash` |
+| C-21 | **Integración sobre PostgreSQL efímero**, creado por ejecución y destruido al terminar; `drizzle-kit migrate`/`push`/`drop` (antes `prisma migrate`, ADR-022) solo contra la base efímera y nunca por el agente contra una real. | 016 | Helper de pruebas que aborta si `DATABASE_URL` no es la efímera; `guard-bash` |
 | C-22 | Prohibido borrar tests para que pase la suite, desactivar reglas de lint o usar `any` como atajo. | 016 | CI (lint y suite), revisión del PR |
 
 ## V. Dependencias, alcance y secretos

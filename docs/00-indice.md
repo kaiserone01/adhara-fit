@@ -6,6 +6,8 @@ Sistema de gestión de gimnasio con control de accesos para **Adhara Fit** (Per�
 
 ## Cómo leer este paquete
 
+> **Nota ADR-022 (2026-11-12):** donde los documentos 01, 03, 10 y 12 nombran Prisma (pila del repo base, adaptadores, prompts históricos), rige ADR-022: el ORM pasa a Drizzle. Son documentos históricos y no se reescriben.
+
 | # | Documento | Para qué sirve |
 |---|---|---|
 | 01 | [Levantamiento de requerimientos](01-levantamiento-requerimientos.md) | Qué necesita el negocio: alcance, RF, RNF, reglas de negocio, supuestos y preguntas abiertas |
@@ -13,7 +15,7 @@ Sistema de gestión de gimnasio con control de accesos para **Adhara Fit** (Per�
 | 03 | [Análisis del repo base](03-analisis-repo-base.md) | Qué hay en `gym-app` y matriz módulo por módulo: conservar / adaptar / eliminar / diferir |
 | 04 | [Arquitectura objetivo](04-arquitectura-objetivo.md) | Stack, componentes, despliegue, seguridad, datos |
 | 05 | [Adaptación a Perú](05-adaptacion-peru.md) | Moneda, DNI, zona horaria, comprobantes SUNAT, pagos locales, protección de datos |
-| 06 | [Cambios al modelo de datos](06-modelo-datos-cambios.md) | Diff conceptual del schema Prisma y estrategia de migración |
+| 06 | [Cambios al modelo de datos](06-modelo-datos-cambios.md) | Diff conceptual del esquema (notación Prisma; ORM sustituido por Drizzle, ADR-022) y estrategia de migración |
 | 07 | [Plan de implementación y roadmap](07-plan-implementacion-roadmap.md) | Fases, tareas, criterios de aceptación, estimaciones, riesgos |
 | 08 | [Decisiones pendientes](08-decisiones-pendientes.md) | Lo que necesito que el cliente/usted confirme antes de Fase 1 |
 | 09 | [Verificación contra el código](09-verificacion-contra-codigo.md) | Cada afirmación de estos documentos contrastada con el fuente: confirmada / corregida / nueva, con evidencia |

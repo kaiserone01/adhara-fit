@@ -24,7 +24,7 @@ Versión 0.1 · 2026-11-11. Se **conserva** la arquitectura del repo base (ADR-0
 |---|---|---|
 | `apps/web-admin` | UI del personal + API del kiosco | Quitar sucursales, tasa, Excel; marca Adhara |
 | `apps/kiosk` | Check-in sin lógica de negocio (estático, PWA) | DNI en lugar de cédula; textos |
-| `packages/domain` | Reglas puras (sin Node/Prisma/red) | PEN, `fechaLima`, documentos, comprobantes |
+| `packages/domain` | Reglas puras (sin Node/ORM/red) | PEN, `fechaLima`, documentos, comprobantes |
 | `packages/infrastructure` | Adaptadores de puertos | Quitar `BcvApiAdapter`; añadir (Fase 3) cliente OSE |
 | `packages/db` | Schema, migraciones, seed | **Baseline nuevo**, seed Adhara |
 | `packages/theming`, `ui` | Tokens y componentes | Paleta amarillo/negro |
@@ -41,7 +41,7 @@ Versión 0.1 · 2026-11-11. Se **conserva** la arquitectura del repo base (ADR-0
 
 ## 4. Modelo de tiempo
 
-- Se almacenan instantes en UTC (`DateTime` Prisma).
+- Se almacenan instantes en UTC (columna de instante UTC; el mapeo con Drizzle se fija en S-22).
 - Las fechas de **calendario** (vencimiento, inscripción) se normalizan a **00:00 `America/Lima`** (= 05:00 UTC). Perú no usa horario de verano, por lo que el offset es fijo UTC-5; aun así se usa el nombre de zona IANA y no un offset codificado.
 - Prueba obligatoria de bordes: 23:59 y 00:00 Lima; 19:00 Lima (00:00 UTC).
 
@@ -79,7 +79,7 @@ En Perú el cobro en efectivo suele traer **vuelto**. El repo base no lo modela 
 | Staging | Misma imagen que producción, BD aparte, datos ficticios |
 | Producción | VPS o PaaS con Docker (EasyPanel/Coolify/Fly/Render); Postgres administrado; **subdominio dedicado** (p. ej. `app.<dominio>`) con TLS, `noindex`/`robots.txt` Disallow y acceso solo autenticado; R2/S3 para fotos |
 
-- **Migraciones:** `prisma migrate deploy` al arrancar el contenedor (como en el base) pero **solo contra la BD de su entorno**.
+- **Migraciones:** baseline único con `drizzle-kit generate`; en producción las aplica el migrador de ejecución de `drizzle-orm` al arrancar el contenedor, **solo contra la BD de su entorno** (ADR-022; asumido, por validar).
 - **Regla heredada y reforzada:** el `.env` local nunca apunta a producción.
 - **Región:** elegir la más cercana a Lima (p. ej. São Paulo / `sa-east-1`) para latencia del kiosco.
 - CI en GitHub Actions: `lint`, `tsc`, tests por workspace, `build`, escaneo de secretos (gitleaks).
@@ -90,4 +90,4 @@ Logs JSON de la app, `/api/health` (BD + versión), alertas por uptime externo y
 
 ## 9. Tecnología — decisiones de versión
 
-Se mantiene: Node 22, Next 16, React 19, Prisma 7, Tailwind 4, Vitest 5, npm workspaces + Turborepo. **No migrar de stack en el MVP.** Revisar versiones y avisos de seguridad al arrancar Fase 0 (`npm outdated`, `npm audit`).
+Se mantiene: Node 22, Next 16, React 19, Drizzle ORM 0.x (sustituye a Prisma 7, ADR-022), Tailwind 4, Vitest 5, npm workspaces + Turborepo. **No migrar de stack en el MVP, salvo el ORM (ADR-022).** Revisar versiones y avisos de seguridad al arrancar Fase 0 (`npm outdated`, `npm audit`).

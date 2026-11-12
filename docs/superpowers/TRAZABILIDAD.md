@@ -291,6 +291,56 @@ Archivo: `S-06-documento-de-identidad.md` · REQ: 40 · BEH: 34 · INV: 6 · AC:
 | REQ-S06-039 | MUST | BEH-S06-021 | — | AC-S06-012 (integracion) | pendiente |
 | REQ-S06-040 | MUST | BEH-S06-031 | — | AC-S06-007 (integracion) | pendiente |
 
+## S-07 — Cambio de plan: una sola operación, sin saldo a favor y sin planes «con entrenador» (en-revision)
+
+Archivo: `S-07-cambio-de-plan.md` · REQ: 43 · BEH: 31 · INV: 5 · AC: 15
+
+| REQ | Prioridad | BEH | INV | AC (método) | Test |
+|---|---|---|---|---|---|
+| REQ-S07-001 | MUST | BEH-S07-001 | — | AC-S07-001 (unitario) | pendiente |
+| REQ-S07-002 | MUST | BEH-S07-004 | — | AC-S07-001 (unitario) | pendiente |
+| REQ-S07-003 | MUST | BEH-S07-004, BEH-S07-005 | — | AC-S07-001 (unitario) | pendiente |
+| REQ-S07-004 | MUST | BEH-S07-001 | INV-S07-002 | AC-S07-001 (unitario) | pendiente |
+| REQ-S07-005 | MUST | BEH-S07-003 | INV-S07-002 | AC-S07-001 (unitario) | pendiente |
+| REQ-S07-006 | MUST | BEH-S07-002 | INV-S07-002 | AC-S07-001 (unitario) | pendiente |
+| REQ-S07-007 | MUST | BEH-S07-006 | — | AC-S07-002 (unitario) | pendiente |
+| REQ-S07-008 | MUST | BEH-S07-006 | — | AC-S07-002 (unitario) | pendiente |
+| REQ-S07-009 | MUST | BEH-S07-006 | — | AC-S07-002 (unitario) | pendiente |
+| REQ-S07-010 | MUST | BEH-S07-007 | — | AC-S07-003 (integracion) | pendiente |
+| REQ-S07-011 | MUST | BEH-S07-009 | — | AC-S07-004 (integracion) | pendiente |
+| REQ-S07-012 | MUST | BEH-S07-017 | INV-S07-004 | AC-S07-003 (integracion), AC-S07-006 (integracion) | pendiente |
+| REQ-S07-013 | MUST | BEH-S07-010 | — | AC-S07-004 (integracion) | pendiente |
+| REQ-S07-014 | MUST | BEH-S07-011 | — | AC-S07-004 (integracion) | pendiente |
+| REQ-S07-015 | MUST | BEH-S07-012 | — | AC-S07-004 (integracion) | pendiente |
+| REQ-S07-016 | MUST | BEH-S07-013 | — | AC-S07-004 (integracion) | pendiente |
+| REQ-S07-017 | MUST | BEH-S07-014 | — | AC-S07-004 (integracion) | pendiente |
+| REQ-S07-018 | MUST | BEH-S07-007 | INV-S07-004 | AC-S07-003 (integracion) | pendiente |
+| REQ-S07-019 | MUST | BEH-S07-008 | — | AC-S07-003 (integracion) | pendiente |
+| REQ-S07-020 | MUST | BEH-S07-015 | — | AC-S07-005 (integracion) | pendiente |
+| REQ-S07-021 | MUST | BEH-S07-016 | — | AC-S07-004 (integracion) | pendiente |
+| REQ-S07-022 | MUST | BEH-S07-007 | INV-S07-001, INV-S07-004 | AC-S07-003 (integracion), AC-S07-008 (integracion) | pendiente |
+| REQ-S07-023 | MUST | BEH-S07-007 | INV-S07-004 | AC-S07-003 (integracion) | pendiente |
+| REQ-S07-024 | MUST | BEH-S07-019 | — | AC-S07-007 (integracion) | pendiente |
+| REQ-S07-025 | MUST | BEH-S07-018 | — | AC-S07-006 (integracion) | pendiente |
+| REQ-S07-026 | MUST | BEH-S07-020, BEH-S07-021 | INV-S07-001 | AC-S07-008 (integracion) | pendiente |
+| REQ-S07-027 | MUST | BEH-S07-022 | — | AC-S07-009 (sql) | pendiente |
+| REQ-S07-028 | MUST | BEH-S07-019 | — | AC-S07-007 (integracion) | pendiente |
+| REQ-S07-029 | MUST | BEH-S07-022 | — | AC-S07-009 (sql) | pendiente |
+| REQ-S07-030 | MUST | BEH-S07-022 | — | AC-S07-009 (sql) | pendiente |
+| REQ-S07-031 | MUST | BEH-S07-023 | INV-S07-003 | AC-S07-009 (sql) | pendiente |
+| REQ-S07-032 | MUST | BEH-S07-023 | INV-S07-003 | AC-S07-009 (sql) | pendiente |
+| REQ-S07-033 | MUST | BEH-S07-024 | — | AC-S07-010 (unitario) | pendiente |
+| REQ-S07-034 | MUST | BEH-S07-025 | — | AC-S07-010 (unitario) | pendiente |
+| REQ-S07-035 | MUST | BEH-S07-026 | — | AC-S07-011 (integracion) | pendiente |
+| REQ-S07-036 | MUST | BEH-S07-027 | — | AC-S07-012 (manual) | pendiente |
+| REQ-S07-037 | MUST | BEH-S07-028 | — | AC-S07-012 (manual) | pendiente |
+| REQ-S07-038 | MUST | BEH-S07-029 | INV-S07-005 | AC-S07-013 (unitario) | pendiente |
+| REQ-S07-039 | MUST | BEH-S07-029 | INV-S07-005 | AC-S07-013 (unitario) | pendiente |
+| REQ-S07-040 | MUST | BEH-S07-030 | — | AC-S07-014 (manual) | pendiente |
+| REQ-S07-041 | MUST | BEH-S07-031 | — | AC-S07-015 (unitario) | pendiente |
+| REQ-S07-042 | MUST | BEH-S07-022 | — | AC-S07-009 (sql) | pendiente |
+| REQ-S07-043 | MUST | BEH-S07-025 | — | AC-S07-010 (unitario) | pendiente |
+
 ## S-22 — Capa de datos con Drizzle: esquema, repositorios, transacciones y retiro de Prisma (aprobada)
 
 Archivo: `S-22-capa-de-datos-con-drizzle.md` · REQ: 30 · BEH: 27 · INV: 6 · AC: 28

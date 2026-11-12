@@ -1,6 +1,6 @@
 # ADR-018: Sin turnos, arqueo, egresos ni fiado — el sistema solo captura la recepción de pagos
 
-Estado: **propuesto** (2026-11-12) · Decisión de negocio del propietario, formulada en el chat el 2026-11-12 y ampliada ese día con «sin egresos» y «sin fiados»
+Estado: **aceptado** (confirmado por el propietario, 2026-11-12) · propuesto el 2026-11-12 · Decisión de negocio del propietario, formulada en el chat el 2026-11-12 y ampliada ese día con «sin egresos» y «sin fiados»
 
 ## Contexto
 El propietario decidió que en Adhara Fit **no existirán turnos de caja**: la recepción de pagos es un flujo continuo y, por tanto, **el arqueo es innecesario**. Precisó después: **sin egresos y sin fiados**; el sistema solo captura la recepción de pagos de **planes de membresía y de productos**.

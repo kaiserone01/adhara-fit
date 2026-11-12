@@ -29,7 +29,7 @@ Cómo se cumplen las que siguen vigentes:
 - No guardes correos, tokens, rutas del directorio personal ni URLs/IDs de sesión en ningún archivo del repo.
 - El `CLAUDE.md` del Repo A dice "NO SIGNATURES": allí es *metadatos de IA en el mensaje*. Aquí mandan estas reglas.
 
-### Anulación de las reglas 1 y 2 (2026-11-12, orden del propietario en el chat)
+### Anulación de las reglas 1 y 2 y de la condición de privacidad del push (2026-11-12, órdenes del propietario en el chat)
 El propietario anuló la exigencia de que los commits y los push sean firmados y hechos con su identidad, para que Claude haga commits con
 autonomía y velocidad. En consecuencia:
 - Claude hace los commits con la configuración git del entorno tal como está (autor, *committer* y firma de la plataforma). **No** hace falta
@@ -40,9 +40,10 @@ autonomía y velocidad. En consecuencia:
   trailers; un commit por tarea); las líneas prohibidas de arriba; y la prohibición de leer o listar `~/.ssh`, `~/.gnupg` y tokens, de `gh auth token|login`,
   de generar claves, de `--no-verify` y de `git push --force*`. Claude no escribe `user.*`, `gpg.*`, `commit.gpgsign`, `credential.*` ni
   `adhara.ownerEmail` (no lo necesita). Si un hook te bloquea, **no lo rodees**: repórtalo.
-- **Push:** la anulación no cambia la condición de privacidad: no se hace push mientras el repositorio sea público. Con el repositorio privado, el push va
-  a la rama que impone la plataforma (en la nube `claude/*`; se registra en el handoff) y, al ser una acción hacia afuera, Claude lo hace cuando el
-  propietario lo pida o cuando el cierre de una puerta lo requiera.
+- **Push (reescrito por orden del propietario, 2026-11-12):** se **levanta** la condición de privacidad: Claude puede hacer push aunque el repositorio sea
+  público, y el pre-flight de visibilidad pasa a ser solo informativo. El push puede ir a `main` y a la rama que impone la plataforma (en la nube
+  `claude/*`; se registra en el handoff). Al ser una acción hacia afuera, Claude lo hace solo cuando el propietario lo pida o cuando el cierre de una
+  puerta lo requiera. El push a `main` es siempre un avance rápido: no se reescribe su historia.
 
 ## 2. Puertas de aprobación
 Al llegar a una puerta te detienes y esperas aprobación escrita. No encadenes etapas ni propongas saltarte una.
@@ -69,7 +70,7 @@ Antes de cada puerta entrega **qué comprobaste y qué no**, pegando la salida r
 ## 4. Commits y ramas
 - Mensaje: español, **una sola línea** (sin cuerpo, sin líneas en blanco, sin trailers), imperativo, ≤ 100 caracteres. Un commit por tarea.
 - No mezcles refactor y funcionalidad.
-- `main` protegida. Ramas: `docs/<tema>`, `spec/S-xx-<slug>`, `chore/<tema>`. Nunca `claude/*` (en la nube la plataforma la impone: se registra en el handoff).
+- `main` recibe los push de Claude por orden del propietario (2026-11-12), sin reescribir su historia. Ramas de trabajo: `docs/<tema>`, `spec/S-xx-<slug>`, `chore/<tema>`; `claude/*` solo cuando la plataforma la impone en la nube (se registra en el handoff).
 - Hooks versionados en `.githooks/` (`bash scripts/setup-hooks.sh` en cada clon). La política única vive en `tools/commit-policy.mjs`.
 
 ## 5. Prohibiciones
@@ -95,7 +96,7 @@ personales** (sin correos, tokens, rutas del home ni URLs o IDs de sesión):
 **Cómo.**
 1. Actualiza `handoff.md`. En la sección 4 **nunca borras ni reescribes** entradas previas.
 2. Ejecuta `node tools/check-handoff.mjs`: valida las 5 secciones, rechaza correos, tokens y URLs de sesión, y comprueba que la sección 4 conserva las líneas de `HEAD`.
-3. Commit propio (español, una línea, p. ej. "Actualiza el handoff al cierre de G2"). Push solo si el pre-flight dio PASS.
+3. Commit propio (español, una línea, p. ej. "Actualiza el handoff al cierre de G2"). Push cuando el propietario lo pida; el pre-flight informa pero no bloquea.
 4. En modo sin commit, entrega `handoff.md` como archivo y su texto en el chat.
 5. Cierra con un resumen de 5 líneas en el chat: puerta actual, qué quedó aprobado, qué espera decisión, qué se intentó y falló, y el primer paso de la próxima sesión.
 

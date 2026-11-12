@@ -11,7 +11,7 @@ Estado: **diseño y fundaciones** con Spec-Driven Development (SDD). Todavía no
 - `docs/ops/`: guías operativas del propietario (`firma-commits.md`, `github-setup.md`).
 
 ## Flujo de trabajo
-- `main` protegida; el trabajo va en ramas `docs/<tema>`, `spec/S-xx-<slug>` y `chore/<tema>`, y entra por pull request.
+- `main` recibe los push de Claude por orden del propietario (2026-11-12), sin reescribir su historia; el trabajo puede ir en ramas `docs/<tema>`, `spec/S-xx-<slug>` y `chore/<tema>`.
 - Commits en español, **una sola línea**, imperativo, ≤ 100 caracteres, sin trailers, firmados por el propietario.
 - Cada puerta (G0–G6) requiere aprobación escrita antes de continuar.
 

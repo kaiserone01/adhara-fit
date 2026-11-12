@@ -17,7 +17,7 @@ Ejecuta el pre-flight de solo lectura y muestra una tabla PASS/FAIL. No crees ni
 | Identidad | `user.name`/`user.email` son los que el propietario confirmó en el chat tras verlos |
 | Firma | `commit.gpgsign=true` con `gpg.format` y `user.signingkey` definidos (no leas la clave privada) |
 | Push | el remoto y la autenticación son del propietario, no de un proxy o bot de la plataforma |
-| Visibilidad | el repo es privado |
+| Visibilidad | informativo (desde 2026-11-12 el propietario levantó la exigencia de repo privado; no bloquea el push) |
 | Hooks | `core.hooksPath=.githooks` y `adhara.ownerEmail` definido (lo configura el propietario) |
 
 4. Si algo falla, detente y ofrece: (A) abrir la sesión en local; (B) modo sin commit; o continuar bajo la excepción

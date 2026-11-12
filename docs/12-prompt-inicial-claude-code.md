@@ -158,3 +158,5 @@ Solo esto: el resultado del pre-flight (tabla de E0 con PASS/FAIL), tu veredicto
 - Si ve en algún commit un trailer de Claude, es un fallo del arnés: pida corregirlo **antes** del push (el commit afectado se reescribe localmente; no se empuja) y registre el caso en "Intentos fallidos" del handoff.
 - Las preguntas P-16 a P-23 del doc 08 tienen default; solo respóndalas si el default no sirve.
 - Verificación independiente recomendada tras G1, desde su terminal: `git log -1 --format=fuller --show-signature` y `gh api repos/kaiserone01/adhara-fit/commits/<sha> --jq .commit.verification`.
+
+> Nota (2026-11-12): por orden del propietario se levantó la exigencia de repositorio privado para el push y `main` ya no es una rama protegida contra los push de Claude (ver `CLAUDE.md` §1 y §4 y la enmienda de ADR-014). La fila «Visibilidad» del pre-flight es informativa.

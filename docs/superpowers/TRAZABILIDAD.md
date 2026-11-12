@@ -557,6 +557,44 @@ Archivo: `S-11-productos-sin-fiado.md` · REQ: 37 · BEH: 21 · INV: 4 · AC: 14
 | REQ-S11-036 | MUST | BEH-S11-020 | INV-S11-004 | AC-S11-012 (unitario), AC-S11-013 (unitario) | pendiente |
 | REQ-S11-037 | MUST | BEH-S11-021 | — | AC-S11-014 (manual) | pendiente |
 
+## S-15 — Línea base de la base de datos y datos iniciales de Adhara Fit (en-revision)
+
+Archivo: `S-15-linea-base-y-datos-iniciales.md` · REQ: 31 · BEH: 20 · INV: 4 · AC: 14
+
+| REQ | Prioridad | BEH | INV | AC (método) | Test |
+|---|---|---|---|---|---|
+| REQ-S15-001 | MUST | BEH-S15-001 | INV-S15-003 | AC-S15-001 (integracion), AC-S15-002 (unitario) | pendiente |
+| REQ-S15-002 | MUST | BEH-S15-001 | INV-S15-003 | AC-S15-001 (integracion), AC-S15-002 (unitario) | pendiente |
+| REQ-S15-003 | MUST | BEH-S15-002 | INV-S15-003 | AC-S15-001 (integracion), AC-S15-002 (unitario) | pendiente |
+| REQ-S15-004 | MUST | BEH-S15-003 | — | AC-S15-003 (sql) | pendiente |
+| REQ-S15-005 | MUST | BEH-S15-004 | — | AC-S15-003 (sql) | pendiente |
+| REQ-S15-006 | MUST | BEH-S15-005 | — | AC-S15-003 (sql) | pendiente |
+| REQ-S15-007 | MUST | BEH-S15-006 | — | AC-S15-004 (integracion), AC-S15-006 (unitario) | pendiente |
+| REQ-S15-008 | MUST | BEH-S15-006 | — | AC-S15-004 (integracion) | pendiente |
+| REQ-S15-009 | MUST | BEH-S15-007 | — | AC-S15-005 (integracion) | pendiente |
+| REQ-S15-010 | MUST | BEH-S15-008 | — | AC-S15-004 (integracion) | pendiente |
+| REQ-S15-011 | MUST | BEH-S15-009 | — | AC-S15-006 (unitario) | pendiente |
+| REQ-S15-012 | MUST | BEH-S15-010, BEH-S15-016 | — | AC-S15-007 (integracion), AC-S15-011 (integracion) | pendiente |
+| REQ-S15-013 | MUST | BEH-S15-010 | INV-S15-001, INV-S15-002 | AC-S15-007 (integracion), AC-S15-008 (integracion), AC-S15-010 (integracion) | pendiente |
+| REQ-S15-014 | MUST | BEH-S15-010 | INV-S15-002 | AC-S15-007 (integracion), AC-S15-008 (integracion) | pendiente |
+| REQ-S15-015 | MUST | BEH-S15-010 | — | AC-S15-007 (integracion) | pendiente |
+| REQ-S15-016 | MUST | BEH-S15-011 | INV-S15-001 | AC-S15-007 (integracion), AC-S15-010 (integracion) | pendiente |
+| REQ-S15-017 | MUST | BEH-S15-011 | INV-S15-001 | AC-S15-007 (integracion), AC-S15-010 (integracion) | pendiente |
+| REQ-S15-018 | MUST | BEH-S15-011 | INV-S15-001 | AC-S15-007 (integracion), AC-S15-010 (integracion) | pendiente |
+| REQ-S15-019 | MUST | BEH-S15-012 | INV-S15-001 | AC-S15-008 (integracion), AC-S15-010 (integracion) | pendiente |
+| REQ-S15-020 | MUST | BEH-S15-014 | — | AC-S15-009 (integracion) | pendiente |
+| REQ-S15-021 | MUST | BEH-S15-012, BEH-S15-013 | INV-S15-002 | AC-S15-007 (integracion), AC-S15-008 (integracion) | pendiente |
+| REQ-S15-022 | MUST | BEH-S15-012, BEH-S15-013 | — | AC-S15-008 (integracion) | pendiente |
+| REQ-S15-023 | MUST | BEH-S15-012 | INV-S15-002 | AC-S15-007 (integracion), AC-S15-008 (integracion) | pendiente |
+| REQ-S15-024 | MUST | BEH-S15-015, BEH-S15-016 | INV-S15-001 | AC-S15-010 (integracion), AC-S15-011 (integracion) | pendiente |
+| REQ-S15-025 | MUST | BEH-S15-015 | — | AC-S15-010 (integracion) | pendiente |
+| REQ-S15-026 | MUST | BEH-S15-009 | — | AC-S15-006 (unitario) | pendiente |
+| REQ-S15-027 | MUST | BEH-S15-017 | — | AC-S15-012 (unitario) | pendiente |
+| REQ-S15-028 | MUST | BEH-S15-018 | INV-S15-004 | AC-S15-013 (unitario) | pendiente |
+| REQ-S15-029 | MUST | BEH-S15-018 | INV-S15-004 | AC-S15-013 (unitario) | pendiente |
+| REQ-S15-030 | MUST | BEH-S15-019 | — | AC-S15-014 (manual) | pendiente |
+| REQ-S15-031 | MUST | BEH-S15-020 | — | AC-S15-006 (unitario) | pendiente |
+
 ## S-18 — Entrenadores: personas del gimnasio sin credenciales, asignadas solo al miembro (aprobada)
 
 Archivo: `S-18-entrenadores.md` · REQ: 39 · BEH: 20 · INV: 4 · AC: 11

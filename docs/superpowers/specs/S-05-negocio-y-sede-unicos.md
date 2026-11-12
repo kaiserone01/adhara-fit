@@ -1,10 +1,10 @@
 ---
 id: S-05
-estado: en-revision
+estado: aprobada
 adrs: ADR-002, ADR-004, ADR-012, ADR-016, ADR-018, ADR-019, ADR-021, ADR-022
 depende_de: S-00, S-01, S-04, S-22
-aprobada_por:
-fecha_aprobacion:
+aprobada_por: propietario
+fecha_aprobacion: 2026-11-12
 ---
 # S-05 — Negocio y sede únicos: sin organización, con una sola sede oculta y una configuración global
 

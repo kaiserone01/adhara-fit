@@ -918,6 +918,11 @@ Todas las decisiones de negocio de S-04 fueron respondidas por el propietario el
 - ¿Se prevén anulaciones y reintegros? Default: sí, con el alcance de SUP-S04-015; confirmado.
 - ¿Hay límite de antigüedad para un pago con fecha pasada? Default: no, y nunca con fecha futura (SUP-S04-008); confirmado.
 
+## Enmiendas posteriores (2026-11-12)
+*Derivadas de la aprobación de S-05. El texto anterior se conserva; donde choca, rige esta sección.*
+- REQ-S04-023, BEH-S04-021 y SUP-S04-004: el estado de acceso queda en `activo` y `vencido`; `sucursal_incorrecta` desaparece con la sede única (S-05) y `MiembroFueraDeSucursalError` se retira de `RegistrarPago`.
+- Los cobros no reciben ni validan sede: `sucursalId` de `Pago` se llena con `obtenerSedeUnica` (S-05, REQ-S05-008).
+
 ## Revisión independiente
 
 ### Veredicto de `spec-reviewer` (texto íntegro, sin editar; sobre la primera versión en revisión)

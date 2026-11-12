@@ -14,7 +14,7 @@ Vienen del documento 10 (§2.C). Convierten el código heredado en el sistema de
 | S-02 Hora de Lima | Hoy el sistema usa la hora de Caracas (UTC-4). Pasa a la de Lima (UTC-5) en todas partes y a formato peruano. | **Aprobada** (2026-11-12) |
 | S-03 Dinero y métodos de pago | Todo en soles con 2 decimales exactos (`S/ 120.00`), sin errores de coma flotante y sin redondeo salvo regla explícita; el redondeo de efectivo del BCRP queda preparado y apagado. Métodos de Perú: efectivo, Yape/Plin, tarjeta, transferencia, depósito. Sin dólares ni bolívares. | **Aprobada** (2026-11-12) |
 | S-04 Pago único de membresías | Reescribir el cobro: un solo pago, de 1 a 6 meses; sin abonos; se puede anular con motivo; **una sola** fecha de vencimiento confiable. Cobrar nunca exige turno. Sin pagos repartidos entre métodos y sin días de gracia (decisiones del propietario). | **Aprobada** (2026-11-12) |
-| S-05 Negocio y sede únicos | Quitar el concepto de organización y de sucursales: Adhara Fit es un solo negocio con un solo local (ADR-019, ADR-002). | En revisión |
+| S-05 Negocio y sede únicos | Quitar el concepto de organización y de sucursales: Adhara Fit es un solo negocio con un solo local (ADR-019, ADR-002). | **Aprobada** (2026-11-12) |
 | S-06 Documento de identidad | DNI, carné de extranjería o pasaporte; código numérico corto para quien no tiene DNI. | Por redactar |
 | S-07 Cambio de plan | Unificar las tres formas de cambiar de plan; sin saldo a favor; ya no distingue planes con y sin entrenador. | Por redactar |
 | S-08 Registro continuo de cobros | **Reformulada por tu decisión:** sin turnos ni arqueo. Registra cada cobro (quién, cuándo, método) y da el reporte diario por método y usuario. | Por redactar |

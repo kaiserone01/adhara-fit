@@ -9,7 +9,7 @@ Versión 0.1 · 2026-11-11. Diff **conceptual** sobre `packages/db/prisma/schema
 | Modelo | Acción | Detalle |
 |---|---|---|
 | `Organizacion` | Conservar | Una sola fila (Adhara Fit). Quitar relaciones `miembrosReferencia`, `padronHojas` |
-| `Sucursal` | **Conservar oculta** | Una fila "Local" creada por seed. Se queda: `apiKey`, `reposo*`, `vitrina*` (si vitrina). Se **mueve** `diasGracia` a configuración global. Se **elimina** `tasaCambioUSD` |
+| `Sucursal` | **Conservar oculta** | Una fila "Local" creada por seed. Se queda: `apiKey`, `reposo*`, `vitrina*` (si vitrina). Se **mueve** `diasGracia` a configuración global. Se **elimina** `tasaCambioUSD` | *Enmienda S-05 (2026-11-12): `reposo*` y `vitrina*` pasan a `ConfiguracionNegocio`; en `Sucursal` quedan `apiKey` (hash), `nombre`, `direccion`, `activo` y la columna de fila única.*
 | `UsuarioSucursal` | Eliminar | Sin multi-sede |
 | `UsuarioAdmin.sucursalId` | Opcional → se asigna siempre a la sede única | Evita refactor de 100+ referencias |
 | `ModuloPermiso.SUCURSALES` | Eliminar del enum | |
@@ -29,7 +29,7 @@ Versión 0.1 · 2026-11-11. Diff **conceptual** sobre `packages/db/prisma/schema
 | `CambioPlanAuditoria`, `Sesion`, `RegistroAuditoria`, `TemaOrganizacion`, `PermisoUsuario` | Conservar | |
 | `MiembroReferencia`, `PadronHoja` | **Eliminar** | Padrón Excel |
 | `VitrinaItem`, `TipoVitrinaItem`, `TipoMedioVitrina` | Diferir | Comentar/aislar hasta Fase 3 (o conservar sin uso) |
-| **Nuevo** `ConfiguracionOrganizacion` | Crear | `diasGracia`, `incluyeIGV`, `exigirComprobante`, textos legales (versión consentimiento) |
+| **Nuevo** `ConfiguracionOrganizacion` | Crear | `diasGracia`, `incluyeIGV`, `exigirComprobante`, textos legales (versión consentimiento) | *Enmienda S-05: esa tabla no existe en el Repo A; se crea `ConfiguracionNegocio` de fila única con el nombre del negocio y `reposo*`/`vitrina*`; `diasGracia` se retiró (S-04).*
 | **Nuevo** `ConsentimientoDatos` (opcional) | Crear | Historial versionado por miembro si se requiere trazabilidad completa |
 
 ## 2. Esbozo del schema resultante (extractos)

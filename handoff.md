@@ -38,7 +38,7 @@ Los 22 ADR están aceptados (001 a 022); ninguno queda propuesto ni retirado. AD
 | S-02 | **aprobada** (propietario, 2026-11-12). 20 REQ, 17 BEH, 5 INV, 13 AC; `spec-lint` en estado `aprobada`: 0 errores, 0 avisos. Formato de 12 horas confirmado. Deja una lista de exenciones (archivos que S-04, S-08, S-10 y S-20 reescriben o retiran) |
 | S-03 | **aprobada** (propietario, 2026-11-12; confirmó el efectivo como método de cobro). 32 REQ, 25 BEH, 6 INV, 19 AC; `spec-lint` en estado `aprobada`: 0 errores, 0 avisos. Enmienda registrada en S-22 (montos como cadena). Deja un puente temporal `dineroPuente.ts` que S-04, S-07, S-08, S-10, S-11 y S-20 deben quitar |
 | S-04 | **aprobada** (propietario, 2026-11-12). 49 REQ, 42 BEH, 6 INV, 25 AC; `spec-lint` en estado `aprobada`: 0 errores, 0 avisos. Sin pagos repartidos ni días de gracia; fecha pasada sin límite. Enmiendas registradas en S-01, S-02, S-03 y S-22 |
-| S-05 | **en revisión**. 33 REQ, 25 BEH, 5 INV, 17 AC; `spec-lint`: 0 errores, 0 avisos. El revisor independiente dio «requiere cambios»; los 12 hallazgos se verificaron ciertos y se corrigieron. Espera «S-05 aprobada» del propietario |
+| S-05 | **aprobada** (propietario, 2026-11-12). 33 REQ, 25 BEH, 5 INV, 17 AC; `spec-lint` en estado `aprobada`: 0 errores, 0 avisos. Una sede oculta «Local», configuración global `ConfiguracionNegocio`, login en un paso, sin `organizacionId`. Enmiendas registradas en S-01, S-04 y S-22 y en `docs/06` |
 | S-06 … S-10 | no iniciadas. Todos sus ADR están aceptados. Se redactan de una en una |
 | S-11 … S-21 | propuestas (mapa en lenguaje simple: `docs/superpowers/BACKLOG-SPECS.md`; cruce técnico: `COBERTURA-RF.md`). S-19 aprobada como ítem. S-20 hereda lo que resuelve la vitrina actual; S-21 es el check-in en Android TV con teclado numérico USB |
 
@@ -117,7 +117,7 @@ Los 22 ADR están aceptados (001 a 022); ninguno queda propuesto ni retirado. AD
 - `docs/superpowers/specs/S-22-capa-de-datos-con-drizzle.md`: nueva, `en-revision`; incluye `## Revisión independiente` (veredicto íntegro y conciliación). `docs/superpowers/TRAZABILIDAD.md` regenerado.
 - `docs/datos-iniciales.md`: nuevo; planes, entrenadores y quién usa el sistema, según el propietario.
 - `docs/superpowers/specs/S-04-pago-unico-de-membresia.md`: nueva, `en-revision`; incluye `## Revisión independiente`.
-- `docs/superpowers/specs/S-05-negocio-y-sede-unicos.md`: nueva, `en-revision`; incluye `## Revisión independiente` y conciliación. `BACKLOG-SPECS.md` marca S-05 «En revisión».
+- `docs/superpowers/specs/S-05-negocio-y-sede-unicos.md`: nueva, `aprobada` (2026-11-12); incluye `## Revisión independiente` y conciliación. Enmiendas posteriores añadidas a S-01, S-22 y S-04 (sección nueva); `docs/06-modelo-datos-cambios.md` anotado; `BACKLOG-SPECS.md` marca S-05 «Aprobada».
 - `docs/superpowers/specs/S-03-dinero-y-metodos-de-pago.md`: nueva, `aprobada`; incluye `## Revisión independiente`.
 - `docs/superpowers/specs/S-02-hora-de-lima.md`: nueva, `aprobada`; incluye `## Revisión independiente`.
 - `docs/superpowers/specs/S-01-baseline-de-seguridad.md`: nueva, `en-revision`, con `## Revisión independiente`.
@@ -161,7 +161,7 @@ Los 22 ADR están aceptados (001 a 022); ninguno queda propuesto ni retirado. AD
 
 ## 5. Próximos pasos
 1. Leer handoff.md y ejecutar /preflight.
-2. Esperar «S-05 aprobada» del propietario (negocio y sede únicos; `en-revision`, veredicto y conciliación pegados). Al aprobarla: `estado: aprobada`, `aprobada_por: propietario`, `fecha_aprobacion`, registrar las enmiendas de 5.2 en S-01, S-04 y S-22, actualizar `docs/06` y el backlog, regenerar TRAZABILIDAD y seguir con **S-06** (documento de identidad).
+2. Seguir E5 con **S-06** (documento de identidad: `tipoDocumento` DNI/CE/PASAPORTE, `numeroDocumento` único global, `codigoSocio`, `buscarPorDocumento`; ADR-004 aceptado): borrador con hechos verificados en el Repo A, `spec-lint`, `spec-reviewer` (solo la ruta), conciliación y resumen de 10 líneas; esperar «S-06 aprobada».
 3. Pedir al propietario: repo privado, `adhara.ownerEmail`, firma y `allowedSignersFile`; y si el push se hace desde la nube o en local.
 4. Solo con orden expresa y ADR por ADR: cambiar estados a `aceptado (confirmado por el propietario, AAAA-MM-DD)`. Si acepta ADR-018, enmendar ADR-002, 003, 010 y 011 y reformular S-08 antes de redactarla.
 5. Seguir E5 con las demás specs, de una en una, en el orden S-01…S-10 más las que el propietario apruebe de S-11…S-18; cada una en borrador mientras sus ADR estén *propuestos*; no pasar a revisión sin ADR aceptados. S-04 queda condicionada a la línea base de tests (requiere copia local del Repo A) y ya no exige turno abierto. Solo con «S-xx aprobada» se marca `estado: aprobada`.

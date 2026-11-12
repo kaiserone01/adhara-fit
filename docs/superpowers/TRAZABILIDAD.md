@@ -204,7 +204,7 @@ Archivo: `S-04-pago-unico-de-membresia.md` · REQ: 49 · BEH: 42 · INV: 6 · AC
 | REQ-S04-048 | MUST | BEH-S04-029 | — | AC-S04-019 (integracion) | pendiente |
 | REQ-S04-049 | MUST | BEH-S04-042 | — | AC-S04-003 (integracion) | pendiente |
 
-## S-05 — Negocio y sede únicos: sin organización, con una sola sede oculta y una configuración global (en-revision)
+## S-05 — Negocio y sede únicos: sin organización, con una sola sede oculta y una configuración global (aprobada)
 
 Archivo: `S-05-negocio-y-sede-unicos.md` · REQ: 33 · BEH: 25 · INV: 5 · AC: 17
 

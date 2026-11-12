@@ -114,7 +114,7 @@ Se eliminan en dominio `ReglaAbono.ts`, `CobrarAbonoPendiente`, `ListarAbonosPen
 
 1. **Baseline único.** Se genera `0001_baseline` con `drizzle-kit generate` sobre el esquema adaptado (antes `prisma migrate diff`, ADR-022). No se arrastran las 36 migraciones del base (contienen historia de renombres, datos de Excel y backfills del cliente anterior).
 2. **Seed Adhara** (`seed.ts`): `Organizacion` "Adhara Fit" (slug `adhara-fit`), `Sucursal` "Local" con `apiKey` generada, `ConfiguracionOrganizacion`, usuario SOCIO inicial (contraseña por variable de entorno, forzar cambio), métodos de pago base, planes de ejemplo, reglas de abono.
-3. **Sin datos que migrar** del cliente anterior. Para miembros existentes de Adhara: importador CSV (HU-50, Release 1.1) con `numeroDocumento`, nombre, plan, fecha de vencimiento.
+3. **Sin datos que migrar** del cliente anterior. Para miembros existentes de Adhara: importador CSV (HU-50, Release 1.1) con `numeroDocumento`, nombre, plan, fecha de vencimiento. *Enmienda S-10 (2026-11-12): el importador se descartó; los miembros existentes se cargan a mano.*
 4. **Entornos:** BD local en Docker Compose; `drizzle-kit push` solo en bases desechables locales; el migrador de ejecución en CI/CD hacia staging/producción (antes `prisma migrate dev`/`deploy`, ADR-022).
 5. **Verificación:** comprobación en CI de que generar de nuevo no produce cambios (antes `prisma validate` y `migrate diff`, ADR-022), y test de integración que arranca Postgres efímero y corre el seed.
 

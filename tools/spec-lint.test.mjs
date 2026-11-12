@@ -111,6 +111,9 @@ test('REQ: tipo, prioridad, origen, plantilla EARS y una sola obligación', () =
   assert.ok(reglas(lint(sustituir(BUENA, 'tipo: ubicuo', 'tipo: ubicuo\n- x: y').replace('texto: El sistema deberá responder', 'texto: Cuando sea necesario, el sistema deberá responder'))).includes('E02'));
   assert.ok(reglas(lint(sustituir(BUENA, 'incrementar el total del día en 1.', 'incrementar el total del día en 1 y deberá notificar.'))).includes('E03'));
   assert.ok(reglas(lint(sustituir(BUENA, 'el sistema deberá incrementar', 'el sistema incrementará'))).includes('E03'));
+  // El plural "deberán" cuenta como una obligación (sujeto plural), pero dos obligaciones siguen fallando.
+  assert.ok(!reglas(lint(sustituir(BUENA, 'El sistema deberá responder la consulta', 'Las consultas deberán responder'))).includes('E03'));
+  assert.ok(reglas(lint(sustituir(BUENA, 'El sistema deberá responder la consulta', 'Las consultas deberán responder y deberán registrarse'))).includes('E03'));
 });
 test('BEH, INV y AC: campos obligatorios y valores permitidos', () => {
   assert.ok(reglas(lint(sustituir(BUENA, 'categoria: borde', 'categoria: raro'))).includes('E04'));

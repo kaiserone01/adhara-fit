@@ -227,7 +227,7 @@ export function validarSpec(spec, { archivo, adrs, specIds }) {
     const prefijos = { cuando: /^Cuando\s/, mientras: /^Mientras\s/, donde: /^Donde\s/, 'si-entonces': /^Si\s.+\sentonces\s/ };
     if (tipo === 'ubicuo' && /^(Cuando|Mientras|Donde|Si)\s/.test(texto)) d('E02', ln, `${r.id}: es de tipo ubicuo pero empieza con una palabra clave EARS`);
     if (prefijos[tipo] && !prefijos[tipo].test(texto)) d('E02', ln, `${r.id}: no sigue la plantilla EARS "${tipo}" (${{ cuando: 'Cuando …, el sistema deberá …', mientras: 'Mientras …, el sistema deberá …', donde: 'Donde …, el sistema deberá …', 'si-entonces': 'Si … entonces el sistema deberá …' }[tipo]})`);
-    const n = (texto.match(/(?<![\p{L}])deberá(?![\p{L}])/giu) ?? []).length; // \b no sirve con "á"
+    const n = (texto.match(/(?<![\p{L}])deberán?(?![\p{L}])/giu) ?? []).length; // \b no sirve con "á"; acepta el plural "deberán"
     if (n !== 1) d('E03', ln, `${r.id}: debe expresar UNA sola obligación con "deberá" (tiene ${n})`);
     for (const a of (origen.match(/ADR-\d{3}/g) ?? [])) if (!listaAdrs.includes(a)) d('A03', lineaDe(r, 'origen'), `${r.id}: cita ${a} en su origen pero la cabecera "adrs" no lo incluye`);
   }

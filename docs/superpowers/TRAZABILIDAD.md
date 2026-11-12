@@ -4,7 +4,7 @@
 
 Cadena: **REQ → BEH → INV → AC → test**. Una celda "—" indica que no hay elemento enlazado.
 
-## S-00 — Fundaciones del repo: copia limpia, exclusiones, CI, entorno local y secretos (en-revision)
+## S-00 — Fundaciones del repo: copia limpia, exclusiones, CI, entorno local y secretos (aprobada)
 
 Archivo: `S-00-fundaciones-del-repo.md` · REQ: 31 · BEH: 27 · INV: 6 · AC: 23
 

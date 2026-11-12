@@ -1,10 +1,10 @@
 ---
 id: S-00
-estado: en-revision
+estado: aprobada
 adrs: ADR-001, ADR-005, ADR-009, ADR-012, ADR-014, ADR-016, ADR-017, ADR-018, ADR-019, ADR-020, ADR-021
 depende_de: ninguna
-aprobada_por:
-fecha_aprobacion:
+aprobada_por: propietario
+fecha_aprobacion: 2026-11-12
 ---
 # S-00 — Fundaciones del repo: copia limpia, exclusiones, CI, entorno local y secretos
 

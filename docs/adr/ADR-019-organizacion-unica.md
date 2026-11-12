@@ -1,51 +1,53 @@
-# ADR-019: Organización única — Adhara Fit no es un SaaS multi-organización
+# ADR-019: Negocio único — Adhara Fit no es un SaaS multi-organización
 
-Estado: **propuesto** (2026-11-12) · Decisión de negocio del propietario, formulada en el chat el 2026-11-12 · Opción A asumida por defecto, por validar
+Estado: **propuesto** (2026-11-12) · Decisión de negocio del propietario del 2026-11-12: **opción B, eliminar `Organizacion`** (pendiente de su orden expresa de aceptación)
 
 ## Contexto
-El propietario aclaró que este proyecto **no es un SaaS de gimnasios** que atienda a distintas organizaciones: es el sistema interno de un único negocio, Adhara Fit.
+El propietario aclaró que este proyecto **no es un SaaS de gimnasios** que atienda a distintas organizaciones: es el sistema de un único negocio, Adhara Fit (*single business*). Entre las opciones planteadas eligió **eliminar el concepto de organización del modelo**.
 
 Hechos (de `docs/06`, `docs/11` y los ADR; **no re-verificados** contra el código del Repo A):
 - El base modela `Organizacion` con `slug` único (doc 11 DI-16) y `organizacionId` en las tablas de negocio; por ejemplo, `Miembro` es único por (organización, cédula) (DI-21). Existe `TemaOrganizacion`, sin consumidores en ejecución (DI-28), y el cliente anterior usaba scripts para sembrar y clonar organizaciones (doc 03; ADR-007).
-- La documentación v0.4 conserva ese esquema: `Organizacion` «Conservar — una sola fila (Adhara Fit)» (doc 06 línea 9), seed con `Organizacion` «Adhara Fit» (línea 114), unicidad `@@unique([organizacionId, numeroDocumento])` (ADR-004) y una tabla nueva `ConfiguracionOrganizacion` (doc 06 línea 30; plan 1.8). El PRD llama al producto «Adhara Fit Platform» (doc 02 línea 7).
-- **Ningún ADR decidió esto de forma explícita.** ADR-002 trata la `Sucursal` (sede única oculta), no la `Organizacion`. ADR-001 rechazó contratar un SaaS comercial como alternativa de compra, no la multi-organización.
-- El inventario reproducible (`docs/anexos/inventario/`) no cuenta las coincidencias de «organización»: se desconoce cuántos archivos tocaría eliminarla.
+- La documentación v0.4 conservaba ese esquema: `Organizacion` «una sola fila» (doc 06 línea 9), seed «Adhara Fit» (línea 114), unicidad `@@unique([organizacionId, numeroDocumento])` (ADR-004) y una tabla nueva `ConfiguracionOrganizacion` (doc 06 línea 30; plan 1.8).
+- Ningún ADR había decidido esto. ADR-002 trata la `Sucursal`, no la `Organizacion`; ADR-001 rechazó contratar un SaaS comercial, no la multi-organización.
+- El inventario reproducible (`docs/anexos/inventario/`) no cuenta las coincidencias de «organización»: **se desconoce cuántos archivos toca** eliminarla.
 
 ## Factores de decisión
-- Adhara Fit es un solo negocio con un solo local: no hay alta de organizaciones, ni planes de suscripción de clientes, ni aislamiento entre inquilinos que defender.
-- El costo de eliminar `organizacionId` del modelo no está medido y toca consultas, unicidades y pruebas de todo el sistema.
-- El baseline de migraciones se regenera de todos modos (SUP-S00-002, doc 06 §baseline), de modo que el costo de la opción B recae en el código, no en las migraciones.
-- Coherencia con ADR-002 (sede única oculta) y ADR-008 (tema fijo).
+- Adhara Fit es un solo negocio con un solo local: no hay alta de organizaciones, ni aislamiento entre inquilinos que defender.
+- Un modelo fiel al negocio reduce conceptos que explicar y consultas que filtrar.
+- El baseline de migraciones se regenera de todos modos (SUP-S00-002), de modo que el costo recae en el código y los tests, no en las migraciones.
+- El alcance de la cirugía no está medido: hay que medirlo antes de estimar.
 
 ## Opciones consideradas
 | Opción | Pros | Contras |
 |---|---|---|
-| **A. Una sola fila `Organizacion`, oculta (asumida por defecto)** | Mismo patrón que ADR-002; diff pequeño; riesgo bajo | Queda un concepto invisible en el esquema y en los nombres (`organizacionId`) |
-| B. Eliminar `Organizacion` y `organizacionId` del modelo | Modelo fiel al negocio; sin concepto de inquilino | Cirugía de alcance no medido en esquema, repositorios, unicidades y tests; riesgo alto de regresiones |
+| A. Una sola fila `Organizacion` oculta (patrón de ADR-002) | Diff pequeño; riesgo bajo | Queda un concepto que el negocio no necesita |
+| **B. Eliminar `Organizacion` y `organizacionId` del modelo (elegida por el propietario)** | Modelo fiel al negocio; sin concepto de inquilino | Cirugía de alcance no medido en esquema, repositorios, unicidades y tests; riesgo de regresiones |
 | C. Mantener multi-organización visible | Cero trabajo | Contradice la decisión del propietario |
 
 ## Decisión
-1. Adhara Fit es **una sola organización**. El sistema no ofrece alta, listado, cambio ni administración de organizaciones, ni dominios o temas por organización.
-2. **Asumido, por validar (opción A):** se conserva una única fila `Organizacion` («Adhara Fit»), creada por el seed y oculta, igual que `Sucursal` en ADR-002. El `slug` deja de tener uso funcional y el tema es fijo (ADR-008). `ConfiguracionOrganizacion` se trata como la configuración global única del negocio.
-3. La resolución de la organización se centraliza en un helper (como `obtenerSedeUnica` en ADR-002); ninguna ruta ni pantalla recibe un identificador de organización del cliente.
-4. La terminología de los documentos nuevos habla de «el negocio» o «Adhara Fit», no de «plataforma».
+1. Adhara Fit es **un único negocio**. El sistema no tiene entidad `Organizacion`, ni `slug`, ni `TemaOrganizacion`, ni parámetros de organización en rutas, acciones o cuerpos de petición.
+2. Se elimina `organizacionId` de todas las tablas. Las unicidades pasan a ser globales: `numeroDocumento` y `codigoSocio` únicos en todo el sistema (enmienda de ADR-004).
+3. `ConfiguracionOrganizacion` pasa a ser **`ConfiguracionNegocio`**, una tabla de una sola fila con la configuración global (nombre sugerido, asumido, por validar).
+4. La `Sucursal` única oculta (ADR-002) cuelga directamente del negocio; `obtenerSedeUnica` deja de recibir parámetros.
+5. **Antes de estimar o ejecutar**, se mide el alcance: se amplía `anexos/inventario/generar_inventario.py` con los términos *organización* y *organizacionId* y se registra el conteo en la línea base (S-00, REQ-S00-011).
+6. La terminología de documentos y código habla de «el negocio» o «Adhara Fit»; el PRD deja de llamarlo «Platform» (hecho el 2026-11-12 por orden del propietario).
 
 ## Consecuencias
-- (+) Se evita una cirugía de alcance desconocido y se conserva la separación de datos ya probada.
-- (−) El esquema mantiene un concepto de organización que el negocio no necesita; documentarlo en `CLAUDE.md` como en ADR-002.
-- Si el propietario prefiere la opción B, se abre una spec propia con medición previa de archivos afectados (ampliar `generar_inventario.py` con el término) y se enmiendan ADR-004 y el doc 06.
-- Pendiente: renombrar «Adhara Fit Platform» en el PRD cuando el propietario apruebe el cambio de nomenclatura (los documentos importados no se editan sin su orden).
+- (+) Modelo coherente con el negocio.
+- (−) Refactor transversal de alcance desconocido hasta medir; se hace junto con el baseline nuevo para no acumular migraciones.
+- Enmiendas necesarias al aceptar este ADR: ADR-004 (unicidad global), ADR-002 (helper sin parámetros), ADR-008 (sin `TemaOrganizacion`), doc 06 (modelo `Organizacion`, `TemaOrganizacion`, `ConfiguracionOrganizacion`, unicidades) y los supuestos del seed (`Organizacion` «Adhara Fit», slug).
+- Afecta al backlog: S-05 se amplía a «negocio y sede únicos»; S-06 fija las unicidades globales; el seed (S-15 propuesta) crea una sola sede y una configuración.
 
 ## Cómo se valida
-- **Spec:** S-05 (sede única) se amplía a «sede y organización únicas»; el seed (S-15 propuesta) crea una sola fila de cada una.
-- **Invariantes a fijar:** existe exactamente una fila `Organizacion` y una `Sucursal`; ninguna ruta, acción ni pantalla crea, lista o cambia organizaciones; ningún cuerpo de petición acepta `organizacionId`.
-- **Criterio a fijar:** una búsqueda en rutas y server actions no encuentra parámetros de organización y un test de contrato (ADR-016 §3) lo comprueba.
+- **Specs:** S-05 (eliminación de `Organizacion` y `organizacionId`), S-06 (unicidades globales), S-15 (seed).
+- **Invariantes a fijar:** el esquema no contiene `Organizacion`, `TemaOrganizacion` ni columnas `organizacionId`; ninguna ruta, acción ni cuerpo de petición recibe un identificador de organización; existe exactamente una fila de `Sucursal` y una de `ConfiguracionNegocio`.
+- **Criterios a fijar:** consulta al esquema sin esas columnas; test de contrato de rutas (ADR-016 §3) sin parámetros de organización; los tests de dominio adaptados pasan sin `organizacionId`.
 
 ## Reversibilidad
-Alta con la opción A (la fila única se puede ampliar); baja con la opción B.
+Baja: reintroducir multi-organización exigiría rediseñar el modelo y las consultas; con el baseline nuevo no hay datos heredados que migrar.
 
 ## Dependencias
-- Complementa **ADR-002** y **ADR-008**; afecta a **ADR-004** (unicidad por organización) y al doc 06 si se elige la opción B. Se apoya en SUP-S00-002 (baseline regenerado).
+- Enmienda **ADR-004**, **ADR-002** y **ADR-008**; se apoya en SUP-S00-002 (baseline regenerado) y en la medición de la línea base (S-00).
 
 ## Referencias
 `docs/06-modelo-datos-cambios.md` (líneas 9, 30, 114) · `docs/11` DI-16, DI-21, DI-28 · `docs/02-PRD-adhara-fit.md` línea 7 · `docs/adr/ADR-001`, `ADR-002`, `ADR-004`, `ADR-007`, `ADR-008`.

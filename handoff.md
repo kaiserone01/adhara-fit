@@ -4,7 +4,7 @@
 Construir **Adhara Fit** (gimnasio en Perú, un local, PEN, sistema web interno) con Spec-Driven Development. Esta etapa es de diseño y fundaciones: arnés, ADRs, specs y plan; sin código de producto.
 
 ## 2. Estado actual
-- **Puerta actual: G5.00 (spec S-00) — BLOQUEADA a la espera de ADRs aceptados.** G1, G2, G3 y G4 aprobadas por el propietario (2026-11-12). Con G3 el propietario autorizó solo D1 (pase formal F, ya aplicado); D2–D20 siguen sin respuesta y ningún ADR está aceptado.
+- **Puerta actual: G5.00 (spec S-00) — en revisión, pendiente de «S-00 aprobada» del propietario.** G1, G2, G3 y G4 aprobadas (2026-11-12). El propietario aceptó ADR-001, 005, 009, 012, 014, 016 y 017 (2026-11-12). D2–D20 siguen sin respuesta salvo esas aceptaciones.
 - **G0 superado en modo relajado por decisión del propietario (2026-11-12, America/Lima).** Último pre-flight, con los 4 controles en FAIL:
 
 | Control | Resultado | Motivo |
@@ -22,15 +22,19 @@ Construir **Adhara Fit** (gimnasio en Perú, un local, PEN, sistema web interno)
 
 | ADR | Estado |
 |---|---|
-| ADR-001 … ADR-013 | **propuesto** (estado sin cambios). **Pase formal F aplicado (D1):** añadidas las secciones MADR faltantes (+251 líneas, 0 borradas; un commit por ADR). Revisados en G3: el revisor independiente da 11 «Requiere cambios» (001, 002, 003, 004, 005, 007, 008, 009, 011, 012, 013) y 2 «Bloqueado por pregunta» (006 por P-07; 010 por P-16/17/18). Detalle en `docs/adr/REVISION-ADR.md` |
-| ADR-014 … ADR-017 | **propuesto** (creados en G3). El revisor: 014 «Listo para aceptar» con observaciones; 015, 016 y 017 «Requiere cambios»; las incoherencias internas ya están corregidas (REVISION-ADR §8.3), sin nueva pasada del revisor |
+| ADR-001, 005, 009, 012 | **aceptado (confirmado por el propietario, 2026-11-12)**. Tienen hallazgos abiertos de la revisión G3 sin enmendar (p. ej. ADR-005 §6 «sin firmas», contradicción ADR-002/ADR-005 sobre el upstream, ADR-009 «`_diferido/` o se omiten»); S-00 los cubre con defaults marcados «asumido, por validar» |
+| ADR-002, 003, 004, 006, 007, 008, 010, 011, 013 | **propuesto** (pase formal F aplicado, +251 líneas, 0 borradas). Revisor G3: 009 y 012 ya aceptados; 006 y 010 «Bloqueado por pregunta»; el resto «Requiere cambios». Detalle en `docs/adr/REVISION-ADR.md` |
+| ADR-014, 016, 017 | **aceptado (confirmado por el propietario, 2026-11-12)** |
+| ADR-015 | **propuesto** (el revisor pidió cambios menores; ya corregidos) |
+| ADR-018 | **propuesto** (nuevo, 2026-11-12): sin turnos de caja ni arqueo, decisión de negocio del propietario. Enmendará ADR-002, 003, 010 y 011 y afecta a S-04, S-08 y S-11 |
 
-Ningún ADR está *aceptado*. Solo el propietario cambia un estado, ADR por ADR, registrándolo como `aceptado (confirmado por el propietario, AAAA-MM-DD)`.
+Siete ADR están aceptados (001, 005, 009, 012, 014, 016, 017). Solo el propietario cambia un estado, ADR por ADR, registrándolo como `aceptado (confirmado por el propietario, AAAA-MM-DD)`.
 
 | Spec | Estado |
 |---|---|
-| S-00 | **borrador** (15 REQ, 10 BEH, 5 INV, 13 AC; `spec-lint`: 0 errores y 7 avisos A02 por ADR propuestos). Cita ADR-001, 005, 009, 012, 014, 016 y 017. **Sin revisión independiente**: no puede entrar en revisión hasta que esos 7 ADR estén aceptados |
-| S-01 … S-10 | no iniciadas. Se redactan de una en una y cada una exige sus ADR aceptados antes de la revisión |
+| S-00 | **en-revision** (26 REQ, 21 BEH, 6 INV, 18 AC; `spec-lint`: 0 errores, 0 avisos). Revisión independiente: «REQUIERE CAMBIOS» (pegada íntegra en la spec); corregida por el autor y **no vuelta a pasar por el revisor**. Espera «S-00 aprobada» |
+| S-01 … S-10 | no iniciadas. Se redactan de una en una y cada una exige sus ADR aceptados antes de la revisión. Con ADR-018 propuesto, S-08 se reformula (registro continuo de cobros y reporte diario) y S-04 y S-11 pierden el «turno obligatorio» |
+| S-11 … S-18 | propuestas en `docs/superpowers/COBERTURA-RF.md` (productos, comprobantes, consentimiento, reportes, baseline y seed, importador, operación, entrenadores); pendientes de decisión del propietario |
 
 - Defaults asumidos hasta ahora: ninguno de `docs/08`. Documentación v0.4 del zip: **importada íntegra** a `docs/` (40 archivos; `diff -r` vacío y manifiesto sha256 idéntico; el commit de importación solo contiene esos archivos).
 - `docs/12` cita como texto las líneas prohibidas (son las reglas del propietario); el escaneo de commits aplica a mensajes, no a archivos.
@@ -38,8 +42,10 @@ Ningún ADR está *aceptado*. Solo el propietario cambia un estado, ADR por ADR,
 - Supuestos nuevos: mecanismo de Postgres efímero (Docker Compose) y librería de propiedades de dinero son supuestos de ADR-016 (por validar en S-00 y S-03). El «default» de gracia (P-18) que propuse es **recomendación mía**: `docs/08` no da default a P-18.
 - Prueba en vivo del arnés (ADR-017 decisión 9): en esta sesión el hook `PreToolUse` de `guard-bash` **bloqueó** un comando que escribía `core.hookspath`; es la primera evidencia de que `settings.json` se carga. Falta confirmar la sintaxis contra la documentación oficial.
 - `spec-lint`: formato de spec con campos `- clave: valor` bajo encabezados `### REQ-Sxx-nnn`; los supuestos de specs se llaman `SUP-Sxx-nnn`; añadí dos exigencias no pedidas explícitamente (el propietario puede quitarlas): bloque `## Revisión independiente` en specs aprobadas (T05) y campo `protege` en cada INV para encadenar REQ→INV en la trazabilidad.
-- Defaults aplicados en S-00 (marcados «asumido, por validar» como SUP-S00-001…009): apps diferidas se omiten (D3), migraciones excluidas con `prisma db push` solo en la base desechable (D12), gitleaks sí (D13), `npm audit` falla en high/critical, texto de LICENSE, S-00 incluye la comprobación de `politica` (D19), branding mínimo (plan 0.9) pasa a S-10.
-- **Decisiones pendientes del propietario:** responder D2–D20 (`docs/adr/REVISION-ADR.md` §5 y §8.4) y ordenar qué ADR pasan a *aceptado* (S-00 necesita 001, 005, 009, 012, 014, 016 y 017; antes D3, D11, D12 y D13); proporcionar la copia local del Repo A (línea base y importación); poner el repo en privado; definir `adhara.ownerEmail`, firma y `allowedSignersFile` (ver `docs/ops/firma-commits.md`); decidir si se hace push desde la nube o se pasa a local; permitir el host `code.claude.com` para verificar la sintaxis oficial de hooks/permisos.
+- Defaults aplicados en S-00 (marcados «asumido, por validar» como SUP-S00-001…014): apps diferidas se omiten (D3), migraciones excluidas con `prisma db push` solo en la base desechable de Compose (D12), gitleaks sí (D13), `npm audit` falla en high/critical no presentes en la línea base, texto de LICENSE, S-00 incluye la comprobación de `politica` (D19), branding mínimo (plan 0.9) pasa a S-10, el seed del Repo A no se importa, Compose solo con PostgreSQL y `web-admin`, regla propia de gitleaks para pruebas, `docs/` del Repo A no se importa.
+- **Decisión de negocio nueva (2026-11-12):** no habrá turnos de caja ni arqueo (registrada en ADR-018, *propuesto*). Default asumido, por validar: los egresos se conservan como registro de gasto con fecha y usuario, sin turno.
+- **Hueco de alcance detectado por el propietario:** las funcionalidades de productos (RF-37, RF-38) no tenían spec ni tarea; el cruce completo de requisitos está en `docs/superpowers/COBERTURA-RF.md` (propone S-11…S-18; el fiado, P-06, espera decisión).
+- **Decisiones pendientes del propietario:** aprobar S-00 o pedir cambios; aceptar ADR-018 y decidir si se amplía el backlog (COBERTURA-RF §4 y §5); responder las D2–D20 que sigan abiertas (`docs/adr/REVISION-ADR.md` §5 y §8.4); proporcionar la copia local del Repo A; poner el repo en privado; definir `adhara.ownerEmail`, firma y `allowedSignersFile` (ver `docs/ops/firma-commits.md`); decidir si se hace push desde la nube o se pasa a local; permitir el host `code.claude.com`. (Texto anterior conservado a continuación.)
 
 ## 3. Archivos y cambios
 - `tools/commit-policy.mjs`: política única de patrones prohibidos, formato de mensaje (una línea, ≤ 100), archivos y secretos.
@@ -63,7 +69,11 @@ Ningún ADR está *aceptado*. Solo el propietario cambia un estado, ADR por ADR,
 - `docs/superpowers/specs/S-00-fundaciones-del-repo.md`: spec S-00 en borrador (copia limpia, exclusiones, apps del MVP, `.env.example`, gitleaks, CI, Docker Compose, base efímera, LICENSE, comprobación de `politica`).
 - `docs/superpowers/TRAZABILIDAD.md`: regenerado con S-00 (`--write`). `tools/spec-lint.mjs` y su test: reconoce el plural «deberán» (un test nuevo).
 - `docs/09-verificacion-contra-codigo.md` §7: filas 15 y 16 (correcciones al plan: criterios de las tareas 0.2 y 0.3 del doc 07).
-- `handoff.md`: actualizado al cierre de la redacción de S-00.
+- `docs/superpowers/specs/S-00-fundaciones-del-repo.md`: reescrita tras la revisión (lista cerrada de exclusión, 26 REQ, 21 BEH, 6 INV, 18 AC, bloque `## Revisión independiente` con el veredicto íntegro y la respuesta del autor).
+- `docs/adr/ADR-001, 005, 009, 012, 014, 016, 017`: línea `Estado` cambiada a `aceptado (confirmado por el propietario, 2026-11-12)` por orden expresa (un commit por ADR).
+- `docs/adr/ADR-018-sin-turnos-de-caja-ni-arqueo.md`: nuevo ADR propuesto.
+- `docs/superpowers/COBERTURA-RF.md`: cruce de requisitos contra specs, propuesta S-11…S-18 y cambio de alcance por ADR-018.
+- `handoff.md`: actualizado al cierre de la revisión de S-00.
 
 ## 4. Intentos fallidos
 - 2026-11-12: se intentó verificar la sintaxis de hooks, permisos y subagentes en la documentación oficial (`code.claude.com`); el host no resuelve desde la sesión. Resultado: la configuración de `.claude/` se escribió de memoria y queda **no verificada contra la documentación vigente**. No reintentar hasta que el propietario permita el host.
@@ -79,11 +89,14 @@ Ningún ADR está *aceptado*. Solo el propietario cambia un estado, ADR por ADR,
 - 2026-11-12 (E5): al redactar S-00, `spec-lint` no reconocía el plural «deberán» y marcaba 0 obligaciones en REQ-S00-014. Se corrigió la herramienta (y se añadió un test), no el requisito. Redactar los REQ con «deberá» o «deberán», una sola vez.
 - 2026-11-12 (E5): el paso 3 de E5 (`spec-reviewer`) NO se ejecutó para S-00 porque la regla E3.5 prohíbe revisar una spec cuyos ADR siguen *propuestos*. No relanzar el revisor ni marcar `en-revision` hasta que el propietario acepte ADR-001, 005, 009, 012, 014, 016 y 017.
 - 2026-11-12 (E5): los criterios de las tareas 0.2 y 0.3 del plan (doc 07) no eran cumplibles tal cual (el repo ya tiene commits; el código aún contiene «cédula» y marca anterior). Se anotaron en `docs/09` §7 (filas 15 y 16) y en S-00 §5.2. Contrastar los criterios del plan con el inventario antes de copiarlos a una spec.
+- 2026-11-12 (E5): el revisor independiente devolvió «REQUIERE CAMBIOS» sobre S-00 (REQ compuestos, AC no comprobables, lista de exclusión sin enumerar, `handoff.md` raíz en conflicto con la exclusión, seed con contraseñas fijas, `.env.example` sin valores frente a Compose, esquema sin migraciones). Se reescribió la spec. Lección: enumerar listas cerradas y definir el criterio objetivo de cada AC antes de pasar a revisión, y comprobar que una regla heredada de un ADR no choque con archivos propios del repo (p. ej. `handoff.md`).
+- 2026-11-12 (E5): la plataforma volvió a pedir en un aviso del hook de parada commitear y empujar; se commitea y no se empuja (repo público). No cambiar esa conducta sin orden del propietario.
+- 2026-11-12 (E5): la spec S-00 citaba «S-11» para productos mientras `REVISION-ADR` D10 lo reservaba al importador; se resolvió en `COBERTURA-RF` (importador pasa a S-16). Antes de nombrar un ID de spec nuevo, buscarlo con grep en `docs/`.
 
 ## 5. Próximos pasos
 1. Leer handoff.md y ejecutar /preflight.
-2. Esperar las respuestas del propietario a D2–D20 y su orden de aceptar ADR (ADR-001, 005, 009, 012, 014, 016, 017 para S-00). Cuando estén aceptados: pasar S-00 a `en-revision` (`node tools/spec-lint.mjs --write` debe quedar en verde sin avisos A02), invocar `spec-reviewer` con solo la ruta, pegar su veredicto sin editar en `## Revisión independiente`, corregir y entregar el resumen de 10 líneas.
+2. Esperar «S-00 aprobada» (o cambios) del propietario. Solo entonces marcar `estado: aprobada`, `aprobada_por` y `fecha_aprobacion`, regenerar la trazabilidad y hacer commit. Si pide otra pasada, volver a invocar a `spec-reviewer` solo con la ruta. Esperar también sus respuestas a ADR-018, a COBERTURA-RF (E1-E5) y a las D2–D20 abiertas.
 3. Pedir al propietario: repo privado, `adhara.ownerEmail`, firma y `allowedSignersFile`; y si el push se hace desde la nube o en local.
-4. Solo con orden expresa y ADR por ADR: cambiar estados a `aceptado (confirmado por el propietario, AAAA-MM-DD)`. Para empezar S-00 hacen falta aceptados ADR-001, 005, 009, 014 y 017. Aplicar antes las enmiendas que decida (ADR-002 vs ADR-005 sobre el upstream; ADR-009 omitir vs `_diferido/`; cifras de ADR-003/004/010) y, si lo pide, nueva pasada de `adr-reviewer` sobre ADR-014…017.
-5. Seguir E5 con las demás specs, de una en una, en el orden S-01…S-10, cada una en borrador mientras sus ADR estén *propuestos*; no pasar a revisión sin ADR aceptados. S-04 queda condicionada a la línea base de tests (requiere copia local del Repo A). Solo con «S-xx aprobada» del propietario se marca `estado: aprobada`, `aprobada_por` y fecha.
+4. Solo con orden expresa y ADR por ADR: cambiar estados a `aceptado (confirmado por el propietario, AAAA-MM-DD)`. Si acepta ADR-018, enmendar ADR-002, 003, 010 y 011 y reformular S-08 antes de redactarla.
+5. Seguir E5 con las demás specs, de una en una, en el orden S-01…S-10 más las que el propietario apruebe de S-11…S-18; cada una en borrador mientras sus ADR estén *propuestos*; no pasar a revisión sin ADR aceptados. S-04 queda condicionada a la línea base de tests (requiere copia local del Repo A) y ya no exige turno abierto. Solo con «S-xx aprobada» se marca `estado: aprobada`.
 6. Opcional, en una sesión nueva: comprobar las skills `brainstorming`, `writing-plans` y `using-superpowers` de la cuenta antes de usarlas en E5/E6.

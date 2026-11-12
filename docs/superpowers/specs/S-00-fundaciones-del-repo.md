@@ -1,6 +1,6 @@
 ---
 id: S-00
-estado: borrador
+estado: en-revision
 adrs: ADR-001, ADR-005, ADR-009, ADR-012, ADR-014, ADR-016, ADR-017
 depende_de: ninguna
 aprobada_por:
@@ -28,6 +28,7 @@ Adhara Fit parte de una copia del Repo A (`gym-app` @ `b4352a0`), que es públic
 - Generar el baseline de migraciones de Prisma: ocurre cuando el esquema deje de cambiar (ver SUP-S00-002).
 - Rotar o crear credenciales nuevas (plan 0.8): es una tarea operativa del propietario; esta spec solo exige que no haya credenciales del Repo A en el árbol.
 - Hacer privado o depurar el Repo A (plan 0.1): decisión y acción del propietario, fuera de este repositorio.
+- Funcionalidades de productos (venta con cobro inmediato, RF-37, y fiado, RF-38): se copian tal como están en el Repo A y no se modifican aquí; su adaptación a PEN, permisos y turno obligatorio se trata en una spec de productos propuesta como S-11, pendiente de confirmación del propietario.
 - SUNAT, WhatsApp, vitrina/TV, `kiosk-host`, sitio público y multi-sede visible.
 
 ### 0.4 Comportamiento actual verificado

@@ -4,7 +4,7 @@
 Construir **Adhara Fit** (gimnasio en Perú, un local, PEN, sistema web interno) con Spec-Driven Development. Esta etapa es de diseño y fundaciones: arnés, ADRs, specs y plan; sin código de producto.
 
 ## 2. Estado actual
-- **Puerta actual: G5.00 (spec S-00) — corregida tras el segundo veredicto («REQUIERE CAMBIOS»); lista para tu revisión, sin aprobar.** G1 a G4 aprobadas (2026-11-12). **Aceptados por el propietario (11):** ADR-001, 005, 009, 012, 014, 016, 017, 018, 019, 020 y 021. S-00 ya no depende de ningún ADR propuesto.
+- **Puerta actual: G5.01 (spec S-01) — S-00 APROBADA por el propietario el 2026-11-12 (cierra G5.00).** G1 a G4 aprobadas. **Aceptados (11):** ADR-001, 005, 009, 012, 014, 016, 017, 018, 019, 020 y 021. La aprobación de S-00 incluye el cambio de arnés de REQ-S00-022 (gitleaks en `pre-commit`) y las desviaciones registradas en su §5.2. La importación del código es **implementación**: no se hace en esta sesión de diseño.
 - **G0 superado en modo relajado por decisión del propietario (2026-11-12, America/Lima).** Último pre-flight, con los 4 controles en FAIL:
 
 | Control | Resultado | Motivo |
@@ -32,7 +32,7 @@ Siete ADR están aceptados (001, 005, 009, 012, 014, 016, 017). Solo el propieta
 
 | Spec | Estado |
 |---|---|
-| S-00 | **en-revision** (31 REQ, 27 BEH, 6 INV, 23 AC; `spec-lint`: 0 errores, 0 avisos). Dos revisiones independientes, ambas «REQUIERE CAMBIOS» (pegadas íntegras en la spec); corregida tras la segunda con hechos **verificados contra el Repo A**. La versión actual **no se ha vuelto a pasar por el revisor**. Espera «S-00 aprobada» |
+| S-00 | **aprobada** (propietario, 2026-11-12). 31 REQ, 27 BEH, 6 INV, 23 AC; `spec-lint` en estado `aprobada`: 0 errores, 0 avisos. Incluye ambos veredictos del revisor y la respuesta del autor |
 | S-01 … S-10 | no iniciadas. Se redactan de una en una y cada una exige sus ADR aceptados antes de la revisión. Con ADR-018 propuesto, S-08 se reformula (registro continuo de cobros y reporte diario) y S-04 y S-11 pierden el «turno obligatorio» |
 | S-11 … S-21 | propuestas (mapa en lenguaje simple: `docs/superpowers/BACKLOG-SPECS.md`; cruce técnico: `COBERTURA-RF.md`). S-19 aprobada como ítem. S-20 hereda lo que resuelve la vitrina actual; S-21 es el check-in en Android TV con teclado numérico USB |
 
@@ -94,7 +94,8 @@ Siete ADR están aceptados (001, 005, 009, 012, 014, 016, 017). Solo el propieta
 - `docs/linea-base-tests.md` y `docs/linea-base-audit.json`: línea base medida del Repo A. `docs/09` §8: R-10 a R-19 y corrección de la cifra de variables (13).
 - `docs/superpowers/specs/S-00-fundaciones-del-repo.md`: reescrita tras el segundo veredicto (nuevo script `tools/importar-repo-a.mjs`, lista de permitidos de `packages/db`, `Dockerfile.migrate` excluido, referencias rotas, `.claude/` y `.gitignore`, base efímera, versiones fijas); incluye ambos veredictos íntegros y mi respuesta.
 - `docs/superpowers/BACKLOG-SPECS.md`: mapa de specs en lenguaje simple (entregado al propietario en el zip).
-- `handoff.md`: actualizado tras la línea base y el segundo veredicto de S-00.
+- `docs/superpowers/specs/S-00-fundaciones-del-repo.md`: marcada `aprobada` (`aprobada_por: propietario`, `fecha_aprobacion: 2026-11-12`); `TRAZABILIDAD.md` regenerada.
+- `handoff.md`: actualizado tras la aprobación de S-00.
 
 ## 4. Intentos fallidos
 - 2026-11-12: se intentó verificar la sintaxis de hooks, permisos y subagentes en la documentación oficial (`code.claude.com`); el host no resuelve desde la sesión. Resultado: la configuración de `.claude/` se escribió de memoria y queda **no verificada contra la documentación vigente**. No reintentar hasta que el propietario permita el host.
@@ -123,7 +124,7 @@ Siete ADR están aceptados (001, 005, 009, 012, 014, 016, 017). Solo el propieta
 
 ## 5. Próximos pasos
 1. Leer handoff.md y ejecutar /preflight.
-2. Esperar la decisión del propietario sobre S-00: «S-00 aprobada» (solo entonces `estado: aprobada`, `aprobada_por` y fecha), cambios, o una tercera pasada de `spec-reviewer` (solo la ruta). Resumen de 10 líneas entregado en el chat.
+2. Seguir E5 con S-01 (baseline de seguridad, ADR-012 aceptado): redactarla en borrador con hechos verificados contra el clon del Repo A, `spec-lint` en verde, `spec-reviewer` independiente (solo la ruta), resumen de 10 líneas y esperar «S-01 aprobada».
 3. Pedir al propietario: repo privado, `adhara.ownerEmail`, firma y `allowedSignersFile`; y si el push se hace desde la nube o en local.
 4. Solo con orden expresa y ADR por ADR: cambiar estados a `aceptado (confirmado por el propietario, AAAA-MM-DD)`. Si acepta ADR-018, enmendar ADR-002, 003, 010 y 011 y reformular S-08 antes de redactarla.
 5. Seguir E5 con las demás specs, de una en una, en el orden S-01…S-10 más las que el propietario apruebe de S-11…S-18; cada una en borrador mientras sus ADR estén *propuestos*; no pasar a revisión sin ADR aceptados. S-04 queda condicionada a la línea base de tests (requiere copia local del Repo A) y ya no exige turno abierto. Solo con «S-xx aprobada» se marca `estado: aprobada`.

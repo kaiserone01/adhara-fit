@@ -24,8 +24,6 @@ Escritos tal como los dio el propietario, con mayúsculas normalizadas por mí (
 - Joa Bonillo
 - Jesús Bonillo
 
-## Formato de montos
-- Convención del propietario: **S/ 120.00** (formato habitual de Perú) en precios y en todos los registros transaccionales; sin conversión entre monedas.
-- Reglas: prefijo `S/`, punto decimal, siempre 2 decimales, coma para miles (`S/ 1,200.00`), negativos `-S/ 50.25`, sin redondeo del monto cobrado.
-- Detalle técnico, que el usuario no ve: la base guarda el valor exacto con 2 decimales y el cálculo interno puede usar enteros para evitar errores de coma flotante (ADR-011, propuesto).
-
+## Formato y política de montos
+- Política del propietario (2026-11-12), registrada como ADR-011 versión 2 (propuesto): PEN con 2 decimales; base con valor exacto; API con cadena `"120.00"` y código `PEN`; un solo formateador `S/ 120.00` (`S/ 1,200.00`, `-S/ 50.25`); sin coma flotante; sin redondeo global, solo por regla explícita; redondeo de efectivo del BCRP preparado como política intercambiable y apagada, sin alterar nunca el importe original.
+- Solo registros contables; el cálculo tributario y las transacciones fiscales están fuera de alcance.

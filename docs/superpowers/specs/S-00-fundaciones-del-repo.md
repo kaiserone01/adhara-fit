@@ -1,7 +1,7 @@
 ---
 id: S-00
 estado: borrador
-adrs: ADR-001, ADR-005, ADR-009, ADR-012, ADR-014, ADR-016, ADR-017, ADR-021
+adrs: ADR-001, ADR-005, ADR-009, ADR-012, ADR-014, ADR-016, ADR-017, ADR-020, ADR-021
 depende_de: ninguna
 aprobada_por:
 fecha_aprobacion:
@@ -26,7 +26,7 @@ Adhara Fit parte de una copia del Repo A (`gym-app` @ `b4352a0`), que es públic
   - Todo archivo cuyo nombre contenga `zipgym` o `zip-gym`.
   - Todas las migraciones de Prisma del Repo A (hasta la marca `20261016000000`) y `migration_lock.toml`.
   - El seed del Repo A (`prisma/seed.ts`) y cualquier archivo que contenga las contraseñas `admin1234` o `entrenador1234`.
-  - En `packages/db`, todo script de mantenimiento: solo se admiten los archivos de la lista de permitidos que apruebe el propietario en el informe de importación (el árbol real no está verificado).
+  - En `packages/db`, todo archivo salvo `package.json`, `prisma/schema.prisma`, `prisma7.config.ts`, `prisma7.local.config.ts` y `Dockerfile.migrate` (este último se revisa en el informe de importación porque ejecuta migraciones). Quedan excluidos los scripts `backfillPermisos*.ts`, `clonarSedePrincipalAZipGym.ts`, `clonarZipGym/`, `diagnosticoVencimientos.ts`, `importarPadronExcel.ts`, `limpiarCajaPrueba.ts`, `limpiarMiembros.ts`, `limpiarOrganizacionParaMigracion.ts`, `marcarAjustarFecha.ts`, `migracion-excel/`, `productos-prueba/`, `quitarPermisosEntrenadores.ts`, `resetVencimientosPrueba.ts`, `reset-vencimientos-log-*.json`, `sembrar*.ts` y `prisma/seed.ts`; el propietario aprueba la lista en el informe de importación.
   - Las apps `worker` y `kiosk-host`; los workflows `apk-*.yml` y `verificar-vitrina.yml`; y todo `.github/` del Repo A (los workflows permitidos son los de este repositorio).
   - El `docs/` del Repo A completo, su `README.md` y su `CLAUDE.md` (colisionan con los de este repositorio).
 
@@ -42,19 +42,19 @@ Adhara Fit parte de una copia del Repo A (`gym-app` @ `b4352a0`), que es públic
 - Adaptación de la vitrina y del kiosco en TV (PEN, contenido, claves de Android, APK y su CI): specs S-20 y S-21, propuestas; S-00 solo las importa sin cambios.
 
 ### 0.4 Comportamiento actual verificado
-> No hay copia local del Repo A en esta sesión: todo lo siguiente proviene de `docs/09` y `docs/11`, que citan archivo y línea, y queda como no re-verificado.
-- El Repo A es público, no declara licencia y tiene 732 commits (dato de ADR-005 contexto, sin respaldo en `docs/09` ni `docs/11`, ver REVISION-ADR T-04); no verificado.
-- `cookies.txt` está versionado en la raíz y contiene una cookie `sesion_token` de `localhost` (doc 11 DI-88); no re-verificado.
-- Hay dos `debug.keystore` rastreados, en `apps/kiosk-tv/capacitor/android/app/` y `apps/vitrina-tv/capacitor/android/app/` (doc 11 DI-88); no re-verificado.
-- `prisma/seed.ts` fija las contraseñas `admin1234` y `entrenador1234` e imprime la contraseña y la API key (doc 11 DI-88, `prisma/seed.ts:41-60` según el doc); no re-verificado.
-- No existe `.env.example`; el código lee `DATABASE_URL`, `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`, `R2_PUBLIC_URL`, `KIOSCO_CLAVE`, `KIOSCO_URL`, `NEXT_PUBLIC_API_URL`, `VITRINA_WEB_DIR`, `ZIP_GYM_PASSWORD` y `NODE_ENV`, y los workflows y scripts usan además `VITRINA_API_URL`, `VITRINA_CLAVE`, `VITRINA_DEV_URL` y variables `KIOSCO_*` (doc 09 §4.2, doc 11 DI-85); no re-verificado.
-- Hay 36 migraciones (de `20260913024831` a `20261016000000`) y el entrypoint ejecuta `migrate deploy` al arrancar el contenedor, de modo que un fallo bloquea el servicio (doc 11 DI-15, DI-83; doc 09 §4.2); no re-verificado.
-- Hay tres workflows en `.github/workflows`: `apk-kiosco.yml`, `apk-vitrina.yml` y `verificar-vitrina.yml` (doc 11 DI-13); no re-verificado.
-- `kiosk` y `vitrina` son export estático en producción; el puerto 3001 es solo el del script `dev` (doc 11 DI-02, `apps/kiosk/package.json:6`); no re-verificado.
-- La vitrina muestra precios en Bs y su emisor SSE vive en memoria, por lo que exige un solo contenedor (ADR-009 consecuencias; doc 11 DI-78); no re-verificado.
-- El `docs/` del Repo A contiene `docs/adr/ADR-001-gym-app-sesion.md` (doc 11 DI-92, línea 5), que repite el número ADR-001 de este repositorio; no re-verificado.
-- `packages/domain-custom`, `design-system` y `config` están vacíos o casi vacíos (doc 11 DI-05); no re-verificado.
-- La suite de tests nunca se ejecutó en el análisis: no hay `node_modules` ni red (doc 09 §1); no verificado.
+> Verificado el 2026-11-12 sobre un clon de solo lectura del Repo A en el commit `b4352a03` (SHA completo `b4352a0398933cf2665a3e7b82dc84049697e10c`). Lo que no se pudo comprobar se marca «no verificado».
+- El Repo A es público (se clonó de forma anónima) y su raíz no tiene archivo `LICENSE`; el dato de 732 commits viene de ADR-005 y no se pudo verificar con un clon superficial; no verificado.
+- `cookies.txt` está versionado en la raíz (254 bytes); su contenido no se leyó, solo se verificó que existe (verificado con `ls` en la raíz).
+- Hay dos `debug.keystore` rastreados: `apps/kiosk-tv/capacitor/android/app/debug.keystore` y `apps/vitrina-tv/capacitor/android/app/debug.keystore` (verificado con `find . -name debug.keystore`).
+- `packages/db/prisma/seed.ts` fija las contraseñas `admin1234` (`packages/db/prisma/seed.ts:41` y `:50`) y `entrenador1234` (`packages/db/prisma/seed.ts:55`). La cadena `admin1234` aparece además en 7 documentos de `docs/superpowers/plans/` del Repo A.
+- No existe `.env.example` (verificado). El código lee con `process.env`, en `apps` y `packages`, exactamente estas 12 variables: `DATABASE_URL`, `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`, `R2_PUBLIC_URL`, `KIOSCO_CLAVE`, `KIOSCO_URL`, `NEXT_PUBLIC_API_URL`, `VITRINA_WEB_DIR`, `ZIP_GYM_PASSWORD` y `NODE_ENV` (verificado). Los workflows y scripts usan además `VITRINA_API_URL`, `VITRINA_CLAVE`, `VITRINA_DEV_URL` y variables `KIOSCO_*` (doc 11 DI-85); no verificado.
+- Hay 36 migraciones en `packages/db/prisma/migrations` (de `20260913024831_organizacion_sucursal_plan_suscripcion` a `20261016000000_vitrina_sonido`) más `migration_lock.toml`; `docker-entrypoint.sh:11` ejecuta `prisma migrate deploy` al arrancar y `:13` lanza `apps/web-admin/server.js` (verificado).
+- Hay tres workflows en `.github/workflows`: `apk-kiosco.yml`, `apk-vitrina.yml` y `verificar-vitrina.yml` (verificado con `ls .github/workflows`).
+- `apps/kiosk` y `apps/vitrina` usan `output: "export"` (`apps/kiosk/next.config.ts:9`, `apps/vitrina/next.config.ts:6`) y `apps/web-admin` usa `output: "standalone"` (`apps/web-admin/next.config.ts:7`); los scripts `dev` usan los puertos 3001 y 3002 (`apps/kiosk/package.json:6`, `apps/vitrina/package.json:6`), y `Dockerfile:40` y `Dockerfile:70` fijan `PORT=3000` y `EXPOSE 3000`. `Dockerfile:42` fija `TZ=America/Caracas`.
+- El modelo `VitrinaItem` (`packages/db/prisma/schema.prisma:684`) guarda `precioUSD`, `ofertaUSD` y `mostrarEquivalenteBs`; el emisor SSE en memoria que exige un solo contenedor viene de doc 11 DI-78; no re-verificado.
+- El `docs/adr/` del Repo A contiene `ADR-001-gym-app-sesion.md`, `ADR-001-gym-app-sesion-v2.md` y `ADR-002-vitrina-importa-dominio-puro.md`, que repiten la numeración de este repositorio (verificado con `ls docs/adr`).
+- `packages/domain-custom` solo tiene `.gitkeep` y no es un workspace (sin `package.json`); `packages/config` y `packages/design-system` tienen `.gitkeep` y `package.json` (verificado con `ls -A packages`). Las dependencias internas de las cinco apps del alcance cierran en `db`, `domain`, `infrastructure`, `theming` y `ui`; `config` y `design-system` quedarían fuera (verificado con `package.json` por workspace).
+- El `package.json` raíz solo define `dev`, `build`, `lint`, `start` y `actualizar-tasa`: **no hay `test` ni `typecheck`** (`package.json`, scripts). `test` existe en `apps/kiosk`, `apps/vitrina`, `packages/db` y `packages/domain`, `web-admin` no tiene `test`, y solo `apps/web-admin`, `apps/kiosk` y `apps/vitrina` tienen `tsconfig.json` propio (verificado con `package.json` y `ls` por workspace). La suite no se había ejecutado en los análisis previos: la mide la línea base de S-00.
 
 ### 0.5 Supuestos
 - SUP-S00-001: `worker`, `kiosk-host` y los workflows `apk-*.yml` y `verificar-vitrina.yml` se omiten de la copia; `kiosk-tv`, `vitrina` y `vitrina-tv` se importan sin modificar y se adaptan en S-20 y S-21 (ADR-021, decisión D3). Default: ese reparto; asumido, por validar.
@@ -65,7 +65,7 @@ Adhara Fit parte de una copia del Repo A (`gym-app` @ `b4352a0`), que es públic
 - SUP-S00-006: esta spec incluye la comprobación del workflow `politica` (decisión D19). Default: incluirla; asumido, por validar.
 - SUP-S00-007: la base de `docker compose` es desechable (su volumen se puede borrar) y la de las pruebas es efímera (se crea y se destruye en cada ejecución); son distintas y solo la segunda cumple ADR-016. Default: mantener esa distinción; asumido, por validar.
 - SUP-S00-008: el rebranding y el sistema de diseño completos, que absorben el plan 0.9, se ejecutan en S-19. Default: trasladarlos; asumido, por validar.
-- SUP-S00-009: el repo base expone los scripts `lint`, `typecheck`, `test` y `build` en `package.json` (no verificado). Default: si los nombres reales difieren se adaptan y se documentan en el README; asumido, por validar.
+- SUP-S00-009: como no existe el script `typecheck`, S-00 añade `typecheck` a los `package.json` que tengan `tsconfig.json` y el CI llama a `lint`, `typecheck`, `test` y `build` por workspace (cambio de configuración, no de `src/`). Default: ese reparto; asumido, por validar.
 - SUP-S00-010: con cero migraciones `prisma migrate deploy` no crea tablas (no verificado), por lo que Compose ejecuta `prisma db push` antes de arrancar `web-admin`. Default: ese arranque; asumido, por validar.
 - SUP-S00-011: el seed del Repo A no se importa y el usuario inicial llega con la spec de baseline y seed (ver COBERTURA-RF). Default: la pantalla de inicio de sesión basta para validar S-00; asumido, por validar.
 - SUP-S00-012: `package-lock.json` se regenera con `npm install --package-lock-only` tras recortar los workspaces para que `npm ci` funcione. Default: regenerarlo y registrar el cambio en el informe de importación; asumido, por validar.
@@ -97,8 +97,8 @@ Adhara Fit parte de una copia del Repo A (`gym-app` @ `b4352a0`), que es públic
 ### REQ-S00-004
 - tipo: ubicuo
 - prioridad: MUST
-- origen: ADR-009, ADR-021
-- texto: La copia inicial deberá contener solo las apps web-admin, kiosk, kiosk-tv, vitrina y vitrina-tv y los workspaces que estas requieren de forma transitiva en sus package.json.
+- origen: ADR-009, ADR-021, ADR-020
+- texto: La copia inicial deberá contener solo las apps web-admin, kiosk, kiosk-tv, vitrina y vitrina-tv y los workspaces que estas requieren de forma transitiva en sus package.json y el workspace design-system reservado por ADR-020.
 
 ### REQ-S00-005
 - tipo: ubicuo
@@ -414,7 +414,7 @@ Adhara Fit parte de una copia del Repo A (`gym-app` @ `b4352a0`), que es públic
 - protege: REQ-S00-001
 
 ### INV-S00-006
-- propiedad: las apps y los workspaces del árbol son exactamente web-admin, kiosk, kiosk-tv, vitrina, vitrina-tv y el cierre transitivo de sus dependencias internas
+- propiedad: las apps y los workspaces del árbol son exactamente web-admin, kiosk, kiosk-tv, vitrina, vitrina-tv, el cierre transitivo de sus dependencias internas y packages/design-system
 - mecanismo: lint
 - deteccion: tools/verificar-repo.mjs calcula el cierre desde los package.json y termina con código distinto de 0 si sobra o falta un directorio, o si existe una migración con marca igual o anterior a 20261016000000
 - protege: REQ-S00-004, REQ-S00-005
@@ -577,10 +577,10 @@ Adhara Fit parte de una copia del Repo A (`gym-app` @ `b4352a0`), que es públic
 - Dependencia nueva: gitleaks (binario de CI). Justificación: ADR-005 §4 y ADR-012 §7 lo exigen; protege el árbol importado y los pull requests futuros (el repositorio no tiene historia del Repo A) y la alternativa de expresiones regulares locales no cubre formatos de proveedores. La versión de gitleaks y la versión mayor de PostgreSQL se fijan, sin `latest`, en `.github/workflows/ci.yml` y `docker-compose.yml`, y la de PostgreSQL debe coincidir en ambos.
 
 ### 5.4 Preguntas abiertas
-- ¿Se conservan `packages/domain-custom`, `design-system` y `config`, que están casi vacíos (doc 11 DI-05)? Default: se conservan solo si algún workspace conservado los requiere.
+- ¿Se conservan `packages/domain-custom`, `design-system` y `config`? Default: `domain-custom` no es un workspace y se omite; `design-system` se conserva por ADR-020; `config` se omite si ningún workspace del alcance lo requiere (hoy ninguno).
 - ¿Cómo se obtiene la copia local del Repo A? Default: el propietario la proporciona y el procedimiento usa `git archive b4352a0`.
 - ¿Se activa Dependabot (doc 04 §Seguridad)? Default: no entra en S-00; se evalúa en el plan global.
-- ¿Qué puerto usa `web-admin` en `docker compose`? Default: el que fije `docker-compose.yml` tras leer la configuración del Repo A (no verificado).
+- ¿Qué puerto usa `web-admin` en `docker compose`? Default: 3000, el que fijan `Dockerfile:40` y `Dockerfile:70`.
 - ¿Cuál es la razón social para el aviso de copyright? Default: «Adhara Fit».
 - ¿Se compilan las apps de TV en el CI de S-00? Default: no; se compilan en S-20 y S-21.
 

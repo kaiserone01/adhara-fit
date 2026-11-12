@@ -1,0 +1,3 @@
+#!/bin/sh
+# Valida el mensaje con la política única (tools/commit-policy.mjs).
+exec node "$(git rev-parse --show-toplevel)/tools/hooks/commit-msg.mjs" "$@"

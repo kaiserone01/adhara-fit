@@ -1,0 +1,3 @@
+#!/bin/sh
+# Identidad, firma activada, archivos/secretos prohibidos y spec-lint.
+exec node "$(git rev-parse --show-toplevel)/tools/hooks/pre-commit.mjs" "$@"

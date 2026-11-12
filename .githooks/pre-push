@@ -1,0 +1,3 @@
+#!/bin/sh
+# Firmas válidas, mensajes conformes y handoff.md modificado en el rango. Lee stdin de git.
+exec node "$(git rev-parse --show-toplevel)/tools/hooks/pre-push.mjs" "$@"

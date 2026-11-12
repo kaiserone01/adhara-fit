@@ -515,36 +515,47 @@ Archivo: `S-10-retirar-lo-venezolano.md` · REQ: 34 · BEH: 23 · INV: 5 · AC: 
 
 ## S-11 — Productos: catálogo y venta con cobro inmediato, sin fiado (en-revision)
 
-Archivo: `S-11-productos-sin-fiado.md` · REQ: 26 · BEH: 18 · INV: 4 · AC: 11
+Archivo: `S-11-productos-sin-fiado.md` · REQ: 37 · BEH: 21 · INV: 4 · AC: 14
 
 | REQ | Prioridad | BEH | INV | AC (método) | Test |
 |---|---|---|---|---|---|
 | REQ-S11-001 | MUST | BEH-S11-001 | — | AC-S11-001 (integracion) | pendiente |
-| REQ-S11-002 | MUST | BEH-S11-003 | INV-S11-002 | AC-S11-002 (integracion) | pendiente |
-| REQ-S11-003 | MUST | BEH-S11-001, BEH-S11-002 | — | AC-S11-001 (integracion) | pendiente |
-| REQ-S11-004 | MUST | BEH-S11-002 | — | AC-S11-001 (integracion) | pendiente |
-| REQ-S11-005 | MUST | BEH-S11-003 | INV-S11-002 | AC-S11-002 (integracion) | pendiente |
-| REQ-S11-006 | MUST | BEH-S11-004 | INV-S11-002 | AC-S11-002 (integracion) | pendiente |
-| REQ-S11-007 | MUST | BEH-S11-005 | — | AC-S11-003 (integracion) | pendiente |
-| REQ-S11-008 | MUST | BEH-S11-006 | — | AC-S11-003 (integracion) | pendiente |
-| REQ-S11-009 | MUST | BEH-S11-007 | — | AC-S11-004 (integracion) | pendiente |
-| REQ-S11-010 | MUST | BEH-S11-007 | INV-S11-001 | AC-S11-004 (integracion) | pendiente |
-| REQ-S11-011 | MUST | BEH-S11-007 | INV-S11-001 | AC-S11-004 (integracion) | pendiente |
-| REQ-S11-012 | MUST | BEH-S11-008 | — | AC-S11-004 (integracion) | pendiente |
-| REQ-S11-013 | MUST | BEH-S11-009 | INV-S11-004 | AC-S11-005 (integracion), AC-S11-010 (unitario) | pendiente |
-| REQ-S11-014 | MUST | BEH-S11-010 | — | AC-S11-005 (integracion) | pendiente |
-| REQ-S11-015 | MUST | BEH-S11-011, BEH-S11-013 | INV-S11-003 | AC-S11-006 (integracion) | pendiente |
-| REQ-S11-016 | MUST | BEH-S11-011, BEH-S11-013 | INV-S11-003 | AC-S11-006 (integracion) | pendiente |
-| REQ-S11-017 | MUST | BEH-S11-012 | — | AC-S11-006 (integracion) | pendiente |
-| REQ-S11-018 | MUST | BEH-S11-009 | INV-S11-004 | AC-S11-005 (integracion), AC-S11-010 (unitario) | pendiente |
-| REQ-S11-019 | MUST | BEH-S11-007 | — | AC-S11-004 (integracion) | pendiente |
-| REQ-S11-020 | MUST | BEH-S11-014 | — | AC-S11-007 (integracion) | pendiente |
-| REQ-S11-021 | MUST | BEH-S11-015 | — | AC-S11-008 (manual) | pendiente |
-| REQ-S11-022 | MUST | BEH-S11-016 | — | AC-S11-009 (integracion) | pendiente |
-| REQ-S11-023 | MUST | BEH-S11-015 | — | AC-S11-008 (manual) | pendiente |
-| REQ-S11-024 | MUST | BEH-S11-017 | INV-S11-004 | AC-S11-010 (unitario) | pendiente |
-| REQ-S11-025 | MUST | BEH-S11-017 | INV-S11-004 | AC-S11-010 (unitario) | pendiente |
-| REQ-S11-026 | MUST | BEH-S11-018 | — | AC-S11-011 (manual) | pendiente |
+| REQ-S11-002 | MUST | BEH-S11-003 | INV-S11-002 | AC-S11-003 (integracion) | pendiente |
+| REQ-S11-003 | MUST | BEH-S11-001, BEH-S11-002 | — | AC-S11-001 (integracion), AC-S11-002 (integracion) | pendiente |
+| REQ-S11-004 | MUST | BEH-S11-002 | — | AC-S11-002 (integracion) | pendiente |
+| REQ-S11-005 | MUST | BEH-S11-003 | INV-S11-002 | AC-S11-003 (integracion) | pendiente |
+| REQ-S11-006 | MUST | BEH-S11-004 | INV-S11-002 | AC-S11-003 (integracion) | pendiente |
+| REQ-S11-007 | MUST | BEH-S11-005 | — | AC-S11-004 (integracion) | pendiente |
+| REQ-S11-008 | MUST | BEH-S11-006 | — | AC-S11-004 (integracion) | pendiente |
+| REQ-S11-009 | MUST | BEH-S11-007 | — | AC-S11-005 (integracion) | pendiente |
+| REQ-S11-010 | MUST | BEH-S11-007 | INV-S11-001 | AC-S11-005 (integracion) | pendiente |
+| REQ-S11-011 | MUST | BEH-S11-005 | INV-S11-001 | AC-S11-004 (integracion), AC-S11-005 (integracion) | pendiente |
+| REQ-S11-012 | MUST | BEH-S11-008 | — | AC-S11-005 (integracion) | pendiente |
+| REQ-S11-013 | MUST | BEH-S11-009 | INV-S11-004 | AC-S11-006 (integracion), AC-S11-012 (unitario), AC-S11-013 (unitario) | pendiente |
+| REQ-S11-014 | MUST | BEH-S11-010 | — | AC-S11-006 (integracion) | pendiente |
+| REQ-S11-015 | MUST | BEH-S11-010 | — | AC-S11-006 (integracion) | pendiente |
+| REQ-S11-016 | MUST | BEH-S11-011, BEH-S11-014 | INV-S11-003 | AC-S11-007 (integracion) | pendiente |
+| REQ-S11-017 | MUST | BEH-S11-011, BEH-S11-014 | INV-S11-003 | AC-S11-007 (integracion) | pendiente |
+| REQ-S11-018 | MUST | BEH-S11-012 | — | AC-S11-007 (integracion) | pendiente |
+| REQ-S11-019 | MUST | BEH-S11-013 | — | AC-S11-007 (integracion) | pendiente |
+| REQ-S11-020 | MUST | BEH-S11-014 | INV-S11-003 | AC-S11-007 (integracion) | pendiente |
+| REQ-S11-021 | MUST | BEH-S11-009 | — | AC-S11-006 (integracion) | pendiente |
+| REQ-S11-022 | MUST | BEH-S11-009 | INV-S11-004 | AC-S11-006 (integracion), AC-S11-012 (unitario), AC-S11-013 (unitario) | pendiente |
+| REQ-S11-023 | MUST | BEH-S11-007 | — | AC-S11-005 (integracion) | pendiente |
+| REQ-S11-024 | MUST | BEH-S11-007 | — | AC-S11-005 (integracion) | pendiente |
+| REQ-S11-025 | MUST | BEH-S11-015 | — | AC-S11-008 (integracion) | pendiente |
+| REQ-S11-026 | MUST | BEH-S11-015 | — | AC-S11-008 (integracion) | pendiente |
+| REQ-S11-027 | MUST | BEH-S11-016 | — | AC-S11-004 (integracion) | pendiente |
+| REQ-S11-028 | MUST | BEH-S11-016 | — | AC-S11-004 (integracion) | pendiente |
+| REQ-S11-029 | MUST | BEH-S11-017 | — | AC-S11-009 (integracion) | pendiente |
+| REQ-S11-030 | MUST | BEH-S11-017 | — | AC-S11-009 (integracion) | pendiente |
+| REQ-S11-031 | MUST | BEH-S11-018 | — | AC-S11-010 (manual) | pendiente |
+| REQ-S11-032 | MUST | BEH-S11-018 | — | AC-S11-010 (manual) | pendiente |
+| REQ-S11-033 | MUST | BEH-S11-018 | — | AC-S11-010 (manual) | pendiente |
+| REQ-S11-034 | MUST | BEH-S11-019 | — | AC-S11-011 (integracion) | pendiente |
+| REQ-S11-035 | MUST | BEH-S11-020 | INV-S11-004 | AC-S11-012 (unitario), AC-S11-013 (unitario) | pendiente |
+| REQ-S11-036 | MUST | BEH-S11-020 | INV-S11-004 | AC-S11-012 (unitario), AC-S11-013 (unitario) | pendiente |
+| REQ-S11-037 | MUST | BEH-S11-021 | — | AC-S11-014 (manual) | pendiente |
 
 ## S-18 — Entrenadores: personas del gimnasio sin credenciales, asignadas solo al miembro (en-revision)
 

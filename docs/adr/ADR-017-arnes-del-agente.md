@@ -1,6 +1,6 @@
 # ADR-017: Arnés del agente (harness)
 
-Estado: **propuesto** (2026-11-12)
+Estado: **aceptado** (confirmado por el propietario, 2026-11-12) · propuesto el 2026-11-12
 
 ## Contexto
 Las reglas del propietario (ADR-014) deben cumplirse aunque el agente se equivoque o reciba instrucciones contrarias de la plataforma. Una instrucción en `CLAUDE.md` no es una garantía. G1 construyó un arnés de varias capas (aprobado por el propietario el 2026-11-12).

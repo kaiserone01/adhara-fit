@@ -54,3 +54,8 @@ Reemplazar los tokens por la paleta de marca (colores **medidos** del PDF; confi
 
 ## Dependencias
 *(Pase formal F.)* ADR-009 (qué apps llevan marca), ADR-010 (estados activo/gracia/vencido). Pendiente P-15. Hallazgos abiertos de la revisión G3: ver `REVISION-ADR.md` §4, §7 y §8.4.
+
+## Enmiendas posteriores (2026-11-12)
+*Derivadas de decisiones aceptadas por el propietario (ADR-018, ADR-019, ADR-020). El texto anterior se conserva; donde choca, rige esta sección.*
+- `TemaOrganizacion` se elimina (ADR-019); el tema es único por construcción.
+- El alcance se amplía y queda subordinado a **ADR-020** (sistema de diseño y rebranding completos). Los colores `#231F20`, `#FFCB04` y `#FFFFFF` quedan confirmados por el kit de logotipo entregado el 2026-11-12 (`docs/design/`); P-15 queda cerrada en lo que respecta a colores.

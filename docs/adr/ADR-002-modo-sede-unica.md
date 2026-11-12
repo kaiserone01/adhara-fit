@@ -39,3 +39,9 @@ Mantener la tabla `Sucursal` con **exactamente una fila** ("Local") creada por e
 
 ## Dependencias
 *(Pase formal F.)* Depende de ADR-001. Se relaciona con ADR-005 (hallazgo C1 sobre seguir el upstream), ADR-012 (API key del kiosco) y P-18 (`diasGracia` global). Hallazgos abiertos de la revisión G3: ver `REVISION-ADR.md` §4, §7 y §8.4.
+
+## Enmiendas posteriores (2026-11-12)
+*Derivadas de decisiones aceptadas por el propietario (ADR-018, ADR-019, ADR-020). El texto anterior se conserva; donde choca, rige esta sección.*
+- La consecuencia «Caja compartida: `AbrirTurno` permite un solo turno abierto por sede… flujo de traspaso (tarea 1.16)» queda **sin efecto**: no existen turnos de caja (ADR-018).
+- El helper `obtenerSedeUnica(organizacionId)` deja de recibir parámetros: no existe la entidad `Organizacion` (ADR-019). La `Sucursal` única cuelga directamente del negocio.
+- Medición del 2026-11-12 sobre el Repo A (`b4352a0`, mismo criterio de `grep`): `sucursal` aparece en 194 archivos de `apps` y `packages`; el inventario oficial reproduce la cifra de `docs/09` §5.

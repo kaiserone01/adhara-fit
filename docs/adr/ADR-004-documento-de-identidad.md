@@ -40,3 +40,8 @@ El base usa `Miembro.cedula` (única por organización) y el kiosco acepta solo 
 
 ## Dependencias
 *(Pase formal F.)* ADR-013 (anonimización del documento y unicidad), ADR-007 (importador), supuesto SUP-10 / "[SUPUESTO S-10]" (`codigoSocio`), P-05 (dispositivo de check-in, abierta). Hallazgos abiertos de la revisión G3: ver `REVISION-ADR.md` §4, §7 y §8.4.
+
+## Enmiendas posteriores (2026-11-12)
+*Derivadas de decisiones aceptadas por el propietario (ADR-018, ADR-019, ADR-020). El texto anterior se conserva; donde choca, rige esta sección.*
+- La unicidad `@@unique([organizacionId, numeroDocumento])` pasa a `@@unique([numeroDocumento])` global, y lo mismo para `codigoSocio`: no existe `organizacionId` (ADR-019).
+- Con el baseline regenerado no hay datos heredados que migrar a la nueva restricción.

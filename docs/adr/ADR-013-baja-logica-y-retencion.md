@@ -36,3 +36,7 @@ Estado: **propuesto** (2026-11-12) · Origen: `EliminarMiembro` borra pagos e hi
 
 ## Dependencias
 *(Pase formal F.)* ADR-004 (unicidad al anonimizar el documento), ADR-010 (pagos conservados). Pendiente P-20 (plazo de retención). Hallazgos abiertos de la revisión G3 (C13, C14): ver `REVISION-ADR.md` §4, §7 y §8.4.
+
+## Enmiendas posteriores (2026-11-12)
+*Derivadas de decisiones aceptadas por el propietario (ADR-018, ADR-019, ADR-020). El texto anterior se conserva; donde choca, rige esta sección.*
+- La entidad `DeudaProducto`, que `eliminarConHistorial` borraba, se elimina (ADR-018). La decisión de baja lógica y anonimización no cambia.

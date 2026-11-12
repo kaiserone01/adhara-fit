@@ -42,3 +42,8 @@ El repo base trabaja con precios en USD y cobros en USD y bolívares con tasa BC
 
 ## Dependencias
 *(Pase formal F.)* ADR-011 (dinero en céntimos; se corrigen mutuamente), ADR-006 (catálogo de métodos, solapado), ADR-010 (orden: abonos antes que moneda), ADR-009 (el worker se elimina). Hallazgos abiertos de la revisión G3: ver `REVISION-ADR.md` §4, §7 y §8.4.
+
+## Enmiendas posteriores (2026-11-12)
+*Derivadas de decisiones aceptadas por el propietario (ADR-018, ADR-019, ADR-020). El texto anterior se conserva; donde choca, rige esta sección.*
+- `Turno` ya no pasa a «un único `fondoInicialEfectivo`»: la entidad `Turno` se elimina (ADR-018).
+- `Egreso` y `MonedaEgreso` no se adaptan a PEN: se eliminan junto con los egresos (ADR-018).

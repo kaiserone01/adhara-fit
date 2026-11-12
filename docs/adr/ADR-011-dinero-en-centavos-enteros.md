@@ -38,3 +38,8 @@ Verificado en el código: la BD usa `Decimal(10,2)`/`Decimal(14,2)`, pero los re
 
 ## Dependencias
 *(Pase formal F.)* ADR-010 (pago exacto); corrige a ADR-003; ADR-016 (tests de propiedad). Hallazgos abiertos de la revisión G3: ver `REVISION-ADR.md` §4, §7 y §8.4.
+
+## Enmiendas posteriores (2026-11-12)
+*Derivadas de decisiones aceptadas por el propietario (ADR-018, ADR-019, ADR-020). El texto anterior se conserva; donde choca, rige esta sección.*
+- La propiedad «el total de un turno es la suma exacta de sus líneas» pasa a «el total del día, por método y por usuario, es la suma exacta de los pagos no anulados» (ADR-018: sin turnos ni arqueo).
+- `Egreso` se elimina (ADR-018); sus importes dejan de existir en el dominio.

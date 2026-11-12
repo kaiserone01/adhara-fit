@@ -46,3 +46,8 @@ El repo base permite **abonos**: el miembro paga una parte y entra hasta una fec
 
 ## Dependencias
 *(Pase formal F.)* ADR-011 (importes exactos), ADR-016 (pruebas), orden respecto a ADR-003 (tarea 1.3b antes de 1.4). Pendientes P-16, P-17 y P-18. Hallazgos abiertos de la revisión G3: ver `REVISION-ADR.md` §4, §7 y §8.4.
+
+## Enmiendas posteriores (2026-11-12)
+*Derivadas de decisiones aceptadas por el propietario (ADR-018, ADR-019, ADR-020). El texto anterior se conserva; donde choca, rige esta sección.*
+- El invariante «no hay pago sin turno» queda **sin efecto**: cobrar nunca exige un turno porque no existen turnos (ADR-018).
+- El fiado de productos deja de ser «un tema distinto que sigue a P-06»: P-06 está respondida y el fiado se elimina (ADR-018). Siguen abiertas P-16, P-17 y P-18.

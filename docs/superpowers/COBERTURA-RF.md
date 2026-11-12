@@ -21,7 +21,7 @@ Leyenda: ✅ cubierto por la spec indicada · ◐ cubierto en parte · ⚪ hered
 | **RF-15, RF-72** | **Consentimiento de datos y política (M, nuevo)** | ❌ | Plan 2.2 sin spec |
 | RF-20…RF-25 | Planes, cambio de plan, pago de 1-6 meses, gracia | ✅ S-03, S-04, S-05, S-07 | — |
 | RF-30…RF-34 | Pago único, métodos, n.º de operación, fecha pasada, anulación | ✅ S-03, S-04 | — |
-| RF-35 | Turnos de caja y arqueo | ✅ S-08 | — |
+| RF-35 | ~~Turnos de caja y arqueo~~ **Retirado** (ADR-018 propuesto: sin turnos ni arqueo) | S-08 reformulada | S-08 pasa a cubrir el registro continuo de cobros y el reporte diario por método y usuario |
 | RF-36 | Histórico de pagos imprimible | ⚪ (ajuste de PEN en S-03/S-10) | Impresión: sin criterio propio |
 | **RF-37** | **Venta de productos con cobro inmediato (S)** | ❌ | **Sin spec** |
 | **RF-38** | **Fiado de productos y cobro de deudas (C, P-06 sin respuesta)** | ❌ | **Sin spec; default de `docs/08`: conservado pero oculto** |
@@ -49,7 +49,7 @@ Los IDs son estables: las specs nuevas continúan la numeración. Orden y depend
 
 | Spec propuesta | Cubre | Depende de (specs) | Nota |
 |---|---|---|---|
-| **S-11 Productos y fiado** | RF-37, RF-38, tarea 1.12; permisos de productos (DI-57), turno obligatorio al vender (DI-69), precios en PEN | S-01, S-03, S-08 | Decisión P-06: ver §4 |
+| **S-11 Productos y fiado** | RF-37, RF-38, tarea 1.12; permisos de productos (DI-57), vender sin turno (ADR-018; DI-69 deja de aplicar), precios en PEN | S-01, S-03, S-08 | Decisión P-06: ver §4 |
 | S-12 Comprobantes de pago | RF-39, plan 2.1, ADR-006 | S-03, S-04 | Registro, no emisión |
 | S-13 Consentimiento y aviso legal | RF-15, RF-72, RF-71, plan 2.2 y 2.3 | S-06, S-09 | Textos legales a revisar por abogado |
 | S-14 Reportes | RF-62, RF-36, plan 2.5 | S-04, S-12 | Morosos, por vencer, ingresos por método |
@@ -66,3 +66,18 @@ Los IDs son estables: las specs nuevas continúan la numeración. Orden y depend
 | E3 | **Fiado (P-06, sin respuesta):** ¿el fiado se usa (RF-38)? Default de `docs/08`: «conservado pero oculto». Ojo: ADR-010 decidió **borrar, no ocultar**, los abonos; ocultar el fiado deja código y pantallas muertos | Decidir: **eliminar el fiado** del MVP (como los abonos) o conservarlo visible. Si no hay respuesta, aplico el default de `docs/08` y lo marco «asumido, por validar» |
 | E4 | ¿Se necesita un ADR para fiado/productos? | Solo si decides eliminar el fiado (decisión de producto con consecuencias en datos) |
 | E5 | ¿Cuáles de S-12…S-18 son MVP y cuáles post-MVP? | PRD Release 1 incluye comprobante, consentimiento, reportes y despliegue: todas MVP salvo lo que decidas diferir |
+
+## 5. Cambio de alcance: sin turnos de caja ni arqueo (ADR-018, propuesto)
+El propietario decidió el 2026-11-12 que no habrá turnos de caja y que el arqueo es innecesario. Efecto sobre este cruce:
+
+| Spec | Cambio propuesto |
+|---|---|
+| S-04 Pago único y suscripciones | Se elimina el «turno abierto obligatorio» (doc 10 §2.C; doc 11 H-01; P-23): cobrar nunca exige turno |
+| **S-08** | Deja de ser «caja compartida con traspaso de turno y arqueo por método». Nuevo título propuesto: **registro continuo de cobros y reporte diario por método y usuario** (anulación con motivo, auditoría, egresos como gasto fechado). Conserva su ID |
+| S-11 Productos y fiado | Vender y cobrar deudas sin turno |
+| S-03, S-10 | Sin `Turno` ni `fondoInicialEfectivo`; sin `*USD` ni `Bs` en egresos |
+| S-14 Reportes | Absorbe el reporte diario de ingresos por método y usuario que sustituye al arqueo |
+| Plan (doc 07) | Pierden vigencia las tareas 1.16 (traspaso) y el criterio de turno de 1.3b; 0.11 deja de probar `CerrarTurno` |
+| ADR propuestos | Enmiendas en ADR-002, 003, 010 y 011 cuando el propietario acepte ADR-018 (detalle en el propio ADR) |
+
+Pregunta abierta con default: **egresos**. Default: se conservan como registro de gasto con fecha y usuario, sin turno (asumido, por validar).

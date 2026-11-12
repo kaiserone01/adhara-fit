@@ -22,7 +22,7 @@ El propietario exige test primero, Postgres efímero, un test de contrato de per
 
 ## Decisión
 1. **Test primero:** cada `AC-` de una spec tiene su test (o consulta SQL / pasos manuales declarados) escrito antes del código que lo satisface.
-2. **Postgres efímero:** las pruebas de integración crean su base por ejecución y la destruyen al terminar; nunca comparten base ni usan una real. **`prisma migrate` solo corre contra la base efímera.** El mecanismo (servicio de Docker Compose) es un **supuesto, por validar** en S-00; usar una librería tipo Testcontainers sería una dependencia nueva a justificar.
+2. **Postgres efímero:** las pruebas de integración crean su base por ejecución y la destruyen al terminar; nunca comparten base ni usan una real. **El agente no ejecuta `prisma migrate` contra ninguna base real; en pruebas, solo contra la base efímera.** (La migración al arrancar el contenedor, `migrate deploy`, la ejecuta el despliegue, no el agente; doc 09 §4.2.) El mecanismo (servicio de Docker Compose) es un **supuesto, por validar** en S-00; usar una librería tipo Testcontainers sería una dependencia nueva a justificar.
 3. **Test de contrato de permisos:** recorre `app/api/**` y las server actions y falla si alguna no declara permiso (ADR-012 §4; tarea 0.10 del doc 07).
 4. **Línea base antes de tocar código** (doc 07 tarea 0.7; doc 10 §2.A): `npm ci`, `tsc`, lint y suite completa; se registra nº real de tests por workspace, fallos preexistentes y archivos de `web-admin` con tests. Requiere una copia local del Repo A: **S-04 queda condicionada** hasta tenerla.
 5. **Tests de caracterización** del flujo de cobro sobre Postgres efímero **antes** de reescribir `RegistrarPago` (tarea 0.11).

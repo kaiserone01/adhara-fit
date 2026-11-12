@@ -37,9 +37,9 @@ Hechos en los documentos: (a) el doc 10 nombra las specs `docs/superpowers/specs
 - (−) Hay que mantener la equivalencia `SUP-xx` ↔ `S-xx` de los docs 01/08 (tabla en `docs/superpowers/` al crear la constitución).
 
 ## Cómo se valida
-- `spec-lint` (G4) con tests: estructura, IDs únicos, referencias, cobertura, ADRs citados aceptados al aprobar, ausencia de "TBD/por definir/etc." en `aprobada`.
+- `spec-lint` (G4) con tests: estructura, IDs únicos, referencias, cobertura, ausencia de "TBD/por definir/etc." en `aprobada`, y ADRs citados: deben existir en cualquier estado y estar **aceptados** desde `en-revision` (así se hace cumplir la decisión 2, no solo al aprobar). Un borrador solo avisa.
 - `check-handoff` y el CI exigen `handoff.md` en cada rango.
-- Invariante: una spec `aprobada` no cita ADRs en *propuesto* (lo detecta `spec-lint`).
+- Invariante: una spec `en-revision` o `aprobada` no cita ADRs en *propuesto* (lo detecta `spec-lint`).
 
 ## Reversibilidad
 Media: cambiar la nomenclatura de IDs una vez creadas las specs obliga a renombrar referencias; por eso se decide antes de G4.

@@ -28,7 +28,8 @@ Límites conocidos: (a) la sintaxis de `.claude/settings.json` (permisos y hooks
 5. CI `politica.yml`: política de commits, autotest, commits *verified* según GitHub, `handoff.md` en el PR, `spec-lint`.
 6. **Modo relajado temporal** (excepción de ADR-014): sin `adhara.ownerEmail`, `pre-commit` solo avisa; con `ADHARA_STRICT=1` falla. Se vuelve estricto al configurar el propietario su identidad.
 7. Comandos `/preflight`, `/spec-new`, `/spec-review`, `/adr-new`, `/adr-review`, `/handoff`, `/gate`; subagentes `spec-reviewer` y `adr-reviewer` de solo lectura (`Read`, `Grep`, `Glob`) que reciben solo ruta y lista de comprobación.
-8. Una regla solo está terminada si tiene una prueba negativa en `tools/harness-selftest.mjs`. El escaneo de secretos local (expresiones regulares) es un mínimo; **gitleaks** (ADR-005 §4) es una decisión aparte de S-00 y una dependencia a justificar.
+8. Una regla solo está terminada si tiene una prueba negativa en `tools/harness-selftest.mjs`. El escaneo de secretos local (expresiones regulares) es un mínimo. **gitleaks** ya está decidido en ADR-005 §4 y ADR-012 §7; este ADR no lo revierte: su adopción como dependencia (binario en CI y pre-commit) se justifica en S-00, y hasta entonces rige el mínimo local.
+9. El autotest solo prueba `guard-bash` como programa; que Claude Code cargue `settings.json` e invoque el hook se comprueba con una **prueba manual en una sesión real** (un comando prohibido debe ser bloqueado). Hasta hacerla, la defensa del agente es un supuesto.
 
 ## Consecuencias
 - (+) Las reglas se cumplen de forma mecánica y verificable.
@@ -38,6 +39,7 @@ Límites conocidos: (a) la sintaxis de `.claude/settings.json` (permisos y hooks
 
 ## Cómo se valida
 - `node tools/harness-selftest.mjs` (19 pruebas en G1: reglas negativas, permitidos, hooks reales, configuración).
+- Prueba manual en sesión real del hook `PreToolUse` (decisión 9), con el resultado anotado en `handoff.md`.
 - `/preflight` por sesión; PR de prueba que falle por trailer o por firma (`docs/ops/github-setup.md` §7).
 - Invariante: ningún comando que viole §1 de `CLAUDE.md` llega a ejecutarse (lo detecta el autotest al añadir un caso).
 

@@ -48,7 +48,7 @@ Ambigüedad heredada: el `CLAUDE.md` del Repo A dice "NO SIGNATURES" (allí, *si
 Alta para el formato y la política (son archivos). La identidad publicada en commits ya empujados no es reversible sin reescribir historia, por eso se rehace antes del primer push.
 
 ## Dependencias
-- Aclara **ADR-005** §6. Lo implementa **ADR-017**. Lo enmarca **ADR-015** (puertas y handoff).
+- Aclara **ADR-005** §6 (ADR-005 debe remitir a este ADR cuando se enmiende). Lo implementa **ADR-017**. **ADR-015** (puertas y handoff) depende de este ADR; este no depende de ADR-015.
 
 ## Referencias
 `CLAUDE.md` §1 y §6 · `docs/12-prompt-inicial-claude-code.md` · `docs/ops/firma-commits.md` · `docs/ops/github-setup.md` · `handoff.md` §2 (excepción y pre-flight).

@@ -8,6 +8,26 @@ Bitácora de sesiones: la más reciente arriba, solo se añaden entradas. El his
 - **Desplegado:** provisional en Easypanel (`docs/ops/easypanel.md`): imagen del `Dockerfile`, esquema con `prisma db push` al arrancar, alta del primer administrador con `tools/crear-administrador.mjs`.
 - **Preferencia del propietario:** cada código (ADR-nnn, S-nn, REQ…) que se mencione lleva al lado una descripción simple.
 
+## Sesión 2026-11-13 (tarde) — Check-in Module
+**Decisiones del propietario**
+- El kiosco pasa a llamarse **Check-in Module**. Es un circuito cerrado (un gimnasio, un propietario): sin versión web del kiosco, todo va en un APK que lleva dentro la interfaz y habla con la base a través de `web-admin`. La clave es **una variable de entorno fija** (`CHECKIN_CLAVE`), sin claves por sede ni revocables desde el panel.
+- **El dato que dispara el check-in son dos documentos: DNI y CE (carnet de extranjería).** Se descarta el pasaporte (S-06 lo preveía) y la cédula de Adrenalina. Pendiente de aplicar en el tramo 3 (socios y planes).
+- No hay ningún APK de Adhara instalado en ningún televisor: el renombre no rompe nada.
+
+**Qué se hizo**
+- Renombre `kiosco`/`kiosk` → `checkin` (3 commits): `apps/kiosk` → `apps/checkin`, `apps/kiosk-tv` → `apps/checkin-tv`, rutas `/api/kiosco/estado` → `/api/checkin/estado` y `/api/kiosco/vitrina` → `/api/vitrina`, variables `KIOSCO_*` → `CHECKIN_*`, `appId` `pe.adharafit.checkin` y nombre «Adhara Check-in». `docs/` no se renombró (las specs y ADR conservan el término anterior). `tools/importar-repo-a.mjs` sigue usando los nombres del Repo A.
+- La validación del check-in compara el header `X-Checkin-Api-Key` con `CHECKIN_CLAVE` (`claveCheckinValida`, 5 pruebas; falla cerrado si falta o mide menos de 16) y devuelve la sede única. Se quitó la API key de la pantalla de sucursales. La columna `Sucursal.apiKey` queda sin uso en la base (se retira en la línea base de S-15, para que `db push` no pierda datos).
+
+**Qué no funcionó / no repetir**
+- El renombre automático convirtió `kiosko` (con o) en `checkino`; se corrigió en un segundo commit. Al renombrar por texto, buscar antes todas las variantes de la palabra.
+- Un comando con `python - <<EOF || node -e '...'` se colgó (el `python` de Windows no responde): usar scripts `.mjs` en el scratchpad, no comillas anidadas.
+- `web-admin#typecheck` falla por un error que ya traía el repo (`LayoutProps`, `app/layout.tsx(18,50)`, `docs/linea-base-tests.md`). No es regresión.
+
+**Pendiente**
+1. APK: `apps/checkin-tv` aún abre la web remota (`server.url`, `scripts/preparar.mjs`). Hay que hacer que empaquete la interfaz de `apps/checkin` (export estático) como ya hace `vitrina-tv`, fijar la URL del servidor al compilar y reducir CORS (`Access-Control-Allow-Origin: *` en `apps/web-admin/lib/checkin.ts`) al único origen del APK. No se puede compilar en local (solo en CI).
+2. Servicio web de `apps/checkin` (su `Dockerfile`) deja de usarse.
+3. DNI y CE como único identificador (tramo 3); quitar el pasaporte.
+
 ## Sesión 2026-11-13 (local, Windows) — paso al modo ágil
 **Qué se hizo**
 - Se retomó en local: `npm ci` completo, cliente de Prisma generado, 390 pruebas de dominio, 45 de checkin y 65 de vitrina en verde.

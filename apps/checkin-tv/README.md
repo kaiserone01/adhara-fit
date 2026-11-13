@@ -14,7 +14,7 @@ Código: `capacitor/` (proyecto Capacitor, deliberadamente **no** es un workspac
 
 ## 3. Preparación única
 
-1. Obtener la API key de cada sede: web-admin → Configuraciones → Sucursales → abrir la sede → campo "API Key del checkin" (botón copiar). Usar la cuenta de la organización dueña de esa sede.
+1. La clave es la variable de entorno `CHECKIN_CLAVE` de web-admin (mínimo 16 caracteres, un solo gimnasio y un solo APK). La misma clave se pasa al compilar el APK.
 2. Crear los secretos del repositorio (`github.com/kaiserone01/gym-app/settings/secrets/actions` → New repository secret), o con `gh secret set NOMBRE` (pide el valor por consola; nunca usar `--body`):
    - `CHECKIN_APK_PASSWORD`: contraseña del `.7z` (la inventa el usuario).
    - `CHECKIN_CLAVE_<SUCURSAL>`: API key de la sede. Nombre en MAYÚSCULAS, solo letras, números y `_`. Ya creados: `CHECKIN_CLAVE_PRINCIPAL`, `CHECKIN_CLAVE_TIPURO` y `CHECKIN_CLAVE_PRUEBA`.

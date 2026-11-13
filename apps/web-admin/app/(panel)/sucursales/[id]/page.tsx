@@ -53,7 +53,6 @@ export default async function PaginaEditarSucursal({
           nombre: sucursal.nombre,
           direccion: sucursal.direccion,
           diasGracia: sucursal.diasGracia,
-          apiKey: sucursal.apiKey,
         }}
       />
 

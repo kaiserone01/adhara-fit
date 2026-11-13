@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect } from "react";
 import { Button } from "@gym-app/ui/components/Button";
 import { Input } from "@gym-app/ui/components/Input";
 import { useFeedback } from "@gym-app/ui/components/FeedbackOverlay";
@@ -10,7 +10,6 @@ export interface ValoresFormularioSucursal {
   nombre: string;
   direccion: string | null;
   diasGracia: number;
-  apiKey?: string;
 }
 
 export function FormularioSucursal({
@@ -30,15 +29,6 @@ export function FormularioSucursal({
     if (estado.error) mostrarError(estado.error);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- solo debe reaccionar a un nuevo estado.error, no a mostrarError
   }, [estado.error]);
-
-  const [copiado, setCopiado] = useState(false);
-
-  async function copiarApiKey() {
-    if (!valoresIniciales?.apiKey) return;
-    await navigator.clipboard.writeText(valoresIniciales.apiKey);
-    setCopiado(true);
-    setTimeout(() => setCopiado(false), 2000);
-  }
 
   return (
     <form action={enviar} className="flex flex-col gap-4">
@@ -72,22 +62,6 @@ export function FormularioSucursal({
         defaultValue={valoresIniciales?.diasGracia ?? 0}
         readOnly={!puedeGuardar}
       />
-
-      {valoresIniciales?.apiKey && (
-        <div className="flex flex-col gap-1 text-sm" style={{ color: "var(--gx-muted)" }}>
-          API Key del checkin
-          <div className="flex gap-2">
-            <input
-              readOnly
-              value={valoresIniciales.apiKey}
-              className="min-h-11 flex-1 rounded-lg border px-3 gx-campo"
-            />
-            <Button type="button" variant="secundario" onClick={copiarApiKey}>
-              {copiado ? "Copiado" : "Copiar"}
-            </Button>
-          </div>
-        </div>
-      )}
 
       {puedeGuardar && (
         <Button type="submit" disabled={enviando}>

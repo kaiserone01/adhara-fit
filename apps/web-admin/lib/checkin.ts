@@ -26,14 +26,14 @@ export function opcionesCheckin() {
   return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
 }
 
-// La sucursal dueña de la clave (header X-Checkin-Api-Key, ADR-001 v1 §4.2 — el sucursalId NO viaja
+// La sede única, si el header X-Checkin-Api-Key trae la clave CHECKIN_CLAVE del entorno (el sucursalId NO viaja
 // en el body), o la respuesta 401 que la ruta debe devolver tal cual.
 export async function sucursalDeCheckin(req: NextRequest): Promise<Sucursal | NextResponse> {
   const apiKey = req.headers.get("x-checkin-api-key");
   if (!apiKey) return jsonCheckin({ error: "Falta el header X-Checkin-Api-Key." }, 401);
 
-  const sucursal = await new CheckinTokenValidator(prisma).validar(apiKey);
-  if (!sucursal) return jsonCheckin({ error: "API key de sucursal inválida." }, 401);
+  const sucursal = await new CheckinTokenValidator(prisma, process.env.CHECKIN_CLAVE).validar(apiKey);
+  if (!sucursal) return jsonCheckin({ error: "Clave del check-in inválida." }, 401);
 
   return sucursal;
 }

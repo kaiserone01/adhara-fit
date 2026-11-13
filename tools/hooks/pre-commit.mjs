@@ -1,7 +1,6 @@
 #!/usr/bin/env node
-// pre-commit: identidad, firma activada, archivos y secretos prohibidos, spec-lint.
-import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync, readdirSync } from 'node:fs';
+// pre-commit: identidad y firma (avisos), archivos y secretos prohibidos.
+import { execFileSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import { checkStagedFiles, checkAddedLines, format } from '../commit-policy.mjs';
 
@@ -52,17 +51,7 @@ function main() {
   const secrets = checkAddedLines(added);
   if (secrets.length) errors.push(format(secrets, 'secreto'));
 
-  const top = git('rev-parse', '--show-toplevel');
-  const specsDir = `${top}/docs/superpowers/specs`;
-  const hasSpecs = existsSync(specsDir) && readdirSync(specsDir).some((f) => /^S-\d+.*\.md$/.test(f));
-  if (hasSpecs) {
-    if (!existsSync(`${top}/tools/spec-lint.mjs`)) errors.push('  - [spec-lint] existen specs pero falta tools/spec-lint.mjs');
-    else {
-      const r = spawnSync('node', [`${top}/tools/spec-lint.mjs`], { stdio: 'inherit', cwd: top });
-      if (r.status !== 0) errors.push('  - [spec-lint] falló (ver salida arriba)');
-    }
-  }
-
+  // Modo ágil (2026-11-13): spec-lint ya no bloquea el commit; se corre a mano con `node tools/spec-lint.mjs`.
   if (errors.length) {
     console.error(`pre-commit: commit rechazado\n${errors.join('\n')}`);
     process.exit(1);

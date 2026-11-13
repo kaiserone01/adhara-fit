@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 import { evaluate } from '../.claude/hooks/guard-bash.mjs';
 import { checkCommitMessage, checkText, checkStagedFiles, checkAddedLines } from './commit-policy.mjs';
 import { checkIdentity } from './hooks/pre-commit.mjs';
-import { checkRange, avisosRange } from './hooks/pre-push.mjs';
+import { checkRange, avisosRange, avisoHandoff } from './hooks/pre-push.mjs';
 import { check as checkHandoff } from './check-handoff.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -145,7 +145,7 @@ test('pre-commit: identidad y firma son avisos (reglas 1 y 2 anuladas); con stri
     assert.equal(checkIdentity({ ...ok, ...o, strict: true }).errors.length, 1);
   }
 });
-test('pre-push: mensaje y handoff.md bloquean; firma y autor son avisos salvo strict', () => {
+test('pre-push: el mensaje bloquea; handoff.md, firma y autor son avisos (firma y autor bloquean con strict)', () => {
   const c = (o = {}) => ({ sha: 'a'.repeat(40), sig: 'G', message: 'Agrega x', files: ['handoff.md', 'a.md'], authorEmail: OWNER, committerEmail: OWNER, ...o });
   assert.deepEqual(checkRange([c()], { ownerEmail: OWNER }), []);
   assert.deepEqual(checkRange([c({ sig: 'U' })]), []);
@@ -153,7 +153,9 @@ test('pre-push: mensaje y handoff.md bloquean; firma y autor son avisos salvo st
   assert.ok(avisosRange([c({ sig: 'N' })]).some((e) => e.includes('firma')));
   assert.ok(checkRange([c({ sig: 'B' })], { strict: true }).some((e) => e.includes('firma')));
   assert.ok(checkRange([c({ message: `Agrega x\n\n${COAUTOR}` })]).some((e) => e.includes('mensaje')));
-  assert.ok(checkRange([c({ files: ['a.md'] })]).some((e) => e.includes('handoff.md')));
+  assert.deepEqual(checkRange([c({ files: ['a.md'] })]), []); // modo ágil: sin handoff ya no bloquea
+  assert.ok(avisoHandoff([c({ files: ['a.md'] })]).some((e) => e.includes('handoff.md')));
+  assert.deepEqual(avisoHandoff([c()]), []);
   assert.deepEqual(checkRange([c({ authorEmail: 'x@example.org' })], { ownerEmail: OWNER }), []);
   assert.ok(avisosRange([c({ authorEmail: 'x@example.org' })], { ownerEmail: OWNER }).some((e) => e.includes('propietario')));
   assert.ok(checkRange([c({ authorEmail: 'x@example.org' })], { ownerEmail: OWNER, strict: true }).some((e) => e.includes('propietario')));

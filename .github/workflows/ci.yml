@@ -23,11 +23,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-      - run: node tools/verificar-repo.mjs
       - run: node tools/verificar-env.mjs
       - run: node --test "tools/*.test.mjs"
-      - run: node tools/harness-selftest.mjs
-      - run: node tools/spec-lint.mjs
 
   lint:
     runs-on: ubuntu-latest

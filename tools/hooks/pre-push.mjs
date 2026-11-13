@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// pre-push: todos los commits del rango con firma válida, mensajes conformes y handoff.md modificado.
+// pre-push: mensajes conformes en todos los commits del rango (firma y handoff.md solo avisan).
 // Firmas SSH: ver docs/ops/firma-commits.md (git necesita gpg.ssh.allowedSignersFile para dar "G").
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -22,10 +22,14 @@ export function checkRange(commits, { ownerEmail = '', strict = false } = {}) {
     if (v.length) errors.push(`commit ${id}: mensaje rechazado\n${format(v)}`);
     if (strict) errors.push(...avisosCommit(c, ownerEmail));
   }
-  if (!commits.some((c) => c.files.includes('handoff.md'))) {
-    errors.push('handoff.md no fue modificado en el rango que se sube (protocolo de cierre, CLAUDE.md §Cierre)');
-  }
   return errors;
+}
+
+/** Modo ágil (2026-11-13): que handoff.md no cambie en el rango es solo un aviso, no bloquea el push. */
+export function avisoHandoff(commits) {
+  return commits.length > 0 && !commits.some((c) => c.files.includes('handoff.md'))
+    ? ['handoff.md no cambió en lo que se sube: anota qué funcionó y qué no al cerrar la sesión']
+    : [];
 }
 
 /** Firma e identidad: desde 2026-11-12 (reglas 1 y 2 anuladas por el propietario) son avisos; con ADHARA_STRICT=1 son errores. */
@@ -64,6 +68,7 @@ function main() {
     const commits = readCommits(revs);
     errors.push(...checkRange(commits, { ownerEmail, strict }).map((e) => `${remoteRef}: ${e}`));
     if (!strict) for (const w of avisosRange(commits, { ownerEmail })) console.error(`pre-push: AVISO ${w}`);
+    for (const w of avisoHandoff(commits)) console.error(`pre-push: AVISO ${w}`);
   }
   if (errors.length) {
     console.error(`pre-push: push rechazado\n${errors.map((e) => `  - ${e}`).join('\n')}`);

@@ -6,7 +6,7 @@ import { PrismaSucursalRepository } from "@gym-app/infrastructure/persistence/pr
 import { Sidebar } from "@gym-app/ui/components/Sidebar";
 import { FeedbackProvider } from "@gym-app/ui/components/FeedbackOverlay";
 import { FeedbackDesdeUrl } from "@gym-app/ui/components/FeedbackDesdeUrl";
-import { RelojYTasaConHistorial } from "./RelojYTasaConHistorial";
+import { RelojLima } from "@gym-app/ui/components/RelojLima";
 import { BarraUsuario } from "./BarraUsuario";
 import { EncabezadoSidebar } from "./EncabezadoSidebar";
 import { NavegacionMobile } from "./NavegacionMobile";
@@ -36,7 +36,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
       <Suspense fallback={null}>
         <FeedbackDesdeUrl />
       </Suspense>
-      <RelojYTasaConHistorial />
+      <RelojLima />
       <ConEnSala>
       <div className="marca-agua-pagina flex min-h-dvh flex-col lg:flex-row" style={{ background: "var(--gx-ground)" }}>
         <AvisoCobros />
@@ -56,7 +56,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
             pie={<BarraUsuario nombre={usuario.nombre} email={usuario.email} fotoUrl={usuario.fotoUrl} />}
           />
         </div>
-        {/* pt-16 reserva el espacio del badge de RelojYTasa (fixed,
+        {/* pt-16 reserva el espacio del reloj (fixed,
             arriba a la derecha) — sin esto tapaba controles de página
             que también viven en esa esquina (ej. "Nuevo miembro" en
             /miembros). Se aplica acá, una sola vez, en vez de que cada

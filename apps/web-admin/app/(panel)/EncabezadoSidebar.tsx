@@ -1,15 +1,13 @@
-import { LogoBadge } from "@gym-app/ui/components/LogoBadge";
-
-// Mismo esquema visual del logo/nombre del gym que la pantalla de login
+// Mismo esquema visual del nombre del gym que la pantalla de login
 // (ver apps/web-admin/app/login/page.tsx) — acá en tamaño reducido, arriba
 // del menú del sidebar, con la sucursal activa de la sesión debajo.
+// Sin logotipo hasta que el propietario entregue los PNG originales (S-19).
 export function EncabezadoSidebar({ sucursalNombre }: { sucursalNombre: string }) {
   return (
     <div className="flex flex-col items-center gap-2 text-center">
-      <LogoBadge src="/branding/logo-adrenalina-gym.jpg" alt="Adrenalina Xtreme Gym" size={64} />
       <div>
         <div className="text-lg leading-none" style={{ fontFamily: '"Bebas Neue", sans-serif', letterSpacing: "0.04em" }}>
-          ADRENALINA <span style={{ color: "var(--gx-accent)" }}>XTREME</span>
+          ADHARA <span style={{ color: "var(--gx-accent)" }}>FIT</span>
         </div>
         <div
           className="mt-1 text-[10px] uppercase"

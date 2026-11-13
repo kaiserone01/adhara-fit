@@ -4,7 +4,7 @@ import { ThemeStyleTag } from "@gym-app/theming/ThemeStyleTag";
 import { temaAdrenalinaXtreme } from "@gym-app/theming/tokens";
 
 export const metadata: Metadata = {
-  title: "Adrenalina Xtreme Gym",
+  title: "Adhara Fit",
   description: "Panel de administración",
 };
 

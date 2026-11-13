@@ -8,6 +8,20 @@ Bitácora de sesiones: la más reciente arriba, solo se añaden entradas. El his
 - **Desplegado:** provisional en Easypanel (`docs/ops/easypanel.md`): imagen del `Dockerfile`, esquema con `prisma db push` al arrancar, alta del primer administrador con `tools/crear-administrador.mjs`.
 - **Preferencia del propietario:** cada código (ADR-nnn, S-nn, REQ…) que se mencione lleva al lado una descripción simple.
 
+## Sesión 2026-11-13 (noche) — Primer despliegue y tramo 1, corte 1
+**Qué funcionó**
+- El primer despliegue en Easypanel (rama `main`, commit del rediseño del Check-in) construyó bien (~8 min) y la app responde en su dominio con sesión iniciada: el alta provisional del administrador (`tools/crear-administrador.mjs`) funcionó contra la base real. Variables declaradas por el propietario: `DATABASE_URL`, `CHECKIN_CLAVE`, R2, `TZ`, `ADMIN_*` (y la `NEXT_PUBLIC_API_URL` antigua, que ya no se usa y se puede quitar).
+- Tramo 1, corte 1 (lo visible): marca «ADHARA FIT» en login, panel y título (sin logotipo hasta tener los PNG, S-19); el reloj del panel ahora es `RelojLima` (hora de Lima, es-PE) y ya no muestra la tasa BCV. Se borraron `RelojYTasa`, `RelojYTasaConHistorial` y `ModalHistorialTasas`.
+
+**Qué se vio en el despliegue y falta (tramo 1, corte 2 y siguientes)**
+- La interfaz sigue en venezolano: ~100 archivos con tasa/BCV, ~60 con bolívares, ~107 con USD, 27 con Caracas y 21 con `es-VE`; la paleta y el tema siguen siendo los de Adrenalina Xtreme (`temaAdrenalinaXtreme`).
+- **No quitar tablas ni columnas del esquema en este tramo:** `prisma db push` se niega a perder datos y el contenedor no arrancaría. Se retiran primero del código y las tablas se eliminan en la línea base (S-15).
+- La contraseña de la base de datos se pegó en el chat: hay que rotarla (y revisar que no se haya compartido nada más).
+
+**Siguiente**
+1. Tramo 1, corte 2: dinero solo en PEN (S-03) y fechas en Lima (S-02) en dominio, repositorios y pantallas; retirar tasa, padrón y bolívares (S-10).
+2. Paleta Adhara (`#231F20`, `#FFCB04`, `#FFFFFF`) como tema (S-19).
+
 ## Sesión 2026-11-13 (tarde) — Check-in Module
 **Decisiones del propietario**
 - El kiosco pasa a llamarse **Check-in Module**. Es un circuito cerrado (un gimnasio, un propietario): sin versión web del kiosco, todo va en un APK que lleva dentro la interfaz y habla con la base a través de `web-admin`. La clave es **una variable de entorno fija** (`CHECKIN_CLAVE`), sin claves por sede ni revocables desde el panel.

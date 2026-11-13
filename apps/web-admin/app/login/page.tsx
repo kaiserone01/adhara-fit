@@ -3,7 +3,6 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeSlash } from "@phosphor-icons/react";
-import { LogoBadge } from "@gym-app/ui/components/LogoBadge";
 
 interface SucursalParaElegir {
   id: string;
@@ -85,10 +84,9 @@ export default function LoginPage() {
           style={{ borderColor: "var(--gx-edge)", boxShadow: "0 40px 80px -40px rgba(0,0,0,0.75)" }}
         >
           <div className="flex flex-col items-center justify-center gap-6 p-10" style={{ background: "var(--gx-ground)" }}>
-            <LogoBadge src="/branding/logo-adrenalina-gym.jpg" alt="Adrenalina Xtreme Gym" />
             <div className="text-center">
               <div className="text-3xl" style={{ fontFamily: '"Bebas Neue", sans-serif', letterSpacing: "0.04em" }}>
-                ADRENALINA <span style={{ color: "var(--gx-accent)" }}>XTREME</span>
+                ADHARA <span style={{ color: "var(--gx-accent)" }}>FIT</span>
               </div>
               <div
                 className="mt-1 text-xs uppercase"

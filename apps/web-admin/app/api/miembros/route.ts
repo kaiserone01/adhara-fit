@@ -9,8 +9,10 @@ import { esTipoDocumento } from "@gym-app/domain/utils/documento";
 import { validarEntrenadorDeMiembro } from "@/app/(panel)/miembros/validarEntrenadorDeMiembro";
 import {
   crearMiembro,
+  CelularInvalidoError,
   CodigoSocioEnConflictoError,
   CodigosSocioAgotadosError,
+  CorreoInvalidoError,
   DocumentoDuplicadoError,
   DocumentoInvalidoError,
 } from "@gym-app/domain/use-cases/CrearMiembro";
@@ -71,6 +73,7 @@ export async function POST(req: NextRequest) {
         fechaInscripcion: body.fechaInscripcion ? new Date(body.fechaInscripcion) : null,
         fechaNacimiento: body.fechaNacimiento ? new Date(body.fechaNacimiento) : null,
         celular: body.celular ?? null,
+        correo: body.correo ?? null,
         fotoUrl: body.fotoUrl ?? null,
         entrenadorId: body.entrenadorId ?? null,
         planId: body.planId ?? null,
@@ -80,7 +83,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(miembro, { status: 201 });
   } catch (error) {
-    if (error instanceof DocumentoInvalidoError) {
+    if (error instanceof DocumentoInvalidoError || error instanceof CelularInvalidoError || error instanceof CorreoInvalidoError) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
     if (

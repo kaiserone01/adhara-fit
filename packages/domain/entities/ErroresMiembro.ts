@@ -5,6 +5,18 @@ export class DocumentoInvalidoError extends Error {
   }
 }
 
+export class CelularInvalidoError extends Error {
+  constructor() {
+    super("El celular debe tener 9 dígitos y empezar con 9.");
+  }
+}
+
+export class CorreoInvalidoError extends Error {
+  constructor() {
+    super("El correo electrónico no es válido.");
+  }
+}
+
 export class DocumentoDuplicadoError extends Error {
   constructor(eliminado = false) {
     super(

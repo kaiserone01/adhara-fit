@@ -2,8 +2,8 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type Ch
 import { mensajeDeTecla, type MensajeTeclado } from "./teclasNumpad";
 
 export const TIEMPO_INACTIVIDAD_MS = 7_000;
-// Mismo tope que el servidor (código de socio o documento, hasta 20 caracteres).
-export const MAX_LARGO_IDENTIFICADOR = 20;
+// Máscara de entrada: el documento más largo es el CE (12 dígitos); el servidor admite hasta 20 por tolerancia.
+export const MAX_LARGO_IDENTIFICADOR = 12;
 
 const sinSuscripcion = () => () => {};
 const esAndroid = () => /Android/i.test(navigator.userAgent);

@@ -26,6 +26,7 @@ type FilaMiembro = {
   fechaInscripcion: Date | null;
   fechaNacimiento: Date | null;
   celular: string | null;
+  correo: string | null;
   fotoUrl: string | null;
   entrenadorId: string | null;
   entrenador?: { nombre: string } | null;
@@ -52,6 +53,7 @@ function mapear(miembro: FilaMiembro): Miembro {
     fechaInscripcion: miembro.fechaInscripcion,
     fechaNacimiento: miembro.fechaNacimiento,
     celular: miembro.celular,
+    correo: miembro.correo,
     fotoUrl: miembro.fotoUrl,
     entrenadorId: miembro.entrenadorId,
     entrenadorNombre: miembro.entrenador?.nombre ?? null,

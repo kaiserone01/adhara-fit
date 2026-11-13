@@ -5,11 +5,25 @@ import { Miembro, CambiosMiembro } from "../entities/Miembro";
 import { fijarVencimiento } from "./FijarVencimiento";
 import { diaLima } from "../utils/vencimiento";
 import { MiembroFueraDeSucursalError } from "./ObtenerMiembro";
-import { DocumentoDuplicadoError, DocumentoInvalidoError, MiembroEliminadoError } from "../entities/ErroresMiembro";
+import {
+  CelularInvalidoError,
+  CorreoInvalidoError,
+  DocumentoDuplicadoError,
+  DocumentoInvalidoError,
+  MiembroEliminadoError,
+} from "../entities/ErroresMiembro";
 import { normalizarDocumento, requiereCodigoSocio, validarDocumento } from "../utils/documento";
+import { prepararCelular, prepararCorreo } from "../utils/contacto";
 import { conCodigoSocio } from "./AsignarCodigoSocio";
 
-export { MiembroFueraDeSucursalError, DocumentoDuplicadoError, DocumentoInvalidoError, MiembroEliminadoError };
+export {
+  MiembroFueraDeSucursalError,
+  CelularInvalidoError,
+  CorreoInvalidoError,
+  DocumentoDuplicadoError,
+  DocumentoInvalidoError,
+  MiembroEliminadoError,
+};
 
 // El plan no se cambia desde la ficha (S-07): lo hace `cambiarPlan`, que valora lo no consumido y cobra la diferencia.
 export type CambiosMiembroFicha = Omit<CambiosMiembro, "planId">;
@@ -68,6 +82,10 @@ export async function actualizarMiembro(
     cambios.tipoDocumento = tipoFinal;
     cambios.numeroDocumento = numeroFinal;
   }
+  // Celular y correo (opcionales): solo se validan si cambian respecto a lo guardado, para no bloquear la edición de un
+  // socio cuyo dato viene de antes de las validaciones.
+  if (cambios.celular !== undefined && cambios.celular !== antes.celular) cambios.celular = prepararCelular(cambios.celular);
+  if (cambios.correo !== undefined && cambios.correo !== antes.correo) cambios.correo = prepararCorreo(cambios.correo);
   // El código de socio ya asignado no cambia nunca; solo se asigna uno si el miembro pasa a CE sin tenerlo.
   delete cambios.codigoSocio;
   const necesitaCodigo = cambiaDocumento && requiereCodigoSocio(tipoFinal) && antes.codigoSocio === null;

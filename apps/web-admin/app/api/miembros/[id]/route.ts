@@ -17,6 +17,8 @@ import {
   MiembroNoEncontradoError as ActualizarMiembroNoEncontradoError,
   MiembroFueraDeSucursalError as ActualizarMiembroFueraDeSucursalError,
   MiembroEliminadoError,
+  CelularInvalidoError,
+  CorreoInvalidoError,
 } from "@gym-app/domain/use-cases/ActualizarMiembro";
 import type { CambiosMiembro } from "@gym-app/domain/entities/Miembro";
 import { validarEntrenadorDeMiembro } from "@/app/(panel)/miembros/validarEntrenadorDeMiembro";
@@ -70,6 +72,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     "fechaInscripcion",
     "fechaNacimiento",
     "celular",
+    "correo",
     "fotoUrl",
     "entrenadorId",
     "precioPlan",
@@ -95,6 +98,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     cambios.fechaNacimiento = body.fechaNacimiento ? new Date(body.fechaNacimiento) : null;
   }
   if (body.celular !== undefined) cambios.celular = body.celular;
+  if (body.correo !== undefined) cambios.correo = body.correo;
   if (body.fotoUrl !== undefined) cambios.fotoUrl = body.fotoUrl;
   if (body.entrenadorId !== undefined) cambios.entrenadorId = body.entrenadorId;
   if (body.precioPlan !== undefined) cambios.precioPlan = body.precioPlan;
@@ -122,6 +126,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
     if (error instanceof MiembroEliminadoError) {
       return NextResponse.json({ error: error.message }, { status: 409 });
+    }
+    if (error instanceof CelularInvalidoError || error instanceof CorreoInvalidoError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
     console.error("Error al actualizar miembro:", error);
     return NextResponse.json(

@@ -162,7 +162,8 @@ model Miembro {
   codigoSocio      String?       @unique // S-06: 4 dígitos, solo para CE (quien no puede teclear su documento)
   fechaInscripcion DateTime?
   fechaNacimiento  DateTime?
-  celular          String?
+  celular          String? // 9 dígitos (móvil peruano), opcional
+  correo           String? // opcional, en minúsculas
   fotoUrl          String?
   entrenadorId     String? // S-18: registro propio de entrenador, sin credenciales
   entrenador       Entrenador?   @relation(fields: [entrenadorId], references: [id])

@@ -8,6 +8,27 @@ Bitácora de sesiones: la más reciente arriba, solo se añaden entradas. El his
 - **Desplegado:** provisional en Easypanel (`docs/ops/easypanel.md`): imagen del `Dockerfile`, esquema con `prisma db push` al arrancar, alta del primer administrador con `tools/crear-administrador.mjs`.
 - **Preferencia del propietario:** cada código (ADR-nnn, S-nn, REQ…) que se mencione lleva al lado una descripción simple.
 
+## Sesión 2026-11-13 (noche, 23) — Máscaras y validación de documento y celular, correo opcional, selectores visuales
+**Qué se hizo**
+- **Máscaras de entrada** (`documento.ts`, `contacto.ts`): DNI solo dígitos, máximo 8; CE solo dígitos, máximo 12 (mínimo 9, **asumido, por validar**: las búsquedas no confirmaron la longitud del CE; SUNAT lo define alfanumérico de hasta 12). Al cambiar de tipo el número se recorta. El `pattern` del navegador avisa antes de enviar y el dominio sigue siendo la validación definitiva. Un documento anterior a las validaciones no bloquea guardar mientras no se toque.
+- **DNI «hasta 9»:** el DNI son 8 dígitos; el noveno carácter que se ve en el carné es el dígito verificador, aparte del número. El sistema guarda y busca solo los 8.
+- **Celular** (opcional): móvil peruano, 9 dígitos que empiezan con 9, máscara «987 654 321», acepta pegar con +51 y se guarda como 9 dígitos. Solo se valida si cambia respecto a lo guardado (los celulares anteriores no bloquean la edición).
+- **Correo** (nueva columna `Miembro.correo`, opcional, aditiva): junto al celular; se guarda en minúsculas y se valida (formato usuario@dominio.ext, máx. 254). También en la API (`/api/miembros`) y en la ficha de eliminados.
+- **Kiosco de check-in:** el tope de entrada baja de 20 a 12 dígitos (solo numpad, ya era solo dígitos); la búsqueda por código de 4 dígitos heredado sigue funcionando.
+- **Formulario del socio:** se quitó el texto del CE; el tipo de documento ahora son dos botones (DNI por defecto, CE) con el sombreado amarillo de los planes; el entrenador pasa a un selector visual (`SelectorEntrenador`: avatar y nombre; al elegir, las demás tarjetas se ocultan y la elegida crece, con «Cambiar» y «Quitar»). `EntrenadorResumen` incluye `fotoUrl`.
+
+**Qué funcionó**
+- Dominio 322 pruebas (nuevas: `contacto.test.ts`, máscara de documento, celular/correo en crear y actualizar), kiosco verde, `tsc` limpio, lint sin errores, build correcto.
+
+**Qué no funcionó / a tener en cuenta**
+- La columna `correo` se crea con el `prisma db push` del arranque (aditiva, sin `--accept-data-loss`).
+- El APK del kiosco lleva el tope de 12 empaquetado: hay que volver a compilarlo para que lo aplique.
+- Sin pruebas de interfaz para la máscara del formulario (solo las funciones puras).
+
+**Siguiente**
+1. Confirmar con Migraciones la longitud real del CE (9 o 12 dígitos) y ajustar `FORMATOS`/`PATRON_DOCUMENTO` si hace falta.
+2. Subir los logos de Yape y BCP y probar el alta («Guardar y cobrar»); probar el despliegue y respaldar; marca (S-19), APK y limpieza del esquema cuando corresponda.
+
 ## Sesión 2026-11-13 (noche, 22) — Ajustes del propietario: CE sin código, métodos con su nombre, reportes ocultos, alta sin primer pago
 **Qué se hizo**
 - **CE sin código de socio:** ya no se asigna ningún código nuevo (`requiereCodigoSocio` devuelve siempre `false`); se quitó el aviso «Se le asignará un código de 4 dígitos» y el CE entra con su propio número. El CE pasa a ser **solo dígitos (9 a 12)**, porque en el check-in se teclea con el numpad (un CE con letras no podría entrar). Los códigos ya asignados siguen sirviendo en el check-in y se muestran en la ficha. El kiosco dice «Ingresa tu DNI o carné de extranjería». Pruebas de dominio actualizadas (no borradas).

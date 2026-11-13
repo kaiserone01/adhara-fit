@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import { crearMiembro } from "./CrearMiembro";
 import { conCodigoSocio } from "./AsignarCodigoSocio";
 import {
+  CelularInvalidoError,
+  CorreoInvalidoError,
   CodigoSocioEnConflictoError,
   CodigosSocioAgotadosError,
   DocumentoDuplicadoError,
@@ -19,6 +21,7 @@ const base: Omit<DatosNuevoMiembro, "codigoSocio"> = {
   fechaInscripcion: null,
   fechaNacimiento: null,
   celular: null,
+  correo: null,
   fotoUrl: null,
   entrenadorId: null,
   planId: null,
@@ -56,6 +59,21 @@ describe("crearMiembro (S-06)", () => {
     const b = repo({ existente: true });
     await expect(crearMiembro({ miembros: b.miembros }, base)).rejects.toBeInstanceOf(DocumentoDuplicadoError);
     expect(a.creados.length + b.creados.length).toBe(0);
+  });
+
+  it("celular y correo son opcionales: vacíos quedan en null, con texto se guardan normalizados", async () => {
+    const { miembros, creados } = repo();
+    await crearMiembro({ miembros }, { ...base, celular: "", correo: "" });
+    await crearMiembro({ miembros }, { ...base, numeroDocumento: "87654321", celular: "987 654 321", correo: " Ana@Correo.COM " });
+    expect(creados[0]).toMatchObject({ celular: null, correo: null });
+    expect(creados[1]).toMatchObject({ celular: "987654321", correo: "ana@correo.com" });
+  });
+
+  it("rechaza un celular o un correo con formato inválido sin crear", async () => {
+    const { miembros, creados } = repo();
+    await expect(crearMiembro({ miembros }, { ...base, celular: "12345" })).rejects.toBeInstanceOf(CelularInvalidoError);
+    await expect(crearMiembro({ miembros }, { ...base, correo: "sin-arroba" })).rejects.toBeInstanceOf(CorreoInvalidoError);
+    expect(creados.length).toBe(0);
   });
 
   it("CE entra con su propio número: no recibe código de socio", async () => {

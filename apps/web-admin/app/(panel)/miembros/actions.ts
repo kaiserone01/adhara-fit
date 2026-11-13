@@ -13,6 +13,8 @@ import {
   crearMiembro,
   CodigoSocioEnConflictoError,
   CodigosSocioAgotadosError,
+  CelularInvalidoError,
+  CorreoInvalidoError,
   DocumentoDuplicadoError,
   DocumentoInvalidoError,
 } from "@gym-app/domain/use-cases/CrearMiembro";
@@ -89,6 +91,8 @@ function leerDocumento(formData: FormData): { tipoDocumento: TipoDocumento; nume
 function esErrorDeDocumento(error: unknown): error is Error {
   return (
     error instanceof DocumentoInvalidoError ||
+    error instanceof CelularInvalidoError ||
+    error instanceof CorreoInvalidoError ||
     error instanceof DocumentoDuplicadoError ||
     error instanceof CodigosSocioAgotadosError ||
     error instanceof CodigoSocioEnConflictoError
@@ -140,6 +144,7 @@ export async function crearMiembroAction(
         fechaInscripcion: leerFecha(formData.get("fechaInscripcion")) ?? inicioDelDiaLima(new Date()),
         fechaNacimiento: null,
         celular: formData.get("celular")?.toString() || null,
+        correo: formData.get("correo")?.toString() || null,
         fotoUrl,
         entrenadorId: formData.get("entrenadorId")?.toString() || null,
         planId,
@@ -211,6 +216,7 @@ export async function actualizarMiembroAction(
           numeroDocumento: documento.numeroDocumento,
           sucursalId: resolverSucursalId(sucursalId),
           celular: formData.get("celular")?.toString() || null,
+          correo: formData.get("correo")?.toString() || null,
           entrenadorId: formData.get("entrenadorId")?.toString() || null,
           precioPlan,
           ...(fotoUrl ? { fotoUrl } : {}),

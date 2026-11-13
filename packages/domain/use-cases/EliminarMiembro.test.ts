@@ -190,7 +190,7 @@ describe("un socio eliminado en el resto del sistema (S-09)", () => {
     const deps = { miembros: { buscarPorDocumento: async () => ({ id: "m1", estado: "BAJA" }) } } as unknown as Parameters<typeof crearMiembro>[0];
     const error = await crearMiembro(deps, {
       organizacionId: "org", sucursalId: null, nombre: "Ana", tipoDocumento: "DNI", numeroDocumento: "12345678",
-      fechaInscripcion: null, fechaNacimiento: null, celular: null, fotoUrl: null, entrenadorId: null, planId: null, precioPlan: 0,
+      fechaInscripcion: null, fechaNacimiento: null, celular: null, correo: null, fotoUrl: null, entrenadorId: null, planId: null, precioPlan: 0,
     }).catch((e) => e);
     expect(error).toBeInstanceOf(DocumentoDuplicadoError);
     expect(error.message).toMatch(/eliminado/);

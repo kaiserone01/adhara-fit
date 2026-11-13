@@ -14,6 +14,21 @@ const FORMATOS: Record<TipoDocumento, RegExp> = {
   CE: /^[0-9]{9,12}$/,
 };
 
+// Máximo de caracteres que admite la máscara de entrada de cada tipo. El DNI son 8 dígitos (el dígito verificador
+// que lleva el carné tras el guion no forma parte del número); el CE admite hasta 12 (asumido, por validar).
+export const LARGO_MAXIMO_DOCUMENTO: Record<TipoDocumento, number> = { DNI: 8, CE: 12 };
+
+/** Máscara de entrada: solo dígitos y el largo máximo del tipo. Sirve al teclear, pegar o cambiar de tipo. */
+export function aplicarMascaraDocumento(tipo: TipoDocumento, texto: string): string {
+  return texto.replace(/\D/g, "").slice(0, LARGO_MAXIMO_DOCUMENTO[tipo]);
+}
+
+/** Patrón HTML (`pattern`) del número del tipo, para que el navegador avise antes de enviar. */
+export const PATRON_DOCUMENTO: Record<TipoDocumento, string> = {
+  DNI: "[0-9]{8}",
+  CE: "[0-9]{9,12}",
+};
+
 /** Documento para los reportes: 5 puntos y los últimos 3 caracteres («•••••678»); solo puntos si tiene menos de 3. */
 export function enmascararDocumento(numero: string): string {
   const puntos = "•••••";

@@ -19,10 +19,20 @@ import type { SucursalResumen } from "@gym-app/domain/entities/SucursalResumen";
 import type { Plan } from "@gym-app/domain/entities/Plan";
 import type { MetodoPago } from "@gym-app/domain/entities/MetodoPago";
 import {
+  aplicarMascaraDocumento,
   ETIQUETA_TIPO_DOCUMENTO,
+  LARGO_MAXIMO_DOCUMENTO,
+  PATRON_DOCUMENTO,
   TIPOS_DOCUMENTO,
   type TipoDocumento,
 } from "@gym-app/domain/utils/documento";
+import {
+  aplicarMascaraCelular,
+  LARGO_MAXIMO_CORREO,
+  PATRON_CELULAR_MASCARA,
+  validarCelular,
+} from "@gym-app/domain/utils/contacto";
+import { SelectorEntrenador } from "./SelectorEntrenador";
 
 export interface ValoresFormularioMiembro {
   nombre: string;
@@ -30,6 +40,7 @@ export interface ValoresFormularioMiembro {
   numeroDocumento: string;
   codigoSocio: string | null;
   celular: string;
+  correo: string;
   fechaInscripcion: string; // yyyy-mm-dd, solo informativa (no se envía al guardar)
   fechaVencimiento?: string; // yyyy-mm-dd, "" si no tiene
   fechaUltimoPago?: string; // yyyy-mm-dd, "" si no tiene
@@ -127,7 +138,13 @@ export function FormularioMiembro({
   const [tipoDocumento, setTipoDocumento] = useState<TipoDocumento>(valoresIniciales?.tipoDocumento ?? "DNI");
   const [numeroDocumento, setNumeroDocumento] = useState(valoresIniciales?.numeroDocumento ?? "");
   const codigoSocioActual = valoresIniciales?.codigoSocio ?? null;
-  const [celular, setCelular] = useState(valoresIniciales?.celular ?? "");
+  const sinTocarDocumento =
+    !!valoresIniciales && tipoDocumento === valoresIniciales.tipoDocumento && numeroDocumento === valoresIniciales.numeroDocumento;
+  // El celular guardado se muestra con la máscara si es válido; uno anterior a las validaciones se muestra tal cual.
+  const celularInicial = valoresIniciales?.celular ?? "";
+  const celularInicialMostrado = validarCelular(celularInicial) ? aplicarMascaraCelular(celularInicial) : celularInicial;
+  const [celular, setCelular] = useState(celularInicialMostrado);
+  const [correo, setCorreo] = useState(valoresIniciales?.correo ?? "");
   // Solo informativa: en Nuevo miembro se puede poner una fecha pasada (por defecto hoy) y en la ficha no se edita ni se envía.
   const [fechaInscripcion, setFechaInscripcion] = useState(valoresIniciales?.fechaInscripcion ?? hoyISO());
   const [fechaUltimoPago, setFechaUltimoPago] = useState(valoresIniciales?.fechaUltimoPago ?? "");
@@ -156,7 +173,7 @@ export function FormularioMiembro({
   // Si el entrenador ya asignado está desactivado, se agrega igual para no perder el dato al editar.
   const entrenadores =
     valoresIniciales?.entrenadorId && !entrenadoresActivos.some((e) => e.id === valoresIniciales.entrenadorId)
-      ? [...entrenadoresActivos, { id: valoresIniciales.entrenadorId, nombre: "(entrenador actual)" }]
+      ? [...entrenadoresActivos, { id: valoresIniciales.entrenadorId, nombre: "(entrenador actual)", fotoUrl: null }]
       : entrenadoresActivos;
 
   const [planId, setPlanId] = useState<string>(() => {
@@ -190,7 +207,8 @@ export function FormularioMiembro({
     esEdicion &&
     !!valoresIniciales &&
     (nombre !== valoresIniciales.nombre ||
-      celular !== valoresIniciales.celular ||
+      celular !== celularInicialMostrado ||
+      correo !== valoresIniciales.correo ||
       (editaFechas && fechaUltimoPago !== (valoresIniciales.fechaUltimoPago ?? "")) ||
       (editaFechas && fechaVencimiento !== (valoresIniciales.fechaVencimiento ?? "")) ||
       sucursalId !== (valoresIniciales.sucursalId ?? ID_AMBAS_SEDES) ||
@@ -293,30 +311,51 @@ export function FormularioMiembro({
             />
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1.5">
-                <label className="flex flex-col gap-1.5 text-sm" style={{ color: "var(--gx-muted)" }}>
-                  Tipo de documento
-                  <select
-                    name="tipoDocumento"
-                    value={tipoDocumento}
-                    onChange={(e) => setTipoDocumento(e.target.value as TipoDocumento)}
-                    className="rounded-lg border px-3 py-2"
-                    style={{ borderColor: "var(--gx-edge)", background: "var(--gx-surface)", color: "var(--gx-ink)" }}
-                  >
-                    {TIPOS_DOCUMENTO.map((t) => (
-                      <option key={t} value={t}>
-                        {ETIQUETA_TIPO_DOCUMENTO[t]}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+              <div className="flex flex-col gap-1.5 text-sm" style={{ color: "var(--gx-muted)" }} role="group" aria-label="Tipo de documento">
+                Tipo de documento
+                <input type="hidden" name="tipoDocumento" value={tipoDocumento} />
+                <div className="grid grid-cols-2 gap-2">
+                  {TIPOS_DOCUMENTO.map((tipo) => {
+                    const seleccionado = tipoDocumento === tipo;
+                    return (
+                      <button
+                        key={tipo}
+                        type="button"
+                        aria-pressed={seleccionado}
+                        onClick={() => {
+                          setTipoDocumento(tipo);
+                          setNumeroDocumento((actual) => aplicarMascaraDocumento(tipo, actual));
+                        }}
+                        className="min-h-11 rounded-lg border-2 px-3 text-sm font-semibold transition-colors duration-150 active:scale-[0.98]"
+                        style={
+                          seleccionado
+                            ? {
+                                borderColor: "var(--gx-accent)",
+                                background: "color-mix(in srgb, var(--gx-accent) 12%, transparent)",
+                                color: "var(--gx-ink)",
+                              }
+                            : { borderColor: "var(--gx-edge)", color: "var(--gx-muted)" }
+                        }
+                      >
+                        {ETIQUETA_TIPO_DOCUMENTO[tipo]}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
               <Input
                 name="numeroDocumento"
                 label="Número de documento"
                 required
+                inputMode="numeric"
+                autoComplete="off"
+                maxLength={LARGO_MAXIMO_DOCUMENTO[tipoDocumento]}
+                placeholder={tipoDocumento === "DNI" ? "12345678" : "123456789"}
+                // Un documento anterior a las validaciones no bloquea guardar mientras no se toque.
+                pattern={sinTocarDocumento ? undefined : PATRON_DOCUMENTO[tipoDocumento]}
+                title={tipoDocumento === "DNI" ? "8 dígitos" : "Entre 9 y 12 dígitos"}
                 value={numeroDocumento}
-                onChange={(e) => setNumeroDocumento(e.target.value)}
+                onChange={(e) => setNumeroDocumento(aplicarMascaraDocumento(tipoDocumento, e.target.value))}
               />
             </div>
             {codigoSocioActual && (
@@ -324,18 +363,31 @@ export function FormularioMiembro({
                 Código de socio (para registrar su asistencia): <strong style={{ color: "var(--gx-ink)" }}>{codigoSocioActual}</strong>
               </p>
             )}
-            {tipoDocumento === "CE" && (
-              <p className="text-sm" style={{ color: "var(--gx-muted)" }}>
-                El socio registra su asistencia con el número de su carné de extranjería (solo números).
-              </p>
-            )}
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Input
                 name="celular"
-                label="Celular"
+                label="Celular (opcional)"
+                type="tel"
+                inputMode="tel"
+                autoComplete="off"
+                maxLength={11}
+                placeholder="987 654 321"
+                pattern={celular === celularInicialMostrado ? undefined : PATRON_CELULAR_MASCARA}
+                title="9 dígitos, empieza con 9"
                 value={celular}
-                onChange={(e) => setCelular(e.target.value)}
+                onChange={(e) => setCelular(aplicarMascaraCelular(e.target.value))}
+              />
+              <Input
+                name="correo"
+                label="Correo (opcional)"
+                type="email"
+                inputMode="email"
+                autoComplete="off"
+                maxLength={LARGO_MAXIMO_CORREO}
+                placeholder="nombre@correo.com"
+                value={correo}
+                onChange={(e) => setCorreo(e.target.value.replace(/s/g, ""))}
               />
             </div>
 
@@ -471,22 +523,7 @@ export function FormularioMiembro({
           </div>
           )}
 
-          <label className="mt-4 flex flex-col gap-1.5 text-sm" style={{ color: "var(--gx-muted)" }}>
-            Entrenador (opcional)
-            <select
-              name="entrenadorId"
-              value={entrenadorId}
-              onChange={(e) => setEntrenadorId(e.target.value)}
-              className="min-h-11 rounded-lg border px-3 gx-campo"
-            >
-              <option value="">Sin entrenador</option>
-              {entrenadores.map((entrenador) => (
-                <option key={entrenador.id} value={entrenador.id}>
-                  {entrenador.nombre}
-                </option>
-              ))}
-            </select>
-          </label>
+          <SelectorEntrenador entrenadores={entrenadores} valor={entrenadorId} onCambio={setEntrenadorId} />
 
           {!esEdicion && (
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">

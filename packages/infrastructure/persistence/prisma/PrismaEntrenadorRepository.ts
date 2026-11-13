@@ -13,7 +13,7 @@ export class PrismaEntrenadorRepository implements IEntrenadorRepository {
   }
 
   listarActivos(): Promise<EntrenadorResumen[]> {
-    return this.prisma.entrenador.findMany({ where: { activo: true }, select: { id: true, nombre: true }, orderBy: { nombre: "asc" } });
+    return this.prisma.entrenador.findMany({ where: { activo: true }, select: { id: true, nombre: true, fotoUrl: true }, orderBy: { nombre: "asc" } });
   }
 
   buscarPorId(id: string): Promise<Entrenador | null> {

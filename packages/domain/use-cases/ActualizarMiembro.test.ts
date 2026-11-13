@@ -1,10 +1,12 @@
 import { describe, expect, test } from "vitest";
 import { actualizarMiembro, DocumentoDuplicadoError, FechasIncoherentesError } from "./ActualizarMiembro";
-import { DocumentoInvalidoError } from "../entities/ErroresMiembro";
+import { CelularInvalidoError, CorreoInvalidoError, DocumentoInvalidoError } from "../entities/ErroresMiembro";
 import type { CambiosMiembro } from "../entities/Miembro";
 
 type OpcionesMiembro = {
   planId?: string | null;
+  celular?: string | null;
+  correo?: string | null;
   fechaUltimoPago?: Date | null;
   fechaVencimiento?: Date | null;
 };
@@ -19,7 +21,7 @@ function crearDeps(documentoOcupadoPor: string | null = null, miembro: OpcionesM
     miembros: {
       buscarPorId: async () => ({
         id: "m1", sucursalId: null, planId: "p1", tipoDocumento: "DNI", numeroDocumento: "11111111", codigoSocio: null,
-        fechaUltimoPago: null, fechaVencimiento: null, ...miembro,
+        celular: null, correo: null, fechaUltimoPago: null, fechaVencimiento: null, ...miembro,
       }),
       buscarPorDocumento: async () => (documentoOcupadoPor ? { id: documentoOcupadoPor } : null),
       maximoCodigoSocio: async () => 41,
@@ -194,5 +196,28 @@ describe("actualizarMiembro — fecha de nacimiento", () => {
     const nacimiento = new Date(1990, 9, 8);
     await actualizarMiembro(deps, { ...base, cambios: { fechaNacimiento: nacimiento } });
     expect(cambiosGuardados[0]).toEqual({ fechaNacimiento: nacimiento });
+  });
+});
+
+describe("actualizarMiembro — celular y correo", () => {
+  test("un celular o correo nuevo se valida y se guarda normalizado; vacío lo borra", async () => {
+    const { deps, cambiosGuardados } = crearDeps();
+    await actualizarMiembro(deps, { ...base, cambios: { celular: "+51 987 654 321", correo: "Ana@Correo.com" } });
+    await actualizarMiembro(deps, { ...base, cambios: { celular: "", correo: "" } });
+    expect(cambiosGuardados[0]).toMatchObject({ celular: "987654321", correo: "ana@correo.com" });
+    expect(cambiosGuardados[1]).toMatchObject({ celular: null, correo: null });
+  });
+
+  test("rechaza un celular o un correo inválido", async () => {
+    const { deps, cambiosGuardados } = crearDeps();
+    await expect(actualizarMiembro(deps, { ...base, cambios: { celular: "123" } })).rejects.toBeInstanceOf(CelularInvalidoError);
+    await expect(actualizarMiembro(deps, { ...base, cambios: { correo: "x@y" } })).rejects.toBeInstanceOf(CorreoInvalidoError);
+    expect(cambiosGuardados.length).toBe(0);
+  });
+
+  test("un celular anterior a las validaciones no bloquea guardar mientras no se cambie", async () => {
+    const { deps, cambiosGuardados } = crearDeps(null, { celular: "01-234567" });
+    await actualizarMiembro(deps, { ...base, cambios: { nombre: "Ana", celular: "01-234567" } });
+    expect(cambiosGuardados[0]).toMatchObject({ celular: "01-234567" });
   });
 });

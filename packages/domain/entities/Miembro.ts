@@ -13,6 +13,7 @@ export interface Miembro {
   fechaInscripcion: Date | null;
   fechaNacimiento: Date | null;
   celular: string | null;
+  correo: string | null;
   fotoUrl: string | null;
   entrenadorId: string | null;
   entrenadorNombre: string | null;
@@ -38,6 +39,7 @@ export interface DatosNuevoMiembro {
   fechaInscripcion: Date | null;
   fechaNacimiento: Date | null;
   celular: string | null;
+  correo: string | null;
   fotoUrl: string | null;
   entrenadorId: string | null;
   planId: string | null;
@@ -55,6 +57,7 @@ export interface CambiosMiembro {
   fechaInscripcion?: Date | null;
   fechaNacimiento?: Date | null;
   celular?: string | null;
+  correo?: string | null;
   fotoUrl?: string | null;
   entrenadorId?: string | null;
   planId?: string | null;

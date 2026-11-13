@@ -51,6 +51,7 @@ export function FichaMiembroEliminado({
           <Fila etiqueta="Documento" valor={descripcionDocumento(miembro.tipoDocumento, miembro.numeroDocumento)} />
           {miembro.codigoSocio && <Fila etiqueta="Código de socio" valor={miembro.codigoSocio} />}
           <Fila etiqueta="Celular" valor={miembro.celular ?? "—"} />
+          <Fila etiqueta="Correo" valor={miembro.correo ?? "—"} />
           <Fila etiqueta="Plan" valor={nombrePlan ? `${nombrePlan} · ${formatearSoles(miembro.precioPlan)}` : "Sin plan"} />
           <Fila etiqueta="Vencimiento" valor={miembro.fechaVencimiento ? FORMATO_FECHA.format(miembro.fechaVencimiento) : "—"} />
           <Fila etiqueta="Eliminado el" valor={miembro.bajaEn ? FORMATO_FECHA_HORA.format(miembro.bajaEn) : "—"} />

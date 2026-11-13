@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  aplicarMascaraDocumento,
   esCodigoSocio,
   formatearCodigoSocio,
   normalizarDocumento,
@@ -28,6 +29,14 @@ describe("documento (S-06)", () => {
     expect(validarDocumento("CE", "1234567890123")).toBe(false);
     expect(validarDocumento("CE", "ABC123456")).toBe(false); // con letras no se puede teclear en el check-in
     expect(validarDocumento("CE", "12345678*")).toBe(false);
+  });
+
+  it("máscara de entrada: solo dígitos y el largo máximo del tipo", () => {
+    expect(aplicarMascaraDocumento("DNI", "1234-5678")).toBe("12345678");
+    expect(aplicarMascaraDocumento("DNI", "123456789")).toBe("12345678");
+    expect(aplicarMascaraDocumento("DNI", "12A3")).toBe("123");
+    expect(aplicarMascaraDocumento("CE", "1234567890123")).toBe("123456789012");
+    expect(aplicarMascaraDocumento("DNI", "1234567890")).toBe("12345678"); // al pasar de CE a DNI se recorta
   });
 
   it("código de socio: exactamente cuatro dígitos; ya no se asigna a ningún tipo", () => {

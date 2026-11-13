@@ -1,8 +1,8 @@
 "use client";
 
-import { ShieldCheck } from "@phosphor-icons/react";
 import { motion, useReducedMotion } from "motion/react";
 
+/** Firma del pie de la pantalla de acceso. */
 export function SecurityIndicator() {
   const reducir = useReducedMotion();
 
@@ -15,8 +15,7 @@ export function SecurityIndicator() {
       transition={{ duration: 0.6, delay: 1.6 }}
     >
       <span aria-hidden="true" className="hidden h-px w-16 md:block" style={{ background: "var(--gx-edge)" }} />
-      <ShieldCheck size={22} weight="regular" aria-hidden="true" />
-      <span>Acceso seguro</span>
+      <span className="tracking-wide">by zipnegocios</span>
       <span aria-hidden="true" className="hidden h-px w-16 md:block" style={{ background: "var(--gx-edge)" }} />
     </motion.div>
   );

@@ -1,0 +1,144 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "22"
+  GITLEAKS_VERSION: "8.21.2"
+
+jobs:
+  repo:
+    name: Verificaciones del repositorio
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - run: node tools/verificar-repo.mjs
+      - run: node tools/verificar-env.mjs
+      - run: node --test "tools/*.test.mjs"
+      - run: node tools/harness-selftest.mjs
+      - run: node tools/spec-lint.mjs
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run generate --workspace @gym-app/db
+        env:
+          DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+      - run: npm run lint
+
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run generate --workspace @gym-app/db
+        env:
+          DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+      # web-admin tiene 1 error de tipos preexistente (docs/linea-base-tests.md): no se mide contra cero.
+      - run: npx turbo run typecheck --filter=kiosk --filter=vitrina
+      - name: Tipos de web-admin frente a la línea base
+        run: |
+          n=$(npx tsc --noEmit -p apps/web-admin 2>&1 | grep -c 'error TS' || true)
+          echo "errores de tipos en web-admin: $n (línea base 1)"
+          test "$n" -le 1
+
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16.4-alpine
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/postgres
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run generate --workspace @gym-app/db
+      - run: npm test
+      - run: node --test tools/base-efimera.integracion.test.mjs
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run generate --workspace @gym-app/db
+        env:
+          DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+      # vitrina descarga tipografías de Google Fonts y falla en la línea base; S-19 las autoaloja.
+      - run: npx turbo run build --filter=web-admin --filter=kiosk
+
+  audit:
+    name: npm audit frente a la línea base
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - run: node tools/auditar-npm.mjs
+
+  gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Instalar gitleaks ${{ env.GITLEAKS_VERSION }}
+        run: |
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" -o gitleaks.tgz
+          mkdir -p "$RUNNER_TEMP/gitleaks" && tar -xzf gitleaks.tgz -C "$RUNNER_TEMP/gitleaks" gitleaks
+          echo "$RUNNER_TEMP/gitleaks" >> "$GITHUB_PATH"
+      - name: Escanear el rango
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            rango="${{ github.event.pull_request.base.sha }}..${{ github.sha }}"
+          elif [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
+            rango=""
+          else
+            rango="${{ github.event.before }}..${{ github.sha }}"
+          fi
+          if [ -n "$rango" ]; then
+            gitleaks detect --source . --config .gitleaks.toml --redact --log-opts="$rango"
+          else
+            gitleaks detect --source . --config .gitleaks.toml --redact
+          fi

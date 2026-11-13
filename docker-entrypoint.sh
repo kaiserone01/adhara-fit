@@ -8,4 +8,8 @@ set -e
 
 (cd migrate-toolkit/packages/db && ../../node_modules/.bin/prisma db push --config prisma7.config.ts)
 
+# Alta provisional del primer administrador (adelanto de S-15): solo actúa si la tabla de usuarios está vacía.
+# Si ADMIN_NOMBRE o ADMIN_CORREO faltan, avisa y el servidor arranca igual (sin usuario para entrar).
+node migrate-toolkit/tools/crear-administrador.mjs || echo "AVISO: no se creó el administrador inicial (ver el mensaje anterior)."
+
 exec node apps/web-admin/server.js

@@ -15,6 +15,8 @@ Solo nombres; los valores van en Easypanel, nunca en el repositorio.
 | `NEXT_PUBLIC_API_URL` | URL pública de la aplicación |
 | `R2_ACCOUNT_ID`, `R2_BUCKET_NAME`, `R2_PUBLIC_URL`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` | Almacenamiento de archivos (Cloudflare R2) |
 | `TZ` | `America/Lima` |
+| `ADMIN_NOMBRE`, `ADMIN_CORREO` | Nombre y correo del primer administrador. Solo se leen si la tabla de usuarios está vacía |
+| `ADMIN_CONTRASENA_INICIAL` | Opcional, de 8 a 128 caracteres. Si falta, se genera una de 20 y se imprime una sola vez en el registro del arranque |
 
 ## Qué hace al arrancar
 `docker-entrypoint.sh` ejecuta `prisma db push` y luego inicia el servidor: en una base vacía crea las 25 tablas; si un cambio de esquema perdiera datos, se niega y el contenedor no arranca (no usa `--accept-data-loss`). Es provisional: S-15 lo reemplaza por el servicio `migrar` con migraciones versionadas.

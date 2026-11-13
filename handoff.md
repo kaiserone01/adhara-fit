@@ -8,6 +8,26 @@ Bitácora de sesiones: la más reciente arriba, solo se añaden entradas. El his
 - **Desplegado:** provisional en Easypanel (`docs/ops/easypanel.md`): imagen del `Dockerfile`, esquema con `prisma db push` al arrancar, alta del primer administrador con `tools/crear-administrador.mjs`.
 - **Preferencia del propietario:** cada código (ADR-nnn, S-nn, REQ…) que se mencione lleva al lado una descripción simple.
 
+## Sesión 2026-11-13 (diseño, rama de diseño) — Rediseño del login
+**Qué se hizo**
+- `apps/web-admin/app/login/page.tsx` queda en 3 líneas y renderiza `components/auth/LoginExperience.tsx`. Nuevos componentes en `apps/web-admin/components/auth/`: fondo con zoom lento y parallax, franjas diagonales y destellos, tarjeta de cristal, panel de marca, formulario (estados normal/cargando/éxito/error con vibración), indicador «Acceso seguro» y `login.css`.
+- La lógica del login (dos pasos, `/api/auth/login` y `/api/auth/login/sucursal`) se movió sin cambios de contrato a `useLoginFlow.ts`; solo se añadió `try/catch` por si falla la red («No se pudo conectar…»).
+- Versión mobile: tarjeta apilada (marca arriba, formulario abajo), lema y «Acceso seguro» debajo, campos y botón de 48 px.
+- Dependencia nueva: `motion` (en web-admin) para las entradas escalonadas y los estados del botón.
+- Respeta `prefers-reduced-motion` (sin zoom, parallax, destellos ni pulso) y solo anima `transform`/`opacity`.
+
+**Qué funcionó**
+- `tsc --noEmit` sin errores (tras `next typegen`), eslint sin errores en login, `next build` compila y `/login` responde 200.
+
+**Qué no funcionó / pendiente**
+- No se pudo revisar el resultado en el navegador (extensión de Chrome no conectada): falta la revisión visual en desktop y mobile.
+- Falta la foto de fondo: debe guardarse como `apps/web-admin/public/branding/login-fondo.webp`; hasta entonces se ve solo el degradado.
+- Etiquetas flotantes de la propuesta no se hicieron: se dejaron las etiquetas fijas sobre el campo, como en el mockup.
+- Al construir en un clon nuevo hace falta `npm run generate -w @gym-app/db` antes de `next build` (cliente de Prisma no versionado).
+
+**Siguiente**
+- Colocar la foto, revisar a ojo (≈1672×941 y ≈390 px) y ajustar polígonos de las franjas y posición del fondo.
+
 ## Sesión 2026-11-13 (noche, 4) — Tramo 1: solo soles y hora de Lima
 **Qué se hizo**
 - Dinero solo en PEN con dos decimales: `packages/domain/utils/formatearSoles.ts` («S/ 1,234.50», con prueba) reemplaza todos los `# Handoff — Adhara Fit

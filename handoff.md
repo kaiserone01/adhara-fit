@@ -8,6 +8,19 @@ Bitácora de sesiones: la más reciente arriba, solo se añaden entradas. El his
 - **Desplegado:** provisional en Easypanel (`docs/ops/easypanel.md`): imagen del `Dockerfile`, esquema con `prisma db push` al arrancar, alta del primer administrador con `tools/crear-administrador.mjs`.
 - **Preferencia del propietario:** cada código (ADR-nnn, S-nn, REQ…) que se mencione lleva al lado una descripción simple.
 
+## Sesión 2026-11-13 (noche, 3) — Workflow de los APK
+**Qué se hizo**
+- `.github/workflows/apk.yml` (manual, `workflow_dispatch`): para Check-in y Vitrina hace `npm ci`, build del export estático, `npm run sync` de Capacitor, `gradlew assembleDebug` (Java 21) y sube el APK cifrado con `openssl` (AES-256, `APK_PASSPHRASE`) como artefacto de 14 días. Descifrado y pasos en `apps/checkin-tv/README.md` §3.
+- El propietario cargó en GitHub los secrets del repositorio `CHECKIN_CLAVE` y `APK_PASSPHRASE` (no como Environment secrets: el workflow no usa `environment`). **Falta la variable del repositorio `CHECKIN_API_URL`** (Settings → Secrets and variables → Actions → Variables); el workflow falla con mensaje claro si no existe.
+
+**Qué no funcionó / hallazgo**
+- `build.gradle` firma con `android/app/debug.keystore`, que no está en el repositorio (`*.keystore` en `.gitignore`; el README decía que sí). El workflow genera una llave nueva en cada ejecución: **cada APK nuevo exige desinstalar el anterior del TV**. Si molesta, la salida es guardar un keystore fijo como secret en base64.
+- Sin verificar: el workflow no se ha ejecutado (primer intento pendiente); posibles fallos: licencias/plataforma Android 36 en el runner o el Gradle wrapper.
+
+**Siguiente**
+1. Crear la variable `CHECKIN_API_URL` y lanzar el workflow `apk`; anotar aquí el resultado.
+2. Probar el APK en el TV real (lista en `apps/checkin-tv/README.md` §6).
+
 ## Sesión 2026-11-13 (noche, 2) — Paleta y logotipos de Adhara
 **Decisiones del propietario**
 - **Se queda Prisma; Drizzle (ADR-022 / S-22) queda descartado**, para evitar el refactor. El ORM ya no está pendiente.

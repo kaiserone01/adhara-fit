@@ -18,7 +18,15 @@ Código: `capacitor/` (proyecto Capacitor, deliberadamente **no** es un workspac
 
 1. Exportar la interfaz: `npm run build --workspace checkin` (genera `apps/checkin/out`).
 2. En `apps/checkin-tv/capacitor/`: `CHECKIN_API_URL=https://<web-admin> CHECKIN_CLAVE=<clave> npm run sync`. `CHECKIN_API_URL` debe ser https, sin barra final; `CHECKIN_CLAVE` es el valor de la variable `CHECKIN_CLAVE` de `web-admin` (mínimo 16 caracteres). Genera `www/` y `capacitor.config.json`, que están en `.gitignore`.
-3. Compilar el APK con Gradle (`capacitor/android`). **El workflow de GitHub Actions que lo hace y cifra el artefacto aún no está escrito**; el APK no se ha compilado ni probado.
+3. Compilar el APK con Gradle (`capacitor/android`, `./gradlew assembleDebug`, Java 21).
+
+**Compilación en GitHub Actions (la forma normal).** Workflow `apk` (`.github/workflows/apk.yml`, Actions → apk → Run workflow): compila el APK del Check-in y el de la Vitrina y sube cada uno **cifrado** como artefacto (`adhara-checkin.apk.enc`, `adhara-vitrina.apk.enc`, 14 días). Necesita, en el repositorio: secrets `CHECKIN_CLAVE` y `APK_PASSPHRASE`, y la variable `CHECKIN_API_URL` (https, sin barra final). La vitrina usa la misma clave y URL. Para descifrar el artefacto descargado:
+
+```
+openssl enc -d -aes-256-cbc -pbkdf2 -pass env:APK_PASSPHRASE -in adhara-checkin.apk.enc -out adhara-checkin.apk
+```
+
+(con `APK_PASSPHRASE` definida en la terminal; no pegarla en el comando ni en chats). Sin `CHECKIN_API_URL`, `CHECKIN_CLAVE` o `APK_PASSPHRASE` el workflow falla de inmediato.
 
 Nunca pegar la clave en chats, issues, commits ni logs.
 
@@ -53,7 +61,7 @@ No hace falta recompilar ni reinstalar: en el panel, menú **Check-in**, se edit
 
 ## 8. Seguridad
 
-El repositorio es **público**. El APK lleva la clave dentro: nunca publicarlo ni subirlo a un sitio sin acceso restringido. Con acceso físico al TV la clave podría extraerse del APK instalado (riesgo aceptado). El APK se firma con una llave de debug fija y pública (`capacitor/android/app/debug.keystore`, contraseña `android`) solo para que las actualizaciones se instalen encima; no protege nada.
+El repositorio es **público**. El APK lleva la clave dentro: nunca publicarlo ni subirlo a un sitio sin acceso restringido. Con acceso físico al TV la clave podría extraerse del APK instalado (riesgo aceptado). El APK se firma con una llave de debug que el workflow genera en cada ejecución (`debug.keystore` no se versiona: `*.keystore` está en `.gitignore`). Como la llave cambia en cada compilación, **para actualizar un TV hay que desinstalar antes el APK anterior** (`adb uninstall pe.adharafit.checkin`); `adb install -r` fallaría por firma distinta. La firma no protege nada.
 
 ## Desarrollo
 

@@ -5,7 +5,7 @@ import { PrismaSucursalRepository } from "@gym-app/infrastructure/persistence/pr
 import { Card } from "@gym-app/ui/components/Card";
 import { FormularioFrases } from "./FormularioFrases";
 
-export default async function PaginaFrasesCheckino() {
+export default async function PaginaFrasesCheckin() {
   const sesion = await obtenerUsuarioDeSesionActual();
   if (!sesion) redirect("/login");
   const { usuario, sucursalActivaId } = sesion;

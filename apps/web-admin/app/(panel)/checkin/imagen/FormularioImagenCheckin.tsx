@@ -3,11 +3,11 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { Button } from "@gym-app/ui/components/Button";
 import { useFeedback } from "@gym-app/ui/components/FeedbackOverlay";
-import { OPACIDAD_MAXIMA, OPACIDAD_MINIMA } from "@gym-app/domain/utils/reposoCheckino";
+import { OPACIDAD_MAXIMA, OPACIDAD_MINIMA } from "@gym-app/domain/utils/reposoCheckin";
 import { SelectorFotoPerfil } from "../../miembros/SelectorFotoPerfil";
 import { actualizarImagenReposoAction, guardarImagenReposoAction, restablecerImagenReposoAction } from "../actions";
 
-export function FormularioImagenCheckino({
+export function FormularioImagenCheckin({
   imagenActualUrl,
   esPersonalizada,
   opacidadInicial,

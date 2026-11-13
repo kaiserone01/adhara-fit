@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { obtenerUsuarioDeSesionActual } from "@/lib/sesion";
-import { puedeEditarCheckino } from "@/lib/permisoCheckino";
+import { puedeEditarCheckin } from "@/lib/permisoCheckin";
 import { PrismaVitrinaRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaVitrinaRepository";
 import { Card } from "@gym-app/ui/components/Card";
 import { BotonEliminarItem } from "../../BotonEliminarItem";
@@ -14,7 +14,7 @@ export default async function PaginaEditarVitrina({ params }: { params: Promise<
   if (!tipo) notFound();
   const sesion = await obtenerUsuarioDeSesionActual();
   if (!sesion) redirect("/login");
-  if (!puedeEditarCheckino(sesion.usuario.rol)) redirect("/miembros");
+  if (!puedeEditarCheckin(sesion.usuario.rol)) redirect("/miembros");
 
   const item = await new PrismaVitrinaRepository(prisma).buscar(sesion.sucursalActivaId, id);
   if (!item || item.tipo !== tipo) notFound();

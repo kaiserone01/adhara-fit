@@ -67,7 +67,7 @@ Pendiente de verificar (no probado en un TV físico):
 
 ## Cambiar frases, imagen y opacidad del reposo
 
-La APK solo abre la web del checkin, así que no hay que recompilarla ni reinstalarla para cambiar el reposo: en el panel, menú **Checkino** (SOCIO y GERENTE), se editan las frases, la imagen del círculo y la opacidad del fondo de la ficha. El TV consulta el servidor cada ~30 s y aplica el cambio solo; sin red conserva la última configuración recibida.
+La APK solo abre la web del checkin, así que no hay que recompilarla ni reinstalarla para cambiar el reposo: en el panel, menú **Checkin** (SOCIO y GERENTE), se editan las frases, la imagen del círculo y la opacidad del fondo de la ficha. El TV consulta el servidor cada ~30 s y aplica el cambio solo; sin red conserva la última configuración recibida.
 
 ## 9. Seguridad
 

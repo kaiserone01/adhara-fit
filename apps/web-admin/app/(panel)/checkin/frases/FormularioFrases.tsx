@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useState } from "react";
 import { Button } from "@gym-app/ui/components/Button";
 import { useFeedback } from "@gym-app/ui/components/FeedbackOverlay";
-import { MAX_FRASES_REPOSO, MAX_LARGO_FRASE_REPOSO } from "@gym-app/domain/utils/reposoCheckino";
+import { MAX_FRASES_REPOSO, MAX_LARGO_FRASE_REPOSO } from "@gym-app/domain/utils/reposoCheckin";
 import { guardarFrasesAction } from "../actions";
 
 export function FormularioFrases({ frasesIniciales }: { frasesIniciales: string[] }) {

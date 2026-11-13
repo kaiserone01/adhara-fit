@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { obtenerUsuarioDeSesionActual } from "@/lib/sesion";
-import { puedeEditarCheckino } from "@/lib/permisoCheckino";
+import { puedeEditarCheckin } from "@/lib/permisoCheckin";
 import { PageHeader } from "@gym-app/ui/components/PageHeader";
 import { TabsConfiguraciones } from "../configuraciones/TabsConfiguraciones";
 import { TABS_VITRINA } from "./tabs";
@@ -9,7 +9,7 @@ import { tabsConfiguracionesPara } from "../configuraciones/tabs";
 export default async function LayoutVitrina({ children }: { children: React.ReactNode }) {
   const sesion = await obtenerUsuarioDeSesionActual();
   if (!sesion) redirect("/login");
-  if (!puedeEditarCheckino(sesion.usuario.rol)) redirect("/miembros");
+  if (!puedeEditarCheckin(sesion.usuario.rol)) redirect("/miembros");
 
   return (
     <div className="p-6 lg:p-8">

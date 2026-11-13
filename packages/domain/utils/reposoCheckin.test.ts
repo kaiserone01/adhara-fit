@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { limitarOpacidad, normalizarFrasesReposo, MAX_FRASES_REPOSO, MAX_LARGO_FRASE_REPOSO } from "./reposoCheckino";
+import { limitarOpacidad, normalizarFrasesReposo, MAX_FRASES_REPOSO, MAX_LARGO_FRASE_REPOSO } from "./reposoCheckin";
 
 describe("normalizarFrasesReposo", () => {
   it("recorta espacios y descarta vacías", () => {

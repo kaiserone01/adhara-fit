@@ -1,5 +1,5 @@
 // Compartido entre /configuraciones y los layouts de /planes, /sucursales,
-// /usuarios, /checkino y /vitrina — esas rutas viven fuera de /configuraciones
+// /usuarios, /checkin y /vitrina — esas rutas viven fuera de /configuraciones
 // pero muestran la misma barra de tabs (ver diseño acordado).
 export const TABS_CONFIGURACIONES = [
   { href: "/configuraciones/metodos-pago", label: "Métodos de pago" },
@@ -8,13 +8,13 @@ export const TABS_CONFIGURACIONES = [
   { href: "/sucursales", label: "Sucursales" },
   { href: "/usuarios", label: "Usuarios" },
   { href: "/configuraciones/excel", label: "Excel" },
-  { href: "/checkino", label: "Checkino" },
+  { href: "/checkin", label: "Checkin" },
   { href: "/vitrina", label: "Vitrina" },
 ];
 
-// El GERENTE solo configura Checkino y Vitrina; el resto es solo de SOCIO.
+// El GERENTE solo configura Checkin y Vitrina; el resto es solo de SOCIO.
 export function tabsConfiguracionesPara(rol: string) {
   return rol === "SOCIO"
     ? TABS_CONFIGURACIONES
-    : TABS_CONFIGURACIONES.filter((t) => t.href === "/checkino" || t.href === "/vitrina");
+    : TABS_CONFIGURACIONES.filter((t) => t.href === "/checkin" || t.href === "/vitrina");
 }

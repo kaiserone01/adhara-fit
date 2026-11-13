@@ -1,5 +1,5 @@
 // GET /api/checkin/estado — lo que el reposo del checkin muestra: sede, última tasa BCV y la configuración
-// del reposo (frases, imagen y opacidad) hecha desde el menú Checkino del panel.
+// del reposo (frases, imagen y opacidad) hecha desde el menú Checkin del panel.
 // Autenticado con la apiKey de la sucursal (ver lib/checkin.ts).
 import { NextRequest, NextResponse } from "next/server";
 import { jsonCheckin, opcionesCheckin, sucursalDeCheckin, tasaBcvParaCheckin } from "@/lib/checkin";

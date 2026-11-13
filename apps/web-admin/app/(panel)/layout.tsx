@@ -11,7 +11,7 @@ import { BarraUsuario } from "./BarraUsuario";
 import { EncabezadoSidebar } from "./EncabezadoSidebar";
 import { NavegacionMobile } from "./NavegacionMobile";
 import { tienePermisoEnSala } from "@/lib/permisoEnSala";
-import { puedeEditarCheckino } from "@/lib/permisoCheckino";
+import { puedeEditarCheckin } from "@/lib/permisoCheckin";
 import { ProveedorEnSala, ContadorEnSala, AvisoCobros } from "./en-sala/ContextoEnSala";
 
 export default async function PanelLayout({ children }: { children: React.ReactNode }) {
@@ -51,7 +51,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
               // Planes, Sucursales y Usuarios se administran desde las tabs
               // de Configuraciones (ver diseño acordado) — SOCIO y GERENTE llegan
               // a ellas desde ahí.
-              ...(puedeEditarCheckino(usuario.rol) ? [{ href: "/configuraciones", label: "Configuraciones" }] : []),
+              ...(puedeEditarCheckin(usuario.rol) ? [{ href: "/configuraciones", label: "Configuraciones" }] : []),
             ]}
             pie={<BarraUsuario nombre={usuario.nombre} email={usuario.email} fotoUrl={usuario.fotoUrl} />}
           />

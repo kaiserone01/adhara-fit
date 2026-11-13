@@ -3,17 +3,17 @@ import { prisma } from "@/lib/prisma";
 import { obtenerUsuarioDeSesionActual } from "@/lib/sesion";
 import { PrismaSucursalRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSucursalRepository";
 import { Card } from "@gym-app/ui/components/Card";
-import { FormularioImagenCheckino } from "./FormularioImagenCheckino";
+import { FormularioImagenCheckin } from "./FormularioImagenCheckin";
 
-export default async function PaginaImagenCheckino() {
+export default async function PaginaImagenCheckin() {
   const sesion = await obtenerUsuarioDeSesionActual();
   if (!sesion) redirect("/login");
   const { usuario, sucursalActivaId } = sesion;
 
   const sucursal = await new PrismaSucursalRepository(prisma).buscarPorId(usuario.organizacionId, sucursalActivaId);
 
-  // El placeholder original vive en R2 (carpeta checkino/) para poder ajustarle el encuadre desde el panel.
-  const imagenPlaceholder = `${process.env.R2_PUBLIC_URL}/checkino/placeholder-profile.jpg`;
+  // El placeholder original vive en R2 (carpeta checkin/) para poder ajustarle el encuadre desde el panel.
+  const imagenPlaceholder = `${process.env.R2_PUBLIC_URL}/checkin/placeholder-profile.jpg`;
 
   return (
     <Card className="max-w-2xl">
@@ -22,7 +22,7 @@ export default async function PaginaImagenCheckino() {
         segundos.
       </p>
       {/* La key reinicia el formulario cuando cambian los valores guardados (tras guardar o restablecer). */}
-      <FormularioImagenCheckino
+      <FormularioImagenCheckin
         key={`${sucursal?.reposoImagenUrl ?? ""}|${sucursal?.reposoOpacidad ?? 100}`}
         imagenActualUrl={sucursal?.reposoImagenUrl ?? imagenPlaceholder}
         esPersonalizada={!!sucursal?.reposoImagenUrl}

@@ -72,7 +72,7 @@ export async function registrarCheckIn(apiKey: string, cedula: string): Promise<
 export interface InfoCheckin {
   sucursalNombre: string;
   tasaBcv: { valor: number; fecha: string } | null;
-  // Configuración hecha desde el menú Checkino del panel; ausente en un API viejo.
+  // Configuración hecha desde el menú Checkin del panel; ausente en un API viejo.
   reposo?: { frases: string[]; imagenUrl: string | null; opacidad: number };
 }
 

@@ -21,7 +21,7 @@ export function FichaReposo({
   hora: string;
   tasa: InfoCheckin["tasaBcv"];
   sede: string | null;
-  // Imagen y opacidad configuradas en el panel (menú Checkino); sin ellas, el placeholder y 100 %.
+  // Imagen y opacidad configuradas en el panel (menú Checkin); sin ellas, el placeholder y 100 %.
   imagenUrl?: string | null;
   opacidad?: number;
 }) {

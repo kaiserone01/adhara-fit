@@ -23,22 +23,7 @@ export function DiagonalAccents() {
         <polygon points="88,0 100,0 100,27 79,27" fill="var(--gx-accent)" opacity="0.92" />
         <polygon points="80,0 86,0 70,27 64,27" fill="var(--gx-accent)" opacity="0.3" />
         <polygon points="92,27 100,27 100,45 83,45" fill="var(--gx-accent)" opacity="0.14" className="hidden md:block" />
-        {/* Esquina superior izquierda */}
-        <polygon points="0,0 9,0 0,19" fill="var(--gx-accent)" opacity="0.9" />
-        <polygon points="11,0 14,0 0,29" fill="var(--gx-accent)" opacity="0.35" />
-        {/* Esquina inferior izquierda */}
-        <polygon points="0,64 5,57 5,66 0,80" fill="var(--gx-accent)" opacity="0.55" className="hidden md:block" />
-        <line
-          x1="0"
-          y1="96"
-          x2="14"
-          y2="74"
-          stroke="var(--gx-accent)"
-          strokeWidth="1"
-          opacity="0.5"
-          vectorEffect="non-scaling-stroke"
-          className="hidden md:block"
-        />
+        {/* Las esquinas izquierdas e inferior derecha ya vienen pintadas en la foto de fondo. */}
       </svg>
 
       {/* Contorno del isotipo (una «A» de líneas finas) */}
@@ -56,7 +41,6 @@ export function DiagonalAccents() {
       {/* Destellos que recorren las diagonales */}
       <span className="login-destello" style={{ right: "6%", top: "12%" }} />
       <span className="login-destello hidden md:block" style={{ right: "18%", top: "6%", animationDelay: "3.2s" }} />
-      <span className="login-destello hidden md:block" style={{ left: "2%", top: "10%", animationDelay: "5s" }} />
     </motion.div>
   );
 }

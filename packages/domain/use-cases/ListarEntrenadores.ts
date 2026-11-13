@@ -1,10 +1,7 @@
-import { IEntrenadorRepository } from "../ports/IEntrenadorRepository";
-import { EntrenadorResumen } from "../entities/EntrenadorResumen";
+import type { IEntrenadorRepository } from "../ports/IEntrenadorRepository";
+import type { EntrenadorResumen } from "../entities/EntrenadorResumen";
 
-export async function listarEntrenadores(
-  deps: { entrenadores: IEntrenadorRepository },
-  organizacionId: string,
-  sucursalId: string
-): Promise<EntrenadorResumen[]> {
-  return deps.entrenadores.listarPorOrganizacionYSucursal(organizacionId, sucursalId);
+/** Entrenadores activos para los selectores (gimnasio de una sola sede). */
+export async function listarEntrenadores(deps: { entrenadores: IEntrenadorRepository }): Promise<EntrenadorResumen[]> {
+  return deps.entrenadores.listarActivos();
 }

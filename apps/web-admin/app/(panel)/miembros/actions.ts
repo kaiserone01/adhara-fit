@@ -9,6 +9,7 @@ import { PrismaMemberRepository } from "@gym-app/infrastructure/persistence/pris
 import { PrismaPlanRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPlanRepository";
 import { PrismaPagoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPagoRepository";
 import { PrismaSuscripcionRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSuscripcionRepository";
+import { validarEntrenadorDeMiembro } from "./validarEntrenadorDeMiembro";
 import { crearMiembro, CedulaDuplicadaError } from "@gym-app/domain/use-cases/CrearMiembro";
 import {
   actualizarMiembro,
@@ -133,6 +134,9 @@ export async function crearMiembroAction(
   if (!planId) {
     return { error: "Elige un plan para el miembro." };
   }
+
+  const errorEntrenador = await validarEntrenadorDeMiembro(formData.get("entrenadorId")?.toString() || null);
+  if (errorEntrenador) return { error: errorEntrenador };
 
   const fotoUrl = await guardarFoto(formData.get("foto"));
 
@@ -261,6 +265,8 @@ export async function actualizarMiembroAction(
   });
 
   const planId = resolverPlanId(formData);
+  const errorEntrenador = await validarEntrenadorDeMiembro(formData.get("entrenadorId")?.toString() || null, id);
+  if (errorEntrenador) return { error: errorEntrenador };
   const fotoUrl = await guardarFoto(formData.get("foto"));
 
   try {

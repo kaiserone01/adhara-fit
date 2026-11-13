@@ -16,7 +16,7 @@ function iniciales(nombre: string): string {
     .join("");
 }
 
-function CampoFoto({ nombreActual, fotoUrlActual }: { nombreActual: string; fotoUrlActual?: string | null }) {
+export function CampoFoto({ nombreActual, fotoUrlActual }: { nombreActual: string; fotoUrlActual?: string | null }) {
   const [fotoPreview, setFotoPreview] = useState<string | null>(fotoUrlActual ?? null);
 
   return (

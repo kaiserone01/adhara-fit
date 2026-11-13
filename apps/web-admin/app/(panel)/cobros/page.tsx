@@ -47,7 +47,7 @@ export default async function PaginaCobros({ searchParams }: { searchParams: Pro
     listarMetodosPagoActivos({ metodosPago: new PrismaMetodoPagoRepository(prisma) }, usuario.organizacionId),
     listarReglasAbono({ reglasAbono: new PrismaReglaAbonoRepository(prisma) }, usuario.organizacionId),
     // Solo para "Cambiar plan" en el Paso 2 del asistente de cobro.
-    listarEntrenadores({ entrenadores: new PrismaEntrenadorRepository(prisma) }, usuario.organizacionId, sucursalActivaId),
+    listarEntrenadores({ entrenadores: new PrismaEntrenadorRepository(prisma) }),
   ]);
 
   const miembrosActivos = miembros.filter((m) => m.activo);

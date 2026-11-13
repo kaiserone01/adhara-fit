@@ -8,6 +8,24 @@ Bitácora de sesiones: la más reciente arriba, solo se añaden entradas. El his
 - **Desplegado:** provisional en Easypanel (`docs/ops/easypanel.md`): imagen del `Dockerfile`, esquema con `prisma db push` al arrancar, alta del primer administrador con `tools/crear-administrador.mjs`.
 - **Preferencia del propietario:** cada código (ADR-nnn, S-nn, REQ…) que se mencione lleva al lado una descripción simple.
 
+## Sesión 2026-11-13 (noche, 9) — Tramo 3 (parte 1): entrenadores como registro propio (S-18)
+**Qué se hizo**
+- Tabla nueva `Entrenador` (nombre, teléfono, foto, activo; sin credenciales ni `organizacionId`) y `Miembro.entrenadorId` ahora apunta a ella en lugar de `UsuarioAdmin` (cambio aditivo; se quitó `miembrosEntrenados` de `UsuarioAdmin`). Las filas antiguas `UsuarioAdmin` con `rol=ENTRENADOR` se ignoran (no existen en la práctica).
+- Dominio: entidad `Entrenador`, `IEntrenadorRepository` (listar todos/activos, buscar, crear, actualizar), casos de uso `GestionarEntrenadores` (crear, actualizar, activar/desactivar, `validarEntrenadorAsignable`) y `listarEntrenadores` sin sede. Repositorio Prisma reescrito.
+- Pantalla **Entrenadores** (lista, alta, edición, desactivar/reactivar) con pestaña en Configuraciones. El selector de entrenador de socio, cobros y vitrina lee los activos de la tabla nueva, sin filtro por sede. Alta/edición de socio (acciones y API) rechazan un entrenador inexistente o desactivado; un socio que ya lo tenía puede conservarlo.
+- Prueba nueva `GestionarEntrenadores.test.ts` (asignación válida, inexistente, inactivo, conservar).
+
+**Qué funcionó**
+- Dominio 266 pruebas en verde; `tsc` solo con el error previo de `LayoutProps`; lint sin errores; `verificar-rol` OK.
+
+**Qué no funcionó / a tener en cuenta**
+- `vitest` falla de vez en cuando con «Cannot read properties of undefined (reading 'config')» en todas las suites (intermitente, tras editar archivos); repetir la corrida lo resuelve.
+- El formulario de socio aún condiciona el entrenador a `plan.incluyeEntrenador`; eso se quita con S-07 (plan simplificado).
+- Sin ejecutar: la app en el navegador.
+
+**Siguiente**
+1. S-06 (DNI/CE/pasaporte), luego S-04 (pago único) y S-07 (cambio de plan único).
+
 ## Sesión 2026-11-13 (noche, 8) — Tramo 2 (parte 3): sede única oculta (S-05, parte visible)
 **Qué se hizo**
 - Login en un solo paso: `/api/auth/login` abre la sesión con la sede única sin preguntar; borrada la ruta `auth/login/sucursal` y el paso «Elige una sucursal» de `LoginForm`/`useLoginFlow` (diseño del propietario intacto en lo demás).

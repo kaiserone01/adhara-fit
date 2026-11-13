@@ -6,6 +6,7 @@ export const TABS_CONFIGURACIONES = [
   { href: "/configuraciones/reglas-abono", label: "Reglas de abono" },
   { href: "/planes", label: "Planes" },
   { href: "/usuarios", label: "Administradores" },
+  { href: "/entrenadores", label: "Entrenadores" },
   { href: "/checkin", label: "Checkin" },
   { href: "/vitrina", label: "Vitrina" },
 ];

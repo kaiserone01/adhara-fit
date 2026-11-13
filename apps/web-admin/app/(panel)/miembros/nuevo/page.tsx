@@ -6,7 +6,7 @@ import { PrismaMetodoPagoRepository } from "@gym-app/infrastructure/persistence/
 import { listarPlanes } from "@gym-app/domain/use-cases/ListarPlanes";
 import { listarMetodosPagoActivos } from "@gym-app/domain/use-cases/ListarMetodosPago";
 import { obtenerSucursalesVisiblesParaMiembro } from "../obtenerSucursalesVisibles";
-import { obtenerEntrenadoresPorSucursal } from "../obtenerEntrenadoresPorSucursal";
+import { obtenerEntrenadoresActivos } from "../obtenerEntrenadoresActivos";
 import { FormularioMiembro } from "../FormularioMiembro";
 import { crearMiembroAction } from "../actions";
 import { PageHeader } from "@gym-app/ui/components/PageHeader";
@@ -21,7 +21,7 @@ export default async function PaginaNuevoMiembro() {
     obtenerSucursalesVisiblesParaMiembro(usuario),
     listarMetodosPagoActivos({ metodosPago: new PrismaMetodoPagoRepository(prisma) }, usuario.organizacionId),
   ]);
-  const entrenadoresPorSucursal = await obtenerEntrenadoresPorSucursal(usuario.organizacionId, sucursales);
+  const entrenadores = await obtenerEntrenadoresActivos();
   const sucursalActiva = sucursales.find((s) => s.id === sucursalActivaId);
 
   return (
@@ -31,7 +31,7 @@ export default async function PaginaNuevoMiembro() {
       </div>
       <FormularioMiembro
         accion={crearMiembroAction}
-        entrenadoresPorSucursal={entrenadoresPorSucursal}
+        entrenadores={entrenadores}
         planes={planes}
         sucursales={sucursales}
         sucursalActivaNombre={sucursalActiva?.nombre ?? "—"}

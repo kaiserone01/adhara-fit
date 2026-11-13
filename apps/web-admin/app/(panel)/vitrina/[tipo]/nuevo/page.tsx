@@ -15,7 +15,7 @@ export default async function PaginaNuevoVitrina({ params }: { params: Promise<{
 
   const entrenadores =
     tipo === "ENTRENADOR"
-      ? await new PrismaEntrenadorRepository(prisma).listarPorOrganizacionYSucursal(sesion.usuario.organizacionId, sesion.sucursalActivaId)
+      ? await new PrismaEntrenadorRepository(prisma).listarActivos()
       : [];
 
   return (

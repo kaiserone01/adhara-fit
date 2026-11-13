@@ -89,7 +89,7 @@ function Fila({ label, valor }: { label: string; valor: string }) {
 
 export function FormularioMiembro({
   accion,
-  entrenadoresPorSucursal,
+  entrenadores: entrenadoresActivos,
   sucursales,
   sucursalActivaNombre,
   sucursalIdDefault,
@@ -104,10 +104,8 @@ export function FormularioMiembro({
   tieneCicloVigente,
 }: {
   accion: (estado: EstadoFormularioMiembro, formData: FormData) => Promise<EstadoFormularioMiembro>;
-  // Entrenadores disponibles por cada sucursal visible — el elegible
-  // depende de la sucursal seleccionada en el propio formulario, así que
-  // se filtra en el cliente sin ida y vuelta al servidor.
-  entrenadoresPorSucursal: Record<string, EntrenadorResumen[]>;
+  // Entrenadores activos (S-18: un solo gimnasio, sin filtro por sede).
+  entrenadores: EntrenadorResumen[];
   // Se sigue usando para resolver entrenadoresDeLaSede y para mostrar el
   // nombre cuando sucursalId === ID_AMBAS_SEDES; ya NO se usa para poblar
   // un <select> de sedes.
@@ -182,20 +180,11 @@ export function FormularioMiembro({
     (plan) => plan.activo || (valoresIniciales && plan.id === valoresIniciales.planId)
   );
 
-  // Entrenadores elegibles según la sucursal actualmente seleccionada. Si
-  // el entrenador ya asignado no está en esa lista (p. ej. se cambió de
-  // sede, o el entrenador dejó de tener esa sucursal asignada), se agrega
-  // igual para no perder el dato al mostrar el formulario de edición.
-  const entrenadoresDeLaSede =
-    sucursalId === ID_AMBAS_SEDES
-      ? Object.values(entrenadoresPorSucursal)
-          .flat()
-          .filter((e, i, lista) => lista.findIndex((otro) => otro.id === e.id) === i)
-      : entrenadoresPorSucursal[sucursalId] ?? [];
+  // Si el entrenador ya asignado está desactivado, se agrega igual para no perder el dato al editar.
   const entrenadores =
-    valoresIniciales?.entrenadorId && !entrenadoresDeLaSede.some((e) => e.id === valoresIniciales.entrenadorId)
-      ? [...entrenadoresDeLaSede, { id: valoresIniciales.entrenadorId, nombre: "(entrenador actual)" }]
-      : entrenadoresDeLaSede;
+    valoresIniciales?.entrenadorId && !entrenadoresActivos.some((e) => e.id === valoresIniciales.entrenadorId)
+      ? [...entrenadoresActivos, { id: valoresIniciales.entrenadorId, nombre: "(entrenador actual)" }]
+      : entrenadoresActivos;
 
   const [planId, setPlanId] = useState<string>(() => {
     if (!valoresIniciales) return planesActivos[0]?.id ?? "";
@@ -281,17 +270,6 @@ export function FormularioMiembro({
     // eslint-disable-next-line react-hooks/purity -- los dias hasta el cobro se calculan con la hora actual en cada render; congelarlos cambiaria el comportamiento
     ? Math.ceil((new Date(cicloMasReciente.fechaFinCiclo).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
     : null;
-
-  // Si se cambia de sede y el entrenador seleccionado no está entre los
-  // elegibles de la nueva sede, se limpia la selección en vez de dejar un
-  // entrenadorId "fantasma" que el usuario ya no ve en el select.
-  useEffect(() => {
-    if (entrenadorId && !entrenadores.some((e) => e.id === entrenadorId)) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- limpia el entrenador si no pertenece a la sede elegida (depende solo de sucursalId)
-      setEntrenadorId("");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- solo debe re-evaluar cuando cambia la sede, no en cada render de `entrenadores`
-  }, [sucursalId]);
 
   // "Cambiar de plan" (panelLateral) redirige a /miembros al confirmar —
   // si hay cambios de Datos personales sin guardar en este momento, se

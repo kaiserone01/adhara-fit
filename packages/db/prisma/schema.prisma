@@ -94,7 +94,6 @@ model UsuarioAdmin {
   pagosAnulados          Pago[]                @relation("PagosAnulados")
   permisos               PermisoUsuario[]
   sucursales             UsuarioSucursal[]
-  miembrosEntrenados     Miembro[]             @relation("EntrenadorDeMiembro")
   cambiosPlanRegistrados CambioPlanAuditoria[]
   deudasRegistradas      DeudaProducto[]       @relation("DeudasRegistradas")
   deudasCobradas         DeudaProducto[]       @relation("DeudasCobradas")
@@ -154,8 +153,8 @@ model Miembro {
   fechaNacimiento  DateTime?
   celular          String?
   fotoUrl          String?
-  entrenadorId     String? // referencia a UsuarioAdmin con rol ENTRENADOR (ver "EntrenadorDeMiembro")
-  entrenador       UsuarioAdmin? @relation("EntrenadorDeMiembro", fields: [entrenadorId], references: [id])
+  entrenadorId     String? // S-18: registro propio de entrenador, sin credenciales
+  entrenador       Entrenador?   @relation(fields: [entrenadorId], references: [id])
   planId           String? // plan vigente asignado (frecuencia y con/sin entrenador se leen de ahí)
   plan             Plan?         @relation(fields: [planId], references: [id])
   precioPlan       Decimal       @db.Decimal(10, 2) // precio vigente que paga (puede diferir del precio de catálogo del Plan, ej. "Personalizado")
@@ -725,4 +724,17 @@ model VitrinaItem {
   updatedAt DateTime @updatedAt
 
   @@index([sucursalId, orden])
+}
+
+// S-18: el entrenador es un registro propio, sin credenciales ni acceso al sistema.
+model Entrenador {
+  id        String   @id @default(uuid())
+  nombre    String
+  telefono  String?
+  fotoUrl   String?
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  miembros Miembro[]
 }

@@ -20,6 +20,7 @@ import {
   MiembroFueraDeSucursalError as ActualizarMiembroFueraDeSucursalError,
 } from "@gym-app/domain/use-cases/ActualizarMiembro";
 import type { CambiosMiembro } from "@gym-app/domain/entities/Miembro";
+import { validarEntrenadorDeMiembro } from "@/app/(panel)/miembros/validarEntrenadorDeMiembro";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const sesion = await obtenerUsuarioDeSesion(req);
@@ -79,6 +80,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (body.planId !== undefined) cambios.planId = body.planId;
   if (body.precioPlan !== undefined) cambios.precioPlan = body.precioPlan;
   if (body.activo !== undefined) cambios.activo = body.activo;
+
+  const errorEntrenador = await validarEntrenadorDeMiembro(body.entrenadorId ?? null, id);
+  if (errorEntrenador) return NextResponse.json({ error: errorEntrenador }, { status: 400 });
 
   try {
     const miembro = await actualizarMiembro(

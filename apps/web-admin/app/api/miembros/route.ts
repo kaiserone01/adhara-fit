@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { obtenerUsuarioDeSesion } from "@/lib/sesion";
 import { PrismaMemberRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaMemberRepository";
 import { listarMiembros } from "@gym-app/domain/use-cases/ListarMiembros";
+import { validarEntrenadorDeMiembro } from "@/app/(panel)/miembros/validarEntrenadorDeMiembro";
 import { crearMiembro, CedulaDuplicadaError } from "@gym-app/domain/use-cases/CrearMiembro";
 
 export async function GET(req: NextRequest) {
@@ -41,6 +42,9 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+
+    const errorEntrenador = await validarEntrenadorDeMiembro(body.entrenadorId ?? null);
+    if (errorEntrenador) return NextResponse.json({ error: errorEntrenador }, { status: 400 });
 
     const miembro = await crearMiembro(
       { miembros: new PrismaMemberRepository(prisma) },

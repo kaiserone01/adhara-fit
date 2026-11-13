@@ -14,7 +14,7 @@ import { PrismaSucursalRepository } from "@gym-app/infrastructure/persistence/pr
 import { listarPlanes } from "@gym-app/domain/use-cases/ListarPlanes";
 import { listarMetodosPagoActivos } from "@gym-app/domain/use-cases/ListarMetodosPago";
 import { obtenerSucursalesVisiblesParaMiembro } from "../obtenerSucursalesVisibles";
-import { obtenerEntrenadoresPorSucursal } from "../obtenerEntrenadoresPorSucursal";
+import { obtenerEntrenadoresActivos } from "../obtenerEntrenadoresActivos";
 import { MiembroFueraDeSucursal } from "./MiembroFueraDeSucursal";
 import { FormularioMiembro } from "../FormularioMiembro";
 import { actualizarMiembroAction } from "../actions";
@@ -59,7 +59,7 @@ export default async function PaginaEditarMiembro({ params }: { params: Promise<
     obtenerSucursalesVisiblesParaMiembro(usuario),
     listarMetodosPagoActivos({ metodosPago: new PrismaMetodoPagoRepository(prisma) }, usuario.organizacionId),
   ]);
-  const entrenadoresPorSucursal = await obtenerEntrenadoresPorSucursal(usuario.organizacionId, sucursales);
+  const entrenadores = await obtenerEntrenadoresActivos();
 
   // Solo tiene sentido cobrar "la diferencia" cuando el ciclo actual todavía
   // no venció — vencido, el próximo pago ya es el precio completo del plan
@@ -103,7 +103,7 @@ export default async function PaginaEditarMiembro({ params }: { params: Promise<
 
       <FormularioMiembro
         accion={actualizarMiembroAction.bind(null, id)}
-        entrenadoresPorSucursal={entrenadoresPorSucursal}
+        entrenadores={entrenadores}
         planes={planes}
         sucursales={sucursales}
         sucursalActivaNombre={sucursales.find((s) => s.id === sucursalActivaId)?.nombre ?? "—"}

@@ -229,13 +229,6 @@ export function FormularioMiembro({
   }
 
 
-  function manejarClickGuardar() {
-    const form = formRef.current;
-    if (!form) return;
-    if (!form.reportValidity()) return;
-    form.requestSubmit();
-  }
-
   function manejarCambioFoto(archivo: File) {
     if (fotoPreview?.startsWith("blob:")) URL.revokeObjectURL(fotoPreview);
     setFotoPreview(URL.createObjectURL(archivo));
@@ -387,7 +380,7 @@ export function FormularioMiembro({
                 maxLength={LARGO_MAXIMO_CORREO}
                 placeholder="nombre@correo.com"
                 value={correo}
-                onChange={(e) => setCorreo(e.target.value.replace(/s/g, ""))}
+                onChange={(e) => setCorreo(e.target.value.replace(/\s/g, ""))}
               />
             </div>
 
@@ -409,16 +402,6 @@ export function FormularioMiembro({
             )}
           </div>
 
-          {esEdicion && (
-            <>
-              <Button type="button" className="mt-6 w-full" onClick={manejarClickGuardar} disabled={enviando}>
-                Guardar
-              </Button>
-              <span className="mt-2 block text-xs" style={{ color: "var(--gx-muted-dim)" }}>
-                Guarda estos datos junto con el entrenador y el plan del cuadro de al lado.
-              </span>
-            </>
-          )}
         </Card>
 
         <Card className="lg:col-start-2 lg:row-start-1">
@@ -525,8 +508,7 @@ export function FormularioMiembro({
 
           <SelectorEntrenador entrenadores={entrenadores} valor={entrenadorId} onCambio={setEntrenadorId} />
 
-          {!esEdicion && (
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <Button type="submit" name="despues" value="listo" variant="secundario" className="flex-1" disabled={enviando}>
                 {enviando ? "Guardando..." : "Guardar"}
               </Button>
@@ -534,7 +516,6 @@ export function FormularioMiembro({
                 Guardar y cobrar
               </Button>
             </div>
-          )}
 
           {esEdicion && (
             <div className="mt-4 flex flex-col gap-3">

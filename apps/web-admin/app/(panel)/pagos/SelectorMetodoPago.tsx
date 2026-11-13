@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Eye } from "@phosphor-icons/react/dist/ssr";
 import { Button } from "@gym-app/ui/components/Button";
 import { CampoNumeroOperacion } from "./CampoNumeroOperacion";
 import type { MetodoPago } from "@gym-app/domain/entities/MetodoPago";
@@ -14,6 +15,7 @@ export function SelectorMetodoPago({
   grande = false,
   ocultarNumeroOperacion = false,
   compacto = false,
+  enFila = false,
   numeroOperacion: numeroOperacionProp,
   onCambioNumeroOperacion: onCambioNumeroOperacionProp,
 }: {
@@ -41,6 +43,8 @@ export function SelectorMetodoPago({
   ocultarNumeroOperacion?: boolean;
   // Íconos y espaciados más chicos (mismo tamaño de texto) para que el asistente de Caja no haga scroll.
   compacto?: boolean;
+  // Cobro de Caja: los métodos y, en la última casilla de la misma fila, el número de operación (solo si el método lo pide).
+  enFila?: boolean;
   numeroOperacion?: string;
   onCambioNumeroOperacion?: (valor: string) => void;
 }) {
@@ -71,49 +75,64 @@ export function SelectorMetodoPago({
 
   const textoNombre = grande ? "text-base" : "text-sm";
 
+  const campoOperacion = requiereNumeroOperacion && !ocultarNumeroOperacion;
+
   return (
     <div className="flex flex-col gap-4">
-      <div className={compacto ? "grid grid-cols-2 gap-2 sm:grid-cols-3" : "grid grid-cols-2 gap-2 sm:grid-cols-3"}>
+      <div className={enFila ? "grid grid-cols-2 gap-2 sm:grid-cols-4" : "grid grid-cols-2 gap-2 sm:grid-cols-3"}>
         {metodos.map((m) => {
           const seleccionado = metodoId === m.id;
+          // El ojo abre los datos para el pago (celular, cuenta, QR); el efectivo no tiene datos que mostrar.
+          const conOjo = seleccionado && m.tipo !== "EFECTIVO";
           return (
-            <button
-              key={m.id}
-              type="button"
-              onClick={() => setMetodoId(m.id)}
-              className={`flex items-center gap-2.5 rounded-lg border-2 text-left transition-colors duration-150 active:scale-95 ${compacto ? "min-h-12 px-2.5 py-1.5" : "min-h-14 px-3 py-2"}`}
-              style={
-                seleccionado
-                  ? { borderColor: "var(--gx-accent)", background: "color-mix(in srgb, var(--gx-accent) 12%, transparent)" }
-                  : { borderColor: "var(--gx-field-edge)" }
-              }
-            >
-              <LogoMetodo metodo={m} className={compacto ? "h-8 w-8" : "h-10 w-10"} />
-              <span className="flex min-w-0 flex-col">
-                <span className={`${textoNombre} truncate font-semibold`} style={{ color: "var(--gx-ink)" }}>
-                  {nombreVisibleMetodo(m)}
+            <div key={m.id} className="relative">
+              <button
+                type="button"
+                onClick={() => setMetodoId(m.id)}
+                aria-pressed={seleccionado}
+                className={`flex w-full items-center gap-2.5 rounded-lg border-2 text-left transition-colors duration-150 active:scale-95 ${compacto || enFila ? "min-h-12 px-2.5 py-1.5" : "min-h-14 px-3 py-2"} ${conOjo ? "pr-10" : ""}`}
+                style={
+                  seleccionado
+                    ? { borderColor: "var(--gx-accent)", background: "color-mix(in srgb, var(--gx-accent) 12%, transparent)" }
+                    : { borderColor: "var(--gx-field-edge)" }
+                }
+              >
+                <LogoMetodo metodo={m} className={compacto || enFila ? "h-8 w-8" : "h-10 w-10"} />
+                <span className="flex min-w-0 flex-col">
+                  <span className={`${textoNombre} truncate font-semibold`} style={{ color: "var(--gx-ink)" }}>
+                    {nombreVisibleMetodo(m)}
+                  </span>
+                  <span className="text-[0.65rem] leading-tight" style={{ color: "var(--gx-muted-dim)" }}>
+                    {ETIQUETA_DISCRETA_TIPO_METODO_PAGO[m.tipo]}
+                  </span>
                 </span>
-                <span className="text-[0.65rem] leading-tight" style={{ color: "var(--gx-muted-dim)" }}>
-                  {ETIQUETA_DISCRETA_TIPO_METODO_PAGO[m.tipo]}
-                </span>
-              </span>
-            </button>
+              </button>
+              {conOjo && (
+                <button
+                  type="button"
+                  aria-label={`Ver datos para el pago con ${nombreVisibleMetodo(m)}`}
+                  title="Ver datos para el pago"
+                  onClick={() => setMostrarDatos(true)}
+                  className="absolute right-1.5 top-1/2 flex size-8 -translate-y-1/2 items-center justify-center rounded-md transition-colors hover:bg-[var(--gx-surface-2)]"
+                  style={{ color: "var(--gx-accent)" }}
+                >
+                  <Eye size={20} weight="bold" />
+                </button>
+              )}
+            </div>
           );
         })}
+
+        {enFila && campoOperacion && (
+          <CampoNumeroOperacion form={idFormulario} value={numeroOperacion} onChange={setNumeroOperacion} compacto />
+        )}
       </div>
 
-      {metodo && metodo.tipo !== "EFECTIVO" && (
-        <Button type="button" variant="secundario" className="self-start" onClick={() => setMostrarDatos(true)}>
-          Ver datos para el pago
-        </Button>
-      )}
-
-      {requiereNumeroOperacion && !ocultarNumeroOperacion && (
+      {!enFila && campoOperacion && (
         <CampoNumeroOperacion form={idFormulario} value={numeroOperacion} onChange={setNumeroOperacion} />
       )}
 
       {mostrarDatos && metodo && <ModalDatosPago metodo={metodo} onCerrar={() => setMostrarDatos(false)} />}
-
     </div>
   );
 }

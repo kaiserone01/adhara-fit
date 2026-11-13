@@ -38,6 +38,8 @@ export interface EstadoMemoria {
   suscripcion: SuscripcionMemoria | null;
   auditorias: CambioPlanAuditoria[];
   registrosAuditoria: DatosRegistroAuditoria[];
+  /** Lo marca `eliminarDefinitivamente`. */
+  miembroEliminado?: boolean;
 }
 
 export function crearEstadoMemoria(parcial: Partial<EstadoMemoria> = {}): EstadoMemoria {
@@ -64,6 +66,13 @@ export function crearUnidadEnMemoria(estado: EstadoMemoria): IUnidadDeTrabajo {
           actualizar: async (_org: string, _id: string, cambios: Partial<MiembroMemoria>) => {
             Object.assign(estado.miembro, cambios);
             return { ...estado.miembro };
+          },
+          eliminarDefinitivamente: async (_id: string, conPagos: boolean) => {
+            estado.miembroEliminado = true;
+            estado.suscripcion = null;
+            estado.auditorias = [];
+            if (conPagos) estado.pagos = [];
+            else estado.pagos.forEach((p) => { p.miembroId = null; });
           },
           actualizarFechasPago: async (_id: string, pago: Date | null, vencimiento: Date) => {
             estado.miembro.fechaUltimoPago = pago;

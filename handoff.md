@@ -8,6 +8,27 @@ Bitácora de sesiones: la más reciente arriba, solo se añaden entradas. El his
 - **Desplegado:** provisional en Easypanel (`docs/ops/easypanel.md`): imagen del `Dockerfile`, esquema con `prisma db push` al arrancar, alta del primer administrador con `tools/crear-administrador.mjs`.
 - **Preferencia del propietario:** cada código (ADR-nnn, S-nn, REQ…) que se mencione lleva al lado una descripción simple.
 
+## Sesión 2026-11-13 (noche, 24) — Calendario centrado, eliminación definitiva en un paso, ficha con «Guardar y cobrar», cobro rehecho
+**Qué se hizo**
+- **Calendario centrado:** `InputFecha` abre el selector como diálogo centrado sobre la pantalla (portal en `document.body` con fondo oscuro; tocar fuera o Esc lo cierra), en vez de desplegarse hacia abajo. Afecta a todos los campos de fecha.
+- **Eliminar socio en un solo paso (decisión del propietario):** se quitó la bandeja de eliminados (filtro «Ver eliminados», ficha de solo lectura, «Restaurar», `restaurarMiembro`). Ahora «Eliminar» abre un diálogo con dos opciones, «Eliminar solo al socio» (sus pagos quedan en caja e ingresos como «Socio eliminado», con `Pago.miembroId` en null) y «Eliminar al socio y sus pagos» (con aviso de que los ingresos de esas fechas bajan), y exige escribir «eliminar» (también se comprueba en el servidor). `eliminarMiembro` ahora llama a `IMemberRepository.eliminarDefinitivamente` dentro de una transacción: borra asistencias, suscripciones, cambios de plan, deudas de producto y consentimientos heredados, y deja una auditoría sin datos personales (`ELIMINADO_CONSERVANDO_PAGOS` o `ELIMINADO_CON_PAGOS`). Pruebas de dominio reescritas para este comportamiento (las de socios en BAJA heredados se conservan con el estado armado a mano).
+- **Ficha del socio:** «Guardar» y «Guardar y cobrar» van en la tarjeta de Plan de membresía (también al editar); el segundo guarda y abre `/cobros?cobrar=<id>` (deshabilitado si el plan no tiene costo). Se quitó el Guardar de Datos personales.
+- **Cobro (`FormularioCobro`):** barra del socio comprimida (avatar chico, «Nombre · documento» y «Cambiar socio» como enlace); sin selector de plan (se cobra el plan asignado) ni «Meses a pagar» (siempre 1); el bloque «Total a cobrar» sube al principio con el plan y el acceso hasta, y un botón «Cambiar plan» (socio no vigente: lista de planes en línea; socio vigente: el cambio de plan a mitad de ciclo S-07 en un diálogo, que cobra la diferencia y cierra el cobro). Método de pago en una sola fila: tarjetas compactas y, en la cuarta casilla, el número de operación (solo si el método no es efectivo); «Ver datos para el pago» pasó a un ojo dentro de la tarjeta seleccionada.
+- Corregido un fallo de la sesión anterior: el campo de correo quitaba la letra «s» al teclear (la expresión de espacios quedó sin la barra).
+
+**Qué funcionó**
+- Dominio 318 pruebas, `tsc` y lint sin errores (5 avisos de siempre), build correcto.
+
+**Qué no funcionó / a tener en cuenta**
+- Los socios en estado BAJA creados antes de este cambio ya no se ven en ninguna lista (no hay forma de restaurarlos desde la pantalla); su documento sigue reservado y el mensaje al intentar inscribirlos lo dice. Si existen en la base desplegada, hay que depurarlos aparte.
+- Las fotos de socios eliminados quedan en el almacenamiento (R2); no se borran.
+- No se probó en navegador el calendario centrado, el diálogo de eliminación ni el nuevo cobro: verificarlos en el despliegue.
+- `FormularioPago` (`/pagos/nuevo`) usa el mismo cobro, pero sin `hoy`: allí «Cambiar plan» de un socio vigente lleva a su ficha.
+
+**Siguiente**
+1. Probar en el despliegue: eliminar con y sin pagos, «Guardar y cobrar» (alta y ficha), cobro con Yape/BCP/Efectivo y «Cambiar plan».
+2. Pendientes: logos de Yape y BCP, respaldo, S-19, APK y limpieza del esquema.
+
 ## Sesión 2026-11-13 (noche, 23) — Máscaras y validación de documento y celular, correo opcional, selectores visuales
 **Qué se hizo**
 - **Máscaras de entrada** (`documento.ts`, `contacto.ts`): DNI solo dígitos, máximo 8; CE solo dígitos, máximo 12 (mínimo 9, **asumido, por validar**: las búsquedas no confirmaron la longitud del CE; SUNAT lo define alfanumérico de hasta 12). Al cambiar de tipo el número se recorta. El `pattern` del navegador avisa antes de enviar y el dominio sigue siendo la validación definitiva. Un documento anterior a las validaciones no bloquea guardar mientras no se toque.

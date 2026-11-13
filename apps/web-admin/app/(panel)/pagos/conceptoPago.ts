@@ -6,5 +6,6 @@ export function conceptoPago(pago: Pick<Pago, "miembroId" | "miembroNombre" | "p
   if (pago.productoNombre) {
     return `${pago.productoNombre}${pago.cantidad && pago.cantidad > 1 ? ` × ${pago.cantidad}` : ""}`;
   }
-  return pago.miembroNombre ?? pago.miembroId ?? "—";
+  // Sin socio ni producto: el socio se eliminó conservando sus pagos.
+  return pago.miembroNombre ?? (pago.miembroId ? pago.miembroId : "Socio eliminado");
 }

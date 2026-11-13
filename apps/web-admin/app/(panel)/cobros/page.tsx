@@ -53,6 +53,7 @@ export default async function PaginaCobros({ searchParams }: { searchParams: Pro
             planes={planesActivos}
             metodosPago={metodosPago}
             miembroInicialId={cobrar}
+            hoy={hoy}
           />
           <BotonVenderProducto accion={venderProductoAction} productos={productos.filter((p) => p.activo)} metodosPago={metodosPago} />
           <EnlaceHistoricoPagos />

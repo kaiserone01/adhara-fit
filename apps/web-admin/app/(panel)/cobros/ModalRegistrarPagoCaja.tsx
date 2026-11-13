@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import type { Miembro } from "@gym-app/domain/entities/Miembro";
 import type { MetodoPago } from "@gym-app/domain/entities/MetodoPago";
 import { Avatar } from "@gym-app/ui/components/Avatar";
-import { Button } from "@gym-app/ui/components/Button";
 import { DURACION_MS } from "@gym-app/ui/components/FeedbackOverlay";
 import { registrarPagoAction } from "../pagos/actions";
 import { FormularioCobro } from "./FormularioCobro";
@@ -21,6 +20,7 @@ export function ModalRegistrarPagoCaja({
   planes,
   metodosPago,
   miembroInicialId,
+  hoy,
   onCerrar,
 }: {
   miembros: Miembro[];
@@ -28,6 +28,8 @@ export function ModalRegistrarPagoCaja({
   metodosPago: MetodoPago[];
   // Viene de /cobros?cobrar=<id> («Cobrar ahora» en En sala): abre el cobro con ese socio ya elegido.
   miembroInicialId?: string;
+  // Hoy según el servidor (para el cambio de plan a mitad de ciclo).
+  hoy?: Date;
   onCerrar: () => void;
 }) {
   const router = useRouter();
@@ -52,18 +54,26 @@ export function ModalRegistrarPagoCaja({
 
         {elegido && (
           <>
-            <div className="flex items-center gap-4 rounded-xl p-4" style={{ background: "var(--gx-surface-2)" }}>
-              <Avatar fotoUrl={elegido.fotoUrl} nombre={elegido.nombre} tamano={64} />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-lg font-semibold" style={{ color: "var(--gx-ink)" }}>
+            <div className="flex items-center gap-3 rounded-xl px-3 py-2" style={{ background: "var(--gx-surface-2)" }}>
+              <Avatar fotoUrl={elegido.fotoUrl} nombre={elegido.nombre} tamano={40} />
+              <p className="min-w-0 flex-1 truncate">
+                <span className="font-semibold" style={{ color: "var(--gx-ink)" }}>
                   {elegido.nombre}
-                </p>
-                <p style={{ color: "var(--gx-muted)" }}>{elegido.documento}</p>
-              </div>
+                </span>
+                <span className="text-sm" style={{ color: "var(--gx-muted)" }}>
+                  {" · "}
+                  {elegido.documento}
+                </span>
+              </p>
               {!miembroInicialId && (
-                <Button type="button" variant="secundario" onClick={() => setElegido(null)}>
+                <button
+                  type="button"
+                  onClick={() => setElegido(null)}
+                  className="shrink-0 rounded-md px-2 py-1 text-sm font-medium transition-colors hover:bg-[var(--gx-surface)]"
+                  style={{ color: "var(--gx-accent)" }}
+                >
                   Cambiar socio
-                </Button>
+                </button>
               )}
             </div>
 
@@ -75,6 +85,8 @@ export function ModalRegistrarPagoCaja({
               accion={registrarPagoAction}
               origen="caja"
               onRegistrado={alRegistrar}
+              hoy={hoy}
+              onPlanCambiado={alRegistrar}
             />
           </>
         )}

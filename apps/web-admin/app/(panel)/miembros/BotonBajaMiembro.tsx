@@ -1,31 +1,52 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Trash, ArrowCounterClockwise } from "@phosphor-icons/react/dist/ssr";
+import { Trash } from "@phosphor-icons/react/dist/ssr";
 import { Button } from "@gym-app/ui/components/Button";
 import { useFeedback } from "@gym-app/ui/components/FeedbackOverlay";
-import { eliminarMiembroAction, restaurarMiembroAction } from "./actions";
+import { eliminarMiembroAction } from "./actions";
 
-const MAX_MOTIVO = 200;
+const PALABRA_CONFIRMACION = "eliminar";
 
 /**
- * «Eliminar» (baja lógica, S-09) y «Restaurar» de un socio, con una confirmación y un motivo opcional.
- * Eliminar no borra nada: el socio deja de aparecer y sus pagos y datos se conservan.
+ * Eliminación definitiva de un socio en un solo paso: se elige qué pasa con sus pagos y, para confirmar, se escribe la
+ * palabra «eliminar». No hay bandeja de eliminados ni forma de deshacerlo.
  */
-export function BotonBajaMiembro({ id, nombre, accion }: { id: string; nombre: string; accion: "eliminar" | "restaurar" }) {
+export function BotonBajaMiembro({ id, nombre }: { id: string; nombre: string }) {
   const [abierto, setAbierto] = useState(false);
-  const [motivo, setMotivo] = useState("");
+  const [conPagos, setConPagos] = useState(false);
+  const [texto, setTexto] = useState("");
   const [enviando, iniciarTransicion] = useTransition();
   const { mostrarError } = useFeedback();
-  const eliminar = accion === "eliminar";
+  const confirmado = texto.trim().toLowerCase() === PALABRA_CONFIRMACION;
+
+  function cerrar() {
+    setAbierto(false);
+    setConPagos(false);
+    setTexto("");
+  }
 
   function confirmar() {
+    if (!confirmado) return;
     iniciarTransicion(async () => {
       // Si sale bien, la acción redirige; si no, devuelve el mensaje de error.
-      const resultado = await (eliminar ? eliminarMiembroAction(id, motivo) : restaurarMiembroAction(id, motivo));
+      const resultado = await eliminarMiembroAction(id, conPagos, texto);
       if (resultado?.error) mostrarError(resultado.error);
     });
   }
+
+  const opciones = [
+    {
+      conPagos: false,
+      titulo: "Eliminar solo al socio",
+      detalle: "Se borran sus datos, asistencias y plan. Sus pagos se conservan en caja e ingresos como «Socio eliminado».",
+    },
+    {
+      conPagos: true,
+      titulo: "Eliminar al socio y sus pagos",
+      detalle: "Se borran también todos sus cobros: los ingresos de esas fechas bajarán y no podrás recuperarlos.",
+    },
+  ];
 
   return (
     <>
@@ -33,10 +54,10 @@ export function BotonBajaMiembro({ id, nombre, accion }: { id: string; nombre: s
         type="button"
         onClick={() => setAbierto(true)}
         className="inline-flex cursor-pointer items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold transition-colors"
-        style={eliminar ? { color: "var(--gx-bad)", borderColor: "var(--gx-bad)" } : { color: "var(--gx-accent)", borderColor: "var(--gx-accent)" }}
+        style={{ color: "var(--gx-bad)", borderColor: "var(--gx-bad)" }}
       >
-        {eliminar ? <Trash size={16} weight="bold" /> : <ArrowCounterClockwise size={16} weight="bold" />}
-        {eliminar ? "Eliminar" : "Restaurar"}
+        <Trash size={16} weight="bold" />
+        Eliminar
       </button>
 
       {abierto && (
@@ -45,33 +66,62 @@ export function BotonBajaMiembro({ id, nombre, accion }: { id: string; nombre: s
           style={{ background: "color-mix(in srgb, black 60%, transparent)" }}
         >
           <div
-            className="w-full max-w-md rounded-2xl border-2 p-6"
-            style={{ borderColor: eliminar ? "var(--gx-bad)" : "var(--gx-accent)", background: "var(--gx-surface)" }}
+            className="max-h-full w-full max-w-md overflow-auto rounded-2xl border-2 p-6"
+            style={{ borderColor: "var(--gx-bad)", background: "var(--gx-surface)" }}
           >
             <h3 className="text-lg font-bold" style={{ color: "var(--gx-ink)" }}>
-              {eliminar ? `¿Eliminar a ${nombre}?` : `¿Restaurar a ${nombre}?`}
+              ¿Eliminar a {nombre}?
             </h3>
-            <p className="mt-2 text-sm" style={{ color: "var(--gx-muted)" }}>
-              {eliminar
-                ? "El socio dejará de aparecer en los listados, en los cobros y en el kiosco. Sus pagos y sus datos se conservan, y podrás restaurarlo desde «Eliminados»."
-                : "El socio volverá a aparecer en los listados y podrá registrar su asistencia. Conserva su plan y su vencimiento tal como estaban."}
+            <p className="mt-1 text-sm" style={{ color: "var(--gx-muted)" }}>
+              Es definitivo: no hay forma de recuperarlo.
             </p>
+
+            <div className="mt-4 flex flex-col gap-2" role="radiogroup" aria-label="Qué se elimina">
+              {opciones.map((opcion) => {
+                const seleccionada = conPagos === opcion.conPagos;
+                return (
+                  <button
+                    key={opcion.titulo}
+                    type="button"
+                    role="radio"
+                    aria-checked={seleccionada}
+                    onClick={() => setConPagos(opcion.conPagos)}
+                    className="rounded-lg border-2 p-3 text-left transition-colors duration-150"
+                    style={
+                      seleccionada
+                        ? { borderColor: "var(--gx-bad)", background: "color-mix(in srgb, var(--gx-bad) 12%, transparent)" }
+                        : { borderColor: "var(--gx-edge)" }
+                    }
+                  >
+                    <span className="block text-sm font-semibold" style={{ color: "var(--gx-ink)" }}>
+                      {opcion.titulo}
+                    </span>
+                    <span className="mt-0.5 block text-xs" style={{ color: "var(--gx-muted)" }}>
+                      {opcion.detalle}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
             <label className="mt-4 flex flex-col gap-1.5 text-sm" style={{ color: "var(--gx-muted)" }}>
-              Motivo (opcional)
-              <textarea
-                value={motivo}
-                onChange={(e) => setMotivo(e.target.value)}
-                maxLength={MAX_MOTIVO}
-                rows={2}
-                className="rounded-lg border px-3 py-2 gx-campo"
+              Escribe «{PALABRA_CONFIRMACION}» para confirmar
+              <input
+                value={texto}
+                onChange={(e) => setTexto(e.target.value)}
+                autoComplete="off"
+                autoCapitalize="none"
+                spellCheck={false}
+                className="min-h-11 rounded-lg border px-3 gx-campo"
               />
             </label>
+
             <div className="mt-4 flex gap-3">
-              <Button type="button" variant="secundario" className="flex-1" onClick={() => setAbierto(false)} disabled={enviando}>
+              <Button type="button" variant="secundario" className="flex-1" onClick={cerrar} disabled={enviando}>
                 Cancelar
               </Button>
-              <Button type="button" variant={eliminar ? "peligro" : "primario"} className="flex-1" onClick={confirmar} disabled={enviando}>
-                {enviando ? "Guardando..." : eliminar ? "Sí, eliminar" : "Sí, restaurar"}
+              <Button type="button" variant="peligro" className="flex-1" onClick={confirmar} disabled={enviando || !confirmado}>
+                {enviando ? "Eliminando..." : "Eliminar"}
               </Button>
             </div>
           </div>

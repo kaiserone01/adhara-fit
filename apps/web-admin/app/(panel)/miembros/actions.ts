@@ -31,14 +31,7 @@ import { inicioDelDiaLima } from "@gym-app/domain/utils/fechaLima";
 import { PrismaSucursalRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSucursalRepository";
 import { PrismaUnidadDeTrabajo } from "@gym-app/infrastructure/persistence/prisma/PrismaUnidadDeTrabajo";
 import { storageR2 } from "@/lib/storageR2";
-import {
-  eliminarMiembro,
-  restaurarMiembro,
-  MiembroNoEncontradoError as BajaMiembroNoEncontradoError,
-  MiembroYaEliminadoError,
-  MiembroNoEliminadoError,
-  MotivoBajaInvalidoError,
-} from "@gym-app/domain/use-cases/EliminarMiembro";
+import { eliminarMiembro, MiembroNoEncontradoError as BajaMiembroNoEncontradoError } from "@gym-app/domain/use-cases/EliminarMiembro";
 import { MiembroFueraDeSucursalError as BajaMiembroFueraDeSucursalError } from "@gym-app/domain/use-cases/ObtenerMiembro";
 import { conMensajeOk } from "../redirectConMensaje";
 
@@ -179,6 +172,7 @@ export async function actualizarMiembroAction(
   const documento = leerDocumento(formData);
   const sucursalId = formData.get("sucursalId")?.toString();
   const precioPlan = Number(formData.get("precioPlan"));
+  const cobrarDespues = formData.get("despues")?.toString() === "cobrar";
 
   if (!nombre || !documento.numeroDocumento || !sucursalId || Number.isNaN(precioPlan)) {
     return { error: "Nombre, documento, sede y precio del plan son requeridos." };
@@ -244,6 +238,10 @@ export async function actualizarMiembroAction(
   // lado seguiría mostrando el plan/monto viejos aunque el cambio ya esté
   // guardado en la base (ver diseño acordado, bug real reportado).
   revalidatePath(`/miembros/${id}`);
+  // «Guardar y cobrar»: tras guardar, abre el cobro con el socio ya elegido (un plan sin costo no tiene nada que cobrar).
+  if (cobrarDespues && precioPlan > 0) {
+    redirect(`/cobros?cobrar=${encodeURIComponent(id)}`);
+  }
   redirect(conMensajeOk(`/miembros/${id}`, "Cambios guardados."));
 }
 
@@ -285,56 +283,31 @@ export interface ResultadoBajaMiembro {
   error?: string;
 }
 
-function mensajeDeBaja(error: unknown): string | null {
-  return error instanceof BajaMiembroNoEncontradoError ||
-    error instanceof BajaMiembroFueraDeSucursalError ||
-    error instanceof MiembroYaEliminadoError ||
-    error instanceof MiembroNoEliminadoError ||
-    error instanceof MotivoBajaInvalidoError
-    ? error.message
-    : null;
-}
-
-// Elimina al socio (baja lógica y reversible, S-09): deja de aparecer y sus pagos y datos se conservan.
-// Devuelve el error de dominio como mensaje (en producción Next oculta el texto de los errores lanzados).
-export async function eliminarMiembroAction(id: string, motivo: string): Promise<ResultadoBajaMiembro> {
+// Elimina al socio de forma definitiva y en un solo paso; `conPagos` decide si también se borran sus cobros. La palabra
+// de confirmación se vuelve a comprobar aquí: la pantalla no es la única barrera. Devuelve el error de dominio como
+// mensaje (en producción Next oculta el texto de los errores lanzados).
+export async function eliminarMiembroAction(id: string, conPagos: boolean, confirmacion: string): Promise<ResultadoBajaMiembro> {
   const sesion = await obtenerUsuarioDeSesionActual();
   if (!sesion) redirect("/login");
   const { usuario, sucursalActivaId } = sesion;
+
+  if (confirmacion.trim().toLowerCase() !== "eliminar") {
+    return { error: "Escribe «eliminar» para confirmar." };
+  }
 
   try {
     await eliminarMiembro(
       { unidad: new PrismaUnidadDeTrabajo(prisma) },
-      { organizacionId: usuario.organizacionId, id, sucursalActivaId, usuarioId: usuario.id, motivo }
+      { organizacionId: usuario.organizacionId, id, sucursalActivaId, usuarioId: usuario.id, conPagos: conPagos === true }
     );
   } catch (error) {
-    const mensaje = mensajeDeBaja(error);
-    if (mensaje) return { error: mensaje };
+    if (error instanceof BajaMiembroNoEncontradoError || error instanceof BajaMiembroFueraDeSucursalError) {
+      return { error: error.message };
+    }
     throw error;
   }
 
   revalidatePath("/miembros");
-  revalidatePath(`/miembros/${id}`);
-  redirect(conMensajeOk("/miembros", "Socio eliminado. Sus pagos se conservan; puedes restaurarlo desde «Eliminados»."));
-}
-
-export async function restaurarMiembroAction(id: string, motivo: string): Promise<ResultadoBajaMiembro> {
-  const sesion = await obtenerUsuarioDeSesionActual();
-  if (!sesion) redirect("/login");
-  const { usuario, sucursalActivaId } = sesion;
-
-  try {
-    await restaurarMiembro(
-      { unidad: new PrismaUnidadDeTrabajo(prisma) },
-      { organizacionId: usuario.organizacionId, id, sucursalActivaId, usuarioId: usuario.id, motivo }
-    );
-  } catch (error) {
-    const mensaje = mensajeDeBaja(error);
-    if (mensaje) return { error: mensaje };
-    throw error;
-  }
-
-  revalidatePath("/miembros");
-  revalidatePath(`/miembros/${id}`);
-  redirect(conMensajeOk(`/miembros/${id}`, "Socio restaurado."));
+  revalidatePath("/cobros");
+  redirect(conMensajeOk("/miembros", conPagos ? "Socio y pagos eliminados." : "Socio eliminado. Sus pagos se conservan en caja."));
 }

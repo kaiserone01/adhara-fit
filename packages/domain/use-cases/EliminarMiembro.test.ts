@@ -1,12 +1,5 @@
 import { describe, expect, test } from "vitest";
-import {
-  eliminarMiembro,
-  restaurarMiembro,
-  MiembroNoEncontradoError,
-  MiembroYaEliminadoError,
-  MiembroNoEliminadoError,
-  MotivoBajaInvalidoError,
-} from "./EliminarMiembro";
+import { eliminarMiembro, MiembroNoEncontradoError } from "./EliminarMiembro";
 import { registrarPago } from "./RegistrarPago";
 import { cambiarPlan } from "./CambiarPlan";
 import { anularPago } from "./AnularPago";
@@ -17,10 +10,11 @@ import { actualizarMiembro } from "./ActualizarMiembro";
 import { DocumentoDuplicadoError, MiembroEliminadoError } from "../entities/ErroresMiembro";
 import { crearEstadoMemoria, crearUnidadEnMemoria, type EstadoMemoria } from "./unidadEnMemoria";
 import type { Miembro } from "../entities/Miembro";
+import type { Pago } from "../entities/Pago";
 
 const AHORA = new Date("2026-11-13T15:00:00Z");
 const dia = (iso: string) => new Date(`${iso}T05:00:00.000Z`);
-const BASE = { organizacionId: "org", id: "m1", sucursalActivaId: "s1", usuarioId: "u1", ahora: AHORA };
+const BASE = { organizacionId: "org", id: "m1", sucursalActivaId: "s1", usuarioId: "u1" };
 
 function preparar(parcial: Partial<EstadoMemoria> = {}) {
   const estado = crearEstadoMemoria({
@@ -31,71 +25,44 @@ function preparar(parcial: Partial<EstadoMemoria> = {}) {
   return { estado, deps: { unidad: crearUnidadEnMemoria(estado) } };
 }
 
-describe("eliminarMiembro / restaurarMiembro (S-09)", () => {
-  test("eliminar deja el socio en BAJA con instante, usuario y motivo, y audita en la misma operación", async () => {
-    const { estado, deps } = preparar();
-    await eliminarMiembro(deps, { ...BASE, motivo: "  se mudó  " });
+describe("eliminarMiembro: borrado definitivo en un paso", () => {
+  const pagoDe = (id: string) => ({ id, miembroId: "m1", monto: 100 }) as unknown as Pago;
 
-    expect(estado.miembro).toMatchObject({ estado: "BAJA", bajaEn: AHORA, bajaPorId: "u1", bajaMotivo: "se mudó" });
-    expect(estado.registrosAuditoria).toEqual([
-      { entidad: "Miembro", entidadId: "m1", campo: "estado", valorAnterior: "ACTIVO", valorNuevo: "BAJA", motivo: "se mudó", usuarioId: "u1" },
+  test("sin pagos: borra al socio y su plan, y los pagos quedan sin socio (se verán como «Socio eliminado»)", async () => {
+    const { estado, deps } = preparar({ pagos: [pagoDe("p1"), pagoDe("p2")] });
+    await eliminarMiembro(deps, { ...BASE, conPagos: false });
+
+    expect(estado.miembroEliminado).toBe(true);
+    expect(estado.suscripcion).toBeNull();
+    expect(estado.pagos.map((p) => p.miembroId)).toEqual([null, null]);
+  });
+
+  test("con pagos: borra también todos sus pagos", async () => {
+    const { estado, deps } = preparar({ pagos: [pagoDe("p1"), pagoDe("p2")] });
+    await eliminarMiembro(deps, { ...BASE, conPagos: true });
+
+    expect(estado.miembroEliminado).toBe(true);
+    expect(estado.pagos).toHaveLength(0);
+  });
+
+  test("deja un registro de auditoría sin datos personales que dice qué se borró", async () => {
+    const a = preparar();
+    await eliminarMiembro(a.deps, { ...BASE, conPagos: false });
+    const b = preparar();
+    await eliminarMiembro(b.deps, { ...BASE, conPagos: true });
+
+    expect(a.estado.registrosAuditoria).toEqual([
+      { entidad: "Miembro", entidadId: "m1", campo: "eliminado", valorAnterior: "ACTIVO", valorNuevo: "ELIMINADO_CONSERVANDO_PAGOS", motivo: "eliminación definitiva", usuarioId: "u1" },
     ]);
-  });
-
-  test("eliminar no toca el plan, el precio, el vencimiento ni la suscripción", async () => {
-    const { estado, deps } = preparar();
-    await eliminarMiembro(deps, BASE);
-
-    expect(estado.miembro).toMatchObject({ planId: "mensual", precioPlan: 100, fechaVencimiento: dia("2026-11-20"), fechaUltimoPago: dia("2026-10-21") });
-    expect(estado.suscripcion).toEqual({ planId: "mensual", inicio: dia("2026-10-21"), fin: dia("2026-11-20") });
-  });
-
-  test("el motivo es opcional (la auditoría guarda «sin motivo»), de hasta 200 caracteres", async () => {
-    for (const motivo of [undefined, "   "]) {
-      const { estado, deps } = preparar();
-      await eliminarMiembro(deps, { ...BASE, motivo });
-      expect(estado.miembro.bajaMotivo).toBeNull();
-      expect(estado.registrosAuditoria[0].motivo).toBe("sin motivo");
-    }
-    const { estado, deps } = preparar();
-    await eliminarMiembro(deps, { ...BASE, motivo: "x".repeat(200) });
-    expect(estado.miembro.bajaMotivo).toHaveLength(200);
-  });
-
-  test("un motivo de 201 caracteres se rechaza sin escribir nada", async () => {
-    const { estado, deps } = preparar();
-    await expect(eliminarMiembro(deps, { ...BASE, motivo: "x".repeat(201) })).rejects.toBeInstanceOf(MotivoBajaInvalidoError);
-    expect(estado.miembro.estado).toBe("ACTIVO");
-    expect(estado.registrosAuditoria).toHaveLength(0);
-  });
-
-  test("eliminar a un socio ya eliminado se rechaza y no audita de nuevo", async () => {
-    const { estado, deps } = preparar();
-    await eliminarMiembro(deps, BASE);
-    await expect(eliminarMiembro(deps, BASE)).rejects.toBeInstanceOf(MiembroYaEliminadoError);
-    expect(estado.registrosAuditoria).toHaveLength(1);
-  });
-
-  test("restaurar vuelve a ACTIVO, vacía los datos de baja y conserva el vencimiento vencido", async () => {
-    const { estado, deps } = preparar({
-      miembro: { id: "m1", planId: "mensual", precioPlan: 100, fechaVencimiento: dia("2026-10-01"), fechaUltimoPago: null, estado: "BAJA", bajaEn: AHORA, bajaPorId: "u1", bajaMotivo: "x" },
-    });
-    await restaurarMiembro(deps, { ...BASE, motivo: "volvió" });
-
-    expect(estado.miembro).toMatchObject({ estado: "ACTIVO", bajaEn: null, bajaPorId: null, bajaMotivo: null, fechaVencimiento: dia("2026-10-01") });
-    expect(estado.registrosAuditoria[0]).toMatchObject({ valorAnterior: "BAJA", valorNuevo: "ACTIVO", motivo: "volvió" });
-  });
-
-  test("restaurar a un socio activo se rechaza", async () => {
-    const { deps } = preparar();
-    await expect(restaurarMiembro(deps, BASE)).rejects.toBeInstanceOf(MiembroNoEliminadoError);
+    expect(b.estado.registrosAuditoria[0].valorNuevo).toBe("ELIMINADO_CON_PAGOS");
   });
 
   test("un socio que no está en la sede activa no se elimina", async () => {
     const { estado, deps } = preparar();
     estado.miembro.sucursalId = "otra";
-    await expect(eliminarMiembro(deps, BASE)).rejects.toThrow();
-    expect(estado.miembro.estado).toBe("ACTIVO");
+    await expect(eliminarMiembro(deps, { ...BASE, conPagos: true })).rejects.toThrow();
+    expect(estado.miembroEliminado).toBeUndefined();
+    expect(estado.registrosAuditoria).toHaveLength(0);
   });
 
   test("eliminar a un socio inexistente lanza MiembroNoEncontradoError", async () => {
@@ -104,11 +71,12 @@ describe("eliminarMiembro / restaurarMiembro (S-09)", () => {
       ejecutar: (op: Parameters<typeof unidad.ejecutar>[0]) =>
         unidad.ejecutar((repos) => op({ ...repos, miembros: { ...repos.miembros, buscarPorId: async () => null } })),
     } as typeof unidad;
-    await expect(eliminarMiembro({ unidad: sinMiembro }, BASE)).rejects.toBeInstanceOf(MiembroNoEncontradoError);
+    await expect(eliminarMiembro({ unidad: sinMiembro }, { ...BASE, conPagos: false })).rejects.toBeInstanceOf(MiembroNoEncontradoError);
   });
 });
 
-describe("un socio eliminado en el resto del sistema (S-09)", () => {
+// Socios en estado BAJA heredados de la baja lógica anterior (S-09): ya no se crean, pero el código los sigue tratando como inexistentes.
+describe("un socio en BAJA heredado en el resto del sistema", () => {
   const cobro = {
     organizacionId: "org",
     miembroId: "m1",
@@ -122,7 +90,7 @@ describe("un socio eliminado en el resto del sistema (S-09)", () => {
   test("no recibe cobros nuevos, pero repetir un cobro ya registrado devuelve el original", async () => {
     const { estado, deps } = preparar();
     const original = await registrarPago(deps, { ...cobro, cobroId: "C1" });
-    await eliminarMiembro(deps, BASE);
+    estado.miembro.estado = "BAJA";
 
     await expect(registrarPago(deps, { ...cobro, cobroId: "C2" })).rejects.toBeInstanceOf(MiembroEliminadoError);
     expect(estado.pagos).toHaveLength(1);
@@ -137,7 +105,7 @@ describe("un socio eliminado en el resto del sistema (S-09)", () => {
         { id: "trimestral", activo: true, precioUSD: 250, diasCiclo: 90 },
       ],
     });
-    await eliminarMiembro(deps, BASE);
+    estado.miembro.estado = "BAJA";
     await expect(
       cambiarPlan(deps, {
         organizacionId: "org",
@@ -159,7 +127,7 @@ describe("un socio eliminado en el resto del sistema (S-09)", () => {
   test("sus pagos se pueden anular (corrección contable)", async () => {
     const { estado, deps } = preparar();
     const pago = await registrarPago(deps, { ...cobro, cobroId: "C1" });
-    await eliminarMiembro(deps, BASE);
+    estado.miembro.estado = "BAJA";
     const anulado = await anularPago(deps, { organizacionId: "org", pagoId: pago.id, anuladoPorId: "u1", motivo: "error" });
     expect(anulado.anuladoEn).not.toBeNull();
     expect(estado.pagos).toHaveLength(1);

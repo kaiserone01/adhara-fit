@@ -179,6 +179,25 @@ export class PrismaMemberRepository implements IMemberRepository {
     await this.prisma.$queryRaw`SELECT "id" FROM "Miembro" WHERE "id" = ${id} FOR UPDATE`;
   }
 
+  async eliminarDefinitivamente(id: string, conPagos: boolean): Promise<void> {
+    if (conPagos) {
+      const pagos = await this.prisma.pago.findMany({ where: { miembroId: id }, select: { id: true } });
+      // El registro de un cambio de plan puede apuntar a un pago: se borra antes que él.
+      await this.prisma.cambioPlanAuditoria.deleteMany({
+        where: { OR: [{ miembroId: id }, { pagoId: { in: pagos.map((p) => p.id) } }] },
+      });
+      await this.prisma.pago.deleteMany({ where: { miembroId: id } });
+    } else {
+      await this.prisma.cambioPlanAuditoria.deleteMany({ where: { miembroId: id } });
+      await this.prisma.pago.updateMany({ where: { miembroId: id }, data: { miembroId: null } });
+    }
+    await this.prisma.checkIn.deleteMany({ where: { miembroId: id } });
+    await this.prisma.suscripcion.deleteMany({ where: { miembroId: id } });
+    await this.prisma.deudaProducto.deleteMany({ where: { miembroId: id } });
+    await this.prisma.consentimientoMiembro.deleteMany({ where: { miembroId: id } });
+    await this.prisma.miembro.delete({ where: { id } });
+  }
+
   async actualizarFechasPago(id: string, fechaUltimoPago: Date | null, fechaVencimiento: Date): Promise<void> {
     await this.prisma.miembro.update({
       where: { id },

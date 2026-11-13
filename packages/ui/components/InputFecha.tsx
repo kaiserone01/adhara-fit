@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useState } from "react";
+import { createPortal } from "react-dom";
 import { DayPicker } from "react-day-picker";
 import { es } from "react-day-picker/locale";
 import { CalendarBlank } from "@phosphor-icons/react";
@@ -79,7 +80,6 @@ export function InputFecha({
 
   const [texto, setTexto] = useState(isoATexto(iso));
   const [abierto, setAbierto] = useState(false);
-  const contenedor = useRef<HTMLDivElement>(null);
   const idError = useId();
 
   // Si el valor cambia desde afuera (p. ej. un botón que lo ajusta), se refleja en el texto.
@@ -89,17 +89,12 @@ export function InputFecha({
 
   useEffect(() => {
     if (!abierto) return;
-    function alClickAfuera(e: MouseEvent) {
-      if (!contenedor.current?.contains(e.target as Node)) setAbierto(false);
-    }
     function alTeclear(e: KeyboardEvent) {
       if (e.key === "Escape") setAbierto(false);
     }
-    document.addEventListener("mousedown", alClickAfuera);
     document.addEventListener("keydown", alTeclear);
     return () => {
-      document.removeEventListener("mousedown", alClickAfuera);
-      document.removeEventListener("keydown", alTeclear);
+        document.removeEventListener("keydown", alTeclear);
     };
   }, [abierto]);
 
@@ -116,7 +111,7 @@ export function InputFecha({
   const hoy = new Date();
 
   return (
-    <div className="flex flex-col gap-1.5 text-sm" style={{ color: "var(--gx-muted)" }} ref={contenedor}>
+    <div className="flex flex-col gap-1.5 text-sm" style={{ color: "var(--gx-muted)" }}>
       <label htmlFor={id ?? idError + "-campo"} className={etiquetaOculta ? "sr-only" : undefined}>
         {label}
       </label>
@@ -155,9 +150,20 @@ export function InputFecha({
         </button>
         )}
 
-        {abierto && !sinCalendario && (
+        {/* El calendario se abre centrado en la pantalla (en un portal, para que ningún contenedor lo recorte ni obligue a
+            bajar con el scroll); tocar fuera lo cierra. */}
+        {abierto && !sinCalendario && createPortal(
           <div
-            className="selector-fecha absolute left-0 top-full z-50 mt-2 rounded-2xl border p-3 shadow-lg"
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-label={label}
+            onMouseDown={(e) => {
+              if (e.target === e.currentTarget) setAbierto(false);
+            }}
+          >
+          <div
+            className="selector-fecha max-h-full overflow-auto rounded-2xl border p-3 shadow-lg"
             style={{ background: "var(--gx-surface-elevada, var(--gx-surface))", borderColor: "var(--gx-edge)" }}
           >
             <DayPicker
@@ -205,6 +211,8 @@ export function InputFecha({
               </button>
             </div>
           </div>
+          </div>,
+          document.body
         )}
       </div>
       {(incompleto || fueraDeRango) && (

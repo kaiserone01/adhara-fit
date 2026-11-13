@@ -19,4 +19,9 @@ export interface IMemberRepository {
   actualizarFechasPago(id: string, fechaUltimoPago: Date | null, fechaVencimiento: Date): Promise<void>;
   // Bloquea la fila del miembro hasta el fin de la transacción en curso (cobros y anulaciones concurrentes).
   bloquearPorId(id: string): Promise<void>;
+  /**
+   * Borra al miembro y lo que cuelga de él (asistencias, suscripciones, cambios de plan, deudas). Con `conPagos` borra
+   * también sus pagos; sin él, los pagos quedan sin socio. Pensado para ejecutarse dentro de una transacción.
+   */
+  eliminarDefinitivamente(id: string, conPagos: boolean): Promise<void>;
 }

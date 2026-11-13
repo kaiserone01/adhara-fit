@@ -13,12 +13,14 @@ export function BotonRegistrarPagoCaja({
   planes,
   metodosPago,
   miembroInicialId,
+  hoy,
 }: {
   miembros: Miembro[];
   planes: PlanParaModal[];
   metodosPago: MetodoPago[];
   // Viene de /cobros?cobrar=<id> («Cobrar ahora» en En sala): abre el cobro con ese socio ya elegido.
   miembroInicialId?: string;
+  hoy?: Date;
 }) {
   const router = useRouter();
   const [modalAbierta, setModalAbierta] = useState(!!miembroInicialId);
@@ -32,6 +34,7 @@ export function BotonRegistrarPagoCaja({
           planes={planes}
           metodosPago={metodosPago}
           miembroInicialId={miembroInicialId}
+          hoy={hoy}
           onCerrar={() => {
             setModalAbierta(false);
             // Quita ?cobrar para que recargar la página no reabra el wizard.

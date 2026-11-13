@@ -130,8 +130,8 @@ export function FormularioVitrinaItem({
       ) : (
         <>
           <div className="grid gap-4 sm:grid-cols-3">
-            <Input label="Precio (USD)" name="precioUSD" inputMode="decimal" defaultValue={item?.precioUSD ?? ""} />
-            <Input label="Oferta (USD)" name="ofertaUSD" inputMode="decimal" defaultValue={item?.ofertaUSD ?? ""} />
+            <Input label="Precio (S/)" name="precioUSD" inputMode="decimal" defaultValue={item?.precioUSD ?? ""} />
+            <Input label="Oferta (S/)" name="ofertaUSD" inputMode="decimal" defaultValue={item?.ofertaUSD ?? ""} />
             <Input label="Descuento (%)" name="descuentoPct" inputMode="numeric" defaultValue={item?.descuentoPct ?? ""} />
           </div>
           <Input label="Etiqueta (ej. NUEVO, 2x1)" name="etiqueta" defaultValue={item?.etiqueta ?? ""} maxLength={20} />

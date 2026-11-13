@@ -1,5 +1,5 @@
-// Mensajes de teclado que entiende el checkin: los manda apps/kiosk-host (WebView2) y, en la APK
-// de Android TV, los genera mensajeDeTecla a partir de `keydown`.
+// Mensajes de teclado que entiende el checkin: en el APK de Android TV los genera mensajeDeTecla a partir del
+// `keydown` del teclado numérico USB.
 export type MensajeTeclado =
   | { type: "digit"; value: string }
   | { type: "enter" }

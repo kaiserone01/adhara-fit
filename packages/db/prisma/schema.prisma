@@ -238,6 +238,21 @@ model ConsentimientoMiembro {
   @@index([miembroId, aceptadoEn])
 }
 
+// S-21: intentos de check-in por sede, para limitar los fallos (un código de 4 dígitos se podría enumerar).
+enum ResultadoIntentoCheckin {
+  EXITO
+  FALLO
+}
+
+model IntentoCheckin {
+  id         String                  @id @default(cuid())
+  sucursalId String
+  resultado  ResultadoIntentoCheckin
+  creadoEn   DateTime                @default(now())
+
+  @@index([sucursalId, creadoEn])
+}
+
 enum EstadoMiembro {
   ACTIVO
   BAJA

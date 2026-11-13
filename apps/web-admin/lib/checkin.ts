@@ -14,6 +14,7 @@ export const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, X-Checkin-Api-Key",
+  "Access-Control-Expose-Headers": "Retry-After",
 };
 
 export function jsonCheckin(body: unknown, status: number) {

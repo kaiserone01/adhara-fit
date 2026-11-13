@@ -14,6 +14,7 @@ import { useFraseRotativa } from "@/lib/useFraseRotativa";
 import { useFrasesReposo } from "@/lib/useFrasesReposo";
 import { useHoraActual } from "@/lib/useHoraActual";
 import { useInfoCheckin } from "@/lib/useInfoCheckin";
+import { ESPERA_POR_DEFECTO_SEGUNDOS } from "@/lib/esperaBloqueo";
 import { AccessCard } from "@/components/AccessCard";
 import { FichaAviso } from "@/components/FichaAviso";
 import { FichaGiratoria } from "@/components/FichaGiratoria";
@@ -64,10 +65,20 @@ export default function PaginaCheckIn() {
   const [pantalla, despachar] = useReducer(reducirPantalla, estadoInicial);
   const [reaccion, setReaccion] = useState<Reaccion | null>(null);
   const [pendientes, setPendientes] = useState(0);
+  // Instante hasta el que el servidor pidió no enviar más (429); 0 si no hay bloqueo.
+  const [bloqueadoHasta, setBloqueadoHasta] = useState(0);
+  const [ahoraMs, setAhoraMs] = useState(() => Date.now());
   const { identificador, limpiar, sinInput, propsInput } = useEntradaIdentificador({ alEnviar: enviar });
   const info = useInfoCheckin(apiKey);
   const { frase, saliendo } = useFraseRotativa(useFrasesReposo(info?.reposo));
   const hora = useHoraActual();
+
+  // Mientras dura el bloqueo se refresca cada segundo para mostrar la cuenta regresiva.
+  useEffect(() => {
+    if (bloqueadoHasta <= Date.now()) return;
+    const intervalo = setInterval(() => setAhoraMs(Date.now()), 1_000);
+    return () => clearInterval(intervalo);
+  }, [bloqueadoHasta]);
 
   useEffect(() => {
     let activo = true;
@@ -127,6 +138,8 @@ export default function PaginaCheckIn() {
 
   async function enviar(identificador: string) {
     if (!apiKey || !identificador || pantalla.procesando) return;
+    // Bloqueado por intentos: no se envía ni se encola (el servidor ya dijo que no).
+    if (bloqueadoHasta > Date.now()) return;
 
     despachar({ tipo: "enviar" });
 
@@ -151,6 +164,11 @@ export default function PaginaCheckIn() {
       };
     } catch (error) {
       if (error instanceof ErrorCheckIn) {
+        if (error.status === 429) {
+          const espera = error.reintentarEnSegundos ?? ESPERA_POR_DEFECTO_SEGUNDOS;
+          setBloqueadoHasta(Date.now() + espera * 1_000);
+          setAhoraMs(Date.now());
+        }
         salida = { ficha: { tipo: "error", mensaje: error.message }, tono: "rojo" };
       } else {
         try {
@@ -201,16 +219,21 @@ export default function PaginaCheckIn() {
         </h1>
 
         {sinInput ? (
-          // Dentro de apps/kiosk-host o de la APK el identificador llega por teclas del numpad: no hace falta foco.
-          <div className={`${CLASES_CAMPO_IDENTIFICADOR} min-h-[5.5rem]`} style={ESTILO_CAMPO_IDENTIFICADOR}>
-            {identificador}
+          // En el APK el identificador llega por teclas del numpad: no hace falta foco. Solo se muestran puntos.
+          <div className={`${CLASES_CAMPO_IDENTIFICADOR} min-h-[5.5rem]`} style={ESTILO_CAMPO_IDENTIFICADOR} aria-label="Identificador oculto">
+            {"•".repeat(identificador.length)}
           </div>
         ) : (
           <input {...propsInput} className={`${CLASES_CAMPO_IDENTIFICADOR} bg-transparent outline-none`} style={ESTILO_CAMPO_IDENTIFICADOR} />
         )}
 
         <p className="min-h-[2.5rem] text-3xl" style={{ color: errorConfig ? "var(--gx-bad)" : "var(--gx-muted)" }}>
-          {errorConfig ?? (pantalla.procesando ? "Verificando…" : "")}
+          {errorConfig ??
+            (bloqueadoHasta > ahoraMs
+              ? `Demasiados intentos. Espera ${Math.ceil((bloqueadoHasta - ahoraMs) / 1_000)} s.`
+              : pantalla.procesando
+                ? "Verificando…"
+                : "")}
         </p>
       </div>
 

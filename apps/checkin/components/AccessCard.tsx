@@ -123,13 +123,13 @@ export function AccessCard({
                 </p>
               )}
             </div>
+          ) : cara === "vencido" ? (
+            // El vencido solo ve su primer nombre y la indicación de pasar por recepción (S-21).
+            <p className="border-t pt-6 text-4xl font-medium" style={{ borderColor: "var(--gx-edge)", color: "var(--gx-warn)" }}>
+              Acércate a recepción a renovar tu plan.
+            </p>
           ) : (
             <>
-              {cara === "vencido" && (
-                <p className="border-t pt-6 text-3xl font-medium" style={{ borderColor: "var(--gx-edge)", color: "var(--gx-warn)" }}>
-                  Acércate a recepción a renovar tu plan.
-                </p>
-              )}
               <div className="grid grid-cols-3 gap-6 border-t pt-6" style={{ borderColor: "var(--gx-edge)" }}>
                 <div className="flex flex-col gap-1">
                   <span className={ETIQUETA_DATO} style={ESTILO_ETIQUETA}>

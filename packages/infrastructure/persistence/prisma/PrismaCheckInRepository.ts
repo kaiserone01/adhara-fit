@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@gym-app/db/generated/prisma/client";
+import type { PrismaClientOrTx } from "./PrismaClientOrTx";
 import type { ICheckInRepository } from "@gym-app/domain/ports/ICheckInRepository";
 import type { CheckIn, CheckInEnSala, EstadoCheckIn } from "@gym-app/domain/entities/CheckIn";
 
@@ -21,7 +21,7 @@ function aEntidad(checkIn: {
 }
 
 export class PrismaCheckInRepository implements ICheckInRepository {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(private readonly prisma: PrismaClientOrTx) {}
 
   async buscarRecientePorMiembroYSucursal(
     miembroId: string,

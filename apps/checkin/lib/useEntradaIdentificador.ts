@@ -1,21 +1,11 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type ChangeEvent, type KeyboardEvent } from "react";
 import { mensajeDeTecla, type MensajeTeclado } from "./teclasNumpad";
 
-type EscuchaMensaje = (evento: { data: unknown }) => void;
-
-interface WebView2 {
-  addEventListener(tipo: "message", escucha: EscuchaMensaje): void;
-  removeEventListener(tipo: "message", escucha: EscuchaMensaje): void;
-}
-
-function obtenerWebView(): WebView2 | undefined {
-  return (window as unknown as { chrome?: { webview?: WebView2 } }).chrome?.webview;
-}
-
-const TIEMPO_INACTIVIDAD_MS = 7_000;
+export const TIEMPO_INACTIVIDAD_MS = 7_000;
+// Mismo tope que el servidor (código de socio o documento, hasta 20 caracteres).
+export const MAX_LARGO_IDENTIFICADOR = 20;
 
 const sinSuscripcion = () => () => {};
-const hayHostNativo = () => obtenerWebView() !== undefined;
 const esAndroid = () => /Android/i.test(navigator.userAgent);
 const sinHostEnServidor = () => false;
 
@@ -25,18 +15,16 @@ interface Opciones {
   alEnviar: (identificador: string) => Promise<void>;
 }
 
-// Fuente de el identificador, por orden: host de Windows (mensajes nativos de WebView2), APK de Android TV
-// (keydown global solo de numpad, sin <input> para que no salga el teclado en pantalla) y, en un
-// navegador normal (dev), el <input> con eventos DOM de siempre.
+// Fuente del identificador: en el APK de Android TV, un keydown global solo de numpad (sin <input>, para que no
+// salga el teclado en pantalla) y, en un navegador normal, un <input> de tipo contraseña. La pantalla nunca
+// muestra lo tecleado (ADR-004): solo un punto por carácter.
 export function useEntradaIdentificador({ alEscribir, alEnviar }: Opciones) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [identificador, setIdentificador] = useState("");
   // Espejo síncrono: "dígito + Enter" seguidos deben ver el valor actual sin esperar al render.
   const identificadorRef = useRef("");
   const opciones = useRef({ alEscribir, alEnviar });
-  const nativo = useSyncExternalStore(sinSuscripcion, hayHostNativo, sinHostEnServidor);
   const android = useSyncExternalStore(sinSuscripcion, esAndroid, sinHostEnServidor);
-  const sinInput = nativo || android;
   // Mientras se envía un identificador se ignora todo: evita el doble envío y dígitos que se perderían.
   const enviandoRef = useRef(false);
 
@@ -57,6 +45,7 @@ export function useEntradaIdentificador({ alEscribir, alEnviar }: Opciones) {
       switch (mensaje.type) {
         case "digit":
           if (!/^\d$/.test(mensaje.value)) return;
+          if (identificadorRef.current.length >= MAX_LARGO_IDENTIFICADOR) return;
           alEscribir?.();
           asignar(identificadorRef.current + mensaje.value);
           return;
@@ -69,6 +58,8 @@ export function useEntradaIdentificador({ alEscribir, alEnviar }: Opciones) {
           asignar("");
           return;
         case "enter":
+          // Enter con la entrada vacía no envía nada.
+          if (!identificadorRef.current) return;
           enviandoRef.current = true;
           alEnviar(identificadorRef.current).finally(() => {
             enviandoRef.current = false;
@@ -79,20 +70,7 @@ export function useEntradaIdentificador({ alEscribir, alEnviar }: Opciones) {
   );
 
   useEffect(() => {
-    const webview = obtenerWebView();
-    if (!nativo || !webview) return;
-
-    const alRecibir: EscuchaMensaje = ({ data }) => {
-      if (typeof data !== "object" || data === null) return;
-      manejar(data as MensajeTeclado);
-    };
-
-    webview.addEventListener("message", alRecibir);
-    return () => webview.removeEventListener("message", alRecibir);
-  }, [nativo, manejar]);
-
-  useEffect(() => {
-    if (nativo || !android) return;
+    if (!android) return;
 
     const alTeclear = (evento: globalThis.KeyboardEvent) => {
       const mensaje = mensajeDeTecla(evento);
@@ -105,27 +83,31 @@ export function useEntradaIdentificador({ alEscribir, alEnviar }: Opciones) {
 
     window.addEventListener("keydown", alTeclear);
     return () => window.removeEventListener("keydown", alTeclear);
-  }, [nativo, android, manejar]);
+  }, [android, manejar]);
 
-  // Una identificador a medias que nadie termina de teclear no debe quedar a la vista del siguiente socio.
+  // Un identificador a medias que nadie termina de teclear no debe quedar a la vista del siguiente socio.
+  // Cada tecla reinicia la cuenta (cambia `identificador`).
   useEffect(() => {
     if (!identificador) return;
     const temporizador = setTimeout(() => asignar(""), TIEMPO_INACTIVIDAD_MS);
     return () => clearTimeout(temporizador);
   }, [identificador, asignar]);
 
-  // Sin host ni Android, el checkin tiene un teclado numérico físico y no pantalla táctil (ADR v1 §2.5):
+  // Sin Android, el checkin tiene un teclado numérico físico y no pantalla táctil (ADR v1 §2.5):
   // el input siempre debe estar enfocado para capturarlo sin que el staff toque nada.
   useEffect(() => {
-    if (!sinInput) inputRef.current?.focus();
+    if (!android) inputRef.current?.focus();
   });
 
   const propsInput = {
     ref: inputRef,
+    type: "password" as const,
+    autoComplete: "off",
+    maxLength: MAX_LARGO_IDENTIFICADOR,
     value: identificador,
     onChange: (evento: ChangeEvent<HTMLInputElement>) => {
       opciones.current.alEscribir?.();
-      asignar(evento.target.value.replace(/\D/g, ""));
+      asignar(evento.target.value.replace(/\D/g, "").slice(0, MAX_LARGO_IDENTIFICADOR));
     },
     onKeyDown: (evento: KeyboardEvent<HTMLInputElement>) => {
       if (evento.key === "Enter") manejar({ type: "enter" });
@@ -136,5 +118,5 @@ export function useEntradaIdentificador({ alEscribir, alEnviar }: Opciones) {
     autoFocus: true,
   };
 
-  return { identificador, limpiar: () => asignar(""), sinInput, propsInput };
+  return { identificador, limpiar: () => asignar(""), sinInput: android, propsInput };
 }

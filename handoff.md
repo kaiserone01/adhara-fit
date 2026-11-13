@@ -8,6 +8,25 @@ Bitácora de sesiones: la más reciente arriba, solo se añaden entradas. El his
 - **Desplegado:** provisional en Easypanel (`docs/ops/easypanel.md`): imagen del `Dockerfile`, esquema con `prisma db push` al arrancar, alta del primer administrador con `tools/crear-administrador.mjs`.
 - **Preferencia del propietario:** cada código (ADR-nnn, S-nn, REQ…) que se mencione lleva al lado una descripción simple.
 
+## Sesión 2026-11-13 (noche, 17) — Tramo 5: check-in en smart-TV (S-21) y ajuste de la vitrina (S-20)
+**Qué se hizo**
+- Servidor `api/checkin`: límite de intentos fallidos por sede. Cuentan como fallo el identificador inválido, el socio inexistente o eliminado y el vencido; con 5 fallos vigentes en 5 minutos responde 429 con `Retry-After` (los envíos bloqueados no cuentan). Conteo y registro en una transacción con candado asesor (`pg_advisory_xact_lock`). Tabla nueva `IntentoCheckin` (aditiva; se purga lo de más de 24 h en cada envío). Regla pura en `domain/utils/bloqueoCheckin.ts` (+4 pruebas, bordes 299/300 s). CORS expone `Retry-After`.
+- Respuestas neutras: socio no encontrado o eliminado → «No te encontramos. Consulta en recepción.»; el vencido solo recibe su primer nombre y el estado (sin foto, entrenador ni vencimiento) y la tarjeta muestra solo la indicación de pasar por recepción.
+- Kiosco (`apps/checkin`): se quitó la vía del host de Windows (WebView2); la entrada se enmascara (un punto por carácter en el APK, `<input type="password">` en navegador), tope de 20 caracteres, Enter vacío no envía. Un 429 bloquea los envíos con cuenta regresiva (300 s si falta la cabecera) y no se encola; la cola conserva los pendientes que reciben 401 o 429 (antes los descartaba). `PrismaCheckInRepository` acepta transacciones.
+- Vitrina (S-20): la app ya mostraba soles, usa día de Lima y «hasta (incluido)»; solo se corrigieron las etiquetas del formulario («Precio (S/)», «Oferta (S/)»).
+
+**Qué funcionó**
+- Dominio 302 pruebas (4 nuevas), kiosco 52 (2 nuevas), `tools` 116, `tsc` limpio en web-admin y kiosco, lint sin errores, build de web-admin y del kiosco correctos.
+
+**Qué no funcionó / a tener en cuenta**
+- Sin prueba contra base real del 429 ni de la concurrencia (no hay base local); verificar en el despliegue: 5 documentos inexistentes seguidos y el sexto debe dar 429.
+- El desbloqueo ocurre cuando el fallo más antiguo sale de la ventana (no «300 s después del quinto fallo» de la spec): es equivalente con 5 fallos y no más estricto; asumido, por validar.
+- Pendiente del Tramo 5: APK `checkin-tv` y `vitrina-tv` (identidad ya `pe.adharafit`, pero firma `release` con keystore secreto y CI del APK sin versionar claves siguen sin hacerse; se dejan para el final), `KIOSCO_ORIGENES_PERMITIDOS` (S-01), registro del primer bloqueo por minuto, superficie `tv` (S-19), columnas `precioUSD`/`ofertaUSD` de la vitrina (renombre en S-15).
+
+**Siguiente**
+1. Probar en el despliegue el check-in con el límite y el vencido; probar el numpad en el smart-TV real.
+2. Tramo 6: seguridad (S-01: límite de login, CORS del kiosco, cuenta deshabilitada), operación (S-17) y limpieza legacy (S-15); APK al final.
+
 ## Sesión 2026-11-13 (noche, 16) — Tramo 4 (parte 3): consentimiento y avisos legales (S-13)
 **Qué se hizo**
 - Esquema (solo tablas y columnas nuevas): `TextoLegal` (versiones inmutables por tipo: consentimiento, política de privacidad, aviso del Libro de Reclamaciones), `ConsentimientoMiembro` (versión aceptada, medio pantalla/papel, quién y cuándo, revocación con motivo) y `razonSocial`, `ruc`, `direccion` opcionales en `Organizacion`.

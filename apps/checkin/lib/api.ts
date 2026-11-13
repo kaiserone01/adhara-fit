@@ -1,3 +1,5 @@
+import { segundosDeEspera } from "./esperaBloqueo";
+
 const TIMEOUT_CHECKIN_MS = 10_000;
 
 // URL base de web-admin: la fija la pantalla al arrancar con la de checkin-config.json (ver lib/config.ts).
@@ -26,7 +28,9 @@ export interface ResultadoCheckIn {
 export class ErrorCheckIn extends Error {
   constructor(
     message: string,
-    public status: number
+    public status: number,
+    // Solo en un 429: segundos que el servidor pide esperar (Retry-After).
+    public reintentarEnSegundos?: number
   ) {
     super(message);
   }
@@ -62,7 +66,8 @@ export async function registrarCheckIn(apiKey: string, identificador: string): P
   }
 
   if (!respuesta.ok) {
-    throw new ErrorCheckIn(datos.error ?? `Error ${respuesta.status} al registrar el check-in.`, respuesta.status);
+    const espera = respuesta.status === 429 ? segundosDeEspera(respuesta.headers.get("Retry-After")) : undefined;
+    throw new ErrorCheckIn(datos.error ?? `Error ${respuesta.status} al registrar el check-in.`, respuesta.status, espera);
   }
 
   return datos as ResultadoCheckIn;

@@ -8,7 +8,7 @@ describe("fondoFicha", () => {
   });
 
   it("por debajo de 100 usa rgba con esa transparencia", () => {
-    expect(fondoFicha(60)).toBe("rgba(18, 22, 13, 0.6)");
-    expect(fondoFicha(20)).toBe("rgba(18, 22, 13, 0.2)");
+    expect(fondoFicha(60)).toBe("rgba(44, 39, 40, 0.6)");
+    expect(fondoFicha(20)).toBe("rgba(44, 39, 40, 0.2)");
   });
 });

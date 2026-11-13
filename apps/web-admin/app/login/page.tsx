@@ -85,11 +85,10 @@ export default function LoginPage() {
         >
           <div className="flex flex-col items-center justify-center gap-6 p-10" style={{ background: "var(--gx-ground)" }}>
             <div className="text-center">
-              <div className="text-3xl" style={{ fontFamily: '"Bebas Neue", sans-serif', letterSpacing: "0.04em" }}>
-                ADHARA <span style={{ color: "var(--gx-accent)" }}>FIT</span>
-              </div>
+              {/* eslint-disable-next-line @next/next/no-img-element -- logo estático del kit de marca */}
+              <img src="/branding/logo-negativo.png" alt="Adhara Fit" className="mx-auto h-16 w-auto" />
               <div
-                className="mt-1 text-xs uppercase"
+                className="mt-3 text-xs uppercase"
                 style={{
                   fontFamily: '"Barlow Condensed", sans-serif',
                   fontWeight: 700,

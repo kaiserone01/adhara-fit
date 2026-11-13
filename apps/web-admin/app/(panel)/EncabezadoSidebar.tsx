@@ -1,16 +1,15 @@
 // Mismo esquema visual del nombre del gym que la pantalla de login
 // (ver apps/web-admin/app/login/page.tsx) — acá en tamaño reducido, arriba
 // del menú del sidebar, con la sucursal activa de la sesión debajo.
-// Sin logotipo hasta que el propietario entregue los PNG originales (S-19).
+// Logo horizontal del kit de marca para fondo oscuro (S-19).
 export function EncabezadoSidebar({ sucursalNombre }: { sucursalNombre: string }) {
   return (
     <div className="flex flex-col items-center gap-2 text-center">
       <div>
-        <div className="text-lg leading-none" style={{ fontFamily: '"Bebas Neue", sans-serif', letterSpacing: "0.04em" }}>
-          ADHARA <span style={{ color: "var(--gx-accent)" }}>FIT</span>
-        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element -- logo estático del kit de marca */}
+        <img src="/branding/logo-negativo.png" alt="Adhara Fit" className="mx-auto h-9 w-auto" />
         <div
-          className="mt-1 text-[10px] uppercase"
+          className="mt-2 text-[10px] uppercase"
           style={{
             fontFamily: '"Barlow Condensed", sans-serif',
             fontWeight: 700,

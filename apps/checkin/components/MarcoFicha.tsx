@@ -31,13 +31,7 @@ export function MarcoFicha({
         style={{ borderBottom: "1px solid var(--gx-edge)" }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element -- output: "export" no soporta el optimizador de next/image */}
-        <img src="/branding/adrenalina-gym-bg.png" alt="" className="h-20 w-20 object-contain" />
-        <span
-          className="text-2xl font-bold uppercase"
-          style={{ fontFamily: '"Barlow Condensed", sans-serif', letterSpacing: "0.3em", color: "var(--gx-muted)" }}
-        >
-          Adrenalina Xtreme Gym
-        </span>
+        <img src="/branding/logo-negativo.png" alt="Adhara Fit" className="h-20 w-auto object-contain" />
       </div>
 
       <div className="flex flex-1 flex-col">{children}</div>

@@ -8,6 +8,28 @@ Bitácora de sesiones: la más reciente arriba, solo se añaden entradas. El his
 - **Desplegado:** provisional en Easypanel (`docs/ops/easypanel.md`): imagen del `Dockerfile`, esquema con `prisma db push` al arrancar, alta del primer administrador con `tools/crear-administrador.mjs`.
 - **Preferencia del propietario:** cada código (ADR-nnn, S-nn, REQ…) que se mencione lleva al lado una descripción simple.
 
+## Sesión 2026-11-13 (noche, 2) — Paleta y logotipos de Adhara
+**Decisiones del propietario**
+- **Se queda Prisma; Drizzle (ADR-022 / S-22) queda descartado**, para evitar el refactor. El ORM ya no está pendiente.
+- La contraseña de la base que se pegó en el chat es la de la «Internal Connection URL» de Easypanel (solo alcanzable dentro de la red del proyecto): riesgo aceptado, no se rota.
+
+**Qué se hizo**
+- `packages/theming/tokens.ts`: `temaAdrenalinaXtreme` pasa a `temaAdhara` (carbón `#231F20`, amarillo `#FFCB04`, blanco `#FFFFFF`; superficies como escalones de carbón; verde, naranja y rojo solo para estados). Usado en los layouts de `web-admin`, `checkin` y `vitrina`.
+- Colores fijos que quedaban del verde anterior: `tonos.ts` (+ prueba), `globals.css` del check-in, `GuardaWebView`, `campos.css`, vista previa de `FormularioImagenCheckin`. El tono «verde» del check-in ahora usa `--gx-good` (verde de éxito), no el amarillo de marca.
+- Logotipos del kit (`docs/ADHARA_FIT_Logo_Kit`): `logo-negativo.png` e `isotipo.png` en `public/branding/` de las tres apps; login, barra lateral, ficha del check-in (marco y esquina), marca de agua y pantalla de reposo de la vitrina los usan. `icon.png`, `apple-icon.png` y `favicon.ico` salen del kit. Se borraron los archivos de Adrenalina de `public/branding`.
+
+**Qué funcionó**
+- Pruebas del check-in (50), lint (solo avisos) y build del check-in y la vitrina en verde; `web-admin#typecheck` sigue con el error previo de `LayoutProps`.
+
+**Pendiente / sin verificar**
+- No se miró el resultado en un navegador ni en el TV: revisar contraste y tamaños del logo en el despliegue.
+- Los íconos del APK (`checkin-tv`, `vitrina-tv`: `icono-checkin.jpg`, `generar-iconos.*`, fondo `#0A0D07`) siguen con la marca anterior; se rehacen al compilar el APK.
+- El kit son PNG, no vectores. `docs/design/tema-adrenalina-xtreme.md` describe el tema anterior.
+
+**Siguiente**
+1. Tramo 1, corte 2: solo PEN (S-03), hora de Lima (S-02), quitar tasa, padrón, bolívares y es-VE (S-10), sin tocar el esquema.
+2. «Ingresa tu cédula» del check-in pasa a DNI/CE en el tramo 3.
+
 ## Sesión 2026-11-13 (noche) — Primer despliegue y tramo 1, corte 1
 **Qué funcionó**
 - El primer despliegue en Easypanel (rama `main`, commit del rediseño del Check-in) construyó bien (~8 min) y la app responde en su dominio con sesión iniciada: el alta provisional del administrador (`tools/crear-administrador.mjs`) funcionó contra la base real. Variables declaradas por el propietario: `DATABASE_URL`, `CHECKIN_CLAVE`, R2, `TZ`, `ADMIN_*` (y la `NEXT_PUBLIC_API_URL` antigua, que ya no se usa y se puede quitar).

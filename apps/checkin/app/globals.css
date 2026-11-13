@@ -85,13 +85,13 @@ body {
   animation: destello 1200ms ease-out;
 }
 .destello-verde {
-  background: radial-gradient(circle at center, rgba(147, 232, 58, 0.55) 0%, transparent 65%);
+  background: radial-gradient(circle at center, rgba(74, 222, 128, 0.55) 0%, transparent 65%);
 }
 .destello-ambar {
-  background: radial-gradient(circle at center, rgba(245, 166, 35, 0.55) 0%, transparent 65%);
+  background: radial-gradient(circle at center, rgba(255, 138, 61, 0.55) 0%, transparent 65%);
 }
 .destello-rojo {
-  background: radial-gradient(circle at center, rgba(255, 59, 78, 0.55) 0%, transparent 65%);
+  background: radial-gradient(circle at center, rgba(255, 77, 94, 0.55) 0%, transparent 65%);
 }
 @keyframes destello {
   0% {

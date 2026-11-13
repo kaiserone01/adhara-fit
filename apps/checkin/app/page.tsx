@@ -180,7 +180,7 @@ export default function PaginaCheckIn() {
       {/* Logo fijo arriba a la derecha, dentro del margen de overscan. */}
       {/* eslint-disable-next-line @next/next/no-img-element -- output: "export" no soporta el optimizador de next/image */}
       <img
-        src="/branding/adrenalina-gym-bg.png"
+        src="/branding/isotipo.png"
         alt=""
         aria-hidden
         className="pointer-events-none fixed right-[5vmin] top-[5vmin] h-64 w-64 object-contain"

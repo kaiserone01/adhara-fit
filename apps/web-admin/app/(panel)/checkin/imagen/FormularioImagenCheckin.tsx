@@ -88,11 +88,11 @@ export function FormularioImagenCheckin({
       {/* Vista previa: ondas simuladas detrás de una caja con el mismo rgba que usa el checkin (fondoFicha). */}
       <div
         className="rounded-xl p-4"
-        style={{ background: "repeating-linear-gradient(135deg, #0a0d07 0 16px, #1f3a12 16px 32px)" }}
+        style={{ background: "repeating-linear-gradient(135deg, #231f20 0 16px, #413a3b 16px 32px)" }}
       >
         <div
           className="flex items-center gap-4 rounded-xl border p-4"
-          style={{ background: `rgba(18, 22, 13, ${opacidad / 100})`, borderColor: "var(--gx-edge)" }}
+          style={{ background: `rgba(44, 39, 40, ${opacidad / 100})`, borderColor: "var(--gx-edge)" }}
         >
           <div className="h-16 w-16 shrink-0 overflow-hidden rounded-full">
             {/* eslint-disable-next-line @next/next/no-img-element -- imagen en R2 (dominio externo) o vista previa local */}

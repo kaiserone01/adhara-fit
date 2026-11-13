@@ -2,14 +2,14 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { GuardaWebView } from "../components/GuardaWebView";
 import { ThemeStyleTag } from "@gym-app/theming/ThemeStyleTag";
-import { temaAdrenalinaXtreme } from "@gym-app/theming/tokens";
+import { temaAdhara } from "@gym-app/theming/tokens";
 
 export const metadata: Metadata = {
   title: "Check-in",
 };
 
 export const viewport: Viewport = {
-  themeColor: temaAdrenalinaXtreme.ground,
+  themeColor: temaAdhara.ground,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -24,7 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="marca-agua-pagina sin-logo min-h-full" style={{ background: "var(--gx-ground)", color: "var(--gx-ink)" }}>
-        <ThemeStyleTag tema={temaAdrenalinaXtreme} />
+        <ThemeStyleTag tema={temaAdhara} />
         <GuardaWebView>{children}</GuardaWebView>
       </body>
     </html>

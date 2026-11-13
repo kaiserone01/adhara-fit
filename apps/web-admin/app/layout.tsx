@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { ThemeStyleTag } from "@gym-app/theming/ThemeStyleTag";
-import { temaAdrenalinaXtreme } from "@gym-app/theming/tokens";
+import { temaAdhara } from "@gym-app/theming/tokens";
 
 export const metadata: Metadata = {
   title: "Adhara Fit",
@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: temaAdrenalinaXtreme.ground,
+  themeColor: temaAdhara.ground,
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -27,7 +27,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         />
       </head>
       <body className="min-h-full flex flex-col">
-        <ThemeStyleTag tema={temaAdrenalinaXtreme} />
+        <ThemeStyleTag tema={temaAdhara} />
         {children}
       </body>
     </html>

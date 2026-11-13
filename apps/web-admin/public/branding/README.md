@@ -1,11 +1,8 @@
-# Branding — Adrenalina Xtreme Gym
+# Branding — Adhara Fit
 
-Carpeta para los assets de marca reales del gimnasio (logo, recortes), usados
-por ahora solo en exploraciones de diseño (mockups) — todavía no están
-cableados a ningún componente real de `apps/web-admin` ni `apps/checkin`.
+Logotipos del kit de marca (`docs/ADHARA_FIT_Logo_Kit`), copiados a cada app con el mismo nombre:
 
-Archivos esperados:
-- `logo-adrenalina.png` — logo completo (escudo + texto).
-- `figuras-adrenalina.png` — recorte de las dos figuras fitness, si existe aparte.
+- `logo-negativo.png` — logo horizontal para fondos oscuros (el tema es carbón).
+- `isotipo.png` — la pesa «A» sola, a color y transparente (marcas de agua, fichas).
 
-Formato recomendado: PNG con fondo transparente.
+Los íconos de pestaña están en `app/` (`icon.png`, `apple-icon.png`, `favicon.ico`). Los PNG no son vectoriales: para tamaños mayores a 2400 px pedir el original.

@@ -21,29 +21,29 @@ export interface Tema {
   scrim: string;
 }
 
-// Verde muestreado del logo real de Adrenalina Xtreme Gym — ver
-// docs/design/tema-adrenalina-xtreme.md para la metodología de muestreo.
-// Tema fijo por ahora: la resolución dinámica por Organización
-// (TemaOrganizacion) queda para un plan aparte.
-export const temaAdrenalinaXtreme: Tema = {
-  ground: "#0a0d07",
-  surface: "#12160d",
-  surface2: "#191f11",
-  surfaceElevada: "#1f2616",
-  edge: "#26301a",
-  fieldBg: "#0e1209",
-  fieldEdge: "#667a48",
-  fieldEdgeHover: "#8a9f66",
-  ink: "#f3f6ec",
-  muted: "#93a17d",
-  mutedDim: "#6c7a55",
-  accent: "#93e83a",
-  accentInk: "#0c1400",
-  good: "#93e83a",
-  goodInk: "#0c1400",
-  warn: "#f5a623",
-  warnInk: "#241400",
-  bad: "#ff3b4e",
-  badInk: "#200609",
-  scrim: "rgba(5, 7, 3, 0.6)",
+// Paleta de marca de Adhara Fit: carbón #231F20, amarillo #FFCB04 y blanco #FFFFFF (kit en
+// docs/ADHARA_FIT_Logo_Kit). Las superficies son escalones de carbón; verde, naranja y rojo solo
+// comunican estado (bien, aviso, error) y no compiten con el amarillo de marca.
+// Tema fijo: la resolución dinámica por Organización (TemaOrganizacion) queda para un plan aparte.
+export const temaAdhara: Tema = {
+  ground: "#231f20",
+  surface: "#2c2728",
+  surface2: "#363031",
+  surfaceElevada: "#413a3b",
+  edge: "#4d4546",
+  fieldBg: "#1b1819",
+  fieldEdge: "#7d7576",
+  fieldEdgeHover: "#a79fa0",
+  ink: "#ffffff",
+  muted: "#bdb5b6",
+  mutedDim: "#948c8d",
+  accent: "#ffcb04",
+  accentInk: "#231f20",
+  good: "#4ade80",
+  goodInk: "#06240f",
+  warn: "#ff8a3d",
+  warnInk: "#2a1100",
+  bad: "#ff4d5e",
+  badInk: "#2a0609",
+  scrim: "rgba(18, 15, 16, 0.65)",
 };

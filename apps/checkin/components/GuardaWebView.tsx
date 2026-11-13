@@ -27,8 +27,8 @@ export function GuardaWebView({ children }: { children: ReactNode }) {
         justifyContent: "center",
         padding: "48px",
         textAlign: "center",
-        background: "#0a0d07",
-        color: "#f3f6ec",
+        background: "#231f20",
+        color: "#ffffff",
         fontFamily: "Arial, Helvetica, sans-serif",
       }}
     >

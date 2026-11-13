@@ -1,0 +1,37 @@
+# ADHARA FIT — Kit de logotipo
+
+## Archivos incluidos
+
+### Logotipo horizontal
+- `01-logo-horizontal-color.png`: versión principal, símbolo amarillo y nombre en carbón; fondo transparente.
+- `02-logo-horizontal-negativo.png`: versión para fondos oscuros, nombre blanco y símbolo amarillo; fondo transparente.
+- `03-logo-monocromo-positivo.png`: versión monocromática carbón.
+- `04-logo-monocromo-negativo.png`: versión monocromática blanca.
+
+### Isotipo
+- `05-isotipo-color-transparente.png`: símbolo aislado en amarillo.
+- `06-isotipo-positivo.png`: símbolo monocromático carbón.
+- `07-isotipo-negativo.png`: símbolo monocromático blanco.
+
+### Icono y favicon
+- `icon-adhara-fit-1024.png`, `512`, `256`, `128`, `64` y `32`: icono cuadrado con fondo carbón.
+- `favicon-adhara-fit.ico`: favicon multirresolución.
+
+### Tamaños adicionales del logotipo principal
+- `logo-horizontal-color-2400px.png`
+- `logo-horizontal-color-1200px.png`
+- `logo-horizontal-color-600px.png`
+
+## Colores identificados en el archivo original
+- Carbón: `#231F20`
+- Amarillo: `#FFCB04`
+- Blanco: `#FFFFFF`
+
+## Recomendaciones de uso
+- Usa la versión principal sobre fondos blancos o claros.
+- Usa la versión negativa sobre fondos oscuros.
+- Para perfiles, aplicaciones y favicon, usa los archivos `icon-adhara-fit-*` o `favicon-adhara-fit.ico`.
+- Evita ampliar los archivos pequeños; para impresión o tamaños grandes, utiliza el PNG principal de 4000 px de ancho.
+
+## Nota técnica importante
+El archivo de origen `ADHARA VECTOR.svg` contiene el diseño como una imagen PNG incrustada dentro del contenedor SVG. Por eso, estos archivos son exportaciones PNG de alta resolución y no trazados vectoriales editables. El SVG original no contiene letras ni curvas vectoriales independientes. Para disponer de un logotipo realmente vectorial (SVG/PDF/EPS editable), sería necesario redibujar o vectorizar el símbolo y las letras.

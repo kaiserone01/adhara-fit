@@ -8,6 +8,24 @@ Bitácora de sesiones: la más reciente arriba, solo se añaden entradas. El his
 - **Desplegado:** provisional en Easypanel (`docs/ops/easypanel.md`): imagen del `Dockerfile`, esquema con `prisma db push` al arrancar, alta del primer administrador con `tools/crear-administrador.mjs`.
 - **Preferencia del propietario:** cada código (ADR-nnn, S-nn, REQ…) que se mencione lleva al lado una descripción simple.
 
+## Sesión 2026-11-13 (noche, 20) — Tramo 6 (parte 3): datos iniciales (S-15, versión Prisma)
+**Qué se hizo**
+- `tools/sembrar-datos-iniciales.mjs` (+4 pruebas): crea planes «1 mes», «2 meses» y «3 meses» (30, 60 y 90 días; S/ 120, 200 y 280), métodos de pago (Yape, BCP por transferencia y efectivo) y los entrenadores María Aguilera, José Montesino, Joa Bonillo y Jesús Bonillo. Cada bloque solo se crea si su tabla está vacía; nunca modifica ni borra filas; todo en una transacción; si no hay organización no hace nada. Se copia en el `Dockerfile` y se ejecuta en `docker-entrypoint.sh` justo después del alta del administrador (si falla, avisa y el servidor arranca igual).
+- Revisión del código heredado: ya no queda código que use Turno, Egreso, ArqueoLinea, TasaCambio, ReglaAbonoPorFrecuencia, DeudaProducto, MiembroReferencia, PadronHoja, TemaOrganizacion ni PermisoUsuario (los tramos anteriores lo retiraron); esos modelos y las columnas sin uso siguen solo en el esquema.
+
+**Qué funcionó**
+- `tools` 120 pruebas (4 nuevas) sin fallos.
+
+**Qué no funcionó / a tener en cuenta**
+- Los valores iniciales son «asumidos, por validar» (precios y nombres de la spec S-15): el propietario los edita en el panel. Ojo: si borra TODOS los planes, todos los métodos o todos los entrenadores, el siguiente arranque los vuelve a crear (comportamiento de la spec); si no lo quiere, quitar la línea de `docker-entrypoint.sh`.
+- No se hizo la línea base de migraciones ni se eliminó nada del esquema: con Prisma y `db push` sin `--accept-data-loss`, quitar tablas, columnas o valores de enum con datos hace que el contenedor se niegue a arrancar. Candidatos a eliminar, SOLO tras hacer un respaldo y con aprobación del propietario: los modelos de la lista anterior (y los enums `ModuloPermiso`, `AccionPermiso`, `MonedaEgreso`, `EstadoTurno`, `EstadoDeuda`), y las columnas `Miembro.activo`, `Plan.frecuencia`, `Plan.incluyeEntrenador`, `Plan.permitePagoParcial`, `Plan.minimoAbono*`, `MetodoPago.moneda` y las coordenadas venezolanas, `precioUSD`/`ofertaUSD` (renombrar a precio/oferta). Antes de cada eliminación verificar con búsqueda que ningún código la usa.
+- Sin `CHECK` en la base (documento, estado de baja, sede única): la validación vive en el dominio.
+
+**Siguiente**
+1. Probar el despliegue completo (cambio de plan, eliminar y restaurar, reportes, consentimiento, límites de check-in y login, `/api/salud`) y hacer un respaldo.
+2. Con el respaldo hecho, decidir si se hace la limpieza del esquema (paso destructivo, lo autoriza el propietario).
+3. Lo que queda de la ruta: marca y diseño (S-12, S-19) cuando el propietario lo indique, y el APK (firma `release` con keystore secreto y su CI).
+
 ## Sesión 2026-11-13 (noche, 19) — Tramo 6 (parte 2): `/api/salud` y respaldos (S-17, versión Easypanel)
 **Qué se hizo**
 - `GET /api/salud` público (sin sesión) con solo cinco campos: `estado`, `db`, `ultimoRespaldoHoras`, `ultimaRestauracionDias`, `version`. 503 `caido` si la base no responde en 2 s; con archivo de estado de respaldo configurado, 503 si el último respaldo supera 1 560 minutos (o no hay ninguno tras 26 h en marcha) y 200 `degradado` si la última restauración de prueba supera 35 días o no existe. Archivo ausente o corrupto = «nunca», sin lanzar. Regla pura en `domain/utils/estadoSalud.ts` (+9 pruebas).

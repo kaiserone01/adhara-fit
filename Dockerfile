@@ -63,6 +63,7 @@ COPY --from=builder --chown=nextjs:nodejs /repo/apps/web-admin/public ./apps/web
 COPY --from=builder --chown=nextjs:nodejs /repo/node_modules ./migrate-toolkit/node_modules
 COPY --from=builder --chown=nextjs:nodejs /repo/packages/db ./migrate-toolkit/packages/db
 COPY --from=builder --chown=nextjs:nodejs /repo/tools/crear-administrador.mjs ./migrate-toolkit/tools/crear-administrador.mjs
+COPY --from=builder --chown=nextjs:nodejs /repo/tools/sembrar-datos-iniciales.mjs ./migrate-toolkit/tools/sembrar-datos-iniciales.mjs
 COPY --chown=nextjs:nodejs docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x ./docker-entrypoint.sh
 

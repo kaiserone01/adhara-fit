@@ -12,4 +12,7 @@ set -e
 # Si ADMIN_NOMBRE o ADMIN_CORREO faltan, avisa y el servidor arranca igual (sin usuario para entrar).
 node migrate-toolkit/tools/crear-administrador.mjs || echo "AVISO: no se creó el administrador inicial (ver el mensaje anterior)."
 
+# Planes, métodos de pago y entrenadores iniciales: cada bloque solo se crea si su tabla está vacía (no toca nada existente).
+node migrate-toolkit/tools/sembrar-datos-iniciales.mjs || echo "AVISO: no se sembraron los datos iniciales (ver el mensaje anterior)."
+
 exec node apps/web-admin/server.js

@@ -33,11 +33,11 @@ export interface RegistrarCheckInResultado {
   nombre: string;
   fotoUrl: string | null;
   entrenadorNombre: string | null;
-  // Vencimiento del plan del miembro — el kiosco lo muestra en la tarjeta de acceso.
+  // Vencimiento del plan del miembro — el checkin lo muestra en la tarjeta de acceso.
   fechaVencimiento: Date | null;
   estado: EstadoCheckIn;
   // Sede asignada al miembro — se informa siempre, pero cobra sentido en
-  // el kiosco cuando estado === "sucursal_incorrecta" ("Acceso denegado,
+  // el checkin cuando estado === "sucursal_incorrecta" ("Acceso denegado,
   // tu sede es X en Y").
   sucursalAsignadaNombre: string;
   sucursalAsignadaDireccion: string | null;
@@ -48,11 +48,11 @@ export interface RegistrarCheckInResultado {
   // Si la sucursal FÍSICA donde ocurre el check-in tiene el concepto de
   // "período de gracia" configurado (diasGracia > 0). Cuando es false, el
   // concepto no aplica en absoluto para esta sucursal — la presentación
-  // (kiosco) no debe mencionar "período de gracia" en ningún mensaje,
+  // (checkin) no debe mencionar "período de gracia" en ningún mensaje,
   // aunque el estado sea "vencido".
   tieneGraciaConfigurada: boolean;
   // Si hoy (día de Caracas) es su cumpleaños. La fecha de
-  // nacimiento nunca sale del servidor: el kiosco solo recibe este booleano.
+  // nacimiento nunca sale del servidor: el checkin solo recibe este booleano.
   esCumpleanos: boolean;
 }
 

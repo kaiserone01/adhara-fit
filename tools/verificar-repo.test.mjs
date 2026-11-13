@@ -20,9 +20,9 @@ function arbolBase() {
   escribir(raiz, "docker-compose.yml", "services:\n  postgres:\n    image: postgres:16.4\n");
   escribir(raiz, ".github/workflows/ci.yml", "services:\n  postgres:\n    image: postgres:16.4\n");
   escribir(raiz, "apps/web-admin/package.json", pkg("@gym-app/web-admin", { "@gym-app/db": "*", "@gym-app/ui": "*" }));
-  escribir(raiz, "apps/kiosk/package.json", pkg("@gym-app/kiosk", { "@gym-app/domain": "*" }));
+  escribir(raiz, "apps/checkin/package.json", pkg("@gym-app/checkin", { "@gym-app/domain": "*" }));
   escribir(raiz, "apps/vitrina/package.json", pkg("@gym-app/vitrina", { "@gym-app/theming": "*" }));
-  escribir(raiz, "apps/kiosk-tv/capacitor/package.json", pkg("kiosk-tv"));
+  escribir(raiz, "apps/checkin-tv/capacitor/package.json", pkg("checkin-tv"));
   escribir(raiz, "apps/vitrina-tv/capacitor/package.json", pkg("vitrina-tv"));
   escribir(raiz, "packages/db/package.json", pkg("@gym-app/db", { "@gym-app/domain": "*" }));
   escribir(raiz, "packages/db/prisma/schema.prisma", "x");
@@ -41,18 +41,18 @@ const con = (fn) => { const r = arbolBase(); try { fn(r); } finally { rmSync(r, 
 test("un árbol limpio no tiene hallazgos", () => con((r) => assert.deepEqual(verificar(r), [])));
 
 test("detecta Cookies.txt con mayúsculas y fuera de la raíz sin git add (BEH-S00-004)", () => con((r) => {
-  escribir(r, "apps/kiosk/Cookies.txt", "x");
+  escribir(r, "apps/checkin/Cookies.txt", "x");
   const e = verificar(r);
-  assert.ok(e.some((x) => x.includes("apps/kiosk/Cookies.txt")));
+  assert.ok(e.some((x) => x.includes("apps/checkin/Cookies.txt")));
 }));
 
 test("detecta cada exclusión de la lista cerrada", () => {
   const rutas = [
-    "handoff.md", "apps/kiosk/handoff.md", "a/b.keystore", "a/b.jks", "a/b.p12", "a/b.pfx", "a/keystore.properties", "a/b.pem",
+    "handoff.md", "apps/checkin/handoff.md", "a/b.keystore", "a/b.jks", "a/b.p12", "a/b.pfx", "a/keystore.properties", "a/b.pem",
     "apps/web-admin/.env.local", "x/reset-vencimientos-log-1.json", ".windsurf/a", ".agents/a", "skills-lock.json",
     "docs/xls/a.xlsm", "packages/db/migracion-excel/a.ts", "apps/web-admin/ZipGym.ts", "a/zip-gym.md",
     "packages/db/prisma/migrations/migration_lock.toml", "packages/db/prisma/seed.ts", "apps/worker/package.json",
-    "apps/kiosk-host/a.cs", ".github/workflows/apk-kiosco.yml", ".github/workflows/verificar-vitrina.yml",
+    "apps/kiosk-host/a.cs", ".github/workflows/apk-checkin.yml", ".github/workflows/verificar-vitrina.yml",
   ];
   for (const ruta of rutas) {
     if (ruta === "handoff.md") continue; // el de la raíz es obligatorio
@@ -78,7 +78,7 @@ test("packages/db solo admite su lista de permitidos", () => con((r) => {
 }));
 
 test("apps y workspaces (BEH-S00-026)", () => {
-  con((r) => { rmSync(join(r, "apps/kiosk-tv"), { recursive: true }); assert.ok(verificar(r).some((x) => x.includes("falta apps/kiosk-tv"))); });
+  con((r) => { rmSync(join(r, "apps/checkin-tv"), { recursive: true }); assert.ok(verificar(r).some((x) => x.includes("falta apps/checkin-tv"))); });
   con((r) => { escribir(r, "apps/worker/x.txt", "x"); assert.ok(verificar(r).some((x) => x.includes("sobra apps/worker"))); });
   con((r) => { rmSync(join(r, "packages/ui"), { recursive: true }); assert.ok(verificar(r).some((x) => x.includes("falta packages/ui"))); });
   con((r) => { escribir(r, "packages/domain-custom/x.txt", "x"); assert.ok(verificar(r).some((x) => x.includes("sobra packages/domain-custom"))); });

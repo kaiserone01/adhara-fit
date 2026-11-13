@@ -29,7 +29,7 @@
   opacity: 0.06;
 }
 
-/* Variante sin marca de agua: el logo se ve al 100% (kiosco). */
+/* Variante sin marca de agua: el logo se ve al 100% (checkin). */
 .marca-agua-completa::before {
   opacity: 1;
 }

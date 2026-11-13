@@ -10,7 +10,7 @@ Bitácora de sesiones: la más reciente arriba, solo se añaden entradas. El his
 
 ## Sesión 2026-11-13 (local, Windows) — paso al modo ágil
 **Qué se hizo**
-- Se retomó en local: `npm ci` completo, cliente de Prisma generado, 390 pruebas de dominio, 45 de kiosco y 65 de vitrina en verde.
+- Se retomó en local: `npm ci` completo, cliente de Prisma generado, 390 pruebas de dominio, 45 de checkin y 65 de vitrina en verde.
 - `tools/auditar-npm.mjs`: arreglado en Windows (`ejecutarAuditoria`, con 6 pruebas nuevas).
 - `tools/verificar-env.mjs`: ahora también lee `tools/crear-administrador.mjs`.
 - `tools/crear-administrador.mjs` (+16 pruebas): alta provisional del primer administrador (organización, sede y usuario SOCIO) con `pg`; variables `ADMIN_NOMBRE`, `ADMIN_CORREO` y `ADMIN_CONTRASENA_INICIAL` en `.env.example`, Compose, `docker-entrypoint.sh`, `Dockerfile` y `docs/ops/easypanel.md`. Solo actúa si no hay ningún administrador.

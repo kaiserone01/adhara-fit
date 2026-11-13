@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { obtenerUsuarioDeSesionActual } from "@/lib/sesion";
-import { puedeEditarKiosko } from "@/lib/permisoKiosko";
+import { puedeEditarCheckino } from "@/lib/permisoCheckino";
 import { storageR2 } from "@/lib/storageR2";
 import { notificarCambioVitrina } from "@/lib/vitrinaEventos";
 import { CACHE_CONTROL_INMUTABLE, CARPETA_VITRINA, esUrlDeVitrina } from "@/lib/vitrinaMedios";
@@ -26,11 +26,11 @@ export interface EstadoFormularioVitrina {
 const SIN_PERMISO = "Solo el socio o el gerente pueden administrar la vitrina.";
 const ERROR_GUARDAR = "No se pudo guardar. Inténtalo de nuevo.";
 
-// Sesión válida con permiso (mismo criterio que Kiosko); sin sesión redirige al login, sin permiso devuelve null.
+// Sesión válida con permiso (mismo criterio que Checkino); sin sesión redirige al login, sin permiso devuelve null.
 async function sesionConPermiso() {
   const sesion = await obtenerUsuarioDeSesionActual();
   if (!sesion) redirect("/login");
-  return puedeEditarKiosko(sesion.usuario.rol) ? sesion : null;
+  return puedeEditarCheckino(sesion.usuario.rol) ? sesion : null;
 }
 
 const repositorio = () => new PrismaVitrinaRepository(prisma);

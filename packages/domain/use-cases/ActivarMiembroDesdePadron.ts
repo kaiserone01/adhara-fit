@@ -23,7 +23,7 @@ export interface ActivarMiembroInput {
 // Activación bajo demanda: si la cédula no es miembro pero está en el padrón de ESTA sede, crea el
 // Miembro (por regularizar) y su Suscripción a partir del Excel. Nunca crea un Pago. Devuelve el
 // miembro (existente o recién creado) o null si no hay nada que activar. Punto único de entrada para
-// el kiosco y el panel; el llamador decide si lo envuelve en una transacción.
+// el checkin y el panel; el llamador decide si lo envuelve en una transacción.
 export async function activarMiembroPorCedula(deps: ActivarMiembroDeps, input: ActivarMiembroInput): Promise<Miembro | null> {
   const existente = await deps.miembros.buscarPorOrganizacionYCedula(input.organizacionId, input.cedula);
   if (existente) return existente;

@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Todo se mide en rem: 16 px a 1920x1080, y escala solo en cualquier TV (mismo criterio que el kiosco). */
+/* Todo se mide en rem: 16 px a 1920x1080, y escala solo en cualquier TV (mismo criterio que el checkin). */
 html {
   font-size: clamp(9px, min(0.8333vw, 1.5vh), 32px);
   cursor: none;

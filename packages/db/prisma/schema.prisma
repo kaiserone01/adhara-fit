@@ -44,9 +44,9 @@ model Sucursal {
   tasaCambioUSD  Decimal?     @db.Decimal(10, 2) // fallback manual si la API BCV falla (ver ADR v1 §7)
   activo         Boolean      @default(true)
   createdAt      DateTime     @default(now())
-  apiKey         String       @unique @default(uuid()) // el kiosco se autentica con esto (header X-Kiosk-Api-Key), nunca manda sucursalId directo (ADR v1 §4.2)
-  reposoFrases    String[]    @default([]) // frases de la ficha en reposo del kiosco; vacío = las predeterminadas
-  reposoImagenUrl String? // imagen del círculo de la ficha en reposo (R2); null = placeholder del kiosco
+  apiKey         String       @unique @default(uuid()) // el checkin se autentica con esto (header X-Checkin-Api-Key), nunca manda sucursalId directo (ADR v1 §4.2)
+  reposoFrases    String[]    @default([]) // frases de la ficha en reposo del checkin; vacío = las predeterminadas
+  reposoImagenUrl String? // imagen del círculo de la ficha en reposo (R2); null = placeholder del checkin
   reposoOpacidad  Int         @default(100) // % de opacidad del fondo de la ficha en reposo (20–100)
   vitrinaDuracionSeg Int         @default(12) // duración por defecto de cada diapositiva de la vitrina (segundos)
   vitrinaTransicion  String      @default("FUNDIDO") // FUNDIDO | DESLIZAR
@@ -165,7 +165,7 @@ model Miembro {
   activo           Boolean       @default(true) // baja lógica del miembro
   porRegularizar   Boolean       @default(false) // los datos de fecha/pago vienen de una fuente externa (Excel/padrón) sin verificar: el socio debe ajustar el vencimiento o registrar un pago (badge "Por regularizar"); se limpia al ajustar la fecha o al registrar un pago
   vieneDelExcel    Boolean       @default(false) // el miembro viene del padrón/migración del Excel: su fecha de pago y de vencimiento se editan siempre en la ficha (no se conoce su fecha de inscripción)
-  genero           Genero? // solo para saludar en el kiosco ("Bienvenido" / "Bienvenida"); null = no definido
+  genero           Genero? // solo para saludar en el checkin ("Bienvenido" / "Bienvenida"); null = no definido
   createdAt        DateTime      @default(now())
 
   pagos                Pago[]

@@ -52,8 +52,8 @@ test("valor no marcado como solo local", () =>
   }));
 
 test("valor de secreto fuera de Solo Compose", () =>
-  con("const a = process.env.KIOSCO_CLAVE;", "KIOSCO_CLAVE=abc123\n", (r) => {
-    assert.match(verificarEnv(r).join("\n"), /KIOSCO_CLAVE/);
+  con("const a = process.env.CHECKIN_CLAVE;", "CHECKIN_CLAVE=abc123\n", (r) => {
+    assert.match(verificarEnv(r).join("\n"), /CHECKIN_CLAVE/);
   }));
 
 test("variable de .env.example que nadie lee", () =>

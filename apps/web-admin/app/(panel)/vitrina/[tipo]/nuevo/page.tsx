@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { obtenerUsuarioDeSesionActual } from "@/lib/sesion";
-import { puedeEditarKiosko } from "@/lib/permisoKiosko";
+import { puedeEditarCheckino } from "@/lib/permisoCheckino";
 import { PrismaEntrenadorRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaEntrenadorRepository";
 import { Card } from "@gym-app/ui/components/Card";
 import { FormularioVitrinaItem } from "../../FormularioVitrinaItem";
@@ -13,7 +13,7 @@ export default async function PaginaNuevoVitrina({ params }: { params: Promise<{
   if (!tipo) notFound();
   const sesion = await obtenerUsuarioDeSesionActual();
   if (!sesion) redirect("/login");
-  if (!puedeEditarKiosko(sesion.usuario.rol)) redirect("/miembros");
+  if (!puedeEditarCheckino(sesion.usuario.rol)) redirect("/miembros");
 
   const entrenadores =
     tipo === "ENTRENADOR"

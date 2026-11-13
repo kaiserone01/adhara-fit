@@ -75,7 +75,7 @@ export function FormularioSucursal({
 
       {valoresIniciales?.apiKey && (
         <div className="flex flex-col gap-1 text-sm" style={{ color: "var(--gx-muted)" }}>
-          API Key del kiosco
+          API Key del checkin
           <div className="flex gap-2">
             <input
               readOnly

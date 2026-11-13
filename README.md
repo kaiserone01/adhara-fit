@@ -26,7 +26,7 @@ La base de Compose es **desechable**; para empezar de cero:
 docker compose down -v
 ```
 
-Todavía no hay usuario inicial: lo crea la spec S-15 (línea base y datos iniciales). Para el kiosco (`apps/kiosk`) usa su script `dev` (puerto 3001); no entra en Compose.
+Todavía no hay usuario inicial: lo crea la spec S-15 (línea base y datos iniciales). Para el checkin (`apps/checkin`) usa su script `dev` (puerto 3001); no entra en Compose.
 
 ## Calidad
 ```bash
@@ -35,7 +35,7 @@ npm run generate --workspace @gym-app/db   # genera el cliente de Prisma (necesi
 npm run lint
 npm run typecheck
 npm test
-npx turbo run build --filter=web-admin --filter=kiosk
+npx turbo run build --filter=web-admin --filter=checkin
 ```
 
 `typecheck` de `web-admin` tiene 1 error preexistente y `vitrina` no compila sin acceso a Google Fonts: ambos están en la línea base (`docs/linea-base-tests.md`).

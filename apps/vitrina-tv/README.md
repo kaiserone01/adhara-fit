@@ -18,12 +18,12 @@ Secretos:
 | Secreto | Para qué |
 | --- | --- |
 | `VITRINA_CLAVE_<SEDE>` | API key de la sede (nombre de la sede en mayúsculas, p. ej. `VITRINA_CLAVE_ZIPGYM`). Va dentro del APK. |
-| `KIOSCO_APK_PASSWORD` | Contraseña del cifrado 7-Zip del artefacto. |
+| `CHECKIN_APK_PASSWORD` | Contraseña del cifrado 7-Zip del artefacto. |
 
 Inputs del workflow:
 
 - `sucursal`: nombre corto de la sede (minúsculas, números y `_`).
-- `api_url`: URL base de web-admin, sin `/` final (la app pide ahí `/api/kiosco/vitrina`). Se guarda en `vitrina-config.json` del APK, no es de build.
+- `api_url`: URL base de web-admin, sin `/` final (la app pide ahí `/api/vitrina`). Se guarda en `vitrina-config.json` del APK, no es de build.
 - `modo`: `vitrina` (app real) o `prueba` (página de rendimiento de `prueba/`, sin clave).
 
 El workflow inspecciona el APK (applicationId, versionCode, permisos, `leanback`, `capacitor.config.json` y `vitrina-config.json`) y falla si algo no cuadra.

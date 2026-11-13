@@ -11,7 +11,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join, posix, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { PERMITIDOS_DB, listarArchivos, motivoExclusion, scriptsRotos, verificarApps } from "./verificar-repo.mjs";
+import { APPS_REPO_A, PERMITIDOS_DB, listarArchivos, motivoExclusion, scriptsRotos, verificarApps } from "./verificar-repo.mjs";
 
 export const SHA_REPO_A = "b4352a0";
 export const MENSAJE_COMMIT = "Importa el Repo A sin historia (b4352a0) con las exclusiones de S-00";
@@ -258,7 +258,7 @@ export async function importar(op) {
     exportar(repoA, sha, staging);
     informe.excluidos = aplicarExclusiones(staging, destino).excluidos;
     informe.cambios = corregirConfiguracion(staging);
-    const errApps = verificarApps(staging);
+    const errApps = verificarApps(staging, APPS_REPO_A);
     if (errApps.length) throw new ErrorImportacion(`El árbol recortado no coincide con apps y workspaces: ${errApps.join("; ")}`);
     if (!sinLockfile) informe.lock = regenerarLockfile(staging, ejecutar);
     informe.datos = archivosDeDatos(staging);

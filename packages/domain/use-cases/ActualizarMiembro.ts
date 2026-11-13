@@ -77,7 +77,7 @@ export async function actualizarMiembro(
     throw new MiembroNoEncontradoError();
   }
 
-  // También al darle plan a un miembro del Excel que ya tiene vencimiento pero ninguna Suscripcion (el kiosco lo
+  // También al darle plan a un miembro del Excel que ya tiene vencimiento pero ninguna Suscripcion (el checkin lo
   // mostraría "vencido"): se sincroniza o crea con sus fechas actuales.
   if ((cambiaFechas || (cambiaDePlan && antes.vieneDelExcel)) && vencimientoFinal) {
     // Ciclo [fecha de pago, vencimiento]; sin una fecha de pago válida, el inicio es el vencimiento - días del plan.
@@ -94,7 +94,7 @@ export async function actualizarMiembro(
       await deps.pagos.moverFinCiclo(input.id, antes.fechaVencimiento, vencimientoFinal);
     }
     const sincronizada = await deps.suscripciones.ajustarCicloMasReciente(input.id, inicio, vencimientoFinal, planNuevoId);
-    // Sin ninguna Suscripcion (el padrón no traía vencimiento o plan) el kiosco seguiría mostrando "vencido": se crea.
+    // Sin ninguna Suscripcion (el padrón no traía vencimiento o plan) el checkin seguiría mostrando "vencido": se crea.
     const planId = planNuevoId ?? antes.planId;
     if (!sincronizada && planId) {
       await deps.suscripciones.crear({ miembroId: input.id, planId, inicio, fin: vencimientoFinal, fechaLimiteAbono: null });

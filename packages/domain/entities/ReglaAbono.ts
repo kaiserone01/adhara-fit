@@ -75,7 +75,7 @@ export function calcularMontoMinimoAbono(
 // el abono más reciente) — null si no hay regla activa, o si el monto ya
 // alcanza/supera el precio del plan (ciclo saldado, sin restricción). Esta
 // fecha es la que se PERSISTE (Suscripcion.fechaLimiteAbono) y la que
-// bloquea el acceso físico en el kiosco — solo aplica cuando hay una regla
+// bloquea el acceso físico en el checkin — solo aplica cuando hay una regla
 // configurada (ver diseño acordado: sin regla, el acceso es el mismo
 // comportamiento previo a este motor, sin plazo).
 export function calcularFechaLimiteAbono(

@@ -7,9 +7,11 @@ import { dirname, join, posix, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const CORTE_MIGRACIONES = "20261016000000";
-export const APPS_PERMITIDAS = ["web-admin", "kiosk", "kiosk-tv", "vitrina", "vitrina-tv"];
+export const APPS_PERMITIDAS = ["web-admin", "checkin", "checkin-tv", "vitrina", "vitrina-tv"];
 export const WORKSPACES_VACIOS = ["config", "design-system"];
-export const RAICES_CIERRE = ["web-admin", "kiosk", "vitrina"];
+export const RAICES_CIERRE = ["web-admin", "checkin", "vitrina"];
+/** Nombres de las apps en el Repo A (origen de la importación); el repo de Adhara usa APPS_PERMITIDAS. */
+export const APPS_REPO_A = { permitidas: ["web-admin", "kiosk", "kiosk-tv", "vitrina", "vitrina-tv"], raicesCierre: ["web-admin", "kiosk", "vitrina"] };
 export const OBLIGATORIOS = ["LICENSE", "README.md", ".env.example", "CLAUDE.md", "handoff.md"];
 export const FRASE_LICENCIA = "Copyright (c) 2026 Adhara Fit. Todos los derechos reservados.";
 export const PATRONES_GITIGNORE = [
@@ -100,14 +102,14 @@ function nombresWorkspaces(raiz) {
   return mapa;
 }
 
-export function verificarApps(raiz) {
+export function verificarApps(raiz, { permitidas = APPS_PERMITIDAS, raicesCierre = RAICES_CIERRE } = {}) {
   const errores = [];
   const apps = existsSync(join(raiz, "apps")) ? readdirSync(join(raiz, "apps")).filter((d) => statSync(join(raiz, "apps", d)).isDirectory()) : [];
-  for (const a of APPS_PERMITIDAS) if (!apps.includes(a)) errores.push(`apps: falta apps/${a}`);
-  for (const a of apps) if (!APPS_PERMITIDAS.includes(a)) errores.push(`apps: sobra apps/${a}`);
+  for (const a of permitidas) if (!apps.includes(a)) errores.push(`apps: falta apps/${a}`);
+  for (const a of apps) if (!permitidas.includes(a)) errores.push(`apps: sobra apps/${a}`);
   const mapa = nombresWorkspaces(raiz);
   const requeridos = new Set(WORKSPACES_VACIOS);
-  const pendientes = RAICES_CIERRE.map((a) => `apps/${a}/package.json`);
+  const pendientes = raicesCierre.map((a) => `apps/${a}/package.json`);
   const vistos = new Set();
   while (pendientes.length) {
     const ruta = pendientes.pop();

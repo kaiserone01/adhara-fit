@@ -48,7 +48,7 @@ export interface AjustesVitrina {
   version: number;
 }
 
-// Lo que viaja por GET /api/kiosco/vitrina: las fechas van en ISO.
+// Lo que viaja por GET /api/vitrina: las fechas van en ISO.
 export interface ItemManifiesto extends Omit<VitrinaItem, "inicio" | "fin"> {
   inicio: string | null;
   fin: string | null;
@@ -59,6 +59,6 @@ export interface ManifiestoVitrina {
   servidorAhora: string; // hora del servidor (ISO): la TV guarda la última para su reloj efectivo
   duracionSeg: number;
   transicion: TransicionVitrina;
-  tasaBcv: { valor: number; fecha: string } | null; // misma forma que /api/kiosco/estado
+  tasaBcv: { valor: number; fecha: string } | null; // misma forma que /api/checkin/estado
   items: ItemManifiesto[];
 }

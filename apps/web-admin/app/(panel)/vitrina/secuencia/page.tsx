@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { obtenerUsuarioDeSesionActual } from "@/lib/sesion";
-import { puedeEditarKiosko } from "@/lib/permisoKiosko";
+import { puedeEditarCheckino } from "@/lib/permisoCheckino";
 import { PrismaVitrinaRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaVitrinaRepository";
 import { Card } from "@gym-app/ui/components/Card";
 import { construirSecuencia, numeroDeDiapositiva } from "@gym-app/domain/services/secuenciaVitrina";
@@ -11,7 +11,7 @@ import { FilaVitrina } from "../FilaVitrina";
 export default async function PaginaSecuencia() {
   const sesion = await obtenerUsuarioDeSesionActual();
   if (!sesion) redirect("/login");
-  if (!puedeEditarKiosko(sesion.usuario.rol)) redirect("/miembros");
+  if (!puedeEditarCheckino(sesion.usuario.rol)) redirect("/miembros");
 
   const repositorio = new PrismaVitrinaRepository(prisma);
   const [items, ajustes] = await Promise.all([

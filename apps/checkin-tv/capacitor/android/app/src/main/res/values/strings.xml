@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Adhara Check-in</string>
+    <string name="title_activity_main">Adhara Check-in</string>
+    <string name="package_name">pe.adharafit.checkin</string>
+    <string name="custom_url_scheme">pe.adharafit.checkin</string>
+</resources>

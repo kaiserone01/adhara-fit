@@ -53,7 +53,7 @@ jobs:
         env:
           DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
       # web-admin tiene 1 error de tipos preexistente (docs/linea-base-tests.md): no se mide contra cero.
-      - run: npx turbo run typecheck --filter=kiosk --filter=vitrina
+      - run: npx turbo run typecheck --filter=checkin --filter=vitrina
       - name: Tipos de web-admin frente a la línea base
         run: |
           n=$(npx tsc --noEmit -p apps/web-admin 2>&1 | grep -c 'error TS' || true)
@@ -102,7 +102,7 @@ jobs:
         env:
           DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
       # vitrina descarga tipografías de Google Fonts y falla en la línea base; S-19 las autoaloja.
-      - run: npx turbo run build --filter=web-admin --filter=kiosk
+      - run: npx turbo run build --filter=web-admin --filter=checkin
 
   audit:
     name: npm audit frente a la línea base

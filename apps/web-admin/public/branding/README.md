@@ -2,7 +2,7 @@
 
 Carpeta para los assets de marca reales del gimnasio (logo, recortes), usados
 por ahora solo en exploraciones de diseño (mockups) — todavía no están
-cableados a ningún componente real de `apps/web-admin` ni `apps/kiosk`.
+cableados a ningún componente real de `apps/web-admin` ni `apps/checkin`.
 
 Archivos esperados:
 - `logo-adrenalina.png` — logo completo (escudo + texto).

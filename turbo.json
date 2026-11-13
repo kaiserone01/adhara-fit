@@ -10,7 +10,7 @@
         "!.next/cache/**"
       ]
     },
-    "kiosk#build": {
+    "checkin#build": {
       "dependsOn": [
         "^build"
       ],

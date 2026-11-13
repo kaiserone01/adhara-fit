@@ -64,7 +64,6 @@ function Avatar({ fotoUrl, nombre, tamano }: { fotoUrl: string | null; nombre: s
 
 interface FilaMiembro extends Miembro {
   plan: Plan | undefined;
-  sucursalNombre: string;
 }
 
 export function ListaMiembros({
@@ -89,16 +88,14 @@ export function ListaMiembros({
   const [proximoCobroFiltro, setProximoCobroFiltro] = useState<FiltroProximoCobro>("todos");
 
   const planesPorId = useMemo(() => new Map(planes.map((plan) => [plan.id, plan])), [planes]);
-  const sucursalesPorId = useMemo(() => new Map(sucursales.map((s) => [s.id, s.nombre])), [sucursales]);
 
   const filas: FilaMiembro[] = useMemo(
     () =>
       miembros.map((miembro) => ({
         ...miembro,
         plan: miembro.planId ? planesPorId.get(miembro.planId) : undefined,
-        sucursalNombre: miembro.sucursalId === null ? "Ambas" : sucursalesPorId.get(miembro.sucursalId) ?? "—",
       })),
-    [miembros, planesPorId, sucursalesPorId]
+    [miembros, planesPorId]
   );
 
   const filtradas = useMemo(() => {
@@ -246,7 +243,6 @@ function VistaImpresion({ miembros }: { miembros: FilaMiembro[] }) {
             <th className="py-1 pr-2">Nombre</th>
             <th className="py-1 pr-2">Cédula</th>
             <th className="py-1 pr-2">Plan</th>
-            <th className="py-1 pr-2">Sede</th>
             <th className="py-1 pr-2">Vencimiento</th>
             <th className="py-1">Estado</th>
           </tr>
@@ -257,7 +253,6 @@ function VistaImpresion({ miembros }: { miembros: FilaMiembro[] }) {
               <td className="py-1.5 pr-2 font-medium">{miembro.nombre}</td>
               <td className="py-1.5 pr-2">{miembro.cedula}</td>
               <td className="py-1.5 pr-2">{miembro.plan?.nombre ?? "Sin plan"}</td>
-              <td className="py-1.5 pr-2">{miembro.sucursalNombre}</td>
               <td className="py-1.5 pr-2">{miembro.fechaVencimiento ? formatearFecha(miembro.fechaVencimiento) : "—"}</td>
               <td className="py-1.5 font-semibold">{miembro.activo ? "Activo" : "Inactivo"}</td>
             </tr>
@@ -341,7 +336,6 @@ function VistaLista({ miembros }: { miembros: FilaMiembro[] }) {
               <th className="py-2">Nombre</th>
               <th className="py-2">Cédula</th>
               <th className="py-2">Plan</th>
-              <th className="py-2">Sede</th>
               <th className="py-2">Fecha de Vencimiento</th>
               <th className="py-2">Próximo cobro</th>
               <th className="py-2">Estado</th>
@@ -362,9 +356,6 @@ function VistaLista({ miembros }: { miembros: FilaMiembro[] }) {
                 </td>
                 <td className="py-2" style={{ color: "var(--gx-ink)" }}>
                   {miembro.plan?.nombre ?? "Sin plan"}
-                </td>
-                <td className="py-2" style={{ color: "var(--gx-ink)" }}>
-                  {miembro.sucursalNombre}
                 </td>
                 <td className="py-2" style={{ color: "var(--gx-ink)" }}>
                   {miembro.fechaVencimiento ? formatearFecha(miembro.fechaVencimiento) : "—"}

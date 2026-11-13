@@ -22,11 +22,7 @@ export async function POST(req: NextRequest) {
     const hasher = new BcryptPasswordHasher();
     const usuarios = new PrismaUsuarioAdminRepository(prisma);
 
-    // Se valida credenciales primero (reutilizando la lógica exacta de
-    // iniciarSesion vía su propio caso de uso más abajo cuando ya se sabe
-    // la sucursal) pero acá hace falta saber el usuario ANTES de decidir
-    // si hace falta preguntar la sucursal — por eso se resuelven
-    // credenciales acá, no dentro de iniciarSesion todavía.
+    // Se validan las credenciales acá para poder tomar la sede única antes de abrir la sesión.
     const credenciales = await usuarios.buscarCredencialesPorEmail(email);
     if (!credenciales || !credenciales.usuario.activo || !(await hasher.comparar(password, credenciales.passwordHash))) {
       return NextResponse.json({ error: "Email o contraseña incorrectos." }, { status: 401 });
@@ -37,25 +33,10 @@ export async function POST(req: NextRequest) {
       credenciales.usuario
     );
 
-    if (sucursalesVisibles.length > 1) {
-      // Más de una opción: no se loguea todavía (sin cookie) — se le pide
-      // al cliente que elija sucursal (ver FormularioLogin/paso 2), que
-      // reenvía las credenciales a /api/auth/login/sucursal (ver ese
-      // archivo para por qué se reenvían en vez de usar un token
-      // intermedio: evita agregar una entidad de "sesión temporal" solo
-      // para cubrir un intervalo de segundos).
-      const sucursales = sucursalesVisibles.map((s) => ({ id: s.id, nombre: s.nombre }));
-      return NextResponse.json({ requiereSeleccion: true, sucursales });
-    }
-
-    // Una sola sucursal visible (o ninguna, caso borde: usuario sin
-    // sucursales asignadas todavía) — se loguea directo, sin preguntar.
-    // sucursalesVisibles[0] no existe en el caso "ninguna"; se lo trata
-    // como error explícito en vez de crear una sesión sin sucursal activa
-    // válida (violaría la garantía de que sucursalActivaId siempre existe).
+    // La sede única es oculta: el usuario no la elige. Sin ninguna sede configurada no hay con qué abrir sesión.
     if (sucursalesVisibles.length === 0) {
       return NextResponse.json(
-        { error: "Tu usuario no tiene ninguna sucursal asignada. Contactá a un administrador." },
+        { error: "El negocio no tiene una sede configurada. Contacta a soporte." },
         { status: 403 }
       );
     }
@@ -65,7 +46,7 @@ export async function POST(req: NextRequest) {
       { email, password, sucursalActivaId: sucursalesVisibles[0].id }
     );
 
-    const response = NextResponse.json({ requiereSeleccion: false });
+    const response = NextResponse.json({ ok: true });
     response.cookies.set(NOMBRE_COOKIE_SESION, resultado.token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",

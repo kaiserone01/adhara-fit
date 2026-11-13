@@ -138,16 +138,6 @@ export function FormularioPlan({
         <label className="flex min-h-11 items-center gap-2 text-sm" style={{ color: "var(--gx-muted)" }}>
           <input
             type="checkbox"
-            name="multisede"
-            defaultChecked={valoresIniciales?.multisede}
-            className="gx-check"
-          />
-          Multisede (permite asignar &quot;Ambas&quot; sedes a un miembro con este plan)
-        </label>
-
-        <label className="flex min-h-11 items-center gap-2 text-sm" style={{ color: "var(--gx-muted)" }}>
-          <input
-            type="checkbox"
             name="permitePagoParcial"
             checked={permitePagoParcial}
             onChange={(e) => setPermitePagoParcial(e.target.checked)}

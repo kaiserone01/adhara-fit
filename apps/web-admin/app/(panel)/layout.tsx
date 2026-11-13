@@ -43,7 +43,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
               { href: "/miembros", label: "Miembros" },
               { href: "/cobros", label: "Cobros" },
               { href: "/productos", label: "Productos" },
-              // Planes, Sucursales y Administradores se administran desde las tabs de Configuraciones.
+              // Planes y Administradores se administran desde las tabs de Configuraciones.
               { href: "/configuraciones", label: "Configuraciones" },
             ]}
             pie={<BarraUsuario nombre={usuario.nombre} email={usuario.email} fotoUrl={usuario.fotoUrl} />}

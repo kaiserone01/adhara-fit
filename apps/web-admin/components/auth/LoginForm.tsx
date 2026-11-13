@@ -86,43 +86,6 @@ export function LoginForm({ flujo }: { flujo: Flujo }) {
     transition: { duration: 0.45 },
   };
 
-  if (flujo.sucursalesParaElegir !== null) {
-    return (
-      <div className="login-panel-form flex flex-col justify-center gap-5 px-6 py-8 md:px-12 md:py-14">
-        <motion.div {...aparece(0)}>
-          <Titulo texto="Elige una sucursal" />
-        </motion.div>
-
-        <div className="flex flex-col gap-3">
-          {flujo.sucursalesParaElegir.map((sucursal, i) => (
-            <motion.button
-              key={sucursal.id}
-              type="button"
-              disabled={cargando || estado === "exito"}
-              onClick={() => flujo.elegirSucursal(sucursal.id)}
-              {...aparece(i + 1)}
-              className="flex min-h-12 flex-col gap-1 rounded-xl border px-4 py-3 text-left transition-colors duration-150 hover:border-[var(--gx-accent)] focus-visible:border-[var(--gx-accent)] focus-visible:outline-none disabled:opacity-50"
-              style={{ borderColor: "var(--gx-edge)", background: "color-mix(in srgb, var(--gx-surface-2) 70%, transparent)", color: "var(--gx-ink)" }}
-            >
-              <span className="font-semibold">{sucursal.nombre}</span>
-            </motion.button>
-          ))}
-        </div>
-
-        <motion.div {...vibra}>{mensajeError}</motion.div>
-
-        <button
-          type="button"
-          onClick={flujo.volverACredenciales}
-          className="w-fit cursor-pointer text-sm font-medium hover:underline"
-          style={{ color: "var(--gx-muted)" }}
-        >
-          ← Volver
-        </button>
-      </div>
-    );
-  }
-
   return (
     <form onSubmit={flujo.manejarSubmitCredenciales} className="login-panel-form flex flex-col justify-center gap-5 px-6 py-8 md:px-12 md:py-14">
       <motion.div {...aparece(0)}>

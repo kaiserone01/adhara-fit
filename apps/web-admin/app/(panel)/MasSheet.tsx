@@ -15,7 +15,7 @@ export function MasSheet({
   nombre: string;
   email: string;
 }) {
-  // Planes, Sucursales y Administradores se administran desde las tabs de Configuraciones.
+  // Planes y Administradores se administran desde las tabs de Configuraciones.
   const enlaces = [
     { href: "/productos", label: "Productos" },
     { href: "/configuraciones", label: "Configuraciones" },

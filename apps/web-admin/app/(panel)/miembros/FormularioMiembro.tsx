@@ -323,7 +323,6 @@ export function FormularioMiembro({
     }
   }
 
-  const planPermiteMultisede = planesActivos.find((p) => p.id === planId)?.multisede ?? false;
 
   function manejarClickGuardar() {
     const form = formRef.current;
@@ -526,21 +525,8 @@ export function FormularioMiembro({
             </div>
           </div>
 
-          {/* La sede es un metadato (sede activa o "Ambas"): no se muestra, solo viaja en el formulario. */}
+          {/* La sede única es un metadato: no se muestra, solo viaja en el formulario. */}
           <input type="hidden" name="sucursalId" value={sucursalId} />
-          {planPermiteMultisede && (
-            <div className="mb-4 rounded-lg border p-4" style={{ borderColor: "var(--gx-edge)" }}>
-              <label className="flex min-h-11 items-center gap-2 text-sm" style={{ color: "var(--gx-muted)" }}>
-                <input
-                  type="checkbox"
-                  checked={sucursalId === ID_AMBAS_SEDES}
-                  onChange={(e) => setSucursalId(e.target.checked ? ID_AMBAS_SEDES : sucursalIdDefault ?? "")}
-                  className="gx-check"
-                />
-                Disponible en ambas sedes
-              </label>
-            </div>
-          )}
 
           {/* Editables para todos; Se envía solo si cambia. */}
           {editaFechas && (
@@ -1008,10 +994,6 @@ export function FormularioMiembro({
               <Fila label="Cédula" valor={cedula || "—"} />
               <Fila label="Celular" valor={celular || "—"} />
               <Fila label="Inscripción" valor={formatearFecha(fechaInscripcion)} />
-              <Fila
-                label="Sede"
-                valor={sucursalId === ID_AMBAS_SEDES ? "Ambas" : sucursalActivaNombre}
-              />
               <Fila label="Plan" valor={meses > 1 ? `${nombrePlanActual} · ${meses} meses` : nombrePlanActual} />
               <Fila label="Entrenador" valor={requiereEntrenador ? (nombreEntrenadorActual ?? "Sin asignar") : "No aplica"} />
               <Fila label="Método de pago" valor={nombreMetodoPagoActual ?? "—"} />

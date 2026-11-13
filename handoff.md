@@ -8,6 +8,21 @@ Bitácora de sesiones: la más reciente arriba, solo se añaden entradas. El his
 - **Desplegado:** provisional en Easypanel (`docs/ops/easypanel.md`): imagen del `Dockerfile`, esquema con `prisma db push` al arrancar, alta del primer administrador con `tools/crear-administrador.mjs`.
 - **Preferencia del propietario:** cada código (ADR-nnn, S-nn, REQ…) que se mencione lleva al lado una descripción simple.
 
+## Sesión 2026-11-13 (noche, 8) — Tramo 2 (parte 3): sede única oculta (S-05, parte visible)
+**Qué se hizo**
+- Login en un solo paso: `/api/auth/login` abre la sesión con la sede única sin preguntar; borrada la ruta `auth/login/sucursal` y el paso «Elige una sucursal» de `LoginForm`/`useLoginFlow` (diseño del propietario intacto en lo demás).
+- Retiradas las pantallas de Sucursales (lista, alta, edición), su pestaña en Configuraciones y los casos de uso `CrearSucursal` y `ActualizarSucursal`. Quitados el «Multisede» del plan, «Disponible en ambas sedes» y la fila «Sede» del ticket en la ficha del miembro y la columna «Sede» de la lista de miembros.
+- Verificado: dominio 263 pruebas en verde; `tsc` solo con el error previo de `LayoutProps`; lint sin errores.
+
+**Qué no funcionó / a tener en cuenta (decisión de alcance, por validar)**
+- **No se purgó `organizacionId` ni `Organizacion` del esquema ni del código** (unos 120 archivos): `prisma db push` del arranque no usa `--accept-data-loss` y se negaría a quitar columnas o tablas con datos (ya existe el administrador inicial), así que el contenedor no arrancaría. Queda pendiente para cuando S-15 reinicie la base limpia (el propietario confirmó que solo hay el administrador inicial): ahí van `ConfiguracionNegocio`, `obtenerSedeUnica()`, quitar `organizacionId`, `UsuarioSucursal`, `Miembro.sucursalId`, `Plan.multisede`, `Sesion.sucursalActivaId` y la unicidad global del documento.
+- Hoy la «sede única» es la primera sede de la organización (la crea `tools/crear-administrador.mjs`); la sesión sigue guardando `sucursalActivaId` y `Miembro.sucursalId`/`Plan.multisede` siguen en la base, sin uso desde la interfaz.
+- Sin ejecutar: la app en el navegador.
+
+**Siguiente**
+1. Tramo 3: DNI/CE/pasaporte (S-06), entrenadores como registro propio (S-18), planes de 1, 2 y 3 meses (S-04) y pago único/cambio de plan (S-07).
+2. Purga de `organizacionId` y reinicio limpio de la base junto con S-15.
+
 ## Sesión 2026-11-13 (noche, 7) — Tramo 2 (parte 2): un solo rol de administrador (S-23)
 **Qué se hizo**
 - Fuera roles y permisos del código: `AuthorizationService`, `IAuthorizationService`, `IPermisoRepository` y `PrismaPermisoRepository`, `ActualizarPermisosUsuario`, `EliminarUsuarioAdmin`, `AsignarSucursalesAUsuario`, la entidad `Permiso`, `FormularioPermisos`, `lib/permisoEnSala` y `lib/permisoCheckin`, y `scripts/verificar-autorizacion.ts`. `UsuarioAdmin` ya no tiene `rol`. Se quitaron todas las comprobaciones de permiso o de «solo el socio» en casos de uso, acciones, rutas y páginas: toda sesión válida de un administrador activo accede a todo (En sala, Configuraciones, Checkin, Vitrina, historial de sala, etc.). El menú ya no oculta entradas.

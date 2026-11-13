@@ -8,7 +8,6 @@ function linea(datos: Partial<DatosLineaPago>): DatosLineaPago {
     metodo: "efectivo_usd",
     metodoPagoId: "metodo-1",
     numeroOperacion: null,
-    tasaCambio: null,
     ...datos,
   };
 }
@@ -82,19 +81,19 @@ describe("repartirLineasPago", () => {
     expect(segundas.map((l) => l.monto)).toEqual([30]);
   });
 
-  test("varias líneas: consume en orden y parte la línea del límite conservando método, operación y tasa", () => {
+  test("varias líneas: consume en orden y parte la línea del límite conservando método y operación", () => {
     const lineas = [
       linea({ monto: 3, metodo: "Efectivo (USD)" }),
-      linea({ monto: 20, metodo: "Pago Móvil - Banesco", numeroOperacion: "1234", tasaCambio: 50 }),
+      linea({ monto: 20, metodo: "Transferencia - BCP", numeroOperacion: "1234" }),
     ];
     const [primeras, segundas] = repartirLineasPago(lineas, 5.25);
 
     expect(primeras.map((l) => [l.metodo, l.monto])).toEqual([
       ["Efectivo (USD)", 3],
-      ["Pago Móvil - Banesco", 2.25],
+      ["Transferencia - BCP", 2.25],
     ]);
     expect(segundas).toEqual([{ ...lineas[1], monto: 17.75 }]);
-    expect(primeras[1]).toMatchObject({ numeroOperacion: "1234", tasaCambio: 50 });
+    expect(primeras[1]).toMatchObject({ numeroOperacion: "1234" });
   });
 
   test("si el monto pedido coincide con el borde de una línea no deja líneas vacías", () => {

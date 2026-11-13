@@ -5,23 +5,13 @@ import { Button } from "@gym-app/ui/components/Button";
 import { Input } from "@gym-app/ui/components/Input";
 import { CurrencyInput } from "@gym-app/ui/components/CurrencyInput";
 import { useFeedback } from "@gym-app/ui/components/FeedbackOverlay";
-import { ModalFallaTemporalTasa, ModalIngresoManualTasa } from "../pagos/SelectorMetodoPago";
 import type { EstadoRegistrarEgreso } from "./actions";
 
-// Los "value" deben coincidir exactamente con el snapshot que
-// construirNombreMetodo() genera para MetodoPago.tipo === "EFECTIVO" (ver
-// configuraciones/metodosPagoUI.ts) — es el mismo formato que usan los
-// Pagos en efectivo, así un retiro de caja resta de la misma línea del
-// arqueo donde se suman esos pagos (ver ObtenerResumenTurno).
-const METODOS_EGRESO = [
-  { value: "Efectivo (USD)", label: "Efectivo (USD)", moneda: "USD" as const },
-  { value: "Efectivo (Bs)", label: "Efectivo (Bs)", moneda: "BS" as const },
-];
-
-// Refresco perezoso (Etapa 2 del plan de tasa BCV): si el modal queda
-// abierto más de 45 min en Bs, se vuelve a pedir la tasa (mismo criterio
-// que SelectorMetodoPago).
-const INTERVALO_REVALIDACION_MS = 45 * 60_000;
+// Los "value" deben coincidir exactamente con el snapshot que construirNombreMetodo() genera para
+// MetodoPago.tipo === "EFECTIVO" (ver configuraciones/metodosPagoUI.ts) — es el mismo formato que usan los
+// Pagos en efectivo, así un retiro de caja resta de la misma línea del arqueo donde se suman esos pagos
+// (ver ObtenerResumenTurno).
+const METODOS_EGRESO = [{ value: "Efectivo", label: "Efectivo" }];
 
 // Antes vivía siempre visible como un formulario grande en la pantalla de
 // Caja (ver diseño acordado: "Registrar egreso" ocupaba mucho espacio). Se
@@ -53,64 +43,7 @@ export function ModalRegistrarEgreso({
   }, [estado.ok]);
 
   const [metodo, setMetodo] = useState(METODOS_EGRESO[0].value);
-  const moneda = METODOS_EGRESO.find((m) => m.value === metodo)?.moneda ?? "USD";
   const [monto, setMonto] = useState("");
-  const montoNumero = Number(monto) || 0;
-
-  // Tasa BCV vigente — se consulta al elegir un método en Bs (mismo
-  // mecanismo que SelectorMetodoPago) para poder guardar la referencia en
-  // USD del egreso (ver Egreso.tasaCambio/montoUSD).
-  const [tasa, setTasa] = useState<number | null>(null);
-  const [cargandoTasa, setCargandoTasa] = useState(false);
-  const [cargadaEnMs, setCargadaEnMs] = useState<number | null>(null);
-  const [modalFallaTemporalAbierto, setModalFallaTemporalAbierto] = useState(false);
-  const [modalIngresoManualAbierto, setModalIngresoManualAbierto] = useState(false);
-
-  function cargarTasa() {
-    setCargandoTasa(true);
-    fetch("/api/tasa-cambio")
-      .then((res) => res.json())
-      .then((datos: { valor?: number }) => {
-        if (datos.valor !== undefined) {
-          setTasa(datos.valor);
-          setCargadaEnMs(Date.now());
-        }
-      })
-      .catch(() => {})
-      .finally(() => setCargandoTasa(false));
-  }
-
-  useEffect(() => {
-    if (moneda !== "BS" || tasa !== null) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- dispara la carga de la tasa (fetch) al elegir moneda Bs; el setState ocurre dentro de cargarTasa
-    cargarTasa();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- solo debe disparar al elegir un método en Bs
-  }, [moneda]);
-
-  // Si el modal queda abierto más de 45 min con Bs elegido, revalida la tasa.
-  useEffect(() => {
-    if (moneda !== "BS" || cargadaEnMs === null) return;
-    const intervalo = setInterval(() => {
-      if (Date.now() - cargadaEnMs >= INTERVALO_REVALIDACION_MS) {
-        cargarTasa();
-      }
-    }, 60_000);
-    return () => clearInterval(intervalo);
-  }, [moneda, cargadaEnMs]);
-
-  // Reacciona a la respuesta de la Server Action (Etapa 3): la tasa cambió
-  // en el servidor (reconfirmar con la nueva) o no se pudo verificar ahora
-  // mismo (mostrar el aviso de las 3 opciones). No cierra el modal.
-  useEffect(() => {
-    if (estado.tasaNueva !== undefined) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- aplica la tasa nueva devuelta por la Server Action; sincroniza con una respuesta externa
-      setTasa(estado.tasaNueva);
-      setCargadaEnMs(Date.now());
-    }
-    if (estado.fallaTemporal) {
-      setModalFallaTemporalAbierto(true);
-    }
-  }, [estado.tasaNueva, estado.fallaTemporal]);
 
   return (
     <div
@@ -138,8 +71,6 @@ export function ModalRegistrarEgreso({
           )}
 
           <input type="hidden" name="turnoId" value={turnoId} />
-          <input type="hidden" name="moneda" value={moneda} />
-          <input type="hidden" name="tasaCambio" value={moneda === "BS" && tasa !== null ? tasa : ""} />
 
           <label className="flex flex-col gap-1.5 text-sm" style={{ color: "var(--gx-muted)" }}>
             Método
@@ -157,62 +88,19 @@ export function ModalRegistrarEgreso({
             </select>
           </label>
 
-          <CurrencyInput
-            name="monto"
-            label="Monto"
-            moneda={moneda === "USD" ? "USD" : "Bs"}
-            required
-            value={monto}
-            onChange={setMonto}
-          />
-          {moneda === "BS" && (
-            <p className="text-xs" style={{ color: "var(--gx-muted)" }}>
-              {cargandoTasa && "Consultando tasa BCV..."}
-              {!cargandoTasa && tasa !== null && montoNumero > 0 && `Ref: $${(montoNumero / tasa).toFixed(2)} (tasa ${tasa})`}
-              {!cargandoTasa && tasa === null && (
-                <span style={{ color: "var(--gx-bad)" }}>No se pudo obtener la tasa BCV — no se puede registrar.</span>
-              )}
-            </p>
-          )}
+          <CurrencyInput name="monto" label="Monto" required value={monto} onChange={setMonto} />
           <Input name="motivo" label="Motivo" required />
 
           <div className="mt-2 flex gap-3">
             <Button type="button" variant="secundario" className="flex-1" onClick={onCerrar} disabled={enviando}>
               Cancelar
             </Button>
-            <Button
-              variant="peligro"
-              type="submit"
-              className="flex-1"
-              disabled={enviando || (moneda === "BS" && tasa === null)}
-            >
+            <Button variant="peligro" type="submit" className="flex-1" disabled={enviando}>
               {enviando ? "Registrando..." : "Registrar egreso"}
             </Button>
           </div>
         </form>
       </div>
-
-      {modalFallaTemporalAbierto && (
-        <ModalFallaTemporalTasa
-          tasaGuardada={tasa ?? 0}
-          onUsarGuardada={() => setModalFallaTemporalAbierto(false)}
-          onIngresarManual={() => {
-            setModalFallaTemporalAbierto(false);
-            setModalIngresoManualAbierto(true);
-          }}
-        />
-      )}
-
-      {modalIngresoManualAbierto && (
-        <ModalIngresoManualTasa
-          onCerrar={() => setModalIngresoManualAbierto(false)}
-          onGuardado={(valor) => {
-            setTasa(valor);
-            setCargadaEnMs(Date.now());
-            setModalIngresoManualAbierto(false);
-          }}
-        />
-      )}
     </div>
   );
 }

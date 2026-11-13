@@ -42,15 +42,15 @@ export default async function PaginaMetodosPago() {
                   className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xs font-semibold"
                   style={{ background: "var(--gx-surface-2)", color: "var(--gx-muted)" }}
                 >
-                  {metodo.moneda}
+                  S/
                 </div>
               )}
               <div>
                 <p className="font-medium" style={{ color: "var(--gx-ink)" }}>
-                  {metodo.nombreBanco ?? (metodo.moneda === "USD" ? "Efectivo (USD)" : "Efectivo (Bs)")}
+                  {metodo.nombreBanco ?? ETIQUETA_TIPO_METODO_PAGO[metodo.tipo]}
                 </p>
                 <p className="text-xs" style={{ color: "var(--gx-muted)" }}>
-                  {metodo.moneda === "BS" ? "Opera en bolívares" : "Opera en dólares"}
+                  {ETIQUETA_TIPO_METODO_PAGO[metodo.tipo]}
                 </p>
               </div>
             </div>

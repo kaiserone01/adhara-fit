@@ -6,9 +6,8 @@ import { PrismaPagoRepository } from "@gym-app/infrastructure/persistence/prisma
 import { PrismaEgresoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaEgresoRepository";
 import { PrismaMemberRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaMemberRepository";
 import { PrismaPlanRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPlanRepository";
-import { obtenerResumenTurno, METODO_EFECTIVO_BS } from "@gym-app/domain/use-cases/ObtenerResumenTurno";
-import { SinTasaDisponibleError } from "@gym-app/domain/use-cases/ObtenerTasaVigente";
-import { orquestadorTasa } from "@/lib/tasaBcv";
+import { obtenerResumenTurno } from "@gym-app/domain/use-cases/ObtenerResumenTurno";
+import { formatearSoles } from "@gym-app/domain/utils/formatearSoles";
 import { obtenerUltimoCierrePorSucursal } from "@gym-app/domain/use-cases/ObtenerUltimoCierrePorSucursal";
 import { PrismaArqueoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaArqueoRepository";
 import { listarMiembros } from "@gym-app/domain/use-cases/ListarMiembros";
@@ -43,26 +42,7 @@ function nombreMetodo(valor: string): string {
   return valor;
 }
 
-// Ref en USD del montoEsperado de una línea en Bs: el fondo inicial en
-// efectivo no tiene tasa propia capturada (se fijó al abrir el turno, no
-// es una transacción) así que su porción se convierte con la tasa BCV
-// vigente AHORA — y solo aplica a la línea de efectivo en Bs, ningún otro
-// método (Punto de Venta, Pago Móvil, etc.) tiene fondo inicial propio.
-// Pagos y egresos ya traen su propia referencia capturada a SU tasa (ver
-// ObtenerResumenTurno.totalPagosUSD/totalEgresosUSD). Devuelve null si la
-// línea es en USD o si no hay tasa vigente disponible.
-function calcularRefUSD(
-  linea: { metodo: string; enBs: boolean; totalPagosUSD: number; totalEgresosUSD: number },
-  fondoInicialEfectivoBs: number,
-  tasaActual: number | null
-): number | null {
-  if (!linea.enBs || tasaActual === null) return null;
-  const fondoBs = linea.metodo === METODO_EFECTIVO_BS ? fondoInicialEfectivoBs : 0;
-  const fondoRefUSD = fondoBs / tasaActual;
-  return fondoRefUSD + linea.totalPagosUSD - linea.totalEgresosUSD;
-}
 import { conceptoPago } from "../pagos/conceptoPago";
-import { formatearBs, formatearBsConRef } from "../tasaBcvFija";
 import { inicioDelDia, finDelDia, inicioDeSemana, finDeSemana, inicioDeMes, finDeMes, formatearFechaISO } from "../fechas";
 import { FormularioAbrirTurno } from "./FormularioAbrirTurno";
 import { FormularioArqueo } from "./FormularioArqueo";
@@ -85,7 +65,7 @@ export default async function PaginaCaja({ searchParams }: { searchParams: Promi
 
   if (turnoAbierto) {
     const esPropio = turnoAbierto.esPropio;
-    const [resumen, miembros, planes, productos, deudasPendientes, metodosPago, tasaCambio, reglasAbono, entrenadores] = await Promise.all([
+    const [resumen, miembros, planes, productos, deudasPendientes, metodosPago, reglasAbono, entrenadores] = await Promise.all([
       obtenerResumenTurno(
         {
           turnos: turnoRepo,
@@ -99,13 +79,6 @@ export default async function PaginaCaja({ searchParams }: { searchParams: Promi
       listarProductos({ productos: new PrismaProductoRepository(prisma) }, usuario.organizacionId),
       listarDeudasPendientes({ deudas: new PrismaDeudaProductoRepository(prisma) }, usuario.organizacionId, sucursalActivaId),
       listarMetodosPagoActivos({ metodosPago: new PrismaMetodoPagoRepository(prisma) }, usuario.organizacionId),
-      // Solo para mostrar la referencia en USD de la porción "fondo
-      // inicial" de la línea en Bs (ver más abajo) — si no hay tasa
-      // guardada todavía, simplemente se omite ese REF.
-      orquestadorTasa.obtenerTasaVigenteFresca().catch((error) => {
-        if (error instanceof SinTasaDisponibleError) return null;
-        throw error;
-      }),
       listarReglasAbono({ reglasAbono: new PrismaReglaAbonoRepository(prisma) }, usuario.organizacionId),
       // Solo para "Cambiar plan" en el Paso 2 del wizard — el selector de
       // entrenador se filtra por la sucursal del miembro elegido, pero
@@ -113,7 +86,6 @@ export default async function PaginaCaja({ searchParams }: { searchParams: Promi
       // sede como en la ficha del miembro).
       listarEntrenadores({ entrenadores: new PrismaEntrenadorRepository(prisma) }, usuario.organizacionId, sucursalActivaId),
     ]);
-    const tasaActual = tasaCambio?.tasa.valor ?? null;
 
     const miembrosActivos = miembros.filter((m) => m.activo);
     const planesActivos = planes.filter((p) => p.activo);
@@ -131,7 +103,6 @@ export default async function PaginaCaja({ searchParams }: { searchParams: Promi
                 miembros={miembrosActivos}
                 planes={planesActivos}
                 metodosPago={metodosPago}
-                tasaActual={tasaActual}
                 reglasAbono={reglasAbono}
                 entrenadores={entrenadores}
                 accionCambiarPlan={cambiarPlanAction}
@@ -144,7 +115,6 @@ export default async function PaginaCaja({ searchParams }: { searchParams: Promi
                 accionFiar={fiarProductoAction}
                 productos={productos.filter((p) => p.activo)}
                 metodosPago={metodosPago}
-                tasaActual={tasaActual}
                 miembros={miembrosActivos}
                 planes={planesActivos}
               />
@@ -152,7 +122,6 @@ export default async function PaginaCaja({ searchParams }: { searchParams: Promi
                 grupos={deudasPendientes}
                 abonos={abonosPendientes}
                 metodosPago={metodosPago}
-                tasaActual={tasaActual}
                 accionCobrar={cobrarDeudasAction}
                 accionAnular={anularDeudaAction}
               />
@@ -177,7 +146,7 @@ export default async function PaginaCaja({ searchParams }: { searchParams: Promi
                   Abierto desde
                 </p>
                 <p className="font-medium" style={{ color: "var(--gx-ink)" }}>
-                  {resumen.turno.abiertoEn.toLocaleString("es-VE")}
+                  {resumen.turno.abiertoEn.toLocaleString("es-PE", { timeZone: "America/Lima" })}
                 </p>
               </div>
               <div>
@@ -185,11 +154,7 @@ export default async function PaginaCaja({ searchParams }: { searchParams: Promi
                   Fondo inicial en efectivo
                 </p>
                 <p className="font-medium" style={{ color: "var(--gx-ink)" }}>
-                  ${resumen.turno.fondoInicialEfectivoUSD.toFixed(2)} /{" "}
-                  {formatearBsConRef(
-                    resumen.turno.fondoInicialEfectivoBs,
-                    tasaActual !== null ? resumen.turno.fondoInicialEfectivoBs / tasaActual : null
-                  )}
+                  {formatearSoles(resumen.turno.fondoInicialEfectivoUSD)}
                 </p>
               </div>
             </Card>
@@ -206,8 +171,6 @@ export default async function PaginaCaja({ searchParams }: { searchParams: Promi
             </h2>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {resumen.lineas.map((linea) => {
-                const refUSD = calcularRefUSD(linea, resumen.turno.fondoInicialEfectivoBs, tasaActual);
-
                 return (
                   <div
                     key={linea.metodo}
@@ -216,7 +179,7 @@ export default async function PaginaCaja({ searchParams }: { searchParams: Promi
                   >
                     <span style={{ color: "var(--gx-muted)" }}>{nombreMetodo(linea.metodo)}</span>
                     <span className="font-medium" style={{ color: "var(--gx-ink)" }}>
-                      {linea.enBs ? formatearBsConRef(linea.montoEsperado, refUSD) : `$${linea.montoEsperado.toFixed(2)}`}
+                      {formatearSoles(linea.montoEsperado)}
                     </span>
                   </div>
                 );
@@ -237,8 +200,7 @@ export default async function PaginaCaja({ searchParams }: { searchParams: Promi
                         <tr className="border-b text-xs" style={{ borderColor: "var(--gx-edge)", color: "var(--gx-muted)" }}>
                           <th className="py-2">Miembro</th>
                           <th className="py-2">Método</th>
-                          <th className="py-2">USD</th>
-                          <th className="py-2">Bs</th>
+                          <th className="py-2">Monto</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -253,10 +215,7 @@ export default async function PaginaCaja({ searchParams }: { searchParams: Promi
                                 {nombreMetodo(pago.metodo)}
                               </td>
                               <td className="py-2" style={{ color: "var(--gx-ink)" }}>
-                                ${pago.monto.toFixed(2)}
-                              </td>
-                              <td className="py-2" style={{ color: "var(--gx-ink)" }}>
-                                {pago.montoBs !== null ? `Bs. ${formatearBs(pago.montoBs)}` : "—"}
+                                {formatearSoles(pago.monto)}
                               </td>
                             </tr>
                           ))}
@@ -280,9 +239,7 @@ export default async function PaginaCaja({ searchParams }: { searchParams: Promi
                       >
                         <span style={{ color: "var(--gx-muted)" }}>{egreso.motivo}</span>
                         <span style={{ color: "var(--gx-ink)" }}>
-                          {egreso.moneda === "BS"
-                            ? formatearBsConRef(egreso.monto, egreso.montoUSD)
-                            : `$${egreso.monto.toFixed(2)}`}
+                          {formatearSoles(egreso.monto)}
                         </span>
                       </div>
                     ))}
@@ -298,9 +255,7 @@ export default async function PaginaCaja({ searchParams }: { searchParams: Promi
               turnoId={resumen.turno.id}
               lineas={resumen.lineas.map((linea) => ({
                 metodo: linea.metodo,
-                enBs: linea.enBs,
                 montoEsperado: linea.montoEsperado,
-                refUSD: calcularRefUSD(linea, resumen.turno.fondoInicialEfectivoBs, tasaActual),
               }))}
             />
           )}

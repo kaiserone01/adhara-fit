@@ -12,7 +12,7 @@ import { CACHE_CONTROL_INMUTABLE, CARPETA_VITRINA, esUrlDeVitrina } from "@/lib/
 import { PrismaVitrinaRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaVitrinaRepository";
 import { TRANSICIONES_VITRINA, type DatosVitrinaItem, type VitrinaItem } from "@gym-app/domain/entities/Vitrina";
 import type { SubidaPrefirmada } from "@gym-app/domain/ports/IArchivoStorageService";
-import { rangoDiaCaracas } from "@gym-app/domain/utils/fechaCaracas";
+import { rangoDiaLima } from "@gym-app/domain/utils/fechaLima";
 import { extensionDeImagen, MAX_BYTES_IMAGEN_VITRINA } from "@gym-app/domain/utils/imagenSubida";
 import { MAX_BYTES_VIDEO_VITRINA } from "@gym-app/domain/utils/videoVitrina";
 import { DURACION_MAX_SEG, DURACION_MIN_SEG, normalizarSonido, numeroOpcional, validarVitrinaItem } from "@gym-app/domain/utils/vitrinaItem";
@@ -56,8 +56,8 @@ function leerDatos(formData: FormData): { datos: DatosVitrinaItem } | { error: s
       posterUrl: textoOpcional(formData.get("posterUrl")),
       sonido: marcada(formData, "sonido"),
       duracionSeg: numeroOpcional(formData.get("duracionSeg")),
-      inicio: inicio ? rangoDiaCaracas(inicio).inicio : null,
-      fin: fin ? rangoDiaCaracas(fin).fin : null,
+      inicio: inicio ? rangoDiaLima(inicio).inicio : null,
+      fin: fin ? rangoDiaLima(fin).fin : null,
       precioUSD: numeroOpcional(formData.get("precioUSD")),
       ofertaUSD: numeroOpcional(formData.get("ofertaUSD")),
       descuentoPct: numeroOpcional(formData.get("descuentoPct")),
@@ -66,7 +66,6 @@ function leerDatos(formData: FormData): { datos: DatosVitrinaItem } | { error: s
       mostrarOferta: marcada(formData, "mostrarOferta"),
       mostrarDescuento: marcada(formData, "mostrarDescuento"),
       mostrarEtiqueta: marcada(formData, "mostrarEtiqueta"),
-      mostrarEquivalenteBs: marcada(formData, "mostrarEquivalenteBs"),
       nombre: textoOpcional(formData.get("nombre")),
       especialidad: textoOpcional(formData.get("especialidad")),
       frase: textoOpcional(formData.get("frase")),

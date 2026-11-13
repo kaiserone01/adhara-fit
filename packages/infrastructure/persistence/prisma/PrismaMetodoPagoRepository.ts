@@ -5,20 +5,15 @@ import type { MetodoPago, DatosNuevoMetodoPago, CambiosMetodoPago } from "@gym-a
 type FilaMetodoPago = {
   id: string;
   organizacionId: string;
-  tipo: MetodoPago["tipo"];
+  tipo: string;
   nombreBanco: string | null;
   logoUrl: string | null;
-  moneda: string;
   activo: boolean;
   orden: number;
-  codigoBanco: string | null;
   telefono: string | null;
-  rif: string | null;
   numeroCuenta: string | null;
   beneficiario: string | null;
   qrUrl: string | null;
-  walletDireccion: string | null;
-  walletUsuario: string | null;
   createdAt: Date;
 };
 
@@ -26,20 +21,15 @@ function mapear(fila: FilaMetodoPago): MetodoPago {
   return {
     id: fila.id,
     organizacionId: fila.organizacionId,
-    tipo: fila.tipo,
+    tipo: fila.tipo as MetodoPago["tipo"],
     nombreBanco: fila.nombreBanco,
     logoUrl: fila.logoUrl,
-    moneda: fila.moneda as MetodoPago["moneda"],
     activo: fila.activo,
     orden: fila.orden,
-    codigoBanco: fila.codigoBanco,
     telefono: fila.telefono,
-    rif: fila.rif,
     numeroCuenta: fila.numeroCuenta,
     beneficiario: fila.beneficiario,
     qrUrl: fila.qrUrl,
-    walletDireccion: fila.walletDireccion,
-    walletUsuario: fila.walletUsuario,
     createdAt: fila.createdAt,
   };
 }
@@ -80,16 +70,11 @@ export class PrismaMetodoPagoRepository implements IMetodoPagoRepository {
         tipo: datos.tipo,
         nombreBanco: datos.nombreBanco,
         logoUrl: datos.logoUrl,
-        moneda: datos.moneda,
         orden: datos.orden ?? 0,
-        codigoBanco: datos.codigoBanco ?? null,
         telefono: datos.telefono ?? null,
-        rif: datos.rif ?? null,
         numeroCuenta: datos.numeroCuenta ?? null,
         beneficiario: datos.beneficiario ?? null,
         qrUrl: datos.qrUrl ?? null,
-        walletDireccion: datos.walletDireccion ?? null,
-        walletUsuario: datos.walletUsuario ?? null,
       },
     });
 

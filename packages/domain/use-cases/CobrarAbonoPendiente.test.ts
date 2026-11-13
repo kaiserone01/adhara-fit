@@ -36,12 +36,11 @@ function crearDeps(opciones: { pagadoPrevio?: number } = {}) {
     autorizacion: { tienePermiso: async () => true },
     reglasAbono: { buscarPorOrganizacionYFrecuencia: async () => null },
     deudas: { listarPendientesPorMiembro: async () => [] },
-    tasas: { buscarMasCercanaAnterior: async () => ({ valor: 40 }) },
   } as unknown as Parameters<typeof cobrarAbonoPendiente>[0];
   return { deps, creados };
 }
 
-const linea = (monto: number) => ({ monto, metodo: "Pago Móvil", metodoPagoId: "mp1", numeroOperacion: "1234", tasaCambio: null });
+const linea = (monto: number) => ({ monto, metodo: "Pago Móvil", metodoPagoId: "mp1", numeroOperacion: "1234" });
 const input = (monto: number) => ({
   organizacionId: "org",
   miembroId: "m1",
@@ -81,14 +80,4 @@ describe("cobrarAbonoPendiente con fecha pasada", () => {
     expect(creados[0]).toMatchObject({ monto: 12, turnoId: null, fechaPago: fecha, fechaFinCiclo: fin });
   });
 
-  test("las líneas en Bs usan la tasa BCV de ese día", async () => {
-    const { deps, creados } = crearDeps();
-    const fecha = new Date(Date.now() - 1 * DIA);
-    await cobrarAbonoPendiente(deps, {
-      ...input(12),
-      lineas: [{ monto: 12, metodo: "Pago Móvil", metodoPagoId: "mp1", numeroOperacion: "1234", tasaCambio: 99 }],
-      fechaCobro: fecha,
-    });
-    expect(creados[0]).toMatchObject({ tasaCambio: 40, montoBs: 480 });
-  });
 });

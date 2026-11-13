@@ -53,7 +53,7 @@ function crearDeps(opciones: { vigenteHasta?: Date; pagosDelMiembro?: Partial<Pa
   return { deps, pagos, extensiones, suscripcionesCreadas, fechasMiembro };
 }
 
-const linea = (monto: number, metodo = "Efectivo (USD)") => ({ monto, metodo, metodoPagoId: "mp1", numeroOperacion: null, tasaCambio: null });
+const linea = (monto: number, metodo = "Efectivo (USD)") => ({ monto, metodo, metodoPagoId: "mp1", numeroOperacion: null });
 
 function input(extra: Partial<DatosRegistrarPago> = {}): DatosRegistrarPago {
   return {

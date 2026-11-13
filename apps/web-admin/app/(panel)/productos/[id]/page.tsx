@@ -2,7 +2,6 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { obtenerUsuarioDeSesionActual } from "@/lib/sesion";
 import { PrismaProductoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaProductoRepository";
-import { obtenerTasaActual } from "../tasaActual";
 import { FormularioProducto } from "../FormularioProducto";
 import { actualizarProductoAction } from "../actions";
 import { PageHeader } from "@gym-app/ui/components/PageHeader";
@@ -23,7 +22,6 @@ export default async function PaginaEditarProducto({ params }: { params: Promise
       </div>
       <FormularioProducto
         accion={actualizarProductoAction.bind(null, id)}
-        tasaActual={await obtenerTasaActual()}
         valoresIniciales={{
           nombre: producto.nombre,
           descripcion: producto.descripcion,

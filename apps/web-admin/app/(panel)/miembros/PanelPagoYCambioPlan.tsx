@@ -1,5 +1,6 @@
 "use client";
 
+import { formatearSoles } from "@gym-app/domain/utils/formatearSoles";
 import { useState } from "react";
 import { Button } from "@gym-app/ui/components/Button";
 import { Card } from "@gym-app/ui/components/Card";
@@ -66,7 +67,7 @@ export function PanelPagoYCambioPlan({
           className="mb-4 rounded-lg px-3 py-2 text-sm font-medium"
           style={{ background: "color-mix(in srgb, var(--gx-accent) 15%, transparent)", color: "var(--gx-accent)" }}
         >
-          Saldo pendiente de este ciclo: ${saldoPendiente.toFixed(2)}
+          Saldo pendiente de este ciclo: {formatearSoles(saldoPendiente)}
         </p>
       )}
 

@@ -8,24 +8,17 @@ import { SelectorMetodoPago } from "../pagos/SelectorMetodoPago";
 
 export interface LineaPagoMiembro {
   monto: number;
-  // Bs tecleados (lo recibido de verdad), si el método es en bolívares.
-  montoBs: number | null;
   metodoPagoId: string | null;
   metodo: string;
-  tasaCambio: number | null;
   numeroOperacion: string;
 }
 
-const aCentavos = (numero: number) => String(Math.round(numero * 100) / 100);
-
-// Una de las líneas del primer pago dividido de un miembro nuevo: método de pago + monto en USD (y en Bs si el
-// método es en bolívares: escribir en Bs recalcula el USD, redondeado a centavos, y los Bs se guardan tal cual).
+// Una de las líneas del primer pago dividido de un miembro nuevo: método de pago + monto en soles.
 export function LineaPagoMiembroCampos({
   nombre,
   titulo,
   metodosPago,
   idFormulario,
-  fechaTasa,
   onCambio,
   onQuitar,
 }: {
@@ -33,37 +26,21 @@ export function LineaPagoMiembroCampos({
   titulo: string;
   metodosPago: MetodoPago[];
   idFormulario: string;
-  fechaTasa?: string;
   onCambio: (linea: LineaPagoMiembro) => void;
   // Solo cuando hay más de dos pagos: quita esta línea.
   onQuitar?: () => void;
 }) {
-  const [montoUSD, setMontoUSD] = useState("");
-  const [montoBs, setMontoBs] = useState("");
-  const [seleccion, setSeleccion] = useState<Omit<LineaPagoMiembro, "monto" | "montoBs">>({
+  const [monto, setMonto] = useState("");
+  const [seleccion, setSeleccion] = useState<Omit<LineaPagoMiembro, "monto">>({
     metodoPagoId: null,
     metodo: "",
-    tasaCambio: null,
     numeroOperacion: "",
   });
-  const tasa = seleccion.tasaCambio;
 
   useEffect(() => {
-    onCambio({
-      monto: Number(montoUSD) || 0,
-      montoBs: tasa !== null && montoBs !== "" ? Number(montoBs) : null,
-      ...seleccion,
-    });
+    onCambio({ monto: Number(monto) || 0, ...seleccion });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- onCambio se reconstruye en cada render del padre
-  }, [montoUSD, montoBs, seleccion]);
-
-  // Al elegir un método en Bs (o cambiar la tasa de la fecha) la casilla Bs se completa con el USD ya escrito.
-  useEffect(() => {
-    const numero = Number(montoUSD);
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- recalcula el monto en Bs solo al cambiar la tasa; el usuario puede editarlo despues, no es derivable
-    setMontoBs(tasa !== null && montoUSD !== "" && !Number.isNaN(numero) ? aCentavos(numero * tasa) : "");
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- solo debe reaccionar a la tasa, no a cada cambio del monto
-  }, [tasa]);
+  }, [monto, seleccion]);
 
   return (
     <div className="mb-4 flex flex-col gap-3 rounded-lg border p-4" style={{ borderColor: "var(--gx-edge)" }}>
@@ -79,35 +56,10 @@ export function LineaPagoMiembroCampos({
       </div>
       <SelectorMetodoPago
         metodos={metodosPago}
-        monto={Number(montoUSD) || 0}
-        onCambio={(s) => setSeleccion({ metodoPagoId: s.metodoPagoId, metodo: s.metodo, tasaCambio: s.tasaCambio, numeroOperacion: s.numeroOperacion })}
+        onCambio={(s) => setSeleccion({ metodoPagoId: s.metodoPagoId, metodo: s.metodo, numeroOperacion: s.numeroOperacion })}
         idFormulario={idFormulario}
-        fechaTasa={fechaTasa}
       />
-      <CurrencyInput
-        name={`${nombre}USD`}
-        label="Monto (USD)"
-        moneda="USD"
-        value={montoUSD}
-        onChange={(valor) => {
-          setMontoUSD(valor);
-          const numero = Number(valor);
-          if (tasa !== null) setMontoBs(valor === "" || Number.isNaN(numero) ? "" : aCentavos(numero * tasa));
-        }}
-      />
-      {tasa !== null && (
-        <CurrencyInput
-          name={`${nombre}Bs`}
-          label="Monto (Bs)"
-          moneda="Bs"
-          value={montoBs}
-          onChange={(valorBs) => {
-            setMontoBs(valorBs);
-            const numero = Number(valorBs);
-            setMontoUSD(valorBs === "" || Number.isNaN(numero) || tasa === 0 ? "" : aCentavos(numero / tasa));
-          }}
-        />
-      )}
+      <CurrencyInput name={`${nombre}USD`} label="Monto" value={monto} onChange={setMonto} />
     </div>
   );
 }

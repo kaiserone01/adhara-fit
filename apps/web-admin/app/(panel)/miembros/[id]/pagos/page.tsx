@@ -1,3 +1,4 @@
+import { formatearSoles } from "@gym-app/domain/utils/formatearSoles";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -11,16 +12,15 @@ import { pagosVigentesDelCiclo, type Pago } from "@gym-app/domain/entities/Pago"
 import { Card } from "@gym-app/ui/components/Card";
 import { PageHeader } from "@gym-app/ui/components/PageHeader";
 import { MiembroFueraDeSucursal } from "../MiembroFueraDeSucursal";
-import { formatearBs } from "../../../tasaBcvFija";
 
 function formatearFechaHora(fecha: Date): string {
-  return new Date(fecha).toLocaleString("es-VE", { dateStyle: "short", timeStyle: "short" });
+  return new Date(fecha).toLocaleString("es-PE", { dateStyle: "short", timeStyle: "short" });
 }
 
 function formatearRangoCiclo(inicio: Date | null, fin: Date | null): string {
   if (!inicio || !fin) return "—";
   const opciones: Intl.DateTimeFormatOptions = { day: "2-digit", month: "2-digit" };
-  return `${new Date(inicio).toLocaleDateString("es-VE", opciones)} → ${new Date(fin).toLocaleDateString("es-VE", opciones)}`;
+  return `${new Date(inicio).toLocaleDateString("es-PE", opciones)} → ${new Date(fin).toLocaleDateString("es-PE", opciones)}`;
 }
 
 // Pagos fraccionados/mixtos: cuando varios Pago comparten el mismo ciclo
@@ -85,9 +85,7 @@ export default async function PaginaHistorialPagos({ params }: { params: Promise
             <thead>
               <tr className="border-b text-sm" style={{ borderColor: "var(--gx-edge)", color: "var(--gx-muted)" }}>
                 <th className="py-2">Fecha y hora</th>
-                <th className="py-2">Monto (USD)</th>
-                <th className="py-2">Monto (Bs)</th>
-                <th className="py-2">Tasa aplicada</th>
+                <th className="py-2">Monto</th>
                 <th className="py-2">Método</th>
                 <th className="py-2">Ciclo</th>
                 <th className="py-2">Registrado por</th>
@@ -100,13 +98,7 @@ export default async function PaginaHistorialPagos({ params }: { params: Promise
                     {formatearFechaHora(pago.fechaPago)}
                   </td>
                   <td className="py-2" style={{ color: "var(--gx-ink)" }}>
-                    ${pago.monto.toFixed(2)}
-                  </td>
-                  <td className="py-2" style={{ color: "var(--gx-ink)" }}>
-                    {pago.montoBs !== null ? `Bs. ${formatearBs(pago.montoBs)}` : "—"}
-                  </td>
-                  <td className="py-2" style={{ color: "var(--gx-ink)" }}>
-                    {pago.tasaCambio !== null ? `Bs. ${pago.tasaCambio}` : "—"}
+                    {formatearSoles(pago.monto)}
                   </td>
                   <td className="py-2" style={{ color: "var(--gx-ink)" }}>
                     {pago.metodo}
@@ -143,7 +135,7 @@ export default async function PaginaHistorialPagos({ params }: { params: Promise
             <div className="flex items-center justify-between">
               <span style={{ color: "var(--gx-ink)" }}>{formatearFechaHora(pago.fechaPago)}</span>
               <p className="font-semibold" style={{ color: "var(--gx-accent)" }}>
-                ${pago.monto.toFixed(2)}
+                {formatearSoles(pago.monto)}
               </p>
             </div>
             <div className="flex flex-col gap-0.5 text-sm" style={{ color: "var(--gx-muted)" }}>
@@ -156,8 +148,6 @@ export default async function PaginaHistorialPagos({ params }: { params: Promise
                   </span>
                 )}
               </span>
-              {pago.montoBs !== null && <span>Monto: Bs. {formatearBs(pago.montoBs)}</span>}
-              <span>Tasa: {pago.tasaCambio !== null ? `Bs. ${pago.tasaCambio}` : "—"}</span>
               <span>Registró: {pago.registradoPorNombre ?? "—"}</span>
             </div>
           </Card>

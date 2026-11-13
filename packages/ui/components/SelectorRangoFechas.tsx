@@ -7,7 +7,7 @@ import "react-day-picker/style.css";
 import { Button } from "./Button";
 
 // OJO: nunca usar fecha.toISOString() para comparar días — convierte a
-// UTC primero, y de noche (pasadas las 8pm en Venezuela, UTC-4) eso salta
+// UTC primero, y de noche (pasadas las 8pm en Venezuela, UTC-5) eso salta
 // al día siguiente. Se compara con los componentes locales de la fecha.
 function mismoDia(a: Date, b: Date): boolean {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
@@ -97,7 +97,7 @@ export function SelectorRangoFechas({ desde, hasta, diasConActividad, onCambiar 
 
       <div className="relative">
         <Button type="button" variant="secundario" onClick={() => setAbierto((v) => !v)}>
-          {desde.toLocaleDateString("es-VE", { day: "2-digit", month: "2-digit", year: "numeric" })} — {hasta.toLocaleDateString("es-VE", { day: "2-digit", month: "2-digit", year: "numeric" })}
+          {desde.toLocaleDateString("es-PE", { day: "2-digit", month: "2-digit", year: "numeric" })} — {hasta.toLocaleDateString("es-PE", { day: "2-digit", month: "2-digit", year: "numeric" })}
         </Button>
 
         {abierto && (

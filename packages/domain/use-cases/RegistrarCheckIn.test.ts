@@ -28,7 +28,7 @@ const input = { organizacionId: "org", sucursalId: "s1", cedula: "123" };
 afterEach(() => vi.useRealTimers());
 
 describe("registrarCheckIn — cumpleaños", () => {
-  test("esCumpleanos es true el día del cumpleaños en Caracas", async () => {
+  test("esCumpleanos es true el día del cumpleaños en Lima", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-10-08T15:00:00Z"));
     const resultado = await registrarCheckIn(crearDeps({ fechaNacimiento: new Date(1990, 9, 8) }), input);

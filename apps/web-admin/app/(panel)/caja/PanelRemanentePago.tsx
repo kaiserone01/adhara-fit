@@ -1,5 +1,6 @@
 "use client";
 
+import { formatearSoles } from "@gym-app/domain/utils/formatearSoles";
 import { DetalleCiclosPago, MensajeProyeccionAbono } from "./ProyeccionCiclosUI";
 import type { ProyeccionAbono } from "./proyeccionAbono";
 
@@ -11,7 +12,6 @@ interface LineaMostrada {
 export function PanelRemanentePago({
   lineas,
   montoObjetivo,
-  tasaReferencia,
   proyeccion,
   modalidad,
   deudaProductos = 0,
@@ -26,7 +26,6 @@ export function PanelRemanentePago({
   // Tasa Bs/USD a usar para la conversión del remanente — se toma de la
   // primera línea que ya tenga una tasa elegida, o null si ninguna la
   // tiene todavía (en ese caso solo se muestra el remanente en USD).
-  tasaReferencia: number | null;
   // Proyección + detalle de períodos que cubre el pago, calculada sobre la
   // suma de fracciones ya cargadas — siempre visible mientras exista (ver
   // diseño acordado: "que el cliente vea que cubre su pago"), arriba del
@@ -78,7 +77,6 @@ export function PanelRemanentePago({
             proyeccionAbono={proyeccion}
             montoSugerido={montoObjetivo}
             montoObjetivo={membresiaCubierta}
-            tasaActual={tasaReferencia}
             modalidad={modalidad}
           />
           {proyeccion.cumpleMinimo && <DetalleCiclosPago ciclos={proyeccion.ciclos} />}
@@ -87,12 +85,12 @@ export function PanelRemanentePago({
 
       {creditoAplicado > 0 && (
         <p className="mb-2 text-sm" style={{ color: "var(--gx-muted)" }}>
-          Saldo a favor aplicado: ${creditoAplicado.toFixed(2)}
+          Saldo a favor aplicado: {formatearSoles(creditoAplicado)}
         </p>
       )}
       {abonadoPrevio > 0 && (
         <p className="mb-2 text-sm" style={{ color: "var(--gx-muted)" }}>
-          Ya abonado en este ciclo: ${abonadoPrevio.toFixed(2)}
+          Ya abonado en este ciclo: {formatearSoles(abonadoPrevio)}
         </p>
       )}
       <p className="text-xs font-semibold uppercase" style={{ color: "var(--gx-muted)" }}>
@@ -104,12 +102,12 @@ export function PanelRemanentePago({
           .map((linea, indice) => (
             <div key={indice} className="flex justify-between text-sm">
               <span style={{ color: "var(--gx-muted)" }}>{linea.metodo || "Sin método"}</span>
-              <span style={{ color: "var(--gx-ink)" }}>${linea.monto.toFixed(2)}</span>
+              <span style={{ color: "var(--gx-ink)" }}>{formatearSoles(linea.monto)}</span>
             </div>
           ))}
         {deudaProductos > 0 && (
           <p className="text-xs" style={{ color: "var(--gx-muted)" }}>
-            Incluye ${deudaProductos.toFixed(2)} de productos pendientes
+            Incluye {formatearSoles(deudaProductos)} de productos pendientes
           </p>
         )}
       </div>
@@ -117,13 +115,8 @@ export function PanelRemanentePago({
         {remanente > 0 ? (
           <>
             <p className="text-sm font-semibold" style={{ color: "var(--gx-bad)" }}>
-              {modalidad === "abono" ? `Próximo giro de $${remanente.toFixed(2)}` : `Falta $${remanente.toFixed(2)}`}
+              {modalidad === "abono" ? `Próximo giro de ${formatearSoles(remanente)}` : `Falta ${formatearSoles(remanente)}`}
             </p>
-            {tasaReferencia !== null && (
-              <p className="text-xs" style={{ color: "var(--gx-muted)" }}>
-                ≈ Bs. {(remanente * tasaReferencia).toFixed(2)}
-              </p>
-            )}
             {faltanteAceptado && (
               <p className="mt-1 text-sm font-bold" style={{ color: "var(--gx-ink)" }}>
                 Diferencia aceptada: el acceso cubre el ciclo completo y este saldo queda pendiente por cobrar.
@@ -132,18 +125,13 @@ export function PanelRemanentePago({
           </>
         ) : excedente > 0 && excedente <= tolerancia ? (
           <p className="text-sm font-semibold" style={{ color: "var(--gx-accent)" }}>
-            Sobra ${excedente.toFixed(2)} — diferencia aceptada
+            Sobra {formatearSoles(excedente)} — diferencia aceptada
           </p>
         ) : excedente > 0 && !excedenteEsAdelantoValido ? (
           <>
             <p className="text-sm font-semibold" style={{ color: "var(--gx-accent)" }}>
-              Sobra ${excedente.toFixed(2)} — se excedió el monto
+              Sobra {formatearSoles(excedente)} — se excedió el monto
             </p>
-            {tasaReferencia !== null && (
-              <p className="text-xs" style={{ color: "var(--gx-muted)" }}>
-                ≈ Bs. {(excedente * tasaReferencia).toFixed(2)}
-              </p>
-            )}
           </>
         ) : (
           <p className="text-sm font-semibold" style={{ color: "var(--gx-accent)" }}>

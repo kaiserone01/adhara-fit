@@ -120,13 +120,13 @@ describe("listarHistorialSala", () => {
     expect(personas.map((p) => [p.checkInId, p.estado])).toEqual([["nuevo", "activo"]]);
   });
 
-  test("pide al repositorio desde las últimas 24 horas o desde el inicio del día de Caracas", async () => {
+  test("pide al repositorio desde las últimas 24 horas o desde el inicio del día de Lima", async () => {
     const desdes: Date[] = [];
     const d = deps([], []);
     d.checkIns = { listarDesde: async (_s: string, desde: Date) => (desdes.push(desde), []) } as unknown as ICheckInRepository;
     await listarHistorialSala(d, { ...base, rango: "24h" });
     await listarHistorialSala(d, { ...base, rango: "hoy" });
     expect(desdes[0]).toEqual(new Date(AHORA.getTime() - 24 * 3_600_000));
-    expect(desdes[1]).toEqual(new Date("2026-09-29T04:00:00Z"));
+    expect(desdes[1]).toEqual(new Date("2026-09-29T05:00:00Z"));
   });
 });

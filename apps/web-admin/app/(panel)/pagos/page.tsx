@@ -1,3 +1,4 @@
+import { formatearSoles } from "@gym-app/domain/utils/formatearSoles";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { obtenerUsuarioDeSesionActual } from "@/lib/sesion";
@@ -10,7 +11,6 @@ import { obtenerDiasConActividad } from "@gym-app/domain/use-cases/ObtenerDiasCo
 import { Card } from "@gym-app/ui/components/Card";
 import { PageHeader } from "@gym-app/ui/components/PageHeader";
 import { conceptoPago } from "./conceptoPago";
-import { formatearBs, formatearBsConRef } from "../tasaBcvFija";
 import { inicioDelDia, finDelDia } from "../fechas";
 import { FiltroFechasHistorico } from "./FiltroFechasHistorico";
 import { BotonImprimir } from "../BotonImprimir";
@@ -19,19 +19,6 @@ import { BotonImprimir } from "../BotonImprimir";
 // directo en Pago.metodo — no hay catálogo estático que traducir.
 function nombreMetodo(valor: string): string {
   return valor;
-}
-
-// Igual criterio que ObtenerResumenTurno.enBs: un método está en Bs si
-// así se registraron sus pagos/egresos reales (Pago.montoBs !== null,
-// Egreso.moneda === "BS"), no por el string del método — Pago Móvil,
-// Transferencia, Punto de Venta y Biopago también pueden ser en Bs (ver
-// MetodoPago.moneda en Configuraciones), y antes solo "Efectivo (Bs)" se
-// detectaba, mostrando el resto como si fueran USD.
-function metodosEnBs(pagos: { metodo: string; montoBs: number | null }[], egresos: { metodo: string; moneda: string }[]): Set<string> {
-  const metodos = new Set<string>();
-  for (const p of pagos) if (p.montoBs !== null) metodos.add(p.metodo);
-  for (const e of egresos) if (e.moneda === "BS") metodos.add(e.metodo);
-  return metodos;
 }
 
 // OJO: nunca usar fecha.toISOString() para pasar diasConActividad al
@@ -98,7 +85,7 @@ export default async function PaginaHistoricoPagos({
 
       <div className="flex items-center gap-3 text-sm print:hidden" style={{ color: "var(--gx-muted)" }}>
         <span className="ml-auto text-base font-semibold" style={{ color: "var(--gx-ink)" }}>
-          Total: ${reporte.totalUSD.toFixed(2)}
+          Total: {formatearSoles(reporte.totalUSD)}
         </span>
       </div>
 
@@ -107,8 +94,8 @@ export default async function PaginaHistoricoPagos({
         <div className="hidden print:block mb-4">
           <h1 className="text-xl font-bold text-black">Histórico de pagos</h1>
           <div className="text-xs text-black">
-            {desde.toLocaleDateString("es-VE", { day: "2-digit", month: "2-digit", year: "numeric" })} – {hasta.toLocaleDateString("es-VE", { day: "2-digit", month: "2-digit", year: "numeric" })} · {pagosOrdenados.length}{" "}
-            {pagosOrdenados.length === 1 ? "pago" : "pagos"} · Total: ${reporte.totalUSD.toFixed(2)}
+            {desde.toLocaleDateString("es-PE", { day: "2-digit", month: "2-digit", year: "numeric" })} – {hasta.toLocaleDateString("es-PE", { day: "2-digit", month: "2-digit", year: "numeric" })} · {pagosOrdenados.length}{" "}
+            {pagosOrdenados.length === 1 ? "pago" : "pagos"} · Total: {formatearSoles(reporte.totalUSD)}
           </div>
         </div>
         <div className="overflow-x-auto">
@@ -121,16 +108,14 @@ export default async function PaginaHistoricoPagos({
                 <th className="py-2 print:text-black">Fecha</th>
                 <th className="py-2 print:text-black">Miembro</th>
                 <th className="py-2 print:text-black">Método</th>
-                <th className="py-2 print:text-black">USD</th>
-                <th className="py-2 print:text-black">Tasa</th>
-                <th className="py-2 print:text-black">Bs</th>
+                <th className="py-2 print:text-black">Monto</th>
               </tr>
             </thead>
             <tbody>
               {pagosOrdenados.map((pago) => (
                 <tr key={pago.id} className="border-b print:border-gray-400" style={{ borderColor: "var(--gx-edge)" }}>
                   <td className="py-1.5 print:text-black" style={{ color: "var(--gx-ink)" }}>
-                    {pago.fechaPago.toLocaleString("es-VE", { dateStyle: "short", timeStyle: "short" })}
+                    {pago.fechaPago.toLocaleString("es-PE", { dateStyle: "short", timeStyle: "short" })}
                   </td>
                   <td className="py-1.5 print:text-black" style={{ color: "var(--gx-ink)" }}>
                     {conceptoPago(pago)}
@@ -139,20 +124,14 @@ export default async function PaginaHistoricoPagos({
                     {nombreMetodo(pago.metodo)}
                   </td>
                   <td className="py-1.5 print:text-black" style={{ color: "var(--gx-ink)" }}>
-                    ${pago.monto.toFixed(2)}
-                  </td>
-                  <td className="py-1.5 print:text-black" style={{ color: "var(--gx-ink)" }}>
-                    {pago.tasaCambio !== null ? pago.tasaCambio.toFixed(2) : "—"}
-                  </td>
-                  <td className="py-1.5 print:text-black" style={{ color: "var(--gx-ink)" }}>
-                    {pago.montoBs !== null ? `Bs. ${formatearBs(pago.montoBs)}` : "—"}
+                    {formatearSoles(pago.monto)}
                   </td>
                 </tr>
               ))}
 
               {pagosOrdenados.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="py-6 text-center print:text-black" style={{ color: "var(--gx-muted)" }}>
+                  <td colSpan={4} className="py-6 text-center print:text-black" style={{ color: "var(--gx-muted)" }}>
                     Sin pagos en este período.
                   </td>
                 </tr>
@@ -165,24 +144,22 @@ export default async function PaginaHistoricoPagos({
       {/* Detalle por turno (apertura/cierre, egresos, arqueo) — no se imprime. Los pagos solo van en la lista de arriba, no se repiten aquí. */}
       <div className="flex flex-col gap-6 print:hidden">
       {reporte.turnos.map((fila) => {
-        const metodosBsDelTurno = metodosEnBs(fila.pagos, fila.egresos);
-
         return (
         <Card key={fila.turno.id} className="text-sm">
           <div className="mb-2 flex justify-between font-medium" style={{ color: "var(--gx-ink)" }}>
-            <span>Turno {fila.turno.abiertoEn.toLocaleString("es-VE")}</span>
-            <span>Neto: ${fila.netoUSD.toFixed(2)}</span>
+            <span>Turno {fila.turno.abiertoEn.toLocaleString("es-PE")}</span>
+            <span>Neto: {formatearSoles(fila.netoUSD)}</span>
           </div>
           <div className="mb-2 flex justify-between text-xs" style={{ color: "var(--gx-muted)" }}>
             <span>
-              Apertura: {fila.turno.abiertoEn.toLocaleTimeString("es-VE")} · Cierre:{" "}
-              {fila.turno.cerradoEn ? fila.turno.cerradoEn.toLocaleTimeString("es-VE") : "turno abierto"}
+              Apertura: {fila.turno.abiertoEn.toLocaleTimeString("es-PE")} · Cierre:{" "}
+              {fila.turno.cerradoEn ? fila.turno.cerradoEn.toLocaleTimeString("es-PE") : "turno abierto"}
             </span>
             <span>{fila.turno.usuarioNombre ?? "—"}</span>
           </div>
           <div className="mb-2 flex justify-between" style={{ color: "var(--gx-muted)" }}>
-            <span>Cobrado: ${fila.totalPagosUSD.toFixed(2)}</span>
-            {fila.totalEgresosUSD > 0 && <span>Egresos (ref. USD): -${fila.totalEgresosUSD.toFixed(2)}</span>}
+            <span>Cobrado: {formatearSoles(fila.totalPagosUSD)}</span>
+            {fila.totalEgresosUSD > 0 && <span>Egresos: -{formatearSoles(fila.totalEgresosUSD)}</span>}
           </div>
           {fila.egresos.length > 0 && (
             <div className="mb-2 flex flex-col gap-1 border-b pb-2" style={{ borderColor: "var(--gx-edge)" }}>
@@ -190,25 +167,15 @@ export default async function PaginaHistoricoPagos({
                 <div key={egreso.id} className="flex justify-between" style={{ color: "var(--gx-muted)" }}>
                   <span>{egreso.motivo}</span>
                   <span>
-                    -{egreso.moneda === "BS" ? formatearBsConRef(egreso.monto, egreso.montoUSD) : `$${egreso.monto.toFixed(2)}`}
+                    -{formatearSoles(egreso.monto)}
                   </span>
                 </div>
               ))}
             </div>
           )}
           {fila.arqueo.map((linea) => {
-            // Un método sin pagos ni egresos en este turno (solo con fondo
-            // inicial, ej. Efectivo (Bs) sin movimiento) no aparece en
-            // metodosBsDelTurno — se cae al string como último recurso
-            // para no perder la moneda en ese caso puntual.
-            const enBs = metodosBsDelTurno.has(linea.metodo) || linea.metodo.endsWith("(Bs)");
-            // El arqueo no guarda la tasa del cierre — a diferencia de
-            // Pago/Egreso, no hay una referencia en USD confiable para
-            // reconstruir acá (ver Egreso.tasaCambio/montoUSD, que sí la
-            // capturan al momento de cada transacción). Solo se corrige
-            // la moneda mostrada (antes no indicaba Bs vs USD).
-            const montoContadoTexto = enBs ? `Bs. ${formatearBs(linea.montoContado)}` : `$${linea.montoContado.toFixed(2)}`;
-            const diferenciaTexto = enBs ? `Bs. ${formatearBs(linea.diferencia)}` : `$${linea.diferencia.toFixed(2)}`;
+            const montoContadoTexto = formatearSoles(linea.montoContado);
+            const diferenciaTexto = formatearSoles(linea.diferencia);
 
             return (
               <div key={linea.metodo} className="flex justify-between" style={{ color: "var(--gx-muted)" }}>
@@ -241,9 +208,7 @@ export default async function PaginaHistoricoPagos({
                 {conceptoPago(pago)} — {nombreMetodo(pago.metodo)}
               </span>
               <span className="flex gap-3" style={{ color: "var(--gx-ink)" }}>
-                <span>${pago.monto.toFixed(2)}</span>
-                <span>{pago.tasaCambio !== null ? `Tasa ${pago.tasaCambio.toFixed(2)}` : "—"}</span>
-                <span>{pago.montoBs !== null ? `Bs. ${formatearBs(pago.montoBs)}` : "—"}</span>
+                <span>{formatearSoles(pago.monto)}</span>
               </span>
             </div>
           ))}

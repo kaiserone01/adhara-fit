@@ -1,5 +1,6 @@
 "use client";
 
+import { formatearSoles } from "@gym-app/domain/utils/formatearSoles";
 import { useActionState, useEffect, useState } from "react";
 import { Button } from "@gym-app/ui/components/Button";
 import { CurrencyInput } from "@gym-app/ui/components/CurrencyInput";
@@ -48,12 +49,11 @@ interface LineaPagoCambio {
   monto: string;
   metodoPagoId: string | null;
   metodo: string;
-  tasaCambio: number | null;
   numeroOperacion: string;
 }
 
 function nuevaLineaVacia(): LineaPagoCambio {
-  return { clave: crypto.randomUUID(), monto: "", metodoPagoId: null, metodo: "", tasaCambio: null, numeroOperacion: "" };
+  return { clave: crypto.randomUUID(), monto: "", metodoPagoId: null, metodo: "", numeroOperacion: "" };
 }
 
 export function FormularioCambiarPlan({
@@ -220,7 +220,6 @@ export function FormularioCambiarPlan({
                 metodo: l.metodo,
                 metodoPagoId: l.metodoPagoId,
                 numeroOperacion: l.numeroOperacion || null,
-                tasaCambio: l.tasaCambio,
               }))
             : []
         )}
@@ -242,7 +241,7 @@ export function FormularioCambiarPlan({
           <option value="">Seleccioná un plan</option>
           {planes.map((plan) => (
             <option key={plan.id} value={plan.id} disabled={plan.id === planActualId}>
-              {plan.nombre} — ${plan.precioUSD.toFixed(2)} ({ETIQUETA_FRECUENCIA[plan.frecuencia]})
+              {plan.nombre} — {formatearSoles(plan.precioUSD)} ({ETIQUETA_FRECUENCIA[plan.frecuencia]})
               {plan.id === planActualId ? " — plan actual" : ""}
             </option>
           ))}
@@ -283,9 +282,7 @@ export function FormularioCambiarPlan({
         <>
           <SelectorMetodoPago
             metodos={metodosPago}
-            monto={montoACobrar}
             onCambio={(seleccion) => actualizarLinea(lineas[0].clave, seleccion)}
-            avisoServidor={{ tasaNueva: estado.tasaNueva, fallaTemporal: estado.fallaTemporal, tasaGuardada: estado.tasaGuardada }}
           />
           <button
             type="button"
@@ -341,7 +338,6 @@ export function FormularioCambiarPlan({
               </div>
               <SelectorMetodoPago
                 metodos={metodosPago}
-                monto={Number(linea.monto) || montoACobrar}
                 onCambio={(seleccion) => actualizarLinea(linea.clave, seleccion)}
                 ocultarNumeroOperacion
                 numeroOperacion={linea.numeroOperacion}
@@ -351,7 +347,7 @@ export function FormularioCambiarPlan({
                 <CurrencyInput
                   name={`monto-linea-${indice}`}
                   label="Monto de este método (USD)"
-                  moneda="USD"
+                 
                   required
                   value={linea.monto}
                   onChange={(valorUSD) => actualizarLinea(linea.clave, { monto: valorUSD })}
@@ -370,7 +366,7 @@ export function FormularioCambiarPlan({
           <div className="flex justify-between rounded-lg px-3 py-2 text-sm" style={{ background: "var(--gx-surface-2)" }}>
             <span style={{ color: "var(--gx-muted)" }}>Total ingresado</span>
             <span className="font-semibold" style={{ color: "var(--gx-ink)" }}>
-              ${sumaLineas.toFixed(2)} de ${montoACobrar.toFixed(2)}
+              {formatearSoles(sumaLineas)} de {formatearSoles(montoACobrar)}
             </span>
           </div>
         </div>
@@ -394,11 +390,11 @@ export function FormularioCambiarPlan({
               {enviando
                 ? "Guardando..."
                 : montoACobrar > 0
-                  ? `Cambiar de plan — cobrar $${montoACobrar.toFixed(2)}`
+                  ? `Cambiar de plan — cobrar ${formatearSoles(montoACobrar)}`
                   : "Cambiar de plan — sin costo adicional"}
             </span>
             <span className="text-xs font-normal" style={{ color: "var(--gx-accent-ink)", opacity: 0.85 }}>
-              Nuevo vencimiento: {resultado.nuevoVencimiento.toLocaleDateString("es-VE", { day: "2-digit", month: "2-digit", year: "numeric" })}
+              Nuevo vencimiento: {resultado.nuevoVencimiento.toLocaleDateString("es-PE", { day: "2-digit", month: "2-digit", year: "numeric" })}
             </span>
           </Button>
         </div>

@@ -18,11 +18,11 @@ const ETIQUETA_ESTADO: Record<EstadoCheckIn, string> = {
 };
 
 function hora(iso: string): string {
-  return new Date(iso).toLocaleTimeString("es-VE", { hour: "2-digit", minute: "2-digit", timeZone: "America/Caracas" });
+  return new Date(iso).toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit", timeZone: "America/Lima" });
 }
 
 function fecha(iso: string): string {
-  return new Date(iso).toLocaleDateString("es-VE", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "UTC" });
+  return new Date(iso).toLocaleDateString("es-PE", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "UTC" });
 }
 
 export function ListaEnSala() {

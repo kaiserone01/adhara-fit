@@ -12,8 +12,6 @@ type FilaPago = {
   metodo: string;
   metodoPagoId: string | null;
   numeroOperacion: string | null;
-  tasaCambio: { toNumber(): number } | null;
-  montoBs: { toNumber(): number } | null;
   fechaPago: Date;
   fechaInicioCiclo: Date | null;
   fechaFinCiclo: Date | null;
@@ -37,8 +35,6 @@ function mapear(pago: FilaPago): Pago {
     metodo: pago.metodo,
     metodoPagoId: pago.metodoPagoId,
     numeroOperacion: pago.numeroOperacion,
-    tasaCambio: pago.tasaCambio ? pago.tasaCambio.toNumber() : null,
-    montoBs: pago.montoBs ? pago.montoBs.toNumber() : null,
     fechaPago: pago.fechaPago,
     fechaInicioCiclo: pago.fechaInicioCiclo,
     fechaFinCiclo: pago.fechaFinCiclo,
@@ -66,8 +62,6 @@ export class PrismaPagoRepository implements IPagoRepository {
         metodo: datos.metodo,
         metodoPagoId: datos.metodoPagoId,
         numeroOperacion: datos.numeroOperacion,
-        tasaCambio: datos.tasaCambio,
-        montoBs: datos.montoBs,
         fechaInicioCiclo: datos.fechaInicioCiclo,
         fechaFinCiclo: datos.fechaFinCiclo,
         grupoPagoId: datos.grupoPagoId,

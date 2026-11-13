@@ -12,14 +12,12 @@ export function BotonCobrarDeudas({
   grupos,
   abonos,
   metodosPago,
-  tasaActual,
   accionCobrar,
   accionAnular,
 }: {
   grupos: GrupoDeudasMiembro[];
   abonos: AbonoPendiente[];
   metodosPago: MetodoPago[];
-  tasaActual: number | null;
   accionCobrar: (estado: EstadoCobrarDeudas, formData: FormData) => Promise<EstadoCobrarDeudas>;
   accionAnular: (id: string) => Promise<{ error?: string; ok?: string }>;
 }) {
@@ -37,7 +35,6 @@ export function BotonCobrarDeudas({
           grupos={grupos}
           abonos={abonos}
           metodosPago={metodosPago}
-          tasaActual={tasaActual}
           accionCobrar={accionCobrar}
           accionAnular={accionAnular}
           onCerrar={() => setModalAbierta(false)}

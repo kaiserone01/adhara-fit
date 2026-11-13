@@ -28,7 +28,6 @@ export interface VitrinaItem {
   mostrarOferta: boolean;
   mostrarDescuento: boolean;
   mostrarEtiqueta: boolean;
-  mostrarEquivalenteBs: boolean;
   // Entrenador (nombre también identifica a las promos y productos en el panel)
   nombre: string | null;
   especialidad: string | null;
@@ -59,6 +58,5 @@ export interface ManifiestoVitrina {
   servidorAhora: string; // hora del servidor (ISO): la TV guarda la última para su reloj efectivo
   duracionSeg: number;
   transicion: TransicionVitrina;
-  tasaBcv: { valor: number; fecha: string } | null; // misma forma que /api/checkin/estado
   items: ItemManifiesto[];
 }

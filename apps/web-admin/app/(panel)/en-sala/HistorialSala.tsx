@@ -27,12 +27,12 @@ const ETIQUETA_ESTADO: Record<EstadoCheckIn, string> = {
 const ETIQUETA_RANGO: Record<Rango, string> = { "24h": "Últimas 24 horas", hoy: "Hoy" };
 
 function horaFecha(iso: string): string {
-  return new Date(iso).toLocaleString("es-VE", {
+  return new Date(iso).toLocaleString("es-PE", {
     day: "2-digit",
     month: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
-    timeZone: "America/Caracas",
+    timeZone: "America/Lima",
   });
 }
 

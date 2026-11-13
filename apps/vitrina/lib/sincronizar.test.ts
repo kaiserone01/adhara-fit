@@ -32,7 +32,6 @@ const manifiestoCon = (...urls: string[]) =>
   armarManifiesto({
     items: urls.map((mediaUrl, i) => itemDePrueba({ id: `i${i}`, orden: i, mediaUrl })),
     ajustes: { duracionSeg: 12, transicion: "FUNDIDO", version: 1 },
-    tasaBcv: null,
     ahora: new Date("2026-10-15T16:00:00Z"),
   });
 
@@ -108,7 +107,6 @@ describe("sincronizar", () => {
         itemDePrueba({ id: "b", orden: 2, mediaUrl: "https://r/a.jpg" }),
       ],
       ajustes: { duracionSeg: 12, transicion: "FUNDIDO", version: 1 },
-      tasaBcv: null,
       ahora: new Date("2026-10-15T16:00:00Z"),
     });
     const almacen = fakeAlmacen();

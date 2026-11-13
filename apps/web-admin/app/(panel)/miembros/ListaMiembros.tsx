@@ -38,7 +38,7 @@ function iniciales(nombre: string): string {
 }
 
 function formatearFecha(fecha: Date): string {
-  return new Date(fecha).toLocaleDateString("es-VE", { day: "2-digit", month: "2-digit", year: "numeric" });
+  return new Date(fecha).toLocaleDateString("es-PE", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
 function Avatar({ fotoUrl, nombre, tamano }: { fotoUrl: string | null; nombre: string; tamano: number }) {
@@ -230,7 +230,7 @@ export function ListaMiembros({
 }
 
 function VistaImpresion({ miembros }: { miembros: FilaMiembro[] }) {
-  const generadoEl = new Date().toLocaleDateString("es-VE", { day: "2-digit", month: "2-digit", year: "numeric" });
+  const generadoEl = new Date().toLocaleDateString("es-PE", { day: "2-digit", month: "2-digit", year: "numeric" });
 
   return (
     <div>

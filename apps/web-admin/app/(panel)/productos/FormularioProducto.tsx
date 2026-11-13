@@ -6,7 +6,6 @@ import { Input } from "@gym-app/ui/components/Input";
 import { CurrencyInput } from "@gym-app/ui/components/CurrencyInput";
 import { useFeedback } from "@gym-app/ui/components/FeedbackOverlay";
 import { SelectorFotoPerfil } from "../miembros/SelectorFotoPerfil";
-import { formatearBs } from "../tasaBcvFija";
 import type { EstadoFormularioProducto } from "./actions";
 
 export interface ValoresFormularioProducto {
@@ -20,11 +19,9 @@ export interface ValoresFormularioProducto {
 export function FormularioProducto({
   accion,
   valoresIniciales,
-  tasaActual,
 }: {
   accion: (estado: EstadoFormularioProducto, formData: FormData) => Promise<EstadoFormularioProducto>;
   valoresIniciales?: ValoresFormularioProducto;
-  tasaActual: number | null;
 }) {
   const [estado, enviar, enviando] = useActionState(accion, {});
   const { mostrarError } = useFeedback();
@@ -41,7 +38,6 @@ export function FormularioProducto({
     setFotoPreview(URL.createObjectURL(archivo));
   }
 
-  const costoNumero = Number(costo);
 
   return (
     <form action={enviar} className="flex flex-col gap-4">
@@ -80,12 +76,7 @@ export function FormularioProducto({
       </label>
 
       <div className="flex flex-col gap-1">
-        <CurrencyInput name="costoUSD" label="Costo" moneda="USD" required value={costo} onChange={setCosto} />
-        {tasaActual !== null && costoNumero > 0 && (
-          <span className="text-xs" style={{ color: "var(--gx-muted)" }}>
-            Equivale a Bs. {formatearBs(costoNumero * tasaActual)} a la tasa vigente.
-          </span>
-        )}
+        <CurrencyInput name="costoUSD" label="Costo" required value={costo} onChange={setCosto} />
       </div>
 
       {valoresIniciales && (

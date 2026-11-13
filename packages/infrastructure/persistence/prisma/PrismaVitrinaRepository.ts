@@ -33,7 +33,6 @@ function mapear(fila: FilaVitrinaItem): VitrinaItem {
     mostrarOferta: fila.mostrarOferta,
     mostrarDescuento: fila.mostrarDescuento,
     mostrarEtiqueta: fila.mostrarEtiqueta,
-    mostrarEquivalenteBs: fila.mostrarEquivalenteBs,
     nombre: fila.nombre,
     especialidad: fila.especialidad,
     frase: fila.frase,

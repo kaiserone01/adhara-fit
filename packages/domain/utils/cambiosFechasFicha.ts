@@ -2,7 +2,7 @@
 // Las fechas llegan como texto "aaaa-mm-dd" (o "" si el campo quedó vacío); null = el campo no se envió
 // (el miembro no puede ajustar fechas) y entonces se omite siempre.
 // Fecha local a las 00:00 (`new Date(`${texto}T00:00:00`)`), igual que el resto de fechas editables de la ficha;
-// la inscripción se guarda aparte, como inicio del día de Caracas.
+// la inscripción se guarda aparte, como inicio del día de Lima.
 export function calcularCambiosFechas(entrada: {
   vencimiento: string | null;
   vencimientoOriginal: string | null;

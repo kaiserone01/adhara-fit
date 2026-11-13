@@ -1,3 +1,4 @@
+import { formatearSoles } from "@gym-app/domain/utils/formatearSoles";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -8,8 +9,6 @@ import { Button } from "@gym-app/ui/components/Button";
 import { Badge } from "@gym-app/ui/components/Badge";
 import { Card } from "@gym-app/ui/components/Card";
 import { PageHeader } from "@gym-app/ui/components/PageHeader";
-import { formatearBs } from "../tasaBcvFija";
-import { obtenerTasaActual } from "./tasaActual";
 import { BotonEliminarProducto } from "./BotonEliminarProducto";
 
 function Miniatura({ fotoUrl }: { fotoUrl: string | null }) {
@@ -28,12 +27,7 @@ export default async function PaginaProductos() {
   if (!sesion) redirect("/login");
   const { usuario } = sesion;
 
-  const [productos, tasaActual] = await Promise.all([
-    listarProductos({ productos: new PrismaProductoRepository(prisma) }, usuario.organizacionId),
-    obtenerTasaActual(),
-  ]);
-
-  const equivalenteBs = (costoUSD: number) => (tasaActual !== null ? `Bs. ${formatearBs(costoUSD * tasaActual)}` : "—");
+  const productos = await listarProductos({ productos: new PrismaProductoRepository(prisma) }, usuario.organizacionId);
 
   return (
     <div className="p-6 lg:p-8">
@@ -51,8 +45,7 @@ export default async function PaginaProductos() {
               <tr className="border-b text-sm" style={{ borderColor: "var(--gx-edge)", color: "var(--gx-muted)" }}>
                 <th className="py-2"></th>
                 <th className="py-2">Nombre</th>
-                <th className="py-2">Costo (USD)</th>
-                <th className="py-2">Equivalente (Bs)</th>
+                <th className="py-2">Costo</th>
                 <th className="py-2">Estado</th>
                 <th className="py-2"></th>
                 <th className="py-2"></th>
@@ -73,10 +66,7 @@ export default async function PaginaProductos() {
                     )}
                   </td>
                   <td className="py-2" style={{ color: "var(--gx-ink)" }}>
-                    ${producto.costoUSD.toFixed(2)}
-                  </td>
-                  <td className="py-2" style={{ color: "var(--gx-ink)" }}>
-                    {equivalenteBs(producto.costoUSD)}
+                    {formatearSoles(producto.costoUSD)}
                   </td>
                   <td className="py-2">
                     <Badge tono={producto.activo ? "verde" : "gris"}>{producto.activo ? "Activo" : "Inactivo"}</Badge>
@@ -119,7 +109,7 @@ export default async function PaginaProductos() {
                     {producto.nombre}
                   </span>
                   <span className="text-sm" style={{ color: "var(--gx-muted)" }}>
-                    ${producto.costoUSD.toFixed(2)} · {equivalenteBs(producto.costoUSD)}
+                    {formatearSoles(producto.costoUSD)}
                   </span>
                 </div>
                 <div className="flex shrink-0 items-center gap-1">

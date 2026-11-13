@@ -47,7 +47,7 @@ function crearDeps() {
   return { deps, marcadas, pagos };
 }
 
-const linea = (monto: number) => ({ monto, metodo: "Efectivo USD", metodoPagoId: "mp1", numeroOperacion: null, tasaCambio: null });
+const linea = (monto: number) => ({ monto, metodo: "Efectivo USD", metodoPagoId: "mp1", numeroOperacion: null });
 const base = { organizacionId: "org", miembroId: "m1", sucursalId: "s1", registradoPorId: "u1" };
 
 describe("cobrar solo algunos productos marcados", () => {

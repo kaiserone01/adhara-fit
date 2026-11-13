@@ -3,9 +3,8 @@ import { IPagoRepository } from "../ports/IPagoRepository";
 import { IProductoRepository } from "../ports/IProductoRepository";
 import { ITurnoRepository } from "../ports/ITurnoRepository";
 import { IAuthorizationService } from "../ports/IAuthorizationService";
-import { ITasaCambioRepository } from "../ports/ITasaCambioRepository";
 import { Pago, DatosLineaPago, validarLineasDePago } from "../entities/Pago";
-import { resolverCobroPasado, tasaDeLinea } from "./resolverCobroPasado";
+import { resolverCobroPasado } from "./resolverCobroPasado";
 import { conceptoDeudas, totalDeudas } from "../entities/DeudaProducto";
 import {
   resolverItemsVenta,
@@ -36,8 +35,6 @@ export interface VenderProductoDeps {
   productos: IProductoRepository;
   turnos: ITurnoRepository;
   autorizacion: IAuthorizationService;
-  // Solo para ventas con fecha pasada: tasa BCV de ese día.
-  tasas?: ITasaCambioRepository;
 }
 
 export interface DatosVenderProducto {
@@ -47,7 +44,7 @@ export interface DatosVenderProducto {
   sucursalId: string;
   registradoPorId: string;
   // Venta que ya se hizo y cobró en un día pasado (hasta MAX_DIAS_ATRAS_PAGO_FECHADO) y no se registró: queda fuera de
-  // turno (no toca el arqueo de hoy) y los Bs usan la tasa BCV de ese día. De hoy se ignora.
+  // turno (no toca el arqueo de hoy). De hoy se ignora.
   fechaVenta?: Date;
 }
 
@@ -62,7 +59,7 @@ export async function venderProducto(deps: VenderProductoDeps, input: DatosVende
   const renglones = items.map((i) => ({ productoNombre: i.producto.nombre, cantidad: i.cantidad, precioUnitarioUSD: i.producto.costoUSD }));
   validarLineasDePago(input.lineas, "exacto", totalDeudas(renglones));
 
-  const pasado = await resolverCobroPasado(deps.tasas, input.fechaVenta, input.lineas);
+  const pasado = resolverCobroPasado(input.fechaVenta);
   let turnoId: string | null = null;
   if (!pasado) {
     const turnoAbierto = await deps.turnos.buscarAbiertoPorSucursal(input.sucursalId);
@@ -83,7 +80,6 @@ export async function venderProducto(deps: VenderProductoDeps, input: DatosVende
 
   const pagosCreados: Pago[] = [];
   for (const linea of input.lineas) {
-    const tasaCambio = tasaDeLinea(linea, pasado);
     pagosCreados.push(
       await deps.pagos.crear({
         miembroId: null,
@@ -94,8 +90,6 @@ export async function venderProducto(deps: VenderProductoDeps, input: DatosVende
         metodo: linea.metodo,
         metodoPagoId: linea.metodoPagoId,
         numeroOperacion: linea.numeroOperacion,
-        tasaCambio,
-        montoBs: tasaCambio !== null ? linea.monto * tasaCambio : null,
         fechaInicioCiclo: null,
         fechaFinCiclo: null,
         grupoPagoId,

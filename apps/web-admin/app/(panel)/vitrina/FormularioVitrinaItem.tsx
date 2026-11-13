@@ -6,11 +6,11 @@ import { Button } from "@gym-app/ui/components/Button";
 import { Input } from "@gym-app/ui/components/Input";
 import { useFeedback } from "@gym-app/ui/components/FeedbackOverlay";
 import type { TipoMedio, TipoVitrinaItem, VitrinaItem } from "@gym-app/domain/entities/Vitrina";
-import { diaCalendarioCaracas } from "@gym-app/domain/utils/fechaCaracas";
+import { diaCalendarioLima } from "@gym-app/domain/utils/fechaLima";
 import { guardarItemAction } from "./actions";
 import { SelectorMedio } from "./SelectorMedio";
 
-const dia = (fecha: Date | null) => (fecha ? diaCalendarioCaracas(fecha).toISOString().slice(0, 10) : "");
+const dia = (fecha: Date | null) => (fecha ? diaCalendarioLima(fecha).toISOString().slice(0, 10) : "");
 
 // Con `alCambiar` el interruptor es controlado (conserva la elección mientras el formulario siga montado).
 function Interruptor({ nombre, etiqueta, marcado, alCambiar }: { nombre: string; etiqueta: string; marcado: boolean; alCambiar?: (marcado: boolean) => void }) {
@@ -141,7 +141,6 @@ export function FormularioVitrinaItem({
             <Interruptor nombre="mostrarOferta" etiqueta="Oferta" marcado={item?.mostrarOferta ?? true} />
             <Interruptor nombre="mostrarDescuento" etiqueta="Descuento" marcado={item?.mostrarDescuento ?? true} />
             <Interruptor nombre="mostrarEtiqueta" etiqueta="Etiqueta" marcado={item?.mostrarEtiqueta ?? true} />
-            <Interruptor nombre="mostrarEquivalenteBs" etiqueta="Equivalente en Bs (con la tasa BCV vigente)" marcado={item?.mostrarEquivalenteBs ?? true} />
             {interruptorSonido}
           </fieldset>
         </>

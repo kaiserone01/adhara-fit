@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { venderProducto, type VenderProductoDeps } from "./VenderProducto";
-import { FechaPagoInvalidaError, SinTasaParaFechaError } from "./RegistrarPago";
+import { FechaPagoInvalidaError } from "./RegistrarPago";
 import type { Producto } from "../entities/Producto";
 import type { DatosNuevoPago, Pago } from "../entities/Pago";
 
@@ -15,9 +15,8 @@ const producto = (id: string, nombre: string, costoUSD: number, extra: Partial<P
   ...extra,
 });
 
-function crearDeps(opciones: { permitido?: boolean; turnoAbierto?: boolean; productos?: Producto[]; tasaDelDia?: number | null } = {}) {
-  const { permitido = true, turnoAbierto = true, tasaDelDia = 40 } = opciones;
-  const fechasTasa: Date[] = [];
+function crearDeps(opciones: { permitido?: boolean; turnoAbierto?: boolean; productos?: Producto[] } = {}) {
+  const { permitido = true, turnoAbierto = true } = opciones;
   const productos = opciones.productos ?? [producto("p1", "Agua", 1.5), producto("p2", "Gatorade", 2.25)];
   const creados: DatosNuevoPago[] = [];
 
@@ -31,24 +30,17 @@ function crearDeps(opciones: { permitido?: boolean; turnoAbierto?: boolean; prod
     productos: { buscarPorId: async (_org: string, id: string) => productos.find((p) => p.id === id) ?? null },
     turnos: { buscarAbiertoPorSucursal: async () => (turnoAbierto ? { id: "turno1" } : null) },
     autorizacion: { tienePermiso: async () => permitido },
-    tasas: {
-      buscarMasCercanaAnterior: async (fecha: Date) => {
-        fechasTasa.push(fecha);
-        return tasaDelDia === null ? null : { valor: tasaDelDia };
-      },
-    },
   } as unknown as VenderProductoDeps;
 
-  return { deps, creados, fechasTasa };
+  return { deps, creados };
 }
 
 const base = { organizacionId: "org", sucursalId: "suc", registradoPorId: "u1" };
-const linea = (monto: number, tasaCambio: number | null = null) => ({
+const linea = (monto: number) => ({
   monto,
   metodo: "Efectivo (USD)",
   metodoPagoId: "mp1",
   numeroOperacion: null,
-  tasaCambio,
 });
 
 describe("venderProducto", () => {
@@ -98,14 +90,13 @@ describe("venderProducto", () => {
     expect(creados[0]).toMatchObject({ productoId: "p1", productoNombre: "Agua", cantidad: 3 });
   });
 
-  test("pago combinado comparte grupoPagoId y calcula montoBs por línea", async () => {
+  test("pago combinado comparte grupoPagoId", async () => {
     const { deps, creados } = crearDeps();
-    await venderProducto(deps, { ...base, items: [{ productoId: "p1", cantidad: 2 }], lineas: [linea(1), linea(2, 50)] });
+    await venderProducto(deps, { ...base, items: [{ productoId: "p1", cantidad: 2 }], lineas: [linea(1), linea(2)] });
 
     expect(creados).toHaveLength(2);
     expect(creados[0].grupoPagoId).toBeTruthy();
     expect(creados[0].grupoPagoId).toBe(creados[1].grupoPagoId);
-    expect(creados[1].montoBs).toBe(100);
   });
 
   test("total con decimales flotantes: 3 × 0.10 se cobra como 0.30", async () => {
@@ -162,14 +153,13 @@ describe("venderProducto con fecha pasada", () => {
   const hace = (dias: number) => new Date(Date.now() - dias * DIA);
   const venta = { ...base, items: [{ productoId: "p1", cantidad: 2 }] };
 
-  test("queda fuera de turno, con la fecha elegida y la tasa BCV de ese día (no la del formulario)", async () => {
-    const { deps, creados, fechasTasa } = crearDeps({ tasaDelDia: 40 });
+  test("queda fuera de turno, con la fecha elegida", async () => {
+    const { deps, creados } = crearDeps();
     const fecha = hace(1);
-    await venderProducto(deps, { ...venta, lineas: [linea(3, 99)], fechaVenta: fecha });
+    await venderProducto(deps, { ...venta, lineas: [linea(3)], fechaVenta: fecha });
 
-    expect(fechasTasa).toEqual([fecha]);
     expect(creados).toHaveLength(1);
-    expect(creados[0]).toMatchObject({ turnoId: null, fechaPago: fecha, tasaCambio: 40, montoBs: 120, productoId: "p1", cantidad: 2 });
+    expect(creados[0]).toMatchObject({ turnoId: null, fechaPago: fecha, productoId: "p1", cantidad: 2 });
   });
 
   test("no exige turno abierto", async () => {
@@ -179,22 +169,10 @@ describe("venderProducto con fecha pasada", () => {
     expect(creados[0].turnoId).toBeNull();
   });
 
-  test("una línea en USD no necesita tasa", async () => {
-    const { deps, creados, fechasTasa } = crearDeps({ tasaDelDia: null });
-    await venderProducto(deps, { ...venta, lineas: [linea(3)], fechaVenta: hace(1) });
-    expect(fechasTasa).toEqual([]);
-    expect(creados[0]).toMatchObject({ tasaCambio: null, montoBs: null });
-  });
-
   test("más de 90 días atrás se rechaza", async () => {
     const { deps, creados } = crearDeps();
     await expect(venderProducto(deps, { ...venta, lineas: [linea(3)], fechaVenta: hace(100) })).rejects.toBeInstanceOf(FechaPagoInvalidaError);
     expect(creados).toEqual([]);
-  });
-
-  test("sin tasa BCV de esa fecha ni anterior, con una línea en Bs, se rechaza", async () => {
-    const { deps } = crearDeps({ tasaDelDia: null });
-    await expect(venderProducto(deps, { ...venta, lineas: [linea(3, 99)], fechaVenta: hace(1) })).rejects.toBeInstanceOf(SinTasaParaFechaError);
   });
 
   test("una fecha de hoy se comporta como siempre (en el turno abierto)", async () => {

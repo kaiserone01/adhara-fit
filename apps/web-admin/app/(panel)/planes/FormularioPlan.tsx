@@ -218,7 +218,7 @@ export function FormularioPlan({
         <CurrencyInput
           name="precioUSD"
           label="Precio"
-          moneda="USD"
+         
           required
           defaultValue={valoresIniciales?.precioUSD !== undefined ? String(valoresIniciales.precioUSD) : ""}
         />

@@ -108,7 +108,6 @@ export async function POST(req: NextRequest) {
             metodo: body.metodo,
             metodoPagoId: body.metodoPagoId ?? null,
             numeroOperacion: body.numeroOperacion ?? null,
-            tasaCambio: body.tasaCambio ?? null,
           },
         ],
         sucursalId: sucursalActivaId,

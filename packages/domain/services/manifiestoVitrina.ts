@@ -6,7 +6,6 @@ import { estaVencido } from "./secuenciaVitrina";
 export function armarManifiesto(entrada: {
   items: VitrinaItem[];
   ajustes: AjustesVitrina;
-  tasaBcv: { valor: number; fecha: string } | null;
   ahora: Date;
 }): ManifiestoVitrina {
   const items: ItemManifiesto[] = entrada.items
@@ -18,7 +17,6 @@ export function armarManifiesto(entrada: {
     servidorAhora: entrada.ahora.toISOString(),
     duracionSeg: entrada.ajustes.duracionSeg,
     transicion: entrada.ajustes.transicion,
-    tasaBcv: entrada.tasaBcv,
     items,
   };
 }

@@ -17,7 +17,6 @@ export function BotonRegistrarPagoCaja({
   miembros,
   planes,
   metodosPago,
-  tasaActual,
   reglasAbono,
   entrenadores,
   accionCambiarPlan,
@@ -28,7 +27,6 @@ export function BotonRegistrarPagoCaja({
   miembros: Miembro[];
   planes: PlanParaModal[];
   metodosPago: MetodoPago[];
-  tasaActual: number | null;
   reglasAbono: ReglaAbonoPorFrecuencia[];
   // Entrenadores de la sucursal activa — para "Cambiar plan" en el Paso 2
   // (ver diseño acordado), solo se muestra el selector si el plan nuevo
@@ -53,7 +51,6 @@ export function BotonRegistrarPagoCaja({
           miembros={miembros}
           planes={planes}
           metodosPago={metodosPago}
-          tasaActual={tasaActual}
           reglasAbono={reglasAbono}
           entrenadores={entrenadores}
           accionCambiarPlan={accionCambiarPlan}

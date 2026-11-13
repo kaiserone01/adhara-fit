@@ -1,5 +1,6 @@
 "use server";
 
+import { formatearSoles } from "@gym-app/domain/utils/formatearSoles";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
@@ -16,8 +17,6 @@ import type { PrismaClientOrTx } from "@gym-app/infrastructure/persistence/prism
 import { PrismaDeudaProductoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaDeudaProductoRepository";
 import { PrismaCambioPlanAuditoriaRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaCambioPlanAuditoriaRepository";
 import { AuthorizationService } from "@gym-app/domain/services/AuthorizationService";
-import { validarTasaSiEsEnBs } from "@/lib/tasaBcv";
-import { PrismaTasaCambioRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaTasaCambioRepository";
 import { conMensajeOk } from "../redirectConMensaje";
 import {
   registrarPago,
@@ -34,7 +33,6 @@ import {
   MesesInvalidosError,
   MesesRequierenPagoCompletoError,
   MesesNoDisponiblesError,
-  SinTasaParaFechaError,
 } from "@gym-app/domain/use-cases/RegistrarPago";
 import { registrarPagoConDeudas, MontoNoCubreDeudaError } from "@gym-app/domain/use-cases/RegistrarPagoConDeudas";
 import {
@@ -66,14 +64,6 @@ export interface EstadoFormularioPago {
   // con `ok`. La usa el Paso 4 del modal de Caja para mostrar la fecha de
   // vencimiento resultante sin recalcularla en el cliente.
   fechaFinCiclo?: string;
-  // La tasa BCV cambió justo al validar (Etapa 3) — el formulario debe
-  // actualizarla y dejar que el operador confirme de nuevo, sin cerrar el modal.
-  tasaNueva?: number;
-  // No se pudo verificar la tasa BCV en este momento (fallo temporal de
-  // DolarAPI) — el formulario debe ofrecer usar la última guardada, verificar
-  // en bcv.org.ve, o ingresarla manualmente.
-  fallaTemporal?: boolean;
-  tasaGuardada?: number;
 }
 
 export async function registrarPagoAction(
@@ -110,7 +100,6 @@ export async function registrarPagoAction(
     metodo: string;
     metodoPagoId: string | null;
     numeroOperacion: string | null;
-    tasaCambio: number | null;
   }>;
   try {
     lineas = JSON.parse(lineasRaw);
@@ -120,14 +109,14 @@ export async function registrarPagoAction(
   if (!Array.isArray(lineas) || lineas.length === 0) {
     return { error: "Agregá al menos una línea de pago." };
   }
-  // Un plan de cortesía ($0) no tiene nada que cobrar — el método de pago
+  // Un plan de cortesía (S/ 0) no tiene nada que cobrar — el método de pago
   // solo es obligatorio cuando hay un monto real de por medio (ver diseño
   // acordado, membresías con beneficio que no pagan en el gym). Se permite
   // la única excepción de una sola línea en $0 (pago de cortesía); toda
   // otra línea necesita monto > 0 y método elegido.
   const esCortesia = lineas.length === 1 && lineas[0].monto === 0;
   if (!esCortesia && lineas.some((linea) => linea.monto <= 0 || !linea.metodo || !linea.metodoPagoId)) {
-    return { error: "Cada línea del pago necesita un monto mayor a $0 y un método." };
+    return { error: "Cada línea del pago necesita un monto mayor a S/ 0 y un método." };
   }
 
   // Pago combinado (más de una línea): el cliente gatea el envío en que la
@@ -146,29 +135,8 @@ export async function registrarPagoAction(
     }
   }
 
-  // La tasa BCV se valida por línea que opere en Bs — cada línea puede
-  // usar un método distinto, así que cada una se revalida por separado
-  // contra el servidor (Etapa 3 del plan de tasa BCV, no se confía en la
-  // tasa que mandó el formulario).
-  const lineasValidadas: Array<{
-    monto: number;
-    metodo: string;
-    metodoPagoId: string | null;
-    numeroOperacion: string | null;
-    tasaCambio: number | null;
-    montoBs?: number | null;
-  }> = [];
   const esPagoConFechaPasada =
     !!fechaPagoTexto && new Date(`${fechaPagoTexto}T12:00:00`) < new Date(new Date().setHours(0, 0, 0, 0));
-  for (const linea of lineas) {
-    if (esPagoConFechaPasada) {
-      lineasValidadas.push(linea);
-      continue;
-    }
-    const validacionTasa = await validarTasaSiEsEnBs(linea.tasaCambio !== null ? String(linea.tasaCambio) : undefined);
-    if (!validacionTasa.ok) return validacionTasa.estado;
-    lineasValidadas.push({ ...linea, tasaCambio: validacionTasa.tasaCambio });
-  }
 
   let pagos;
   try {
@@ -182,14 +150,13 @@ export async function registrarPagoAction(
       // Los permisos se leen con el cliente global: no necesitan estar dentro de la transacción.
       autorizacion: new AuthorizationService(new PrismaPermisoRepository(prisma)),
       reglasAbono: new PrismaReglaAbonoRepository(prisma),
-      tasas: new PrismaTasaCambioRepository(prisma),
       deudas: new PrismaDeudaProductoRepository(cliente),
     });
     const datosPago = {
       organizacionId: usuario.organizacionId,
       miembroId,
       planId,
-      lineas: lineasValidadas.map((linea) => ({ ...linea, metodo: linea.metodo || "Cortesía" })),
+      lineas: lineas.map((linea) => ({ ...linea, metodo: linea.metodo || "Cortesía" })),
       sucursalId: sucursalIdPago,
       registradoPorId: usuario.id,
       rolUsuario: usuario.rol,
@@ -222,7 +189,6 @@ export async function registrarPagoAction(
       error instanceof MesesInvalidosError ||
       error instanceof MesesRequierenPagoCompletoError ||
       error instanceof MesesNoDisponiblesError ||
-      error instanceof SinTasaParaFechaError ||
       error instanceof MontoNoCubreDeudaError ||
       error instanceof DeudasYaCobradasError ||
       error instanceof SinTurnoAbiertoError ||
@@ -249,11 +215,6 @@ export async function registrarPagoAction(
 
 export interface EstadoCambioPlan {
   error?: string;
-  // Ver EstadoFormularioPago — mismo criterio de reconfirmación/aviso de
-  // fallo temporal (Etapa 3 del plan de tasa BCV).
-  tasaNueva?: number;
-  fallaTemporal?: boolean;
-  tasaGuardada?: number;
   // Presente solo cuando origen === "caja" (ver más abajo) — el wizard de
   // Caja usa esto para cerrar el modal sin navegar, en vez del redirect a
   // /miembros que usa el origen por defecto (ficha del miembro).
@@ -292,7 +253,6 @@ export async function cambiarPlanAction(
     metodo: string;
     metodoPagoId: string | null;
     numeroOperacion: string | null;
-    tasaCambio: number | null;
   }> = [];
   if (lineasRaw) {
     try {
@@ -303,17 +263,6 @@ export async function cambiarPlanAction(
     if (!Array.isArray(lineas)) {
       return { error: "No se pudo interpretar la información del pago." };
     }
-  }
-
-  // La tasa BCV se valida por línea que opere en Bs — cada línea puede usar
-  // un método distinto (Etapa 3 del plan de tasa BCV, no se confía en la
-  // tasa que mandó el formulario). Sin líneas (nada que cobrar), no hay
-  // nada que validar.
-  const lineasValidadas: typeof lineas = [];
-  for (const linea of lineas) {
-    const validacionTasa = await validarTasaSiEsEnBs(linea.tasaCambio !== null ? String(linea.tasaCambio) : undefined);
-    if (!validacionTasa.ok) return validacionTasa.estado;
-    lineasValidadas.push({ ...linea, tasaCambio: validacionTasa.tasaCambio });
   }
 
   let resultado;
@@ -340,7 +289,7 @@ export async function cambiarPlanAction(
           miembroId,
           planNuevoId,
           origen: origen === "caja" ? "CAJA" : "FICHA_MIEMBRO",
-          lineas: lineasValidadas,
+          lineas: lineas,
           sucursalId: sucursalIdPago,
           registradoPorId: usuario.id,
           rolUsuario: usuario.rol,
@@ -378,7 +327,7 @@ export async function cambiarPlanAction(
   // crédito) — resultado.diferencia siempre es >= 0.
   const mensaje =
     resultado.diferencia > 0
-      ? `Plan cambiado — se cobró $${resultado.diferencia.toFixed(2)}.`
+      ? `Plan cambiado — se cobró ${formatearSoles(resultado.diferencia)}.`
       : "Plan cambiado, sin costo adicional.";
 
   // Desde el wizard de Caja: se queda en /caja y cierra el modal (ver

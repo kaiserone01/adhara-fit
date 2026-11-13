@@ -8,7 +8,7 @@ import { EstadoCheckIn } from "../entities/CheckIn";
 import { validarAccesoSucursal } from "./ValidarAccesoSucursalPorPlan";
 import type { Miembro } from "../entities/Miembro";
 import type { ActivarMiembroInput } from "./ActivarMiembroDesdePadron";
-import { esCumpleanos } from "../utils/fechaCaracas";
+import { esCumpleanos } from "../utils/fechaLima";
 
 const VENTANA_IDEMPOTENCIA_MINUTOS = 2;
 const MS_POR_DIA = 24 * 60 * 60 * 1000;
@@ -51,7 +51,7 @@ export interface RegistrarCheckInResultado {
   // (checkin) no debe mencionar "período de gracia" en ningún mensaje,
   // aunque el estado sea "vencido".
   tieneGraciaConfigurada: boolean;
-  // Si hoy (día de Caracas) es su cumpleaños. La fecha de
+  // Si hoy (día de Lima) es su cumpleaños. La fecha de
   // nacimiento nunca sale del servidor: el checkin solo recibe este booleano.
   esCumpleanos: boolean;
 }

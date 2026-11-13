@@ -1,5 +1,6 @@
 "use client";
 
+import { formatearSoles } from "@gym-app/domain/utils/formatearSoles";
 import { useActionState, useEffect, useState, useTransition, type ReactNode } from "react";
 import { Button } from "@gym-app/ui/components/Button";
 import { useFeedback } from "@gym-app/ui/components/FeedbackOverlay";
@@ -12,7 +13,6 @@ import { CampoNumeroOperacion } from "../pagos/CampoNumeroOperacion";
 import { MetodoYCampos } from "../pagos/MetodoYCampos";
 import { ColumnaLateral, ColumnaPrincipal, MarcoAsistente, TituloSeccion } from "./MarcoAsistente";
 import { CampoFechaCobro, useFechaCobro } from "./CampoFechaCobro";
-import { formatearBs } from "../tasaBcvFija";
 import { formatearFechaCorta } from "./ProyeccionCiclosUI";
 import type { EstadoCobrarDeudas } from "./actions";
 
@@ -73,7 +73,6 @@ interface CuentaPorCobrar {
 interface Seleccion {
   metodoPagoId: string | null;
   metodo: string;
-  tasaCambio: number | null;
   numeroOperacion: string;
   requiereNumeroOperacion: boolean;
 }
@@ -81,7 +80,6 @@ interface Seleccion {
 const SELECCION_VACIA: Seleccion = {
   metodoPagoId: null,
   metodo: "",
-  tasaCambio: null,
   numeroOperacion: "",
   requiereNumeroOperacion: false,
 };
@@ -90,7 +88,6 @@ export function ModalCobrarDeudas({
   grupos: gruposDeProductos,
   abonos,
   metodosPago,
-  tasaActual,
   accionCobrar,
   accionAnular,
   onCerrar,
@@ -98,7 +95,6 @@ export function ModalCobrarDeudas({
   grupos: GrupoDeudasMiembro[];
   abonos: AbonoPendiente[];
   metodosPago: MetodoPago[];
-  tasaActual: number | null;
   accionCobrar: (estado: EstadoCobrarDeudas, formData: FormData) => Promise<EstadoCobrarDeudas>;
   accionAnular: (id: string) => Promise<{ error?: string; ok?: string }>;
   onCerrar: () => void;
@@ -169,7 +165,6 @@ export function ModalCobrarDeudas({
       metodo: seleccion.metodo,
       metodoPagoId: seleccion.metodoPagoId,
       numeroOperacion: seleccion.requiereNumeroOperacion ? seleccion.numeroOperacion : null,
-      tasaCambio: seleccion.tasaCambio,
     },
   ];
 
@@ -182,7 +177,6 @@ export function ModalCobrarDeudas({
     });
   }
 
-  const bs = (usd: number) => (tasaActual !== null ? `Bs. ${formatearBs(usd * tasaActual)}` : null);
 
   return (
     <MarcoAsistente titulo="Cobrar deudas" etiqueta={grupo ? grupo.miembroNombre : "Elige un miembro"} onCerrar={onCerrar}>
@@ -208,7 +202,7 @@ export function ModalCobrarDeudas({
                     </span>
                     {g.abono && (
                       <span className="text-sm" style={{ color: "var(--gx-ink)" }}>
-                        Membresía {g.abono.planNombre} · saldo ${g.abono.saldoUSD.toFixed(2)}
+                        Membresía {g.abono.planNombre} · saldo {formatearSoles(g.abono.saldoUSD)}
                         <span className="block text-xs" style={{ color: "var(--gx-muted)" }}>
                           Próximo abono: {formatearFechaCorta(g.abono.fechaProximoAbono)}
                         </span>
@@ -220,12 +214,7 @@ export function ModalCobrarDeudas({
                       </span>
                     )}
                     <span className="text-xl font-bold" style={{ color: "var(--gx-accent)" }}>
-                      ${g.totalUSD.toFixed(2)}
-                      {bs(g.totalUSD) && (
-                        <span className="block text-sm font-normal" style={{ color: "var(--gx-muted)" }}>
-                          {bs(g.totalUSD)}
-                        </span>
-                      )}
+                      {formatearSoles(g.totalUSD)}
                     </span>
                   </button>
                 </li>
@@ -255,7 +244,7 @@ export function ModalCobrarDeudas({
                 fecha={fechaCobro}
                 onChange={setFechaCobro}
                 esPasada={esPasada}
-                mensajePasada="Se registra con la tasa BCV de ese día, fuera del turno: no suma al arqueo de hoy."
+                mensajePasada="Se registra con esa fecha, fuera del turno: no suma al arqueo de hoy."
                 mensajeHoy="Cámbiala solo si ya se cobró antes (máx. 90 días)."
               />
               <TituloSeccion>Método de pago</TituloSeccion>
@@ -266,11 +255,8 @@ export function ModalCobrarDeudas({
                     compacto
                     grande
                     metodos={metodosPago}
-                    monto={total}
                     idFormulario={ID_FORMULARIO}
-                    fechaTasa={esPasada ? fechaCobro : undefined}
                     onCambio={setSeleccion}
-                    avisoServidor={{ tasaNueva: estado.tasaNueva, fallaTemporal: estado.fallaTemporal, tasaGuardada: estado.tasaGuardada }}
                     ocultarNumeroOperacion
                     numeroOperacion={seleccion.numeroOperacion}
                     onCambioNumeroOperacion={(valor) => setSeleccion((prev) => ({ ...prev, numeroOperacion: valor }))}
@@ -297,10 +283,10 @@ export function ModalCobrarDeudas({
             </div>
             <ul className="flex flex-col gap-2 lg:flex-1 lg:overflow-y-auto">
               {grupo.abono && (
-                <FilaCobrable marcada={membresiaMarcada} onAlternar={() => alternar(CLAVE_MEMBRESIA)} importe={`$${grupo.abono.saldoUSD.toFixed(2)}`}>
+                <FilaCobrable marcada={membresiaMarcada} onAlternar={() => alternar(CLAVE_MEMBRESIA)} importe={`${formatearSoles(grupo.abono.saldoUSD)}`}>
                   Membresía {grupo.abono.planNombre}
                   <span className="mt-1 block text-xs" style={{ color: "var(--gx-muted)" }}>
-                    Abonado ${grupo.abono.pagadoUSD.toFixed(2)} de ${grupo.abono.precioUSD.toFixed(2)}
+                    Abonado {formatearSoles(grupo.abono.pagadoUSD)} de {formatearSoles(grupo.abono.precioUSD)}
                   </span>
                   <span className="block text-xs" style={{ color: "var(--gx-muted)" }}>
                     Ciclo hasta {formatearFechaCorta(grupo.abono.finCiclo)}
@@ -315,7 +301,7 @@ export function ModalCobrarDeudas({
                   key={d.id}
                   marcada={marcados.has(d.id)}
                   onAlternar={() => alternar(d.id)}
-                  importe={`$${totalDeudas([d]).toFixed(2)}`}
+                  importe={`${formatearSoles(totalDeudas([d]))}`}
                   pie={
                     <button
                       type="button"
@@ -335,13 +321,8 @@ export function ModalCobrarDeudas({
             </ul>
             <div className="flex items-baseline justify-between gap-3 border-t pt-3" style={{ borderColor: "var(--gx-edge)" }}>
               <span className="text-lg font-semibold" style={{ color: "var(--gx-ink)" }}>
-                Total a cobrar ${total.toFixed(2)}
+                Total a cobrar {formatearSoles(total)}
               </span>
-              {bs(total) && (
-                <span className="text-sm" style={{ color: "var(--gx-accent)" }}>
-                  {bs(total)}
-                </span>
-              )}
             </div>
             <div className="flex gap-3">
               <Button type="button" variant="secundario" className="min-h-12 flex-1 text-base" onClick={onCerrar}>

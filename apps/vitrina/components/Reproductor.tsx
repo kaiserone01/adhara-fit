@@ -5,8 +5,6 @@ import type { Almacen } from "@/lib/almacen";
 import type { ManifiestoVitrina } from "@gym-app/domain/entities/Vitrina";
 import { construirSecuencia } from "@gym-app/domain/services/secuenciaVitrina";
 import { itemsDeManifiesto } from "@gym-app/domain/services/manifiestoVitrina";
-import { estadoDeTasa } from "@gym-app/domain/utils/estadoTasa";
-import { diaCalendarioCaracas } from "@gym-app/domain/utils/fechaCaracas";
 import { itemsReproducibles } from "@/lib/reproducibles";
 import { posicionarIndice } from "@/lib/posicionarDiapositiva";
 import { colaDeVideos, msParaAvanzar, techoDiapositivaMs } from "@/lib/reproduccion";
@@ -29,11 +27,6 @@ export function Reproductor({ manifiesto, almacen, ahora }: { manifiesto: Manifi
       ),
     [manifiesto, minuto, almacen]
   );
-
-  // El Bs depende del estado de la tasa respecto del día de Caracas del instante efectivo (no de la hora de la TV).
-  const tasa = manifiesto.tasaBcv
-    ? { valor: manifiesto.tasaBcv.valor, estado: estadoDeTasa(new Date(manifiesto.tasaBcv.fecha), diaCalendarioCaracas(new Date(minuto * 60_000))) }
-    : null;
 
   const [indice, setIndice] = useState(0);
   const [ciclo, setCiclo] = useState(0); // solo avanza al pasar de diapositiva: reposicionar no reinicia el temporizador
@@ -93,7 +86,7 @@ export function Reproductor({ manifiesto, almacen, ahora }: { manifiesto: Manifi
       {actual.tipo === "FRANJA" ? (
         <Franja entrenadores={actual.entrenadores} almacen={almacen} unica={unica} alTerminarVideos={() => alTerminarVideos(false)} />
       ) : (
-        <Cartel item={actual.item} almacen={almacen} tasa={tasa} bucle={unica} alTerminarVideo={alTerminarVideos} />
+        <Cartel item={actual.item} almacen={almacen} bucle={unica} alTerminarVideo={alTerminarVideos} />
       )}
     </main>
   );

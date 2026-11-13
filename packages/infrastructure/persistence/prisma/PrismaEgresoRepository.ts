@@ -6,9 +6,6 @@ type FilaEgreso = {
   id: string;
   turnoId: string;
   monto: { toNumber(): number };
-  moneda: "USD" | "BS";
-  tasaCambio: { toNumber(): number } | null;
-  montoUSD: { toNumber(): number } | null;
   metodo: string;
   motivo: string;
   registradoEn: Date;
@@ -19,9 +16,6 @@ function mapear(fila: FilaEgreso): Egreso {
     id: fila.id,
     turnoId: fila.turnoId,
     monto: fila.monto.toNumber(),
-    moneda: fila.moneda,
-    tasaCambio: fila.tasaCambio?.toNumber() ?? null,
-    montoUSD: fila.montoUSD?.toNumber() ?? null,
     metodo: fila.metodo,
     motivo: fila.motivo,
     registradoEn: fila.registradoEn,
@@ -36,9 +30,6 @@ export class PrismaEgresoRepository implements IEgresoRepository {
       data: {
         turnoId: datos.turnoId,
         monto: datos.monto,
-        moneda: datos.moneda,
-        tasaCambio: datos.tasaCambio,
-        montoUSD: datos.montoUSD,
         metodo: datos.metodo,
         motivo: datos.motivo,
       },

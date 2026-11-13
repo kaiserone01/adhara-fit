@@ -18,11 +18,10 @@ import {
   FechasIncoherentesError,
 } from "@gym-app/domain/use-cases/ActualizarMiembro";
 import { calcularCambiosFechas } from "@gym-app/domain/utils/cambiosFechasFicha";
-import { inicioDelDiaCaracas } from "@gym-app/domain/utils/fechaCaracas";
+import { inicioDelDiaLima } from "@gym-app/domain/utils/fechaLima";
 import { PrismaTurnoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaTurnoRepository";
 import { PrismaPermisoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPermisoRepository";
 import { PrismaSucursalRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSucursalRepository";
-import { PrismaTasaCambioRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaTasaCambioRepository";
 import { PrismaReglaAbonoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaReglaAbonoRepository";
 import { AuthorizationService } from "@gym-app/domain/services/AuthorizationService";
 import { storageR2 } from "@/lib/storageR2";
@@ -40,7 +39,6 @@ import {
   AbonoNoPermitidoError,
   AbonoMenorAlMinimoError,
   FechaPagoInvalidaError,
-  SinTasaParaFechaError,
 } from "@gym-app/domain/use-cases/RegistrarPago";
 import { eliminarMiembro } from "@gym-app/domain/use-cases/EliminarMiembro";
 import { activarMiembroEnTransaccion } from "@/lib/activacion";
@@ -71,11 +69,9 @@ function leerLineasDePago(valor: FormDataEntryValue | null) {
     if (!Array.isArray(lineas) || lineas.length === 0) return null;
     const validas = lineas.map((l) => ({
       monto: Number(l.monto),
-      montoBs: l.montoBs !== null && l.montoBs !== undefined && Number(l.montoBs) > 0 ? Number(l.montoBs) : null,
       metodo: String(l.metodo ?? ""),
       metodoPagoId: l.metodoPagoId ? String(l.metodoPagoId) : null,
       numeroOperacion: l.numeroOperacion ? String(l.numeroOperacion) : null,
-      tasaCambio: l.tasaCambio !== null && l.tasaCambio !== undefined ? Number(l.tasaCambio) : null,
     }));
     return validas.every((l) => l.monto > 0 && l.metodoPagoId) ? validas : null;
   } catch {
@@ -123,7 +119,6 @@ export async function crearMiembroAction(
   const lineasDivididas = leerLineasDePago(formData.get("lineas"));
   const metodo = formData.get("metodo")?.toString();
   const metodoPagoId = formData.get("metodoPagoId")?.toString() || null;
-  const tasaCambioRaw = formData.get("tasaCambio")?.toString();
   const numeroOperacion = formData.get("numeroOperacion")?.toString().trim() || null;
   // Sede elegida en el selector "Sede del pago" (ver SelectorMetodoPago);
   // si no vino, se cae a la sede activa de la sesión.
@@ -156,8 +151,8 @@ export async function crearMiembroAction(
         nombre,
         cedula,
         // Viene del formulario (puede ser pasada: miembros anotados en cuaderno); si falta, hoy: el instante en
-        // que empieza el día calendario de Caracas, que es la medianoche local de Venezuela sin depender de la zona del servidor.
-        fechaInscripcion: leerFecha(formData.get("fechaInscripcion")) ?? inicioDelDiaCaracas(new Date()),
+        // que empieza el día calendario de Lima, que es la medianoche local de Venezuela sin depender de la zona del servidor.
+        fechaInscripcion: leerFecha(formData.get("fechaInscripcion")) ?? inicioDelDiaLima(new Date()),
         fechaNacimiento: null,
         celular: formData.get("celular")?.toString() || null,
         fotoUrl,
@@ -194,7 +189,6 @@ export async function crearMiembroAction(
         sucursales: new PrismaSucursalRepository(prisma),
         autorizacion: new AuthorizationService(new PrismaPermisoRepository(prisma)),
         reglasAbono: new PrismaReglaAbonoRepository(prisma),
-        tasas: new PrismaTasaCambioRepository(prisma),
       },
       {
         organizacionId: usuario.organizacionId,
@@ -213,7 +207,6 @@ export async function crearMiembroAction(
             metodo: metodo || "Cortesía",
             metodoPagoId,
             numeroOperacion,
-            tasaCambio: tasaCambioRaw ? Number(tasaCambioRaw) : null,
           },
         ],
         sucursalId: sucursalIdPago,
@@ -234,8 +227,7 @@ export async function crearMiembroAction(
       error instanceof FechaPagoInvalidaError ||
       error instanceof MesesInvalidosError ||
       error instanceof MesesRequierenPagoCompletoError ||
-      error instanceof MesesNoDisponiblesError ||
-      error instanceof SinTasaParaFechaError
+      error instanceof MesesNoDisponiblesError
     ) {
       return { error: `El miembro se creó, pero no se pudo registrar el pago inicial: ${error.message}` };
     }

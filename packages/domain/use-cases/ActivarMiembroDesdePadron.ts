@@ -3,7 +3,7 @@ import { IMiembroReferenciaRepository } from "../ports/IMiembroReferenciaReposit
 import { IPlanRepository } from "../ports/IPlanRepository";
 import { ISuscripcionRepository } from "../ports/ISuscripcionRepository";
 import type { Miembro } from "../entities/Miembro";
-import { medianocheCaracasDeFechaUtc } from "../utils/fechaCaracas";
+import { medianocheLimaDeFechaUtc } from "../utils/fechaLima";
 
 const MS_POR_DIA = 24 * 60 * 60 * 1000;
 
@@ -35,8 +35,8 @@ export async function activarMiembroPorCedula(deps: ActivarMiembroDeps, input: A
     ? ((await deps.planes.listarPorOrganizacion(input.organizacionId)).find((p) => p.nombre === referencia.planNombre) ?? null)
     : null;
 
-  // El padrón guarda las fechas a medianoche UTC; se normalizan al mismo día a medianoche de Caracas.
-  const normalizar = (fecha: Date | null) => (fecha ? medianocheCaracasDeFechaUtc(fecha) : null);
+  // El padrón guarda las fechas a medianoche UTC; se normalizan al mismo día a medianoche de Lima.
+  const normalizar = (fecha: Date | null) => (fecha ? medianocheLimaDeFechaUtc(fecha) : null);
   const fechaVencimiento = normalizar(referencia.fechaVencimiento);
 
   const miembro = await deps.miembros.crear({

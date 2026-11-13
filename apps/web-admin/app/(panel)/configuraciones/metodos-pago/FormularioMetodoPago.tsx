@@ -5,7 +5,7 @@ import { Button } from "@gym-app/ui/components/Button";
 import { Input } from "@gym-app/ui/components/Input";
 import { useFeedback } from "@gym-app/ui/components/FeedbackOverlay";
 import type { EstadoFormularioMetodoPago } from "../actions";
-import type { TipoMetodoPago, MonedaMetodoPago } from "@gym-app/domain/entities/MetodoPago";
+import type { TipoMetodoPago } from "@gym-app/domain/entities/MetodoPago";
 import { ETIQUETA_TIPO_METODO_PAGO, TIPOS_MULTI_INSTANCIA } from "../metodosPagoUI";
 
 export interface ValoresFormularioMetodoPago {
@@ -13,17 +13,17 @@ export interface ValoresFormularioMetodoPago {
   nombreBanco: string | null;
   logoUrl: string | null;
   qrUrl: string | null;
-  moneda: MonedaMetodoPago;
-  codigoBanco: string | null;
   telefono: string | null;
-  rif: string | null;
   numeroCuenta: string | null;
   beneficiario: string | null;
-  walletDireccion: string | null;
-  walletUsuario: string | null;
 }
 
-const TIPOS: TipoMetodoPago[] = ["EFECTIVO", "PAGO_MOVIL", "TRANSFERENCIA", "PUNTO_VENTA", "BIOPAGO", "CRIPTO"];
+const TIPOS: TipoMetodoPago[] = ["EFECTIVO", "BILLETERA_DIGITAL", "TARJETA", "TRANSFERENCIA", "DEPOSITO"];
+
+const ETIQUETA_NOMBRE: Partial<Record<TipoMetodoPago, string>> = {
+  BILLETERA_DIGITAL: "Billetera (Yape, Plin…)",
+  TARJETA: "Terminal o banco (Niubiz, Izipay…)",
+};
 
 export function FormularioMetodoPago({
   accion,
@@ -41,18 +41,13 @@ export function FormularioMetodoPago({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- solo debe reaccionar a un nuevo estado.error, no a mostrarError
   }, [estado.error]);
 
-  const [tipo, setTipo] = useState<TipoMetodoPago>(valoresIniciales?.tipo ?? "PAGO_MOVIL");
-  const [moneda, setMoneda] = useState<MonedaMetodoPago>(valoresIniciales?.moneda ?? "BS");
+  const [tipo, setTipo] = useState<TipoMetodoPago>(valoresIniciales?.tipo ?? "BILLETERA_DIGITAL");
   const [logoPreview, setLogoPreview] = useState<string | null>(valoresIniciales?.logoUrl ?? null);
   const [qrPreview, setQrPreview] = useState<string | null>(valoresIniciales?.qrUrl ?? null);
 
   const admiteBanco = TIPOS_MULTI_INSTANCIA.includes(tipo);
-  const esPagoMovil = tipo === "PAGO_MOVIL";
-  const esTransferencia = tipo === "TRANSFERENCIA";
-  const esCripto = tipo === "CRIPTO";
-  // Punto de Venta no requiere RIF/Cédula ni ningún otro dato de contacto
-  // en la modal de "Ver datos para el pago" (ver diseño acordado).
-  const esBancario = esPagoMovil || esTransferencia || tipo === "BIOPAGO";
+  const esBilletera = tipo === "BILLETERA_DIGITAL";
+  const conCuenta = tipo === "TRANSFERENCIA" || tipo === "DEPOSITO";
 
   function manejarCambioLogo(archivo: File | undefined) {
     if (!archivo) return;
@@ -97,24 +92,10 @@ export function FormularioMetodoPago({
         </label>
       )}
 
-      <label className="flex flex-col gap-1.5 text-sm" style={{ color: "var(--gx-muted)" }}>
-        Moneda
-        <select
-          name="moneda"
-          required
-          value={moneda}
-          onChange={(e) => setMoneda(e.target.value as MonedaMetodoPago)}
-          className="min-h-11 rounded-lg border px-3 gx-campo"
-        >
-          <option value="USD">USD (dólares)</option>
-          <option value="BS">Bs (bolívares, requiere tasa BCV)</option>
-        </select>
-      </label>
-
       {admiteBanco && (
         <Input
           name="nombreBanco"
-          label={esCripto ? "Exchange / Cripto" : "Banco"}
+          label={ETIQUETA_NOMBRE[tipo] ?? "Banco"}
           required
           defaultValue={valoresIniciales?.nombreBanco ?? ""}
         />
@@ -146,12 +127,9 @@ export function FormularioMetodoPago({
         </label>
       </div>
 
-      {esPagoMovil && (
+      {esBilletera && (
         <>
-          <div className="grid grid-cols-2 gap-4">
-            <Input name="codigoBanco" label="Código de banco" defaultValue={valoresIniciales?.codigoBanco ?? ""} />
-            <Input name="telefono" label="Teléfono" defaultValue={valoresIniciales?.telefono ?? ""} />
-          </div>
+          <Input name="telefono" label="Número de celular" defaultValue={valoresIniciales?.telefono ?? ""} />
 
           <div className="flex items-center gap-4">
             <div
@@ -181,19 +159,10 @@ export function FormularioMetodoPago({
         </>
       )}
 
-      {esBancario && <Input name="rif" label="RIF / Cédula" defaultValue={valoresIniciales?.rif ?? ""} />}
-
-      {esTransferencia && (
+      {conCuenta && (
         <>
           <Input name="beneficiario" label="Nombre del beneficiario" defaultValue={valoresIniciales?.beneficiario ?? ""} />
           <Input name="numeroCuenta" label="Número de cuenta" defaultValue={valoresIniciales?.numeroCuenta ?? ""} />
-        </>
-      )}
-
-      {esCripto && (
-        <>
-          <Input name="walletDireccion" label="Dirección de wallet / ID" defaultValue={valoresIniciales?.walletDireccion ?? ""} />
-          <Input name="walletUsuario" label="Usuario (ej. Binance Pay ID)" defaultValue={valoresIniciales?.walletUsuario ?? ""} />
         </>
       )}
 

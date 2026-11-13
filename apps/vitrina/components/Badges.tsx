@@ -1,21 +1,17 @@
 import type { VitrinaItem } from "@gym-app/domain/entities/Vitrina";
-import type { EstadoTasa } from "@gym-app/domain/utils/estadoTasa";
-import { formatearBs } from "@gym-app/domain/utils/formatearBs";
-import { descuentoMostrado, equivalenteBs } from "@gym-app/domain/utils/vitrinaBadges";
+import { formatearSoles } from "@gym-app/domain/utils/formatearSoles";
+import { descuentoMostrado } from "@gym-app/domain/utils/vitrinaBadges";
 
-const usd = (monto: number) => `$${monto.toFixed(2)}`;
-const PASTILLA = "rgba(10, 13, 7, 0.78)";
+const PASTILLA = "rgba(35, 31, 32, 0.78)";
 
-// Etiqueta, descuento, precio (tachado si hay oferta), oferta y equivalente en Bs, cada uno según sus banderas.
-// El Bs se oculta solo si la tasa está DESACTUALIZADA o no hay tasa (equivalenteBs lo decide). Descuento y etiqueta
+// Etiqueta, descuento, precio (tachado si hay oferta) y oferta, cada uno según sus banderas. Descuento y etiqueta
 // llevan texto ("-20 %", "NUEVO"), no solo color.
-export function Badges({ item, tasa }: { item: VitrinaItem; tasa: { valor: number; estado: EstadoTasa } | null }) {
+export function Badges({ item }: { item: VitrinaItem }) {
   const etiqueta = item.mostrarEtiqueta ? item.etiqueta : null;
   const descuentoCalculado = descuentoMostrado(item);
   const descuento = descuentoCalculado !== null && Number.isFinite(descuentoCalculado) && descuentoCalculado > 0 ? descuentoCalculado : null;
   const oferta = item.mostrarOferta ? item.ofertaUSD : null;
   const precio = item.mostrarPrecio ? item.precioUSD : null;
-  const bs = equivalenteBs(item, tasa);
   if (!etiqueta && descuento === null && oferta === null && precio === null) return null;
 
   return (
@@ -38,24 +34,19 @@ export function Badges({ item, tasa }: { item: VitrinaItem; tasa: { valor: numbe
             <>
               {precio !== null && (
                 <span className="text-[2.2rem] line-through" style={{ color: "var(--gx-muted)" }}>
-                  {usd(precio)}
+                  {formatearSoles(precio)}
                 </span>
               )}
               <span className="titulo text-[5rem]" style={{ color: "var(--gx-accent)" }}>
-                {usd(oferta)}
+                {formatearSoles(oferta)}
               </span>
             </>
           ) : (
             <span className="titulo text-[5rem]" style={{ color: "var(--gx-ink)" }}>
-              {usd(precio as number)}
+              {formatearSoles(precio as number)}
             </span>
           )}
         </div>
-      )}
-      {bs !== null && (
-        <span className="rounded-[0.6rem] px-[1.2rem] py-[0.3rem] text-[2.2rem] font-semibold" style={{ background: PASTILLA, color: "var(--gx-ink)" }}>
-          Bs. {formatearBs(bs)}
-        </span>
       )}
     </div>
   );

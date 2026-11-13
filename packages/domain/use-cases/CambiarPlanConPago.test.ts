@@ -109,8 +109,6 @@ function crearFakes(estadoInicial: { miembro: Miembro; suscripcion: Suscripcion;
         metodo: datos.metodo,
         metodoPagoId: datos.metodoPagoId,
         numeroOperacion: datos.numeroOperacion,
-        tasaCambio: datos.tasaCambio,
-        montoBs: datos.montoBs,
         fechaPago: new Date(),
         fechaInicioCiclo: datos.fechaInicioCiclo,
         fechaFinCiclo: datos.fechaFinCiclo,
@@ -261,7 +259,7 @@ function crearMiembroConSuscripcion(datos: {
   return { miembro, suscripcion };
 }
 
-// Fija Date.now()/`new Date()` a "hoy" = 2026-09-26 en Caracas (mediodía
+// Fija Date.now()/`new Date()` a "hoy" = 2026-09-26 en Lima (mediodía
 // UTC, mismo ancla que cambioPlanCalculo.test.ts) — el use-case usa
 // `new Date()` internamente para "ahora". Devuelve una función para
 // restaurar el reloj real; SIEMPRE debe llamarse en un `finally`.
@@ -389,7 +387,7 @@ describe("cambiarPlanConPago — caso Luis Castro (E1: vista previa vs guardado)
         miembroId: miembro.id,
         planNuevoId: planNuevoCaro.id,
         origen: "CAJA",
-        lineas: [{ monto: 21.67, metodo: "efectivo_usd", metodoPagoId: "metodo-1", numeroOperacion: null, tasaCambio: null }],
+        lineas: [{ monto: 21.67, metodo: "efectivo_usd", metodoPagoId: "metodo-1", numeroOperacion: null }],
         sucursalId: "sucursal-1",
         registradoPorId: "usuario-1",
         rolUsuario: "SOCIO",
@@ -442,8 +440,8 @@ describe("cambiarPlanConPago — caso Luis Castro (E1: vista previa vs guardado)
         planNuevoId: planNuevoCaro.id,
         origen: "CAJA",
         lineas: [
-          { monto: 10, metodo: "efectivo_usd", metodoPagoId: "metodo-1", numeroOperacion: null, tasaCambio: null },
-          { monto: 11.67, metodo: "punto_de_venta", metodoPagoId: "metodo-2", numeroOperacion: "OP-1", tasaCambio: null },
+          { monto: 10, metodo: "efectivo_usd", metodoPagoId: "metodo-1", numeroOperacion: null },
+          { monto: 11.67, metodo: "punto_de_venta", metodoPagoId: "metodo-2", numeroOperacion: "OP-1" },
         ],
         sucursalId: "sucursal-1",
         registradoPorId: "usuario-1",
@@ -485,7 +483,7 @@ describe("cambiarPlanConPago — caso Luis Castro (E1: vista previa vs guardado)
           miembroId: miembro.id,
           planNuevoId: planNuevoCaro.id,
           origen: "CAJA",
-          lineas: [{ monto: 15, metodo: "efectivo_usd", metodoPagoId: "metodo-1", numeroOperacion: null, tasaCambio: null }],
+          lineas: [{ monto: 15, metodo: "efectivo_usd", metodoPagoId: "metodo-1", numeroOperacion: null }],
           sucursalId: "sucursal-1",
           registradoPorId: "usuario-1",
           rolUsuario: "SOCIO",

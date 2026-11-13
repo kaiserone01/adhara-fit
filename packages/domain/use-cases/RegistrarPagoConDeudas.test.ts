@@ -68,12 +68,11 @@ function crearDeps(opciones: { deudas?: DeudaProducto[]; turnoAbierto?: boolean 
   return { deps, pagosCreados, marcadas, consultas };
 }
 
-const linea = (monto: number, tasaCambio: number | null = null) => ({
+const linea = (monto: number) => ({
   monto,
   metodo: "Efectivo (USD)",
   metodoPagoId: "mp1",
   numeroOperacion: null,
-  tasaCambio,
 });
 
 const base = {
@@ -106,12 +105,12 @@ describe("registrarPagoConDeudas", () => {
 
   test("pago combinado: la deuda se descuenta de las líneas en orden y la membresía recibe el resto", async () => {
     const { deps, pagosCreados } = crearDeps();
-    await registrarPagoConDeudas(deps, { ...base, lineas: [linea(8.25), linea(27, 50)], incluirDeudas: true });
+    await registrarPagoConDeudas(deps, { ...base, lineas: [linea(8.25), linea(27)], incluirDeudas: true });
 
-    expect(pagosCreados.map((p) => [p.monto, p.tasaCambio, p.productoNombre ?? null])).toEqual([
-      [5.25, null, "Agua × 2, Gatorade"],
-      [3, null, null],
-      [27, 50, null],
+    expect(pagosCreados.map((p) => [p.monto, p.productoNombre ?? null])).toEqual([
+      [5.25, "Agua × 2, Gatorade"],
+      [3, null],
+      [27, null],
     ]);
   });
 

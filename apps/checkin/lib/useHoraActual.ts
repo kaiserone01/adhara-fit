@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-const formatoHora = () => new Date().toLocaleTimeString("es-VE", { hour: "numeric", minute: "2-digit" });
+const formatoHora = () => new Date().toLocaleTimeString("es-PE", { hour: "numeric", minute: "2-digit" });
 
 // "" hasta montar: el export estático se prerenderiza en Node y la hora real no debe quedar
 // horneada en el HTML.

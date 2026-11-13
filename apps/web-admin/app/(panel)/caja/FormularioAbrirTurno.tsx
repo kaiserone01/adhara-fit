@@ -6,13 +6,12 @@ import { CurrencyInput } from "@gym-app/ui/components/CurrencyInput";
 import { Card } from "@gym-app/ui/components/Card";
 import { useFeedback } from "@gym-app/ui/components/FeedbackOverlay";
 import type { EstadoAbrirTurno } from "./actions";
-import { formatearBsConRef } from "../tasaBcvFija";
+import { formatearSoles } from "@gym-app/domain/utils/formatearSoles";
 
 export interface UltimoCierreFormulario {
   turnoId: string;
   cerradoEn: string;
-  efectivoContadoUSD: number | null;
-  efectivoContadoBs: number | null;
+  efectivoContado: number | null;
 }
 
 export function FormularioAbrirTurno({
@@ -51,8 +50,7 @@ export function FormularioAbrirTurno({
   // lo contado en el cierre anterior, pero el operador los puede cambiar
   // (ver diseño acordado — puede haber diferencias reales, ej. retiraron
   // parte para depósito).
-  const [fondoUSD, setFondoUSD] = useState(cierre?.efectivoContadoUSD !== null ? String(cierre?.efectivoContadoUSD ?? "0") : "0");
-  const [fondoBs, setFondoBs] = useState(cierre?.efectivoContadoBs !== null ? String(cierre?.efectivoContadoBs ?? "0") : "0");
+  const [fondo, setFondo] = useState(cierre?.efectivoContado != null ? String(cierre.efectivoContado) : "0");
 
   async function alCambiarSucursal(sucursalId: string) {
     setSucursalElegida(sucursalId);
@@ -64,8 +62,7 @@ export function FormularioAbrirTurno({
       const res = await fetch(`/api/caja/ultimo-cierre?sucursalId=${sucursalId}`);
       const datos: UltimoCierreFormulario | null = res.ok ? await res.json() : null;
       setCierre(datos);
-      setFondoUSD(datos?.efectivoContadoUSD !== null && datos?.efectivoContadoUSD !== undefined ? String(datos.efectivoContadoUSD) : "0");
-      setFondoBs(datos?.efectivoContadoBs !== null && datos?.efectivoContadoBs !== undefined ? String(datos.efectivoContadoBs) : "0");
+      setFondo(datos?.efectivoContado != null ? String(datos.efectivoContado) : "0");
     } finally {
       setCargandoCierre(false);
     }
@@ -88,13 +85,12 @@ export function FormularioAbrirTurno({
           {!cargandoCierre && cierre !== null && (
             <>
               <p className="mb-2 text-xs" style={{ color: "var(--gx-muted)" }}>
-                {new Date(cierre.cerradoEn).toLocaleString("es-VE")}
+                {new Date(cierre.cerradoEn).toLocaleString("es-PE", { timeZone: "America/Lima" })}
               </p>
               <div className="flex justify-between">
                 <span style={{ color: "var(--gx-muted)" }}>Efectivo contado</span>
                 <span className="font-medium" style={{ color: "var(--gx-ink)" }}>
-                  ${(cierre.efectivoContadoUSD ?? 0).toFixed(2)} /{" "}
-                  {formatearBsConRef(cierre.efectivoContadoBs ?? 0, null)}
+                  {formatearSoles(cierre.efectivoContado ?? 0)}
                 </span>
               </div>
             </>
@@ -127,7 +123,7 @@ export function FormularioAbrirTurno({
                 onChange={(e) => alCambiarSucursal(e.target.value)}
                 className="min-h-11 rounded-lg border px-3 gx-campo"
               >
-                <option value="">Seleccioná una sucursal</option>
+                <option value="">Selecciona una sucursal</option>
                 {sucursales.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.nombre}
@@ -137,25 +133,10 @@ export function FormularioAbrirTurno({
             </label>
           )}
 
-          <CurrencyInput
-            name="fondoInicialEfectivoUSD"
-            label="Fondo inicial en efectivo"
-            moneda="USD"
-            required
-            value={fondoUSD}
-            onChange={setFondoUSD}
-          />
-          <CurrencyInput
-            name="fondoInicialEfectivoBs"
-            label="Fondo inicial en efectivo"
-            moneda="Bs"
-            required
-            value={fondoBs}
-            onChange={setFondoBs}
-          />
+          <CurrencyInput name="fondoInicialEfectivoUSD" label="Fondo inicial en efectivo" required value={fondo} onChange={setFondo} />
           <p className="text-xs" style={{ color: "var(--gx-muted)" }}>
             Solo el efectivo físico en caja — no incluye bancos ni puntos de venta. Se sugiere lo contado en el
-            último cierre; podés ajustarlo si es distinto.
+            último cierre; puedes ajustarlo si es distinto.
           </p>
 
           <Button type="submit" disabled={enviando}>

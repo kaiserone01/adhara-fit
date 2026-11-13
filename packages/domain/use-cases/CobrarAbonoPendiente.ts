@@ -35,7 +35,7 @@ export async function cobrarAbonoPendiente(
     rolUsuario: RolUsuario;
     // Productos marcados para cobrar junto con la membresía (vacío = solo la membresía); sin esto, todos.
     deudaIds?: string[];
-    // Cobro que ya se hizo en un día pasado y no se anotó (hasta 90 días): fuera de turno, tasa BCV de ese día.
+    // Cobro que ya se hizo en un día pasado y no se anotó (hasta 90 días): fuera de turno.
     fechaCobro?: Date;
   }
 ): Promise<Pago[]> {

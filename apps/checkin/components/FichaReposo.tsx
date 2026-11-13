@@ -1,17 +1,10 @@
-import type { InfoCheckin } from "@/lib/api";
 import { MarcoFicha } from "./MarcoFicha";
-
-function formatearTasa(tasa: InfoCheckin["tasaBcv"]): string {
-  if (!tasa) return "—";
-  return `Bs. ${tasa.valor.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
 
 // Ficha en reposo: nunca muestra datos de una persona. Sin verde ni ✓ de "acceso permitido".
 export function FichaReposo({
   frase,
   saliendo,
   hora,
-  tasa,
   sede,
   imagenUrl,
   opacidad,
@@ -19,7 +12,6 @@ export function FichaReposo({
   frase: string;
   saliendo: boolean;
   hora: string;
-  tasa: InfoCheckin["tasaBcv"];
   sede: string | null;
   // Imagen y opacidad configuradas en el panel (menú Checkin); sin ellas, el placeholder y 100 %.
   imagenUrl?: string | null;
@@ -27,7 +19,6 @@ export function FichaReposo({
 }) {
   const datos: { etiqueta: string; valor: string }[] = [
     { etiqueta: "Hora", valor: hora || "—" },
-    { etiqueta: "Tasa BCV", valor: formatearTasa(tasa) },
     { etiqueta: "Sede", valor: sede ?? "—" },
   ];
 
@@ -57,7 +48,7 @@ export function FichaReposo({
             {frase}
           </p>
 
-          <div className="grid grid-cols-[auto_auto_1fr] gap-x-12 gap-y-6 border-t pt-6" style={{ borderColor: "var(--gx-edge)" }}>
+          <div className="grid grid-cols-[auto_1fr] gap-x-12 gap-y-6 border-t pt-6" style={{ borderColor: "var(--gx-edge)" }}>
             {datos.map(({ etiqueta, valor }) => (
               <div key={etiqueta} className="flex flex-col gap-1">
                 <span className="text-2xl font-bold uppercase" style={{ letterSpacing: "0.1em", color: "var(--gx-muted-dim)" }}>

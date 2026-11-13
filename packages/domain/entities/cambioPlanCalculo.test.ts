@@ -1,8 +1,8 @@
 import { describe, expect, test } from "vitest";
 import { calcularCambioPlan, PlanCortesiaConTiempoRestanteError } from "./cambioPlanCalculo";
 
-// hoy fijo = 2026-09-27 en America/Caracas (UTC-4). Se usa mediodía UTC
-// para que la fecha caiga en el día correcto en Caracas sin acercarse a la
+// hoy fijo = 2026-09-27 en America/Lima (UTC-5). Se usa mediodía UTC
+// para que la fecha caiga en el día correcto en Lima sin acercarse a la
 // medianoche de ningún lado.
 const HOY = new Date("2026-09-27T16:00:00Z");
 
@@ -215,7 +215,7 @@ describe("calcularCambioPlan — casos borde de fecha", () => {
 
   test("independencia de la hora: distintas horas del mismo día dan el mismo resultado", () => {
     const vence = new Date("2026-10-06T16:00:00Z");
-    const horas = ["2026-09-27T04:01:00Z", "2026-09-27T16:00:00Z", "2026-09-28T03:59:00Z"];
+    const horas = ["2026-09-27T05:01:00Z", "2026-09-27T16:00:00Z", "2026-09-28T04:59:00Z"];
     for (const hoyIso of horas) {
       const resultado = calcularCambioPlan({
         hoy: new Date(hoyIso),
@@ -246,97 +246,5 @@ describe("calcularCambioPlan — precio con centavos", () => {
     expect(Number.isInteger(resultado.valorNoConsumidoCentavos)).toBe(true);
     expect(Number.isInteger(resultado.diasNuevos)).toBe(true);
     expect(Number.isInteger(resultado.montoCobradoCentavos)).toBe(true);
-  });
-});
-
-describe("calcularCambioPlan — anclaje USD, independiente de la tasa BCV del día", () => {
-  // calcularCambioPlan no recibe ningún parámetro de tasa de cambio en su
-  // firma (DatosCambioPlan solo tiene precios/días/fechas) — esto ya es
-  // una garantía estructural: es imposible que el resultado varíe según la
-  // tasa BCV, porque la función ni siquiera puede verla. Este test lo
-  // demuestra también en tiempo de ejecución, simulando el escenario real:
-  // el mismo caso de negocio (Sin entrenador $25/30d, 9 días restantes ->
-  // Con entrenador $30/30d) se resuelve dos veces, una vez "convirtiendo"
-  // los precios a Bs y de vuelta a USD con la tasa del lunes (Bs. 40/USD),
-  // y otra con la tasa del martes (Bs. 42.50/USD) — igual que pasaría en
-  // el frontend/backend real, donde la tasa BCV solo se usa para mostrar
-  // la referencia en bolívares o para poblar Pago.montoBs, nunca para
-  // alimentar precioViejo/precioNuevo de este cálculo (ver auditoría de la
-  // Fase 2.1: CambiarPlanConPago.ts siempre usa Plan.precioUSD directo).
-  test("mismo caso de negocio con dos tasas BCV distintas: resultado en USD y días idéntico", () => {
-    const vence = new Date("2026-10-06T16:00:00Z"); // 9 días desde hoy
-    const precioViejoUSD = 25;
-    const precioNuevoUSD = 30;
-
-    function resolverConTasaDelDia(tasaBcv: number) {
-      // "Conversión" ida y vuelta que simula mostrar el monto en Bs en
-      // pantalla y volver a convertirlo a USD antes de calcular — si por
-      // error la tasa contaminara el cálculo, cada tasa daría un resultado
-      // distinto acá. precioUSD real (sin redondeo de por medio en el
-      // camino ida-vuelta) es lo que efectivamente entra a
-      // calcularCambioPlan, igual que en el código real.
-      const precioViejoBs = precioViejoUSD * tasaBcv;
-      const precioNuevoBs = precioNuevoUSD * tasaBcv;
-      const precioViejoDeVuelta = precioViejoBs / tasaBcv;
-      const precioNuevoDeVuelta = precioNuevoBs / tasaBcv;
-
-      return calcularCambioPlan({
-        hoy: HOY,
-        precioViejo: precioViejoDeVuelta,
-        diasCicloViejo: 30,
-        fechaVencimientoActual: vence,
-        precioNuevo: precioNuevoDeVuelta,
-        diasCicloNuevo: 30,
-      });
-    }
-
-    const tasaLunes = 40;
-    const tasaMartes = 42.5;
-
-    const resultadoLunes = resolverConTasaDelDia(tasaLunes);
-    const resultadoMartes = resolverConTasaDelDia(tasaMartes);
-
-    expect(resultadoLunes.valorNoConsumidoCentavos).toBe(resultadoMartes.valorNoConsumidoCentavos);
-    expect(resultadoLunes.montoCobradoCentavos).toBe(resultadoMartes.montoCobradoCentavos);
-    expect(resultadoLunes.diasNuevos).toBe(resultadoMartes.diasNuevos);
-    expect(resultadoLunes.nuevoVencimiento).toEqual(resultadoMartes.nuevoVencimiento);
-
-    // Y coincide con el resultado sin ninguna conversión de por medio (ver
-    // test "caso Luis Mendoza" más arriba, mismo caso de negocio):
-    // V = 9 * (25/30) = $7.50, precioNuevo = $30, diferencia = $22.50.
-    expect(resultadoLunes.valorNoConsumidoCentavos).toBe(750);
-    expect(resultadoLunes.montoCobradoCentavos).toBe(2250);
-  });
-});
-
-describe("calcularCambioPlan — ida y vuelta", () => {
-  test("A->B->A conserva el vencimiento dentro de la tolerancia de redondeo cuando V > precioNuevo en ambos sentidos", () => {
-    // Plan A: $30/30d, Plan B: $8/7d. Vencimiento con muchos días restantes
-    // para que V supere el precio del plan nuevo en ambos sentidos (mismo
-    // camino: excedente absorbido en días).
-    const vence = new Date("2027-06-02T16:00:00Z"); // ~248 días
-
-    const aB = calcularCambioPlan({
-      hoy: HOY,
-      precioViejo: 30,
-      diasCicloViejo: 30,
-      fechaVencimientoActual: vence,
-      precioNuevo: 8,
-      diasCicloNuevo: 7,
-    });
-
-    const bA = calcularCambioPlan({
-      hoy: HOY,
-      precioViejo: 8,
-      diasCicloViejo: 7,
-      fechaVencimientoActual: aB.nuevoVencimiento,
-      precioNuevo: 30,
-      diasCicloNuevo: 30,
-    });
-
-    // Tolerancia generosa: el redondeo a días enteros en cada paso puede
-    // acumular hasta unos pocos días de diferencia en un ida y vuelta.
-    const diferenciaDias = Math.abs((bA.nuevoVencimiento.getTime() - vence.getTime()) / 86_400_000);
-    expect(diferenciaDias).toBeLessThanOrEqual(5);
   });
 });

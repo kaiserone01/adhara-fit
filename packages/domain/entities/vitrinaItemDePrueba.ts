@@ -26,7 +26,6 @@ export function itemDePrueba(parcial: Partial<VitrinaItem> = {}): VitrinaItem {
     mostrarOferta: true,
     mostrarDescuento: true,
     mostrarEtiqueta: true,
-    mostrarEquivalenteBs: true,
     nombre: null,
     especialidad: null,
     frase: null,

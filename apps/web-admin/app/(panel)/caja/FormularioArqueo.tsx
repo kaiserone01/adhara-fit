@@ -8,22 +8,11 @@ import { Card } from "@gym-app/ui/components/Card";
 import { useFeedback } from "@gym-app/ui/components/FeedbackOverlay";
 import type { EstadoCerrarTurno } from "./actions";
 import { METODOS_PAGO } from "../metodosPago";
-import { formatearBsConRef } from "../tasaBcvFija";
+import { formatearSoles } from "@gym-app/domain/utils/formatearSoles";
 
 export interface LineaEsperada {
   metodo: string;
-  // Si el método opera en Bs — viene de ObtenerResumenTurno.enBs, que lo
-  // detecta desde las transacciones reales (Pago.montoBs, Egreso.moneda),
-  // no del string del método (antes solo Efectivo (Bs) se reconocía,
-  // dejando Punto de Venta/Pago Móvil/Transferencia/Biopago en Bs
-  // mostrados como si fueran USD).
-  enBs: boolean;
   montoEsperado: number;
-  // Solo para líneas en Bs — referencia en USD del montoEsperado,
-  // calculada en page.tsx (fondo a la tasa BCV vigente + pagos/egresos a
-  // su propia tasa capturada, ver ObtenerResumenTurno). null si la línea
-  // es en USD o si no hay tasa disponible para calcularla.
-  refUSD?: number | null;
 }
 
 export function FormularioArqueo({
@@ -84,8 +73,8 @@ export function FormularioArqueo({
         )}
 
         <input type="hidden" name="turnoId" value={turnoId} />
-        {/* Los nombres de método reales del turno (ej. "Efectivo (USD)",
-            "Punto de Venta - Banesco") — cerrarTurnoAction los necesita
+        {/* Los nombres de método reales del turno (ej. "Efectivo",
+            "Billetera digital - Yape") — cerrarTurnoAction los necesita
             para saber qué campos montoContado_* leer del FormData. Antes
             se adivinaban iterando un catálogo estático (METODOS_PAGO) que
             quedó desactualizado con códigos viejos (efectivo_usd, etc.),
@@ -109,15 +98,12 @@ export function FormularioArqueo({
                   </span>
                   <span style={{ color: "var(--gx-muted)" }}>
                     Esperado:{" "}
-                    {linea.enBs
-                      ? formatearBsConRef(linea.montoEsperado, linea.refUSD ?? null)
-                      : `$${linea.montoEsperado.toFixed(2)}`}
+                    {formatearSoles(linea.montoEsperado)}
                   </span>
                 </div>
                 <CurrencyInput
                   name={`montoContado_${linea.metodo}`}
                   label="Monto contado"
-                  moneda={linea.enBs ? "Bs" : "USD"}
                   required
                   value={contado ?? ""}
                   onChange={(valor) => setContados((prev) => ({ ...prev, [linea.metodo]: valor }))}

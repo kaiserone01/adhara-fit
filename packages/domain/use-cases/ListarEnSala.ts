@@ -3,7 +3,7 @@ import { ISuscripcionRepository } from "../ports/ISuscripcionRepository";
 import { ISucursalRepository } from "../ports/ISucursalRepository";
 import { diasGraciaParaPlan } from "../entities/Plan";
 import { CheckInEnSala, EstadoCheckIn } from "../entities/CheckIn";
-import { inicioDelDiaCaracas } from "../utils/fechaCaracas";
+import { inicioDelDiaLima } from "../utils/fechaLima";
 import { validarAccesoSucursal } from "./ValidarAccesoSucursalPorPlan";
 
 export interface ListarEnSalaDeps {
@@ -38,21 +38,21 @@ export async function listarEnSala(
   input: { organizacionId: string; sucursalId: string; ahora?: Date }
 ): Promise<PersonaEnSala[]> {
   const ahora = input.ahora ?? new Date();
-  const abiertos = await deps.checkIns.listarEnSala(input.sucursalId, inicioDelDiaCaracas(ahora));
+  const abiertos = await deps.checkIns.listarEnSala(input.sucursalId, inicioDelDiaLima(ahora));
   // Los que hay que cobrar primero; dentro de cada grupo, el más reciente arriba.
   return (await armarPersonas(deps, input, abiertos, ahora)).sort((a, b) => Number(b.requiereCobro) - Number(a.requiereCobro));
 }
 
 export type RangoHistorialSala = "hoy" | "24h";
 
-// Quién pasó por la sala hoy (desde las 00:00 de Caracas) o en las últimas 24 horas, haya salido o no.
+// Quién pasó por la sala hoy (desde las 00:00 de Lima) o en las últimas 24 horas, haya salido o no.
 // El estado de pago se recalcula ahora, igual que en "En sala". Una fila por persona, la entrada más reciente.
 export async function listarHistorialSala(
   deps: ListarEnSalaDeps,
   input: { organizacionId: string; sucursalId: string; rango: RangoHistorialSala; ahora?: Date }
 ): Promise<PersonaEnSala[]> {
   const ahora = input.ahora ?? new Date();
-  const desde = input.rango === "hoy" ? inicioDelDiaCaracas(ahora) : new Date(ahora.getTime() - 24 * 3_600_000);
+  const desde = input.rango === "hoy" ? inicioDelDiaLima(ahora) : new Date(ahora.getTime() - 24 * 3_600_000);
   return armarPersonas(deps, input, await deps.checkIns.listarDesde(input.sucursalId, desde), ahora);
 }
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { formatearSoles } from "@gym-app/domain/utils/formatearSoles";
 import { useEffect, useMemo, useState } from "react";
 import { normalizarTexto } from "@/lib/normalizarTexto";
 import type { Miembro } from "@gym-app/domain/entities/Miembro";
@@ -174,7 +175,7 @@ export function BuscadorMiembro({
                   <>
                     <p style={{ color: "var(--gx-ink)" }}>{miembro.plan.nombre}</p>
                     <p className="font-semibold" style={{ color: "var(--gx-accent)" }}>
-                      ${miembro.plan.precioUSD.toFixed(2)}
+                      {formatearSoles(miembro.plan.precioUSD)}
                     </p>
                   </>
                 )}

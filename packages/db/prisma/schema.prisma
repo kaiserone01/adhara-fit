@@ -461,10 +461,12 @@ model Turno {
 
   // Solo efectivo físico en caja al abrir el turno — no incluye saldos de
   // cuentas bancarias ni lo recaudado por puntos de venta (ver
-  // ObtenerResumenTurno: únicamente los métodos efectivo_usd/efectivo_bs
-  // arrancan con este fondo, el resto de métodos arranca en 0).
+  // ObtenerResumenTurno: únicamente el método Efectivo arranca con este
+  // fondo, el resto de métodos arranca en 0). En soles; el nombre de la
+  // columna conserva el sufijo USD hasta la línea base de migraciones (S-15).
+  // fondoInicialEfectivoBs ya no se escribe (sin uso, default 0).
   fondoInicialEfectivoUSD Decimal @db.Decimal(10, 2)
-  fondoInicialEfectivoBs  Decimal @db.Decimal(14, 2)
+  fondoInicialEfectivoBs  Decimal @default(0) @db.Decimal(14, 2)
 
   abiertoEn DateTime    @default(now())
   cerradoEn DateTime?
@@ -477,9 +479,11 @@ model Turno {
   @@index([sucursalId, estado])
 }
 
+// Solo PEN se usa; USD y BS quedan hasta la línea base de migraciones (S-15).
 enum MonedaEgreso {
   USD
   BS
+  PEN
 }
 
 model Egreso {
@@ -487,12 +491,9 @@ model Egreso {
   turnoId      String
   turno        Turno        @relation(fields: [turnoId], references: [id])
   monto        Decimal      @db.Decimal(14, 2)
-  moneda       MonedaEgreso
-  // Tasa BCV vigente al registrar — solo para moneda BS (igual patrón que
-  // Pago.tasaCambio/montoBs). null para egresos en USD.
+  moneda       MonedaEgreso @default(PEN)
+  // tasaCambio y montoUSD ya no se escriben (sin uso hasta S-15).
   tasaCambio   Decimal?     @db.Decimal(10, 2)
-  // Referencia en USD: monto directo si moneda=USD, o monto/tasaCambio si
-  // moneda=BS — permite sumar/comparar egresos de ambas monedas en USD.
   montoUSD     Decimal?     @db.Decimal(14, 2)
   metodo       String
   motivo       String
@@ -534,6 +535,7 @@ model TasaCambio {
   createdAt       DateTime @default(now())
 }
 
+// PAGO_MOVIL, PUNTO_VENTA, BIOPAGO y CRIPTO ya no se usan (se retiran en S-15).
 enum TipoMetodoPago {
   EFECTIVO
   PAGO_MOVIL
@@ -541,6 +543,9 @@ enum TipoMetodoPago {
   PUNTO_VENTA
   BIOPAGO
   CRIPTO
+  BILLETERA_DIGITAL
+  TARJETA
+  DEPOSITO
 }
 
 model MetodoPago {
@@ -550,7 +555,7 @@ model MetodoPago {
   tipo           TipoMetodoPago
   nombreBanco    String? // "Banesco", "Banco de Venezuela", "USDT"... null para Efectivo
   logoUrl        String?
-  moneda         String // "USD" | "BS" — usado sobre todo por EFECTIVO, y para saber si aplica tasa BCV
+  moneda         String         @default("PEN") // sin uso: todo es en soles (se retira en S-15)
   activo         Boolean        @default(true)
   orden          Int            @default(0)
 

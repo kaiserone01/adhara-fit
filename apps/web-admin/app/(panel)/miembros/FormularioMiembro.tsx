@@ -1,5 +1,6 @@
 "use client";
 
+import { formatearSoles } from "@gym-app/domain/utils/formatearSoles";
 import { useActionState, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Button } from "@gym-app/ui/components/Button";
@@ -13,7 +14,6 @@ import { useFeedback } from "@gym-app/ui/components/FeedbackOverlay";
 import { actualizarFotoMiembroAction, type EstadoFormularioMiembro } from "./actions";
 import { SelectorMetodoPago } from "../pagos/SelectorMetodoPago";
 import { LineaPagoMiembroCampos, type LineaPagoMiembro } from "./LineaPagoMiembro";
-import { formatearBs } from "../tasaBcvFija";
 import { ProveedorCambiosSinGuardar } from "./ContextoCambiosSinGuardar";
 import { SelectorFotoPerfil } from "./SelectorFotoPerfil";
 import type { EntrenadorResumen } from "@gym-app/domain/entities/EntrenadorResumen";
@@ -48,7 +48,7 @@ const ETIQUETA_FRECUENCIA: Record<FrecuenciaPago, string> = {
 };
 
 // OJO: nunca usar fecha.toISOString() acá — convierte a UTC primero, y de
-// noche (pasadas las 8pm en Venezuela, UTC-4) eso salta al día siguiente.
+// noche (pasadas las 8pm en Venezuela, UTC-5) eso salta al día siguiente.
 function hoyISO(): string {
   const hoy = new Date();
   const anio = hoy.getFullYear();
@@ -64,7 +64,7 @@ function formatearFecha(fechaISO: string): string {
 }
 
 function formatearFechaCorta(fecha: Date): string {
-  return new Date(fecha).toLocaleDateString("es-VE", { day: "2-digit", month: "2-digit", year: "numeric" });
+  return new Date(fecha).toLocaleDateString("es-PE", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
 function iniciales(nombre: string): string {
@@ -213,9 +213,8 @@ export function FormularioMiembro({
   const [seleccionMetodo, setSeleccionMetodo] = useState<{
     metodoPagoId: string | null;
     metodo: string;
-    tasaCambio: number | null;
     numeroOperacion: string;
-  }>({ metodoPagoId: null, metodo: "", tasaCambio: null, numeroOperacion: "" });
+  }>({ metodoPagoId: null, metodo: "", numeroOperacion: "" });
   const [mostrarTicket, setMostrarTicket] = useState(false);
   // Mientras el ciclo actual esté vigente, el cambio de plan gratis queda
   // deshabilitado acá — usa "Cambiar de plan" del panel derecho, que cobra
@@ -301,16 +300,6 @@ export function FormularioMiembro({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- solo debe re-evaluar cuando cambia la sede, no en cada render de `entrenadores`
   }, [sucursalId]);
-  const montoBsActual = dividirPago
-    ? lineasDivididas.some(({ linea }) => linea && linea.tasaCambio !== null)
-      ? lineasDivididas.reduce(
-          (suma, { linea }) => suma + (linea && linea.tasaCambio !== null ? (linea.montoBs ?? linea.monto * linea.tasaCambio) : 0),
-          0
-        )
-      : null
-    : seleccionMetodo.tasaCambio !== null
-      ? montoAPagar * seleccionMetodo.tasaCambio
-      : null;
 
   // "Cambiar de plan" (panelLateral) redirige a /miembros al confirmar —
   // si hay cambios de Datos personales sin guardar en este momento, se
@@ -370,7 +359,7 @@ export function FormularioMiembro({
       return;
     }
     if (!esEdicion && meses > 1 && precioCiclo - montoAPagar > toleranciaDiferenciaPagoUSD(precioCiclo)) {
-      setErrorMontoHoy(`Para pagar ${meses} meses el monto debe cubrir el total ($${precioCiclo.toFixed(2)}).`);
+      setErrorMontoHoy(`Para pagar ${meses} meses el monto debe cubrir el total (${formatearSoles(precioCiclo)}).`);
       return;
     }
     setErrorMontoHoy(null);
@@ -469,11 +458,9 @@ export function FormularioMiembro({
                       ? [
                           {
                             monto: Math.round(linea.monto * 100) / 100,
-                            montoBs: linea.montoBs,
                             metodo: linea.metodo,
                             metodoPagoId: linea.metodoPagoId,
                             numeroOperacion: linea.numeroOperacion || null,
-                            tasaCambio: linea.tasaCambio,
                           },
                         ]
                       : []
@@ -483,7 +470,6 @@ export function FormularioMiembro({
             )}
             <input type="hidden" name="metodo" value={seleccionMetodo.metodo} />
             <input type="hidden" name="metodoPagoId" value={seleccionMetodo.metodoPagoId ?? ""} />
-            <input type="hidden" name="tasaCambio" value={seleccionMetodo.tasaCambio ?? ""} />
             <input type="hidden" name="numeroOperacion" value={seleccionMetodo.numeroOperacion} />
           </>
         )}
@@ -739,7 +725,7 @@ export function FormularioMiembro({
               <CurrencyInput
                 name="precioPlanEditado"
                 label="Precio"
-                moneda="USD"
+               
                 value={precio}
                 onChange={(valor) => {
                   setPrecio(valor);
@@ -826,7 +812,7 @@ export function FormularioMiembro({
                   style={{ background: "color-mix(in srgb, var(--gx-accent) 15%, transparent)", color: "var(--gx-accent)" }}
                 >
                   <span>Saldo pendiente</span>
-                  <span>${saldoPendiente.toFixed(2)}</span>
+                  <span>{formatearSoles(saldoPendiente)}</span>
                 </div>
               )}
               {!!saldoPendiente && saldoPendiente > 0 && accesoHastaAbono && (
@@ -888,7 +874,7 @@ export function FormularioMiembro({
                   </div>
                   {meses > 1 && (
                     <p className="mt-2 text-sm font-bold" style={{ color: "var(--gx-ink)" }}>
-                      Total de {meses} meses: ${precioCiclo.toFixed(2)}. Se paga completo; puedes repartirlo en varios métodos.
+                      Total de {meses} meses: {formatearSoles(precioCiclo)}. Se paga completo; puedes repartirlo en varios métodos.
                     </p>
                   )}
                 </div>
@@ -899,7 +885,7 @@ export function FormularioMiembro({
                   <CurrencyInput
                     name="montoHoy"
                     label="Monto a pagar hoy"
-                    moneda="USD"
+                   
                     value={montoHoy ?? String(precioCiclo)}
                     onChange={(valor) => {
                       setMontoHoy(valor);
@@ -911,7 +897,7 @@ export function FormularioMiembro({
                       {precioCiclo - montoAPagar <= toleranciaDiferenciaPagoUSD(precioCiclo)
                         ? "Diferencia aceptada: el acceso cubre el ciclo completo y quedan "
                         : "Queda como abono: el acceso se da en proporción a lo pagado y quedan "}
-                      ${(precioCiclo - montoAPagar).toFixed(2)} pendientes.
+                      {formatearSoles((precioCiclo - montoAPagar))} pendientes.
                     </p>
                   )}
                   {errorMontoHoy && (
@@ -931,7 +917,6 @@ export function FormularioMiembro({
                       titulo={`Pago ${indice + 1}`}
                       metodosPago={metodosPago}
                       idFormulario={idFormulario}
-                      fechaTasa={fechaInscripcion && fechaInscripcion < hoyISO() ? fechaInscripcion : undefined}
                       onCambio={(linea) => {
                         // El aviso del pago se borra solo en cuanto se corrige algo.
                         setErrorMontoHoy(null);
@@ -956,11 +941,11 @@ export function FormularioMiembro({
                     Agregar otro método de pago
                   </Button>
                   <p className="mb-2 text-sm font-bold" style={{ color: "var(--gx-ink)" }}>
-                    Total de los pagos: <strong style={{ color: "var(--gx-ink)" }}>${montoAPagar.toFixed(2)}</strong> de ${precioCiclo.toFixed(2)}
+                    Total de los pagos: <strong style={{ color: "var(--gx-ink)" }}>{formatearSoles(montoAPagar)}</strong> de {formatearSoles(precioCiclo)}
                     {esAbonoInicial && (
                       <>
                         {" "}
-                        — quedan ${(precioCiclo - montoAPagar).toFixed(2)} pendientes
+                        — quedan {formatearSoles((precioCiclo - montoAPagar))} pendientes
                         {precioCiclo - montoAPagar <= toleranciaDiferenciaPagoUSD(precioCiclo) ? " (diferencia aceptada)" : " (abono)"}.
                       </>
                     )}
@@ -974,11 +959,8 @@ export function FormularioMiembro({
               ) : precioActual > 0 ? (
                 <SelectorMetodoPago
                   metodos={metodosPago}
-                  monto={montoAPagar}
                   onCambio={setSeleccionMetodo}
                   idFormulario={idFormulario}
-                  // Con inscripción pasada el pago inicial se fecha ese día: la tasa y el monto en Bs son los de esa fecha.
-                  fechaTasa={fechaInscripcion && fechaInscripcion < hoyISO() ? fechaInscripcion : undefined}
                 />
               ) : (
                 <p className="text-sm" style={{ color: "var(--gx-muted)" }}>
@@ -989,7 +971,7 @@ export function FormularioMiembro({
               {hayExcedente && (
                 <fieldset className="mt-4 flex flex-col gap-2 rounded-lg border p-3 text-sm" style={{ borderColor: "var(--gx-edge)" }}>
                   <legend className="px-1 font-bold" style={{ color: "var(--gx-ink)" }}>
-                    Sobran ${excedenteUSD.toFixed(2)}. ¿Qué hacemos con ese dinero?
+                    Sobran {formatearSoles(excedenteUSD)}. ¿Qué hacemos con ese dinero?
                   </legend>
                   {excedenteUSD > precioCiclo && (
                     <p className="text-sm" style={{ color: "var(--gx-bad)" }}>
@@ -1086,22 +1068,17 @@ export function FormularioMiembro({
                 {esAbonoInicial ? "Abono hoy" : "Total"}
               </span>
               <span className="text-2xl font-bold" style={{ color: "var(--gx-ink)" }}>
-                ${montoAPagar.toFixed(2)}
+                {formatearSoles(montoAPagar)}
               </span>
             </div>
             {esAbonoInicial && (
               <p className="text-right text-sm" style={{ color: "var(--gx-muted)" }}>
-                Pendiente ${(precioCiclo - montoAPagar).toFixed(2)} de ${precioCiclo.toFixed(2)}
+                Pendiente {formatearSoles((precioCiclo - montoAPagar))} de {formatearSoles(precioCiclo)}
               </p>
             )}
             {hayExcedente && (
               <p className="text-right text-sm" style={{ color: "var(--gx-muted)" }}>
-                Sobran ${excedenteUSD.toFixed(2)} — {excedente === "saldo" ? "se guardan como saldo a favor" : "de otro cobro"}
-              </p>
-            )}
-            {montoBsActual !== null && (
-              <p className="text-right text-sm" style={{ color: "var(--gx-muted)" }}>
-                Bs. {formatearBs(montoBsActual)}
+                Sobran {formatearSoles(excedenteUSD)} — {excedente === "saldo" ? "se guardan como saldo a favor" : "de otro cobro"}
               </p>
             )}
 

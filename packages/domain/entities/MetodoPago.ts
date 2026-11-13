@@ -1,10 +1,5 @@
-export type TipoMetodoPago = "EFECTIVO" | "PAGO_MOVIL" | "TRANSFERENCIA" | "PUNTO_VENTA" | "BIOPAGO" | "CRIPTO";
-
-export type MonedaMetodoPago = "USD" | "BS";
-
-// Tipos que operan en bolívares y por lo tanto requieren tasa de cambio
-// BCV al momento de registrar un pago con ellos (ver ObtenerTasaVigente).
-export const TIPOS_QUE_PUEDEN_SER_EN_BS: TipoMetodoPago[] = ["EFECTIVO", "PAGO_MOVIL", "TRANSFERENCIA", "PUNTO_VENTA", "BIOPAGO"];
+// Billetera digital: Yape, Plin u otra (el nombre va en nombreBanco).
+export type TipoMetodoPago = "EFECTIVO" | "BILLETERA_DIGITAL" | "TARJETA" | "TRANSFERENCIA" | "DEPOSITO";
 
 export interface MetodoPago {
   id: string;
@@ -12,17 +7,12 @@ export interface MetodoPago {
   tipo: TipoMetodoPago;
   nombreBanco: string | null;
   logoUrl: string | null;
-  moneda: MonedaMetodoPago;
   activo: boolean;
   orden: number;
-  codigoBanco: string | null;
   telefono: string | null;
-  rif: string | null;
   numeroCuenta: string | null;
   beneficiario: string | null;
   qrUrl: string | null;
-  walletDireccion: string | null;
-  walletUsuario: string | null;
   createdAt: Date;
 }
 
@@ -31,30 +21,20 @@ export interface DatosNuevoMetodoPago {
   tipo: TipoMetodoPago;
   nombreBanco: string | null;
   logoUrl: string | null;
-  moneda: MonedaMetodoPago;
   orden?: number;
-  codigoBanco?: string | null;
   telefono?: string | null;
-  rif?: string | null;
   numeroCuenta?: string | null;
   beneficiario?: string | null;
   qrUrl?: string | null;
-  walletDireccion?: string | null;
-  walletUsuario?: string | null;
 }
 
 export interface CambiosMetodoPago {
   nombreBanco?: string | null;
   logoUrl?: string | null;
-  moneda?: MonedaMetodoPago;
   activo?: boolean;
   orden?: number;
-  codigoBanco?: string | null;
   telefono?: string | null;
-  rif?: string | null;
   numeroCuenta?: string | null;
   beneficiario?: string | null;
   qrUrl?: string | null;
-  walletDireccion?: string | null;
-  walletUsuario?: string | null;
 }

@@ -4,8 +4,7 @@ import { armarManifiesto, itemsDeManifiesto, urlsDeManifiesto } from "./manifies
 
 const AHORA = new Date("2026-10-15T16:00:00Z");
 const ajustes = { duracionSeg: 12, transicion: "FUNDIDO" as const, version: 7 };
-const armar = (items: ReturnType<typeof itemDePrueba>[], tasaBcv = null as { valor: number; fecha: string } | null) =>
-  armarManifiesto({ items, ajustes, tasaBcv, ahora: AHORA });
+const armar = (items: ReturnType<typeof itemDePrueba>[]) => armarManifiesto({ items, ajustes, ahora: AHORA });
 
 describe("armarManifiesto", () => {
   test("excluye inactivos y vencidos, mantiene los futuros", () => {
@@ -18,10 +17,9 @@ describe("armarManifiesto", () => {
     expect(m.items.map((i) => i.id)).toEqual(["activo", "futuro"]);
   });
 
-  test("copia versión, ajustes, tasa y la hora del servidor", () => {
-    const tasa = { valor: 40.5, fecha: "2026-10-15T00:00:00.000Z" };
-    const m = armar([], tasa);
-    expect(m).toMatchObject({ version: 7, duracionSeg: 12, transicion: "FUNDIDO", tasaBcv: tasa, items: [] });
+  test("copia versión, ajustes y la hora del servidor", () => {
+    const m = armar([]);
+    expect(m).toMatchObject({ version: 7, duracionSeg: 12, transicion: "FUNDIDO", items: [] });
     expect(m.servidorAhora).toBe("2026-10-15T16:00:00.000Z");
   });
 

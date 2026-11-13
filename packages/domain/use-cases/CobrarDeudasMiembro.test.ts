@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { cobrarDeudasMiembro, type CobrarDeudasMiembroDeps } from "./CobrarDeudasMiembro";
-import { FechaPagoInvalidaError, SinTasaParaFechaError } from "./RegistrarPago";
+import { FechaPagoInvalidaError } from "./RegistrarPago";
 import type { DeudaProducto } from "../entities/DeudaProducto";
 import type { DatosNuevoPago, Pago } from "../entities/Pago";
 
@@ -21,9 +21,9 @@ const deuda = (id: string, productoNombre: string, cantidad: number, precioUnita
 });
 
 function crearDeps(
-  opciones: { permitido?: boolean; turnoAbierto?: boolean; deudas?: DeudaProducto[]; cobradasPorLaBase?: number; tasaDelDia?: number | null } = {}
+  opciones: { permitido?: boolean; turnoAbierto?: boolean; deudas?: DeudaProducto[]; cobradasPorLaBase?: number } = {}
 ) {
-  const { permitido = true, turnoAbierto = true, tasaDelDia = 40 } = opciones;
+  const { permitido = true, turnoAbierto = true } = opciones;
   const deudas = opciones.deudas ?? [deuda("d1", "Agua", 2, 1.5), deuda("d2", "Gatorade", 1, 2.25)];
   const pagosCreados: DatosNuevoPago[] = [];
   const marcadas: { ids: string[]; grupoPagoId: string; en: Date }[] = [];
@@ -48,19 +48,17 @@ function crearDeps(
     },
     turnos: { buscarAbiertoPorSucursal: async () => (turnoAbierto ? { id: "turno1" } : null) },
     autorizacion: { tienePermiso: async () => permitido },
-    tasas: { buscarMasCercanaAnterior: async () => (tasaDelDia === null ? null : { valor: tasaDelDia }) },
   } as unknown as CobrarDeudasMiembroDeps;
 
   return { deps, pagosCreados, marcadas, consultas };
 }
 
 const base = { organizacionId: "org", miembroId: "m1", sucursalId: "suc", registradoPorId: "u1" };
-const linea = (monto: number, tasaCambio: number | null = null) => ({
+const linea = (monto: number) => ({
   monto,
   metodo: "Efectivo (USD)",
   metodoPagoId: "mp1",
   numeroOperacion: null,
-  tasaCambio,
 });
 
 describe("cobrarDeudasMiembro", () => {
@@ -90,13 +88,12 @@ describe("cobrarDeudasMiembro", () => {
     expect(pagosCreados[0].grupoPagoId).toBe(marcadas[0].grupoPagoId);
   });
 
-  test("pago combinado: mismo grupoPagoId en todas las líneas y montoBs por línea", async () => {
+  test("pago combinado: mismo grupoPagoId en todas las líneas", async () => {
     const { deps, pagosCreados } = crearDeps();
-    await cobrarDeudasMiembro(deps, { ...base, lineas: [linea(1.25), linea(4, 50)] });
+    await cobrarDeudasMiembro(deps, { ...base, lineas: [linea(1.25), linea(4)] });
 
     expect(pagosCreados).toHaveLength(2);
     expect(pagosCreados[0].grupoPagoId).toBe(pagosCreados[1].grupoPagoId);
-    expect(pagosCreados[1].montoBs).toBe(200);
   });
 
   test("rechaza si la suma de las líneas no es el total que el servidor calcula", async () => {
@@ -138,12 +135,12 @@ describe("cobrarDeudasMiembro con fecha pasada", () => {
   const DIA = 24 * 60 * 60 * 1000;
   const hace = (dias: number) => new Date(Date.now() - dias * DIA);
 
-  test("el cobro queda fuera de turno, con la fecha elegida y la tasa BCV de ese día", async () => {
-    const { deps, pagosCreados, marcadas } = crearDeps({ turnoAbierto: false, tasaDelDia: 40 });
+  test("el cobro queda fuera de turno, con la fecha elegida", async () => {
+    const { deps, pagosCreados, marcadas } = crearDeps({ turnoAbierto: false });
     const fecha = hace(2);
-    await cobrarDeudasMiembro(deps, { ...base, lineas: [linea(5.25, 99)], fechaCobro: fecha });
+    await cobrarDeudasMiembro(deps, { ...base, lineas: [linea(5.25)], fechaCobro: fecha });
 
-    expect(pagosCreados[0]).toMatchObject({ turnoId: null, fechaPago: fecha, tasaCambio: 40, montoBs: 210 });
+    expect(pagosCreados[0]).toMatchObject({ turnoId: null, fechaPago: fecha });
     expect(marcadas[0].en).toEqual(fecha);
   });
 
@@ -153,13 +150,6 @@ describe("cobrarDeudasMiembro con fecha pasada", () => {
       FechaPagoInvalidaError
     );
     expect(marcadas).toEqual([]);
-  });
-
-  test("sin tasa BCV de esa fecha, con una línea en Bs, se rechaza", async () => {
-    const { deps } = crearDeps({ tasaDelDia: null });
-    await expect(cobrarDeudasMiembro(deps, { ...base, lineas: [linea(5.25, 99)], fechaCobro: hace(1) })).rejects.toBeInstanceOf(
-      SinTasaParaFechaError
-    );
   });
 
   test("una fecha de hoy se cobra como siempre, en el turno abierto", async () => {

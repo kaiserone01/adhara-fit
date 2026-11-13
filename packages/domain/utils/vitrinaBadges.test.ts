@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { itemDePrueba } from "../entities/vitrinaItemDePrueba";
-import { descuentoMostrado, equivalenteBs, precioVigenteUSD } from "./vitrinaBadges";
+import { descuentoMostrado, precioVigenteUSD } from "./vitrinaBadges";
 
 describe("precioVigenteUSD", () => {
   test("la oferta activa manda", () => {
@@ -33,28 +33,5 @@ describe("descuentoMostrado", () => {
   test("sin datos o con oferta igual al precio no hay descuento", () => {
     expect(descuentoMostrado(itemDePrueba())).toBeNull();
     expect(descuentoMostrado(itemDePrueba({ precioUSD: 20, ofertaUSD: 20 }))).toBeNull();
-  });
-});
-
-describe("equivalenteBs", () => {
-  const alDia = { valor: 40, estado: "AL_DIA" as const };
-  test("se calcula sobre el precio vigente", () => {
-    expect(equivalenteBs(itemDePrueba({ precioUSD: 20, ofertaUSD: 12.5 }), alDia)).toBe(500);
-    expect(equivalenteBs(itemDePrueba({ precioUSD: 20 }), alDia)).toBe(800);
-  });
-  test("redondea a dos decimales", () => {
-    expect(equivalenteBs(itemDePrueba({ precioUSD: 3.33 }), { valor: 36.1234, estado: "AL_DIA" })).toBe(120.29);
-  });
-  test("tasa desactualizada: se oculta", () => {
-    expect(equivalenteBs(itemDePrueba({ precioUSD: 20 }), { valor: 40, estado: "DESACTUALIZADA" })).toBeNull();
-  });
-  test("sin tasa: se oculta", () => {
-    expect(equivalenteBs(itemDePrueba({ precioUSD: 20 }), null)).toBeNull();
-  });
-  test("con la bandera apagada: se oculta", () => {
-    expect(equivalenteBs(itemDePrueba({ precioUSD: 20, mostrarEquivalenteBs: false }), alDia)).toBeNull();
-  });
-  test("sin precio vigente: se oculta", () => {
-    expect(equivalenteBs(itemDePrueba(), alDia)).toBeNull();
   });
 });

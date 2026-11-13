@@ -202,8 +202,6 @@ export async function cambiarPlanConPago(
         metodo: linea.metodo,
         metodoPagoId: linea.metodoPagoId,
         numeroOperacion: linea.numeroOperacion,
-        tasaCambio: linea.tasaCambio,
-        montoBs: linea.tasaCambio !== null ? linea.monto * linea.tasaCambio : null,
         fechaInicioCiclo: activa.inicio,
         fechaFinCiclo: resultado.nuevoVencimiento,
         grupoPagoId,

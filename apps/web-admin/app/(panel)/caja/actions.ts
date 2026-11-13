@@ -11,7 +11,6 @@ import { PrismaPagoRepository } from "@gym-app/infrastructure/persistence/prisma
 import { PrismaSucursalRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSucursalRepository";
 import { PrismaPermisoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPermisoRepository";
 import { AuthorizationService } from "@gym-app/domain/services/AuthorizationService";
-import { orquestadorTasa, validarTasaCobro, validarTasaSiEsEnBs } from "@/lib/tasaBcv";
 import { PrismaProductoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaProductoRepository";
 import {
   venderProducto,
@@ -27,8 +26,7 @@ import { PrismaPlanRepository } from "@gym-app/infrastructure/persistence/prisma
 import { PrismaReglaAbonoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaReglaAbonoRepository";
 import { PrismaSuscripcionRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSuscripcionRepository";
 import { cobrarAbonoPendiente, SinAbonoPendienteError, MontoNoCoincideConLoPendienteError } from "@gym-app/domain/use-cases/CobrarAbonoPendiente";
-import { AbonoMenorAlMinimoError, FechaPagoInvalidaError, SinTasaParaFechaError } from "@gym-app/domain/use-cases/RegistrarPago";
-import { PrismaTasaCambioRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaTasaCambioRepository";
+import { AbonoMenorAlMinimoError, FechaPagoInvalidaError } from "@gym-app/domain/use-cases/RegistrarPago";
 import { PrismaMemberRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaMemberRepository";
 import { PrismaDeudaProductoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaDeudaProductoRepository";
 import {
@@ -54,7 +52,7 @@ import {
   DeudaNoPendienteError,
 } from "@gym-app/domain/use-cases/AnularDeuda";
 import { abrirTurno, RolNoAutorizadoError as RolNoAutorizadoAbrir, TurnoYaAbiertoError, SucursalNoEncontradaError } from "@gym-app/domain/use-cases/AbrirTurno";
-import { registrarEgreso, RolNoAutorizadoError as RolNoAutorizadoEgreso, TurnoCerradoError, TurnoNoEncontradoError as TurnoNoEncontradoEgreso, MotivoRequeridoError, TasaRequeridaError as TasaRequeridaEgreso } from "@gym-app/domain/use-cases/RegistrarEgreso";
+import { registrarEgreso, RolNoAutorizadoError as RolNoAutorizadoEgreso, TurnoCerradoError, TurnoNoEncontradoError as TurnoNoEncontradoEgreso, MotivoRequeridoError } from "@gym-app/domain/use-cases/RegistrarEgreso";
 import { cerrarTurno, RolNoAutorizadoError as RolNoAutorizadoCerrar, TurnoYaCerradoError, TurnoNoEncontradoError as TurnoNoEncontradoCerrar, NotaRequeridaError } from "@gym-app/domain/use-cases/CerrarTurno";
 import { anularPago, RolNoAutorizadoError as RolNoAutorizadoAnular, PagoNoEncontradoError, PagoYaAnuladoError, MotivoRequeridoError as MotivoRequeridoAnular } from "@gym-app/domain/use-cases/AnularPago";
 
@@ -79,9 +77,8 @@ export async function abrirTurnoAction(
   const sucursalId = sucursalActivaId;
 
   const fondoInicialEfectivoUSD = Number(formData.get("fondoInicialEfectivoUSD"));
-  const fondoInicialEfectivoBs = Number(formData.get("fondoInicialEfectivoBs"));
-  if (Number.isNaN(fondoInicialEfectivoUSD) || Number.isNaN(fondoInicialEfectivoBs)) {
-    return { error: "El fondo inicial en efectivo (USD y Bs) es requerido." };
+  if (Number.isNaN(fondoInicialEfectivoUSD)) {
+    return { error: "El fondo inicial en efectivo es requerido." };
   }
 
   try {
@@ -97,7 +94,6 @@ export async function abrirTurnoAction(
         usuarioId: usuario.id,
         rolUsuario: usuario.rol,
         fondoInicialEfectivoUSD,
-        fondoInicialEfectivoBs,
       }
     );
   } catch (error) {
@@ -118,11 +114,6 @@ export async function abrirTurnoAction(
 export interface EstadoRegistrarEgreso {
   error?: string;
   ok?: string;
-  // Ver EstadoFormularioPago en pagos/actions.ts — mismo criterio de
-  // reconfirmación/aviso de fallo temporal (Etapa 3 del plan de tasa BCV).
-  tasaNueva?: number;
-  fallaTemporal?: boolean;
-  tasaGuardada?: number;
 }
 
 export async function registrarEgresoAction(
@@ -135,28 +126,11 @@ export async function registrarEgresoAction(
 
   const turnoId = formData.get("turnoId")?.toString();
   const monto = Number(formData.get("monto"));
-  const moneda = formData.get("moneda")?.toString();
   const metodo = formData.get("metodo")?.toString();
   const motivo = formData.get("motivo")?.toString() ?? "";
-  // Solo relevante para moneda BS — capturada en el cliente desde
-  // /api/tasa-cambio al momento de registrar (ver ModalRegistrarEgreso).
-  const tasaCambioTexto = formData.get("tasaCambio")?.toString();
 
-  if (!turnoId || Number.isNaN(monto) || (moneda !== "USD" && moneda !== "BS") || !metodo) {
-    return { error: "Monto, moneda y método son requeridos." };
-  }
-
-  let tasaCambio: number | null = null;
-  if (moneda === "BS" && tasaCambioTexto) {
-    const fresca = await orquestadorTasa.obtenerTasaVigenteFresca({ forzar: true });
-    const resultado = validarTasaCobro(Number(tasaCambioTexto), fresca);
-    if (!resultado.ok) {
-      if ("fallaTemporal" in resultado) {
-        return { error: resultado.error, fallaTemporal: true, tasaGuardada: resultado.tasaGuardada };
-      }
-      return { error: resultado.error, tasaNueva: resultado.tasaNueva };
-    }
-    tasaCambio = resultado.tasa;
+  if (!turnoId || Number.isNaN(monto) || !metodo) {
+    return { error: "Monto y método son requeridos." };
   }
 
   try {
@@ -173,8 +147,6 @@ export async function registrarEgresoAction(
         rolUsuario: usuario.rol,
         usuarioIdSolicitante: usuario.id,
         monto,
-        moneda,
-        tasaCambio,
         metodo,
         motivo,
       }
@@ -184,7 +156,6 @@ export async function registrarEgresoAction(
       error instanceof TurnoCerradoError ||
       error instanceof TurnoNoEncontradoEgreso ||
       error instanceof MotivoRequeridoError ||
-      error instanceof TasaRequeridaEgreso ||
       error instanceof RolNoAutorizadoEgreso
     ) {
       return { error: error.message };
@@ -313,10 +284,6 @@ export async function anularPagoAction(
 export interface EstadoVenderProducto {
   error?: string;
   ok?: string;
-  // Mismo aviso de tasa que EstadoFormularioPago (pagos/actions.ts).
-  tasaNueva?: number;
-  fallaTemporal?: boolean;
-  tasaGuardada?: number;
 }
 
 // El carrito viaja como JSON en el campo "items": [{ productoId, cantidad }].
@@ -354,7 +321,6 @@ export async function venderProductoAction(
     metodo: string;
     metodoPagoId: string | null;
     numeroOperacion: string | null;
-    tasaCambio: number | null;
   }>;
   try {
     lineas = JSON.parse(lineasRaw);
@@ -365,22 +331,8 @@ export async function venderProductoAction(
     return { error: "Cada línea del pago necesita un monto y un método." };
   }
 
-  // Cada línea en Bs se revalida contra la tasa vigente del servidor (igual
-  // que registrarPagoAction) — nunca se confía en la tasa del formulario.
-  // Venta de un día pasado (yyyy-mm-dd): el dominio pone la tasa BCV de ese día, así que no se revalida contra la de hoy.
   const fechaVentaTexto = formData.get("fechaVenta")?.toString();
   const fechaVenta = fechaVentaTexto ? new Date(`${fechaVentaTexto}T12:00:00`) : undefined;
-  const esVentaPasada = !!fechaVenta && fechaVenta < new Date(new Date().setHours(0, 0, 0, 0));
-  const lineasValidadas: typeof lineas = [];
-  for (const linea of lineas) {
-    if (esVentaPasada) {
-      lineasValidadas.push(linea);
-      continue;
-    }
-    const validacionTasa = await validarTasaSiEsEnBs(linea.tasaCambio !== null ? String(linea.tasaCambio) : undefined);
-    if (!validacionTasa.ok) return validacionTasa.estado;
-    lineasValidadas.push({ ...linea, tasaCambio: validacionTasa.tasaCambio });
-  }
 
   try {
     await venderProducto(
@@ -389,12 +341,11 @@ export async function venderProductoAction(
         productos: new PrismaProductoRepository(prisma),
         turnos: new PrismaTurnoRepository(prisma),
         autorizacion: new AuthorizationService(new PrismaPermisoRepository(prisma)),
-        tasas: new PrismaTasaCambioRepository(prisma),
       },
       {
         organizacionId: usuario.organizacionId,
         items,
-        lineas: lineasValidadas,
+        lineas,
         sucursalId: sucursalActivaId,
         registradoPorId: usuario.id,
         fechaVenta,
@@ -410,8 +361,7 @@ export async function venderProductoAction(
       error instanceof SinTurnoAbiertoError ||
       error instanceof LineasDePagoInvalidasError ||
       error instanceof MontoLineasNoCubreObjetivoError ||
-      error instanceof FechaPagoInvalidaError ||
-      error instanceof SinTasaParaFechaError
+      error instanceof FechaPagoInvalidaError
     ) {
       return { error: error.message };
     }
@@ -484,10 +434,6 @@ export async function fiarProductoAction(
 export interface EstadoCobrarDeudas {
   error?: string;
   ok?: string;
-  // Mismo aviso de tasa que EstadoVenderProducto.
-  tasaNueva?: number;
-  fallaTemporal?: boolean;
-  tasaGuardada?: number;
 }
 
 export async function cobrarDeudasAction(
@@ -509,7 +455,6 @@ export async function cobrarDeudasAction(
     metodo: string;
     metodoPagoId: string | null;
     numeroOperacion: string | null;
-    tasaCambio: number | null;
   }>;
   try {
     lineas = JSON.parse(lineasRaw);
@@ -520,20 +465,9 @@ export async function cobrarDeudasAction(
     return { error: "Cada línea del pago necesita un monto y un método." };
   }
 
-  // Cobro de un día pasado (yyyy-mm-dd): el dominio pone la tasa BCV de ese día, así que no se revalida contra la de hoy.
+  // Cobro de un día pasado (yyyy-mm-dd): queda fuera de turno (lo resuelve el dominio).
   const fechaCobroTexto = formData.get("fechaCobro")?.toString();
   const fechaCobro = fechaCobroTexto ? new Date(`${fechaCobroTexto}T12:00:00`) : undefined;
-  const esCobroPasado = !!fechaCobro && fechaCobro < new Date(new Date().setHours(0, 0, 0, 0));
-  const lineasValidadas: typeof lineas = [];
-  for (const linea of lineas) {
-    if (esCobroPasado) {
-      lineasValidadas.push(linea);
-      continue;
-    }
-    const validacionTasa = await validarTasaSiEsEnBs(linea.tasaCambio !== null ? String(linea.tasaCambio) : undefined);
-    if (!validacionTasa.ok) return validacionTasa.estado;
-    lineasValidadas.push({ ...linea, tasaCambio: validacionTasa.tasaCambio });
-  }
 
   // Membresía con saldo pendiente (abono): se cobra junto con los productos en un solo pago.
   const incluirMembresia = formData.get("incluirMembresia")?.toString() === "1";
@@ -566,12 +500,11 @@ export async function cobrarDeudasAction(
               autorizacion: new AuthorizationService(new PrismaPermisoRepository(prisma)),
               reglasAbono: new PrismaReglaAbonoRepository(prisma),
               deudas: new PrismaDeudaProductoRepository(tx),
-              tasas: new PrismaTasaCambioRepository(prisma),
             },
             {
               organizacionId: usuario.organizacionId,
               miembroId,
-              lineas: lineasValidadas,
+              lineas,
               sucursalId: sucursalActivaId,
               registradoPorId: usuario.id,
               rolUsuario: usuario.rol,
@@ -585,12 +518,11 @@ export async function cobrarDeudasAction(
           pagos: new PrismaPagoRepository(tx),
           turnos: new PrismaTurnoRepository(tx),
           autorizacion: new AuthorizationService(new PrismaPermisoRepository(tx)),
-          tasas: new PrismaTasaCambioRepository(prisma),
         },
         {
           organizacionId: usuario.organizacionId,
           miembroId,
-          lineas: lineasValidadas,
+          lineas,
           sucursalId: sucursalActivaId,
           registradoPorId: usuario.id,
           deudaIds,
@@ -609,8 +541,7 @@ export async function cobrarDeudasAction(
       error instanceof SinTurnoAbiertoCobrar ||
       error instanceof LineasDePagoInvalidasError ||
       error instanceof MontoLineasNoCubreObjetivoError ||
-      error instanceof FechaPagoInvalidaError ||
-      error instanceof SinTasaParaFechaError
+      error instanceof FechaPagoInvalidaError
     ) {
       return { error: error.message };
     }

@@ -1,5 +1,6 @@
 "use client";
 
+import { formatearSoles } from "@gym-app/domain/utils/formatearSoles";
 import { useActionState, useEffect, useState } from "react";
 import type { Miembro } from "@gym-app/domain/entities/Miembro";
 import type { MetodoPago } from "@gym-app/domain/entities/MetodoPago";
@@ -18,7 +19,6 @@ import { useFeedback, DURACION_MS } from "@gym-app/ui/components/FeedbackOverlay
 import { BuscadorMiembro, aMiembroConPlan, type MiembroConPlan, type PlanParaModal } from "./SelectorMiembroModal";
 import { calcularProyeccionRenovacion } from "./proyeccionRenovacion";
 import { DiasDisponibles } from "../miembros/vencimiento";
-import { formatearBs } from "../tasaBcvFija";
 import { SelectorMetodoPago } from "../pagos/SelectorMetodoPago";
 import { CampoNumeroOperacion } from "../pagos/CampoNumeroOperacion";
 import { MetodoYCampos } from "../pagos/MetodoYCampos";
@@ -158,7 +158,6 @@ function ContenidoPaso2({
   planes,
   planElegidoId,
   onElegirPlan,
-  tasaActual,
   modalidadElegida,
   onCambiarModalidad,
   meses,
@@ -175,7 +174,6 @@ function ContenidoPaso2({
   planes: PlanParaModal[];
   planElegidoId: string | null;
   onElegirPlan: (id: string) => void;
-  tasaActual: number | null;
   modalidadElegida: Modalidad;
   onCambiarModalidad: (modalidad: Modalidad) => void;
   // Meses que cubre el pago (1 a MAX_MESES_POR_PAGO): multiplica el precio y la duración del ciclo.
@@ -272,8 +270,7 @@ function ContenidoPaso2({
         <div className="grid gap-4 rounded-xl border p-5 sm:grid-cols-3" style={{ borderColor: "var(--gx-edge)", background: "var(--gx-surface-2)" }}>
           {[
             ["Plan", planEfectivo.nombre],
-            [meses > 1 ? `Total (${meses} meses)` : "Precio", meses > 1 ? `${(planEfectivo.precioUSD * meses).toFixed(2)}` : `${planEfectivo.precioUSD.toFixed(2)}/${ETIQUETA_FRECUENCIA[planEfectivo.frecuencia]}`],
-            ...(tasaActual !== null ? [["Equivale a", `Bs. ${formatearBs(planEfectivo.precioUSD * meses * tasaActual)}`]] : []),
+            [meses > 1 ? `Total (${meses} meses)` : "Precio", meses > 1 ? formatearSoles(planEfectivo.precioUSD * meses) : `${formatearSoles(planEfectivo.precioUSD)}/${ETIQUETA_FRECUENCIA[planEfectivo.frecuencia]}`],
           ].map(([etiqueta, valor]) => (
             <div key={etiqueta} className="flex flex-col gap-1">
               <span className="text-xs uppercase tracking-wide" style={{ color: "var(--gx-muted)" }}>
@@ -297,7 +294,7 @@ function ContenidoPaso2({
               <option value="">Seleccioná un plan</option>
               {planes.map((plan) => (
                 <option key={plan.id} value={plan.id}>
-                  {plan.nombre} — ${plan.precioUSD.toFixed(2)}
+                  {plan.nombre} — {formatearSoles(plan.precioUSD)}
                 </option>
               ))}
             </select>
@@ -375,10 +372,10 @@ function ContenidoPaso2({
           className="rounded-lg px-3 py-2 text-sm font-medium"
           style={{ background: "color-mix(in srgb, var(--gx-accent) 15%, transparent)", color: "var(--gx-accent)" }}
         >
-          Saldo a favor: ${miembro.saldoAFavorUSD.toFixed(2)} — se descuenta automáticamente del pago
+          Saldo a favor: {formatearSoles(miembro.saldoAFavorUSD)} — se descuenta automáticamente del pago
           {planEfectivo && planEfectivo.precioUSD > 0 && (
             <>
-              : se cobrarán ${Math.max(0, (abonoPrevio?.saldoUSD ?? planEfectivo.precioUSD * meses) - miembro.saldoAFavorUSD).toFixed(2)}
+              : se cobrarán {formatearSoles(Math.max(0, (abonoPrevio?.saldoUSD ?? planEfectivo.precioUSD * meses) - miembro.saldoAFavorUSD))}
             </>
           )}
           .
@@ -394,7 +391,7 @@ function ContenidoPaso2({
         <div className="rounded-lg border p-4" style={{ borderColor: "var(--gx-accent)" }}>
           <p style={{ color: "var(--gx-ink)" }}>
             {proyeccionCambioPlan.resultado.montoCobradoCentavos > 0
-              ? `Se cobra $${(proyeccionCambioPlan.resultado.montoCobradoCentavos / 100).toFixed(2)} — `
+              ? `Se cobra ${formatearSoles((proyeccionCambioPlan.resultado.montoCobradoCentavos / 100))} — `
               : "Sin costo adicional — "}
             nuevo vencimiento{" "}
             <strong>{formatearFechaCorta(proyeccionCambioPlan.resultado.nuevoVencimiento)}</strong>.
@@ -405,8 +402,8 @@ function ContenidoPaso2({
       {!cambiandoPlan && abonoPrevio && (
         <div className="rounded-lg border p-4" style={{ borderColor: "var(--gx-accent)" }}>
           <p style={{ color: "var(--gx-ink)" }}>
-            Ya abonó <strong>${abonoPrevio.pagadoUSD.toFixed(2)}</strong> de ${abonoPrevio.precioUSD.toFixed(2)} en este
-            ciclo. Falta <strong>${abonoPrevio.saldoUSD.toFixed(2)}</strong>: al pagarlo, el ciclo queda saldado hasta el{" "}
+            Ya abonó <strong>{formatearSoles(abonoPrevio.pagadoUSD)}</strong> de {formatearSoles(abonoPrevio.precioUSD)} en este
+            ciclo. Falta <strong>{formatearSoles(abonoPrevio.saldoUSD)}</strong>: al pagarlo, el ciclo queda saldado hasta el{" "}
             <strong>{formatearFechaCorta(abonoPrevio.finCiclo)}</strong>.
           </p>
         </div>
@@ -451,7 +448,6 @@ interface LineaFormulario {
   seleccion: {
     metodoPagoId: string | null;
     metodo: string;
-    tasaCambio: number | null;
     numeroOperacion: string;
     requiereNumeroOperacion: boolean;
   };
@@ -461,7 +457,7 @@ function nuevaLineaVacia(): LineaFormulario {
   return {
     clave: crypto.randomUUID(),
     monto: "",
-    seleccion: { metodoPagoId: null, metodo: "", tasaCambio: null, numeroOperacion: "", requiereNumeroOperacion: false },
+    seleccion: { metodoPagoId: null, metodo: "", numeroOperacion: "", requiereNumeroOperacion: false },
   };
 }
 
@@ -480,7 +476,6 @@ function ContenidoPaso3({
   reglasAbono,
   modalidad,
   metodosPago,
-  tasaActual: tasaVigente,
   deudaMiembro,
   porRegularizar,
   abonoPrevio,
@@ -513,10 +508,6 @@ function ContenidoPaso3({
   // ejecuta lo elegido (ver diseño acordado, motor de reglas de abono).
   modalidad: Modalidad;
   metodosPago: MetodoPago[];
-  // Solo para calcular el equivalente en Bs del precio fijo mostrado en
-  // modalidad Abono (referencia) — el método elegido trae su propia tasa
-  // para el campo de monto a abonar.
-  tasaActual: number | null;
   // Productos fiados pendientes de este miembro en la sucursal (null = no debe nada).
   deudaMiembro: GrupoDeudasMiembro | null;
   // Con el aviso "Por regularizar" el pago se puede fechar hasta 365 días atrás; el resto, hasta 90.
@@ -537,20 +528,6 @@ function ContenidoPaso3({
   // eslint-disable-next-line react-hooks/purity -- el limite minimo debe calcularse con la hora actual en cada render; congelarlo cambiaria el comportamiento
   const minFechaISO = fechaALocalISO(new Date(Date.now() - maxDiasAtras * 24 * 60 * 60 * 1000));
   const esFechaPasada = fechaPago !== "" && fechaPago < hoyISO;
-  const [tasaDelDia, setTasaDelDia] = useState<number | null>(null);
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- limpia la tasa del dia al cambiar la fecha antes de pedir la nueva; flujo de cobro, sin cambiar el comportamiento
-    setTasaDelDia(null);
-    if (!esFechaPasada) return;
-    let vigente = true;
-    fetch(`/api/tasa-cambio?fecha=${fechaPago}`)
-      .then((res) => (res.ok ? res.json() : null))
-      .then((datos) => vigente && setTasaDelDia(datos?.valor ?? null));
-    return () => {
-      vigente = false;
-    };
-  }, [esFechaPasada, fechaPago]);
-  const tasaActual = esFechaPasada ? tasaDelDia : tasaVigente;
   const { mostrarExito, mostrarError } = useFeedback();
   // Con deuda, la casilla "Cobrar también los productos pendientes" viene marcada.
   const [incluirDeudas, setIncluirDeudas] = useState(true);
@@ -583,7 +560,6 @@ function ContenidoPaso3({
   // cada línea, ver diseño acordado — cada fracción replica el patrón de
   // Abono: método primero, luego monto, con split Bs solo si el método
   // elegido para ESA fracción es en bolívares). Clave = LineaFormulario.clave.
-  const [montosBsCombinadas, setMontosBsCombinadas] = useState<Record<string, string>>({});
   // Fraccionado: qué fracción está expandida (acordeón) — nunca más de
   // una a la vez, puede no haber ninguna abierta. Colapsar NO borra nada,
   // es solo la vista (ver diseño acordado); arranca en la primera.
@@ -667,16 +643,11 @@ function ContenidoPaso3({
   const lineasParaEnviar = lineasActivas
     .filter((l) => Number(l.monto) > 0)
     .map((l) => {
-      // Bs que el cajero tecleó (lo recibido de verdad): el servidor los respeta si cuadran con el USD.
-      const textoBs = usaFracciones ? montosBsCombinadas[l.clave] : "";
-      const bsTecleados = Number(textoBs);
       return {
         monto: Math.round(Number(l.monto) * 100) / 100,
-        montoBs: l.seleccion.tasaCambio !== null && bsTecleados > 0 ? bsTecleados : null,
         metodo: l.seleccion.metodo,
         metodoPagoId: l.seleccion.metodoPagoId,
         numeroOperacion: l.seleccion.numeroOperacion || null,
-        tasaCambio: l.seleccion.tasaCambio,
       };
     });
 
@@ -705,7 +676,7 @@ function ContenidoPaso3({
         name="lineas"
         value={JSON.stringify(
           montoSugerido === 0
-            ? [{ monto: 0, metodo: creditoAplicable > 0 ? "Saldo a favor" : "Cortesía", metodoPagoId: null, numeroOperacion: null, tasaCambio: null }]
+            ? [{ monto: 0, metodo: creditoAplicable > 0 ? "Saldo a favor" : "Cortesía", metodoPagoId: null, numeroOperacion: null }]
             : lineasParaEnviar
         )}
       />
@@ -725,9 +696,7 @@ function ContenidoPaso3({
         />
         <p className="text-sm font-medium" style={{ color: "#ffffff" }}>
           {esFechaPasada
-            ? tasaDelDia !== null
-              ? `El pago se registra el ${fechaPago.split("-").reverse().join("/")} con la tasa BCV de ese día (Bs. ${tasaDelDia}); no entra en ningún turno de caja${porRegularizar ? "" : " ni en el arqueo de hoy"}.`
-              : "Buscando la tasa BCV de esa fecha…"
+            ? `El pago se registra el ${fechaPago.split("-").reverse().join("/")}; no entra en ningún turno de caja${porRegularizar ? "" : " ni en el arqueo de hoy"}.`
             : `Cámbiala solo si pagó antes (máx. ${maxDiasAtras} días).`}
         </p>
       </div>
@@ -742,12 +711,9 @@ function ContenidoPaso3({
           selector={
             <SelectorMetodoPago
               compacto
-              fechaTasa={esFechaPasada ? fechaPago : undefined}
               metodos={metodosPago}
-              monto={montoObjetivo + deudaAPagar}
               onCambio={(seleccion) => setLineaUnica((prev) => ({ ...prev, monto: String(montoObjetivo + deudaAPagar), seleccion }))}
               grande
-              avisoServidor={{ tasaNueva: estado.tasaNueva, fallaTemporal: estado.fallaTemporal, tasaGuardada: estado.tasaGuardada }}
               ocultarNumeroOperacion
               numeroOperacion={lineaUnica.seleccion.numeroOperacion}
               onCambioNumeroOperacion={(valor) =>
@@ -790,7 +756,7 @@ function ContenidoPaso3({
                       expandida (ver diseño acordado) — deja de ocultarse
                       al expandir. */}
                   <span className="flex-1 truncate text-sm" style={{ color: "var(--gx-muted)" }}>
-                    {montoLinea > 0 ? `$${montoLinea.toFixed(2)}` : "Sin monto"}
+                    {montoLinea > 0 ? `${formatearSoles(montoLinea)}` : "Sin monto"}
                     {linea.seleccion.metodo && ` · ${linea.seleccion.metodo}`}
                   </span>
                   <span className="text-lg font-bold" style={{ color: "var(--gx-accent)" }}>{expandida ? "▲" : "▼"}</span>
@@ -807,10 +773,6 @@ function ContenidoPaso3({
                           type="button"
                           onClick={() => {
                             setLineasCombinadas((prev) => prev.filter((_, i) => i !== indice));
-                            setMontosBsCombinadas((prev) => {
-                              const { [linea.clave]: _quitada, ...resto } = prev;
-                              return resto;
-                            });
                             setFraccionAbiertaClave(null);
                           }}
                           className="text-sm"
@@ -826,9 +788,7 @@ function ContenidoPaso3({
                       selector={
                         <SelectorMetodoPago
                           compacto
-                          fechaTasa={esFechaPasada ? fechaPago : undefined}
                           metodos={metodosPago}
-                          monto={montoLinea > 0 ? montoLinea : montoSugerido + deudaAPagar}
                           onCambio={(seleccion) =>
                             setLineasCombinadas((prev) => prev.map((l, i) => (i === indice ? { ...l, seleccion } : l)))
                           }
@@ -847,41 +807,13 @@ function ContenidoPaso3({
                             <CurrencyInput
                               name={`monto-linea-${indice}`}
                               label="Monto de esta fracción (USD)"
-                              moneda="USD"
+                             
                               required
                               value={linea.monto}
                               onChange={(valorUSD) => {
                                 setLineasCombinadas((prev) => prev.map((l, i) => (i === indice ? { ...l, monto: valorUSD } : l)));
-                                if (linea.seleccion.tasaCambio !== null) {
-                                  const numero = Number(valorUSD);
-                                  setMontosBsCombinadas((prev) => ({
-                                    ...prev,
-                                    [linea.clave]:
-                                      Number.isNaN(numero) || valorUSD === "" ? "" : String(numero * linea.seleccion.tasaCambio!),
-                                  }));
-                                }
                               }}
                             />
-                            {linea.seleccion.tasaCambio !== null && (
-                              <CurrencyInput
-                                name={`monto-linea-${indice}-bs`}
-                                label="Monto de esta fracción (Bs)"
-                                moneda="Bs"
-                                value={montosBsCombinadas[linea.clave] ?? ""}
-                                onChange={(valorBs) => {
-                                  setMontosBsCombinadas((prev) => ({ ...prev, [linea.clave]: valorBs }));
-                                  const numero = Number(valorBs);
-                                  const tasa = linea.seleccion.tasaCambio ?? 0;
-                                  setLineasCombinadas((prev) =>
-                                    prev.map((l, i) =>
-                                      i === indice
-                                        ? { ...l, monto: Number.isNaN(numero) || valorBs === "" || tasa === 0 ? "" : String(numero / tasa) }
-                                        : l
-                                    )
-                                  );
-                                }}
-                              />
-                            )}
                             {linea.seleccion.requiereNumeroOperacion && (
                               <CampoNumeroOperacion
                                 value={linea.seleccion.numeroOperacion}
@@ -915,8 +847,7 @@ function ContenidoPaso3({
           <div className="flex justify-between rounded-lg px-3 py-2 text-sm" style={{ background: "var(--gx-surface-2)" }}>
             <span style={{ color: "var(--gx-muted)" }}>Total ingresado</span>
             <span className="font-semibold" style={{ color: "var(--gx-ink)" }}>
-              ${sumaLineas.toFixed(2)}
-              {tasaActual !== null && ` · Bs. ${formatearBs(sumaLineas * tasaActual)}`}
+              {formatearSoles(sumaLineas)}
             </span>
           </div>
         </div>
@@ -925,7 +856,7 @@ function ContenidoPaso3({
       {montoSugerido === 0 && (
         <p className="text-sm" style={{ color: "var(--gx-muted)" }}>
           {creditoAplicable > 0
-            ? `El saldo a favor ($${creditoAplicable.toFixed(2)}) cubre este pago — no hace falta elegir método de pago.`
+            ? `El saldo a favor (${formatearSoles(creditoAplicable)}) cubre este pago — no hace falta elegir método de pago.`
             : "Este plan no tiene costo — no hace falta elegir método de pago."}
         </p>
       )}
@@ -940,7 +871,7 @@ function ContenidoPaso3({
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="flex flex-wrap items-center gap-2 text-sm font-semibold" style={{ color: "var(--gx-ink)" }}>
               <Badge tono="ambar">Deuda pendiente</Badge>
-              Debe ${deudaMiembro.totalUSD.toFixed(2)} en productos
+              Debe {formatearSoles(deudaMiembro.totalUSD)} en productos
             </span>
             <button
               type="button"
@@ -963,18 +894,17 @@ function ContenidoPaso3({
           {incluirDeudas && (
             <div className="flex flex-wrap justify-between gap-2 text-sm">
               <span style={{ color: "var(--gx-muted)" }}>
-                Membresía ${montoObjetivo.toFixed(2)} + productos ${deudaMiembro.totalUSD.toFixed(2)}
+                Membresía {formatearSoles(montoObjetivo)} + productos {formatearSoles(deudaMiembro.totalUSD)}
               </span>
               <span className="font-semibold" style={{ color: "var(--gx-ink)" }}>
-                Total ${(montoObjetivo + deudaMiembro.totalUSD).toFixed(2)}
-                {tasaActual !== null && ` · Bs. ${formatearBs((montoObjetivo + deudaMiembro.totalUSD) * tasaActual)}`}
+                Total {formatearSoles((montoObjetivo + deudaMiembro.totalUSD))}
               </span>
             </div>
           )}
         </div>
       )}
       {detalleDeudaAbierto && deudaMiembro && (
-        <ModalDetalleDeuda grupo={deudaMiembro} tasaActual={tasaActual} onCerrar={() => setDetalleDeudaAbierto(false)} />
+        <ModalDetalleDeuda grupo={deudaMiembro} onCerrar={() => setDetalleDeudaAbierto(false)} />
       )}
 
       {/* Panel flotante — desacoplado del modal para las 3 modalidades (ver
@@ -984,7 +914,7 @@ function ContenidoPaso3({
       {hayExcedenteCaja && (
         <fieldset className="flex flex-col gap-2 rounded-lg border p-3 text-sm" style={{ borderColor: "var(--gx-edge)" }}>
           <legend className="px-1 font-bold" style={{ color: "var(--gx-ink)" }}>
-            Sobran ${excedenteCaja.toFixed(2)}. ¿Qué hacemos con ese dinero?
+            Sobran {formatearSoles(excedenteCaja)}. ¿Qué hacemos con ese dinero?
           </legend>
           {excedenteCaja > precioCiclo && (
             <p style={{ color: "var(--gx-bad)" }}>
@@ -1021,7 +951,6 @@ function ContenidoPaso3({
           // acordado), así que compararlo contra sí mismo siempre daría
           // remanente $0. En Total/Abono también es el precio del plan.
           montoObjetivo={montoSugerido}
-          tasaReferencia={lineasActivas.find((l) => l.seleccion.tasaCambio !== null)?.seleccion.tasaCambio ?? null}
           // Proyección + detalle de períodos, siempre visible (ver diseño
           // acordado: "que el cliente vea que cubre su pago"), calculada
           // sobre la SUMA de todas las líneas activas — se actualiza en vivo.
@@ -1106,7 +1035,6 @@ export function ModalRegistrarPagoCaja({
   miembros,
   planes,
   metodosPago,
-  tasaActual,
   reglasAbono,
   entrenadores,
   accionCambiarPlan,
@@ -1118,7 +1046,6 @@ export function ModalRegistrarPagoCaja({
   miembros: Miembro[];
   planes: PlanParaModal[];
   metodosPago: MetodoPago[];
-  tasaActual: number | null;
   reglasAbono: ReglaAbonoPorFrecuencia[];
   entrenadores: EntrenadorParaCambio[];
   accionCambiarPlan: (estado: EstadoCambioPlan, formData: FormData) => Promise<EstadoCambioPlan>;
@@ -1233,7 +1160,6 @@ export function ModalRegistrarPagoCaja({
             planes={planes}
             planElegidoId={planElegidoId}
             onElegirPlan={setPlanElegidoId}
-            tasaActual={tasaActual}
             modalidadElegida={modalidadElegida}
             onCambiarModalidad={setModalidadElegida}
             meses={meses}
@@ -1283,7 +1209,6 @@ export function ModalRegistrarPagoCaja({
             deudaMiembro={deudas.find((g) => g.miembroId === miembroElegido.id) ?? null}
             porRegularizar={miembroElegido.porRegularizar}
             abonoPrevio={abonoPrevio}
-            tasaActual={tasaActual}
             onVolver={() => setPaso(2)}
             onPagoRegistrado={(fechaFinCicloISO) => {
               setFechaFinCicloFinal(fechaFinCicloISO ? new Date(fechaFinCicloISO) : null);

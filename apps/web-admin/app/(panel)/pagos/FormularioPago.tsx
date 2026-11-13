@@ -1,5 +1,6 @@
 "use client";
 
+import { formatearSoles } from "@gym-app/domain/utils/formatearSoles";
 import { useActionState, useEffect, useState } from "react";
 import { Button } from "@gym-app/ui/components/Button";
 import { Input } from "@gym-app/ui/components/Input";
@@ -101,9 +102,8 @@ export function FormularioPago({
   const [seleccionMetodo, setSeleccionMetodo] = useState<{
     metodoPagoId: string | null;
     metodo: string;
-    tasaCambio: number | null;
     numeroOperacion: string;
-  }>({ metodoPagoId: null, metodo: "", tasaCambio: null, numeroOperacion: "" });
+  }>({ metodoPagoId: null, metodo: "", numeroOperacion: "" });
 
   // El planFijo efectivo: el que llega por prop (ficha del miembro), o —
   // en Caja — el del plan vigente del miembro elegido en el modal.
@@ -208,7 +208,7 @@ export function FormularioPago({
           className="rounded-lg px-3 py-2 text-sm font-medium"
           style={{ background: "color-mix(in srgb, var(--gx-accent) 15%, transparent)", color: "var(--gx-accent)" }}
         >
-          Saldo a favor: ${(miembroElegido?.saldoAFavorUSD ?? saldoAFavorUSD ?? 0).toFixed(2)} — se descuenta
+          Saldo a favor: {formatearSoles((miembroElegido?.saldoAFavorUSD ?? saldoAFavorUSD ?? 0))} — se descuenta
           automáticamente de este pago.
         </p>
       )}
@@ -218,17 +218,17 @@ export function FormularioPago({
           <div className="flex justify-between">
             <span style={{ color: "var(--gx-muted)" }}>Plan</span>
             <span className="font-medium" style={{ color: "var(--gx-ink)" }}>
-              {planFijoEfectivo.nombre} (${planFijoEfectivo.precioUSD.toFixed(2)})
+              {planFijoEfectivo.nombre} ({formatearSoles(planFijoEfectivo.precioUSD)})
             </span>
           </div>
           <CurrencyInput
             name="monto"
             label={
               saldoPendiente !== undefined && saldoPendiente > 0
-                ? `Monto de este abono (saldo pendiente: $${saldoPendiente.toFixed(2)})`
+                ? `Monto de este abono (saldo pendiente: ${formatearSoles(saldoPendiente)})`
                 : "Monto"
             }
-            moneda="USD"
+           
             required
             value={montoPlanFijo}
             onChange={setMontoPlanFijo}
@@ -269,7 +269,7 @@ export function FormularioPago({
           <CurrencyInput
             name="monto"
             label="Monto"
-            moneda="USD"
+           
             required
             value={monto}
             onChange={(valor) => setMonto(valor)}
@@ -279,15 +279,12 @@ export function FormularioPago({
 
       <input type="hidden" name="metodo" value={seleccionMetodo.metodo} />
       <input type="hidden" name="metodoPagoId" value={seleccionMetodo.metodoPagoId ?? ""} />
-      <input type="hidden" name="tasaCambio" value={seleccionMetodo.tasaCambio ?? ""} />
       <input type="hidden" name="numeroOperacion" value={seleccionMetodo.numeroOperacion} />
 
       {requierePago ? (
         <SelectorMetodoPago
           metodos={metodosPago}
-          monto={montoNumero}
           onCambio={setSeleccionMetodo}
-          avisoServidor={{ tasaNueva: estado.tasaNueva, fallaTemporal: estado.fallaTemporal, tasaGuardada: estado.tasaGuardada }}
         />
       ) : (
         <p className="text-sm" style={{ color: "var(--gx-muted)" }}>

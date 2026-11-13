@@ -2,26 +2,23 @@
 
 import { useEffect, useRef, useState } from "react";
 
-// Formato monetario latino: punto para miles, coma para decimales
-// ("1.234,56") — el que espera el usuario del panel, distinto del
-// formato "1,234.56" que usaría type="number" nativo. El valor real
-// (numérico, con punto decimal) viaja en un <input type="hidden"> con
-// el `name` del campo, así los Server Actions existentes no cambian
-// (siguen leyendo FormData.get(name) como string numérico plano).
+// Monto en soles: coma para los miles y punto decimal ("1,234.56"). El valor real (numérico, con punto
+// decimal, sin comas) viaja en un <input type="hidden"> con el `name` del campo, así los Server Actions
+// leen FormData.get(name) como string numérico plano.
 function formatearVisual(valorNumerico: string): string {
   if (valorNumerico === "" || valorNumerico === "-") return valorNumerico;
   const numero = Number(valorNumerico);
   if (Number.isNaN(numero)) return valorNumerico;
 
   const [enteroStr, decimalStr] = valorNumerico.split(".");
-  const enteroFormateado = new Intl.NumberFormat("es-VE").format(Number(enteroStr || "0"));
-  return decimalStr !== undefined ? `${enteroFormateado},${decimalStr}` : enteroFormateado;
+  const enteroFormateado = new Intl.NumberFormat("en-US").format(Number(enteroStr || "0"));
+  return decimalStr !== undefined ? `${enteroFormateado}.${decimalStr}` : enteroFormateado;
 }
 
-// Del texto que el usuario tipea (con puntos de miles y coma decimal)
-// al string numérico plano que usa el resto del sistema.
+// Del texto que el usuario tipea (con comas de miles y punto decimal) al string numérico plano que usa el
+// resto del sistema.
 function aValorNumerico(textoVisual: string): string {
-  const limpio = textoVisual.replace(/\./g, "").replace(",", ".");
+  const limpio = textoVisual.replace(/,/g, "");
   if (!/^-?\d*\.?\d*$/.test(limpio)) return "";
   return limpio;
 }
@@ -29,7 +26,6 @@ function aValorNumerico(textoVisual: string): string {
 export function CurrencyInput({
   name,
   label,
-  moneda,
   required,
   defaultValue = "",
   value,
@@ -38,7 +34,6 @@ export function CurrencyInput({
 }: {
   name: string;
   label: string;
-  moneda: "USD" | "Bs";
   required?: boolean;
   defaultValue?: string;
   /** Modo controlado (opcional) — string numérico plano, igual al que se envía en el hidden input. */
@@ -72,9 +67,6 @@ export function CurrencyInput({
   }
 
   const valorNumericoActual = value !== undefined ? value : aValorNumerico(interno);
-  // Dólares en verde con "$", bolívares en ámbar con "Bs": se distinguen a simple vista al pagar.
-  const esUSD = moneda === "USD";
-  const color = esUSD ? "var(--gx-accent)" : "var(--gx-warn)";
 
   return (
     <label className="flex flex-col gap-1.5 text-sm" style={{ color: "var(--gx-muted)" }}>
@@ -87,17 +79,11 @@ export function CurrencyInput({
           value={interno}
           onChange={(e) => manejarCambio(e.target.value)}
           onBlur={() => setInterno(formatearVisual(valorNumericoActual))}
-          placeholder="0,00"
-          className={`min-h-11 w-full rounded-lg border ${esUSD ? "pl-9" : "pl-11"} pr-16 ${className} gx-campo`}
+          placeholder="0.00"
+          className={`min-h-11 w-full rounded-lg border pl-11 pr-3 ${className} gx-campo`}
         />
-        <span className="pointer-events-none absolute left-3 text-lg font-bold" style={{ color }}>
-          {esUSD ? "$" : "Bs"}
-        </span>
-        <span
-          className="pointer-events-none absolute right-2 rounded px-1.5 py-0.5 text-sm font-bold"
-          style={{ color, background: `color-mix(in srgb, ${color} 16%, transparent)` }}
-        >
-          {moneda}
+        <span className="pointer-events-none absolute left-3 text-lg font-bold" style={{ color: "var(--gx-accent)" }}>
+          S/
         </span>
       </div>
       <input type="hidden" name={name} value={valorNumericoActual} />

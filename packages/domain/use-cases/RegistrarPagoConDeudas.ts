@@ -46,7 +46,7 @@ export async function registrarPagoConDeudas(
   }
 
   await cobrarDeudasMiembro(
-    { deudas: deps.deudas, pagos: deps.pagos, turnos: deps.turnos, autorizacion: deps.autorizacion, tasas: deps.tasas },
+    { deudas: deps.deudas, pagos: deps.pagos, turnos: deps.turnos, autorizacion: deps.autorizacion },
     {
       organizacionId: input.organizacionId,
       miembroId: input.miembroId,

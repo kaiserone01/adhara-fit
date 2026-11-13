@@ -1,24 +1,20 @@
 "use client";
 
+import { formatearSoles } from "@gym-app/domain/utils/formatearSoles";
 import { Button } from "@gym-app/ui/components/Button";
 import { totalDeudas } from "@gym-app/domain/entities/DeudaProducto";
 import type { GrupoDeudasMiembro } from "@gym-app/domain/use-cases/ListarDeudasPendientes";
-import { formatearBs } from "../tasaBcvFija";
 
 // Solo lectura: los productos que el miembro debe (se abre desde el aviso de
 // deuda del paso de pago). Se dibuja encima del wizard, por eso el z-index
 // mayor y que un clic acá nunca cierre el modal de atrás.
 export function ModalDetalleDeuda({
   grupo,
-  tasaActual,
   onCerrar,
 }: {
   grupo: GrupoDeudasMiembro;
-  tasaActual: number | null;
   onCerrar: () => void;
 }) {
-  const bs = (usd: number) => (tasaActual !== null ? `Bs. ${formatearBs(usd * tasaActual)}` : null);
-
   return (
     <div
       className="fixed inset-0 z-[60] flex items-center justify-center p-4"
@@ -49,11 +45,11 @@ export function ModalDetalleDeuda({
                 {d.productoNombre}
                 {d.cantidad > 1 ? ` × ${d.cantidad}` : ""}
                 <span className="block text-xs" style={{ color: "var(--gx-muted)" }}>
-                  ${d.precioUnitarioUSD.toFixed(2)} c/u · {d.creadaEn.toLocaleDateString("es-VE", { day: "2-digit", month: "2-digit", year: "numeric" })}
+                  {formatearSoles(d.precioUnitarioUSD)} c/u · {d.creadaEn.toLocaleDateString("es-PE", { day: "2-digit", month: "2-digit", year: "numeric" })}
                 </span>
               </span>
               <span className="shrink-0 font-medium" style={{ color: "var(--gx-ink)" }}>
-                ${totalDeudas([d]).toFixed(2)}
+                {formatearSoles(totalDeudas([d]))}
               </span>
             </li>
           ))}
@@ -61,13 +57,8 @@ export function ModalDetalleDeuda({
 
         <div className="mt-3 flex items-center justify-between border-t pt-3" style={{ borderColor: "var(--gx-edge)" }}>
           <span className="font-semibold" style={{ color: "var(--gx-ink)" }}>
-            Total ${grupo.totalUSD.toFixed(2)}
+            Total {formatearSoles(grupo.totalUSD)}
           </span>
-          {bs(grupo.totalUSD) && (
-            <span className="text-sm" style={{ color: "var(--gx-muted)" }}>
-              {bs(grupo.totalUSD)}
-            </span>
-          )}
         </div>
 
         <Button type="button" variant="secundario" className="mt-4" onClick={onCerrar}>

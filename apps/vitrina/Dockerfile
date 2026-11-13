@@ -34,7 +34,7 @@ RUN npx turbo run build --filter=vitrina
 FROM node:${NODE_VERSION} AS runner
 WORKDIR /app
 
-ENV TZ=America/Caracas
+ENV TZ=America/Lima
 
 RUN npm install -g serve@14
 

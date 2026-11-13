@@ -1,4 +1,4 @@
-import { diaCalendarioCaracas, sumarDias } from "../utils/fechaCaracas";
+import { diaCalendarioLima, sumarDias } from "../utils/fechaLima";
 
 export interface DatosCambioPlan {
   hoy: Date;
@@ -48,12 +48,12 @@ const MS_POR_DIA = 86_400_000;
 // - V == precioNuevo: no se cobra nada, vencimiento avanza un ciclo
 //   normal del plan nuevo desde hoy.
 export function calcularCambioPlan(datos: DatosCambioPlan): ResultadoCambioPlan {
-  const hoyCaracas = diaCalendarioCaracas(datos.hoy);
-  const vencimientoCaracas = diaCalendarioCaracas(datos.fechaVencimientoActual);
+  const hoyLima = diaCalendarioLima(datos.hoy);
+  const vencimientoLima = diaCalendarioLima(datos.fechaVencimientoActual);
 
   const diasRestantes = Math.max(
     0,
-    Math.round((vencimientoCaracas.getTime() - hoyCaracas.getTime()) / MS_POR_DIA)
+    Math.round((vencimientoLima.getTime() - hoyLima.getTime()) / MS_POR_DIA)
   );
 
   if (datos.precioNuevo === 0 && diasRestantes > 0) {
@@ -70,7 +70,7 @@ export function calcularCambioPlan(datos: DatosCambioPlan): ResultadoCambioPlan 
     const excedenteCentavos = valorNoConsumidoCentavos - precioNuevoCentavos;
     const tarifaNuevaCentavos = precioNuevoCentavos > 0 ? precioNuevoCentavos / datos.diasCicloNuevo : 0;
     const diasNuevos = tarifaNuevaCentavos > 0 ? Math.round(excedenteCentavos / tarifaNuevaCentavos) : 0;
-    const nuevoVencimiento = sumarDias(hoyCaracas, datos.diasCicloNuevo + diasNuevos);
+    const nuevoVencimiento = sumarDias(hoyLima, datos.diasCicloNuevo + diasNuevos);
     return { diasRestantes, valorNoConsumidoCentavos, diasNuevos, nuevoVencimiento, montoCobradoCentavos: 0 };
   }
 
@@ -78,7 +78,7 @@ export function calcularCambioPlan(datos: DatosCambioPlan): ResultadoCambioPlan 
   // En ambos casos el vencimiento avanza un ciclo normal del plan nuevo
   // desde hoy, sin días extra.
   const montoCobradoCentavos = precioNuevoCentavos - valorNoConsumidoCentavos;
-  const nuevoVencimiento = sumarDias(hoyCaracas, datos.diasCicloNuevo);
+  const nuevoVencimiento = sumarDias(hoyLima, datos.diasCicloNuevo);
 
   return { diasRestantes, valorNoConsumidoCentavos, diasNuevos: 0, nuevoVencimiento, montoCobradoCentavos };
 }

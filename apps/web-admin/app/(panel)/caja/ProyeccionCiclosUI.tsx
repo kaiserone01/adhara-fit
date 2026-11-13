@@ -5,12 +5,12 @@
 // PanelRemanentePago.tsx específicamente para que ambos puedan importarlos
 // sin crear una dependencia circular entre esos dos archivos (Panel usa
 // estos componentes, y Modal usa Panel).
-import { formatearBs } from "../tasaBcvFija";
+import { formatearSoles } from "@gym-app/domain/utils/formatearSoles";
 import type { CicloProyectado } from "@gym-app/domain/entities/ReglaAbono";
 import type { ProyeccionAbono } from "./proyeccionAbono";
 
 export function formatearFechaCorta(fecha: Date): string {
-  return new Date(fecha).toLocaleDateString("es-VE", { day: "2-digit", month: "2-digit", year: "numeric" });
+  return new Date(fecha).toLocaleDateString("es-PE", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
 // Lista de períodos que cubre un pago, sin límite de cantidad (ver diseño
@@ -90,7 +90,6 @@ export function MensajeProyeccionAbono({
   proyeccionAbono,
   montoSugerido,
   montoObjetivo,
-  tasaActual,
   modalidad,
 }: {
   proyeccionAbono: ProyeccionAbono;
@@ -99,7 +98,6 @@ export function MensajeProyeccionAbono({
   // Monto realmente cargado hasta ahora (suma de fracciones, o el abono
   // tipeado).
   montoObjetivo: number;
-  tasaActual: number | null;
   modalidad: "total" | "abono" | "combinado";
 }) {
   if (montoObjetivo <= 0) return null;
@@ -139,7 +137,7 @@ export function MensajeProyeccionAbono({
   if (!proyeccionAbono.cumpleMinimo) {
     return (
       <p className="text-sm" style={{ color: "var(--gx-bad)" }}>
-        El abono mínimo para este plan es ${proyeccionAbono.montoMinimo.toFixed(2)}.
+        El abono mínimo para este plan es {formatearSoles(proyeccionAbono.montoMinimo)}.
       </p>
     );
   }
@@ -162,9 +160,9 @@ export function MensajeProyeccionAbono({
       {proyeccionAbono.esAdelantoCicloSiguiente && <>Adelanta el próximo período — </>}
       Queda como abono. Tiene que cancelar el{" "}
       <strong style={{ color: "var(--gx-accent)" }}>
-        saldo remanente de ${proyeccionAbono.saldoRemanente.toFixed(2)}
-        {tasaActual !== null && ` (Bs. ${formatearBs(proyeccionAbono.saldoRemanente * tasaActual)})`} antes del{" "}
-        {proyeccionAbono.fechaTope.toLocaleDateString("es-VE", { day: "2-digit", month: "2-digit", year: "numeric" })}
+        saldo remanente de {formatearSoles(proyeccionAbono.saldoRemanente)}
+        {" "}antes del{" "}
+        {proyeccionAbono.fechaTope.toLocaleDateString("es-PE", { day: "2-digit", month: "2-digit", year: "numeric" })}
       </strong>
       .
     </p>

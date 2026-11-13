@@ -14,7 +14,6 @@ export function BotonVenderProducto({
   accionFiar,
   productos,
   metodosPago,
-  tasaActual,
   miembros,
   planes,
 }: {
@@ -22,7 +21,6 @@ export function BotonVenderProducto({
   accionFiar: (estado: EstadoFiarProducto, formData: FormData) => Promise<EstadoFiarProducto>;
   productos: Producto[];
   metodosPago: MetodoPago[];
-  tasaActual: number | null;
   miembros: Miembro[];
   planes: PlanParaModal[];
 }) {
@@ -39,7 +37,6 @@ export function BotonVenderProducto({
           accionFiar={accionFiar}
           productos={productos}
           metodosPago={metodosPago}
-          tasaActual={tasaActual}
           miembros={miembros}
           planes={planes}
           onCerrar={() => setModalAbierta(false)}

@@ -18,7 +18,7 @@ function iniciales(nombre: string): string {
 }
 
 function formatearFecha(iso: string | null): string {
-  return iso ? new Date(iso).toLocaleDateString("es-VE", { day: "2-digit", month: "2-digit", year: "numeric" }) : "—";
+  return iso ? new Date(iso).toLocaleDateString("es-PE", { day: "2-digit", month: "2-digit", year: "numeric" }) : "—";
 }
 
 const ETIQUETA_CARA: Record<CaraFicha, string> = {

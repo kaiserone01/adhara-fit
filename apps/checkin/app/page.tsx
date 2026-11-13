@@ -141,7 +141,7 @@ export default function PaginaCheckIn() {
         ficha: {
           tipo: "resultado",
           resultado,
-          hora: ahora.toLocaleTimeString("es-VE", { hour: "numeric", minute: "2-digit" }),
+          hora: ahora.toLocaleTimeString("es-PE", { hour: "numeric", minute: "2-digit" }),
           cara,
           diasParaVencer,
           fotoOk: false,
@@ -222,7 +222,6 @@ export default function PaginaCheckIn() {
               frase={frase}
               saliendo={saliendo}
               hora={hora}
-              tasa={info?.tasaBcv ?? null}
               sede={info?.sucursalNombre ?? null}
               imagenUrl={info?.reposo?.imagenUrl ?? null}
               opacidad={info?.reposo?.opacidad}

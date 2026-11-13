@@ -4,7 +4,7 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { SelectorRangoFechas } from "@gym-app/ui/components/SelectorRangoFechas";
 
 // OJO: nunca usar fecha.toISOString() acá — convierte a UTC primero, y de
-// noche (pasadas las 8pm en Venezuela, UTC-4) eso salta al día siguiente.
+// noche (pasadas las 8pm en Venezuela, UTC-5) eso salta al día siguiente.
 function formatearFechaISO(fecha: Date): string {
   const anio = fecha.getFullYear();
   const mes = String(fecha.getMonth() + 1).padStart(2, "0");
@@ -23,7 +23,7 @@ export function FiltroFechasHistorico({
   // completo con hora/Z. Ver el comentario de formatearFechaISO en
   // pagos/page.tsx: un Date "sin hora" serializado con .toISOString() (que
   // sí lleva Z) puede reconstruirse como el día anterior en el navegador,
-  // que corre en la misma zona (America/Caracas) pero interpreta el
+  // que corre en la misma zona (America/Lima) pero interpreta el
   // sufijo Z como UTC.
   diasConActividadISO: string[];
 }) {

@@ -73,10 +73,9 @@ export async function registrarCheckIn(apiKey: string, cedula: string): Promise<
   return datos as ResultadoCheckIn;
 }
 
-// Sede, última tasa BCV y configuración del reposo (GET /api/checkin/estado).
+// Sede y configuración del reposo (GET /api/checkin/estado).
 export interface InfoCheckin {
   sucursalNombre: string;
-  tasaBcv: { valor: number; fecha: string } | null;
   // Configuración hecha desde el menú Checkin del panel; ausente en un API viejo.
   reposo?: { frases: string[]; imagenUrl: string | null; opacidad: number };
 }

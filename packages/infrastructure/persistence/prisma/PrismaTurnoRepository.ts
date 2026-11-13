@@ -8,7 +8,6 @@ type FilaTurno = {
   sucursalId: string;
   usuarioId: string;
   fondoInicialEfectivoUSD: { toNumber(): number };
-  fondoInicialEfectivoBs: { toNumber(): number };
   abiertoEn: Date;
   cerradoEn: Date | null;
   estado: "ABIERTO" | "CERRADO";
@@ -21,7 +20,6 @@ function mapear(fila: FilaTurno): Turno {
     sucursalId: fila.sucursalId,
     usuarioId: fila.usuarioId,
     fondoInicialEfectivoUSD: fila.fondoInicialEfectivoUSD.toNumber(),
-    fondoInicialEfectivoBs: fila.fondoInicialEfectivoBs.toNumber(),
     abiertoEn: fila.abiertoEn,
     cerradoEn: fila.cerradoEn,
     estado: fila.estado,
@@ -38,7 +36,6 @@ export class PrismaTurnoRepository implements ITurnoRepository {
         sucursalId: datos.sucursalId,
         usuarioId: datos.usuarioId,
         fondoInicialEfectivoUSD: datos.fondoInicialEfectivoUSD,
-        fondoInicialEfectivoBs: datos.fondoInicialEfectivoBs,
       },
     });
     return mapear(turno);
@@ -92,7 +89,7 @@ export class PrismaTurnoRepository implements ITurnoRepository {
   }
 
   async listarFechasConTurno(organizacionId: string): Promise<Date[]> {
-    // "abiertoEn AT TIME ZONE 'UTC' AT TIME ZONE 'America/Caracas'"
+    // "abiertoEn AT TIME ZONE 'UTC' AT TIME ZONE 'America/Lima'"
     // convierte la columna (guardada en UTC) al horario de pared de
     // Venezuela y la devuelve como un timestamp SIN zona — Postgres no le
     // agrega ninguna, pero el driver de Node la etiqueta como UTC al
@@ -102,14 +99,14 @@ export class PrismaTurnoRepository implements ITurnoRepository {
     // usa DATE_TRUNC ni se devuelve el Date de Postgres directo: se pide
     // el día/mes/año ya como enteros (EXTRACT) y se reconstruye el Date
     // acá mismo con el constructor local (new Date(año, mes, día)) — ese
-    // constructor asume la zona del proceso, que es America/Caracas
-    // (TZ=America/Caracas, ver Task 1), la misma que usará el navegador
+    // constructor asume la zona del proceso, que es America/Lima
+    // (TZ=America/Lima, ver Task 1), la misma que usará el navegador
     // del cliente al comparar contra esta lista.
     const filas = await this.prisma.$queryRaw<{ anio: number; mes: number; dia: number }[]>`
       SELECT DISTINCT
-        EXTRACT(YEAR FROM ("abiertoEn" AT TIME ZONE 'UTC' AT TIME ZONE 'America/Caracas'))::int AS anio,
-        EXTRACT(MONTH FROM ("abiertoEn" AT TIME ZONE 'UTC' AT TIME ZONE 'America/Caracas'))::int AS mes,
-        EXTRACT(DAY FROM ("abiertoEn" AT TIME ZONE 'UTC' AT TIME ZONE 'America/Caracas'))::int AS dia
+        EXTRACT(YEAR FROM ("abiertoEn" AT TIME ZONE 'UTC' AT TIME ZONE 'America/Lima'))::int AS anio,
+        EXTRACT(MONTH FROM ("abiertoEn" AT TIME ZONE 'UTC' AT TIME ZONE 'America/Lima'))::int AS mes,
+        EXTRACT(DAY FROM ("abiertoEn" AT TIME ZONE 'UTC' AT TIME ZONE 'America/Lima'))::int AS dia
       FROM "Turno"
       WHERE "organizacionId" = ${organizacionId}
       ORDER BY anio ASC, mes ASC, dia ASC

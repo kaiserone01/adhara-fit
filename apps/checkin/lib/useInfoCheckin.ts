@@ -4,7 +4,7 @@ import { obtenerInfoCheckin, type InfoCheckin } from "./api";
 const CLAVE_STORAGE = "checkin_info";
 const REFRESCO_MS = 30_000;
 
-// Sede, tasa y configuración del reposo (frases, imagen, opacidad). Se guarda la última respuesta en localStorage para que el reposo se vea
+// Sede y configuración del reposo (frases, imagen, opacidad). Se guarda la última respuesta en localStorage para que el reposo se vea
 // completo aunque el checkin arranque sin red; si no hay nada guardado devuelve null y el reposo
 // muestra "—".
 export function useInfoCheckin(apiKey: string | null): InfoCheckin | null {

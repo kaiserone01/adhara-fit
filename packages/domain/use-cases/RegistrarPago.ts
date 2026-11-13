@@ -1,4 +1,4 @@
-import { resolverCobroPasado, tasaDeLinea } from "./resolverCobroPasado";
+import { resolverCobroPasado } from "./resolverCobroPasado";
 import { randomUUID } from "node:crypto";
 import { IPagoRepository } from "../ports/IPagoRepository";
 import { ISuscripcionRepository } from "../ports/ISuscripcionRepository";
@@ -7,7 +7,6 @@ import { IPlanRepository } from "../ports/IPlanRepository";
 import { ITurnoRepository } from "../ports/ITurnoRepository";
 import { ISucursalRepository } from "../ports/ISucursalRepository";
 import { IReglaAbonoRepository } from "../ports/IReglaAbonoRepository";
-import { ITasaCambioRepository } from "../ports/ITasaCambioRepository";
 import {
   Pago,
   pagosVigentesDelCiclo,
@@ -51,14 +50,14 @@ export class RolNoAutorizadoError extends Error {
   }
 }
 
-// Un monto en $0 (o negativo) contra un plan que SÍ cuesta algo no es un
+// Un monto en S/ 0 (o negativo) contra un plan que SÍ cuesta algo no es un
 // abono válido — sin este chequeo, un $0 tipeado por error (ej. campo
 // vaciado sin querer) igual adelantaba el vencimiento y daba acceso
 // gratis. Un plan de cortesía real (miembro.precioPlan === 0) sigue
-// pudiendo registrar su pago en $0 sin problema.
+// pudiendo registrar su pago en S/ 0 sin problema.
 export class MontoInvalidoError extends Error {
   constructor() {
-    super("El monto tiene que ser mayor a $0 — este plan no es de cortesía.");
+    super("El monto tiene que ser mayor a S/ 0 — este plan no es de cortesía.");
   }
 }
 
@@ -77,7 +76,7 @@ export class AbonoNoPermitidoError extends Error {
 // exige la regla de abono efectiva (del plan o de su frecuencia).
 export class AbonoMenorAlMinimoError extends Error {
   constructor(minimoUSD: number) {
-    super(`El abono mínimo para este plan es $${minimoUSD.toFixed(2)}.`);
+    super(`El abono mínimo para este plan es S/ ${minimoUSD.toFixed(2)}.`);
   }
 }
 
@@ -107,12 +106,6 @@ export class FechaPagoInvalidaError extends Error {
   }
 }
 
-export class SinTasaParaFechaError extends Error {
-  constructor() {
-    super("No hay tasa de cambio BCV registrada para esa fecha ni anterior: no se puede calcular el monto en bolívares.");
-  }
-}
-
 export interface RegistrarPagoDeps {
   pagos: IPagoRepository;
   suscripciones: ISuscripcionRepository;
@@ -122,8 +115,6 @@ export interface RegistrarPagoDeps {
   sucursales: ISucursalRepository;
   autorizacion: IAuthorizationService;
   reglasAbono: IReglaAbonoRepository;
-  // Solo para pagos retroactivos: tasa BCV de la fecha del pago.
-  tasas?: ITasaCambioRepository;
 }
 
 export interface DatosLineaPago {
@@ -131,17 +122,6 @@ export interface DatosLineaPago {
   metodo: string;
   metodoPagoId: string | null;
   numeroOperacion: string | null;
-  tasaCambio: number | null;
-  // Bs realmente recibidos (lo que tecleó el cajero): se guarda tal cual si coincide con monto × tasa a un centavo
-  // de dólar; el monto en USD queda redondeado a centavos y la tasa no es rígida (ver montoBsDeLinea).
-  montoBs?: number | null;
-}
-
-// Monto en Bs de una línea: el recibido de verdad si cuadra con el USD (dentro de un centavo de dólar), si no el calculado.
-function montoBsDeLinea(linea: DatosLineaPago, tasa: number | null): number | null {
-  if (tasa === null) return null;
-  const calculado = linea.monto * tasa;
-  return linea.montoBs != null && Math.abs(linea.montoBs - calculado) <= 0.01 * tasa ? linea.montoBs : calculado;
 }
 
 // Crédito que de verdad hace falta para completar lo que falta del ciclo después de este pago (nunca más que eso).
@@ -178,7 +158,7 @@ export interface DatosRegistrarPago {
   // mes el pago debe ser completo (sin abonos), pero puede repartirse en varios métodos.
   meses?: number;
   // Solo con fechaPago pasada: el pago completa el abono pendiente del ciclo abierto (no abre un ciclo nuevo). El cobro
-  // queda fuera de turno y los Bs usan la tasa BCV de ese día. Lo usa "Cobrar deudas".
+  // queda fuera de turno. Lo usa "Cobrar deudas".
   completarCicloAbierto?: boolean;
 }
 
@@ -282,7 +262,7 @@ export async function registrarPago(deps: RegistrarPagoDeps, input: DatosRegistr
     });
   }
 
-  const cobroPasado = input.completarCicloAbierto ? await resolverCobroPasado(deps.tasas, input.fechaPago, input.lineas) : null;
+  const cobroPasado = input.completarCicloAbierto ? resolverCobroPasado(input.fechaPago) : null;
 
   const activa = await deps.suscripciones.buscarActivaVigentePorMiembroYPlan(input.miembroId, input.planId, ahora);
 
@@ -387,8 +367,6 @@ export async function registrarPago(deps: RegistrarPagoDeps, input: DatosRegistr
       metodo: linea.metodo,
       metodoPagoId: linea.metodoPagoId,
       numeroOperacion: linea.numeroOperacion,
-      tasaCambio: tasaDeLinea(linea, cobroPasado),
-      montoBs: montoBsDeLinea(linea, tasaDeLinea(linea, cobroPasado)),
       fechaInicioCiclo: base,
       fechaFinCiclo: fin,
       grupoPagoId,
@@ -401,7 +379,7 @@ export async function registrarPago(deps: RegistrarPagoDeps, input: DatosRegistr
 }
 
 // Pago con fecha pasada. Mismo flujo de siempre (líneas, métodos, monto) con una sola variación: la fecha. No se
-// enlaza a ningún turno (no entra en arqueos) y la tasa de las líneas en Bs es la BCV de esa fecha. Admite abonos.
+// enlaza a ningún turno (no entra en arqueos). Admite abonos.
 // Regularizando (aviso "Por regularizar" o primer pago de un miembro nuevo) el ciclo nuevo reemplaza al anterior:
 // vencimiento = fecha del pago + días del plan, y se apaga el aviso. Para un miembro normal el ciclo se suma al
 // vigente en esa fecha, o arranca ese día si ya estaba vencido.
@@ -443,14 +421,6 @@ async function registrarPagoRetroactivo(
   // otra fecha (se suma a uno vigente), el plazo se recalcula más abajo.
   const fechaLimiteAbono = await limiteDesde(ctx.fechaPago);
 
-  // La tasa de cada línea en Bs se reemplaza por la BCV de la fecha del pago (la del formulario es la de hoy).
-  let tasaDelDia: number | null = null;
-  if (input.lineas.some((linea) => linea.tasaCambio !== null)) {
-    const tasa = await deps.tasas?.buscarMasCercanaAnterior(ctx.fechaPago);
-    if (!tasa) throw new SinTasaParaFechaError();
-    tasaDelDia = tasa.valor;
-  }
-
   const planId = input.planId;
   let inicioCiclo = ctx.fechaPago;
   let fin: Date;
@@ -487,7 +457,6 @@ async function registrarPagoRetroactivo(
   const grupoPagoId = input.lineas.length > 1 ? randomUUID() : null;
   const pagosCreados: Pago[] = [];
   for (const linea of input.lineas) {
-    const tasaCambio = linea.tasaCambio !== null ? tasaDelDia : null;
     pagosCreados.push(
       await deps.pagos.crear({
         miembroId: input.miembroId,
@@ -498,8 +467,6 @@ async function registrarPagoRetroactivo(
         metodo: linea.metodo,
         metodoPagoId: linea.metodoPagoId,
         numeroOperacion: linea.numeroOperacion,
-        tasaCambio,
-        montoBs: montoBsDeLinea(linea, tasaCambio),
         fechaInicioCiclo: inicioCiclo,
         fechaFinCiclo: fin,
         grupoPagoId,

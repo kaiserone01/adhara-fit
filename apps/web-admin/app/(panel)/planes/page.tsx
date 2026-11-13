@@ -1,3 +1,4 @@
+import { formatearSoles } from "@gym-app/domain/utils/formatearSoles";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -64,7 +65,7 @@ export default async function PaginaPlanes() {
                     {plan.incluyeEntrenador ? "Incluido" : "No incluido"}
                   </td>
                   <td className="py-2" style={{ color: "var(--gx-ink)" }}>
-                    ${plan.precioUSD.toFixed(2)}
+                    {formatearSoles(plan.precioUSD)}
                   </td>
                   <td className="py-2">
                     <Badge tono={plan.activo ? "verde" : "gris"}>{plan.activo ? "Activo" : "Inactivo"}</Badge>
@@ -114,7 +115,7 @@ export default async function PaginaPlanes() {
                   {ETIQUETA_FRECUENCIA[plan.frecuencia]}
                   {plan.incluyeEntrenador ? " · con entrenador" : ""}
                 </span>
-                <span>${plan.precioUSD.toFixed(2)}</span>
+                <span>{formatearSoles(plan.precioUSD)}</span>
               </div>
             </Card>
           </Link>

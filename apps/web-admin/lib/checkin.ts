@@ -9,8 +9,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { CheckinTokenValidator } from "@gym-app/infrastructure/auth/CheckinTokenValidator";
 import type { Sucursal } from "@gym-app/domain/entities/Sucursal";
-import { orquestadorTasa } from "@/lib/tasaBcv";
-import { SinTasaDisponibleError } from "@gym-app/domain/use-cases/ObtenerTasaVigente";
 
 export const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -36,16 +34,4 @@ export async function sucursalDeCheckin(req: NextRequest): Promise<Sucursal | Ne
   if (!sucursal) return jsonCheckin({ error: "Clave del check-in inválida." }, 401);
 
   return sucursal;
-}
-
-// Última tasa BCV para las pantallas del checkin y de la vitrina, con la misma forma en ambas. Sin tasa guardada
-// devuelve null (las pantallas se ven igual, sin ese dato).
-export async function tasaBcvParaCheckin(): Promise<{ valor: number; fecha: string } | null> {
-  try {
-    const { tasa } = await orquestadorTasa.obtenerTasaVigenteFresca();
-    return { valor: tasa.valor, fecha: tasa.fecha.toISOString() };
-  } catch (error) {
-    if (!(error instanceof SinTasaDisponibleError)) console.error("Error al leer la tasa para el checkin:", error);
-    return null;
-  }
 }

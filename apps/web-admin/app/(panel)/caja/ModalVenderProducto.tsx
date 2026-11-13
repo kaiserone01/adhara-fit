@@ -1,5 +1,6 @@
 "use client";
 
+import { formatearSoles } from "@gym-app/domain/utils/formatearSoles";
 import { useActionState, useEffect, useState } from "react";
 import { Button } from "@gym-app/ui/components/Button";
 import { useFeedback } from "@gym-app/ui/components/FeedbackOverlay";
@@ -13,7 +14,6 @@ import { MetodoYCampos } from "../pagos/MetodoYCampos";
 import { CampoFechaCobro, useFechaCobro } from "./CampoFechaCobro";
 import { ColumnaLateral, ColumnaPrincipal, MarcoAsistente, TarjetaOpcion, TituloSeccion } from "./MarcoAsistente";
 import { BuscadorMiembro, type MiembroConPlan, type PlanParaModal } from "./SelectorMiembroModal";
-import { formatearBs } from "../tasaBcvFija";
 import { normalizarTexto } from "@/lib/normalizarTexto";
 import type { EstadoVenderProducto, EstadoFiarProducto } from "./actions";
 
@@ -23,7 +23,6 @@ const ID_FORMULARIO = "formulario-vender-producto";
 interface Seleccion {
   metodoPagoId: string | null;
   metodo: string;
-  tasaCambio: number | null;
   numeroOperacion: string;
   requiereNumeroOperacion: boolean;
 }
@@ -31,7 +30,6 @@ interface Seleccion {
 const SELECCION_VACIA: Seleccion = {
   metodoPagoId: null,
   metodo: "",
-  tasaCambio: null,
   numeroOperacion: "",
   requiereNumeroOperacion: false,
 };
@@ -46,7 +44,6 @@ export function ModalVenderProducto({
   accionFiar,
   productos,
   metodosPago,
-  tasaActual,
   miembros,
   planes,
   onCerrar,
@@ -55,7 +52,6 @@ export function ModalVenderProducto({
   accionFiar: (estado: EstadoFiarProducto, formData: FormData) => Promise<EstadoFiarProducto>;
   productos: Producto[];
   metodosPago: MetodoPago[];
-  tasaActual: number | null;
   miembros: Miembro[];
   planes: PlanParaModal[];
   onCerrar: () => void;
@@ -127,22 +123,15 @@ export function ModalVenderProducto({
       metodo: seleccion.metodo,
       metodoPagoId: seleccion.metodoPagoId,
       numeroOperacion: seleccion.requiereNumeroOperacion ? seleccion.numeroOperacion : null,
-      tasaCambio: seleccion.tasaCambio,
     },
   ];
 
-  const bs = (usd: number) => (tasaActual !== null ? `Bs. ${formatearBs(usd * tasaActual)}` : null);
 
   const etiquetaTotal = (
     <div className="flex items-baseline justify-between gap-3 border-t pt-3" style={{ borderColor: "var(--gx-edge)" }}>
       <span className="text-lg font-semibold" style={{ color: "var(--gx-ink)" }}>
-        Total ${total.toFixed(2)}
+        Total {formatearSoles(total)}
       </span>
-      {bs(total) && (
-        <span className="text-sm" style={{ color: "var(--gx-accent)" }}>
-          {bs(total)}
-        </span>
-      )}
     </div>
   );
 
@@ -207,12 +196,7 @@ export function ModalVenderProducto({
                       {p.nombre}
                     </span>
                     <span className="text-sm font-semibold" style={{ color: "var(--gx-accent)" }}>
-                      ${p.costoUSD.toFixed(2)}
-                      {bs(p.costoUSD) && (
-                        <span className="block text-xs font-normal" style={{ color: "var(--gx-muted)" }}>
-                          {bs(p.costoUSD)}
-                        </span>
-                      )}
+                      {formatearSoles(p.costoUSD)}
                     </span>
                   </button>
                 );
@@ -246,7 +230,7 @@ export function ModalVenderProducto({
                         </Button>
                       </span>
                       <span className="font-semibold" style={{ color: "var(--gx-ink)" }}>
-                        ${totalDeudas([r]).toFixed(2)}
+                        {formatearSoles(totalDeudas([r]))}
                       </span>
                     </span>
                   </div>
@@ -324,7 +308,7 @@ export function ModalVenderProducto({
                     fecha={fechaVenta}
                     onChange={setFechaVenta}
                     esPasada={esVentaPasada}
-                    mensajePasada="Se registra con la tasa BCV de ese día, fuera del turno: no suma al arqueo de hoy."
+                    mensajePasada="Se registra con esa fecha, fuera del turno: no suma al arqueo de hoy."
                     mensajeHoy="Cámbiala solo si ya se vendió antes (máx. 90 días)."
                   />
                   <TituloSeccion>Método de pago</TituloSeccion>
@@ -335,11 +319,8 @@ export function ModalVenderProducto({
                         compacto
                         grande
                         metodos={metodosPago}
-                        monto={total}
                         idFormulario={ID_FORMULARIO}
-                        fechaTasa={esVentaPasada ? fechaVenta : undefined}
                         onCambio={setSeleccion}
-                        avisoServidor={{ tasaNueva: estado.tasaNueva, fallaTemporal: estado.fallaTemporal, tasaGuardada: estado.tasaGuardada }}
                         ocultarNumeroOperacion
                         numeroOperacion={seleccion.numeroOperacion}
                         onCambioNumeroOperacion={(valor) => setSeleccion((prev) => ({ ...prev, numeroOperacion: valor }))}
@@ -369,7 +350,7 @@ export function ModalVenderProducto({
                     {r.cantidad > 1 ? ` × ${r.cantidad}` : ""}
                   </span>
                   <span className="shrink-0" style={{ color: "var(--gx-muted)" }}>
-                    ${totalDeudas([r]).toFixed(2)}
+                    {formatearSoles(totalDeudas([r]))}
                   </span>
                 </div>
               ))}

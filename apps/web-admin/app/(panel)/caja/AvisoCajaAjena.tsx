@@ -18,7 +18,7 @@ export function AvisoCajaAjena({ usuarioNombre, abiertoEn }: { usuarioNombre: st
     >
       <p style={{ color: "var(--gx-ink)" }}>
         Esta caja está abierta por <strong>{usuarioNombre}</strong> desde{" "}
-        {abiertoEn.toLocaleString("es-VE")}. Solo podés ver el resumen — para registrar pagos, egresos o cerrarla
+        {abiertoEn.toLocaleString("es-PE")}. Solo podés ver el resumen — para registrar pagos, egresos o cerrarla
         tiene que hacerlo esa persona.
       </p>
     </div>

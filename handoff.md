@@ -8,6 +8,33 @@ Bitácora de sesiones: la más reciente arriba, solo se añaden entradas. El his
 - **Desplegado:** provisional en Easypanel (`docs/ops/easypanel.md`): imagen del `Dockerfile`, esquema con `prisma db push` al arrancar, alta del primer administrador con `tools/crear-administrador.mjs`.
 - **Preferencia del propietario:** cada código (ADR-nnn, S-nn, REQ…) que se mencione lleva al lado una descripción simple.
 
+## Sesión 2026-11-13 (noche, 4) — Tramo 1: solo soles y hora de Lima
+**Qué se hizo**
+- Dinero solo en PEN con dos decimales: `packages/domain/utils/formatearSoles.ts` («S/ 1,234.50», con prueba) reemplaza todos los `# Handoff — Adhara Fit
+
+Bitácora de sesiones: la más reciente arriba, solo se añaden entradas. El historial del diseño (puertas G0–G6, estado de cada ADR y spec, intentos fallidos) está en `docs/historial/handoff-diseno.md`.
+
+## Estado resumido
+- **Qué es:** sistema web interno de un gimnasio en Perú (PEN, un local). Base: código del Repo A importado (S-00). Modo ágil desde 2026-11-13: ver `CLAUDE.md` y `docs/superpowers/plans/2026-11-13-ruta-agil.md`.
+- **Referencia de qué construir:** ADR-001 a 022 (decisiones de arquitectura) y specs S-00 a S-15, S-17, S-18, S-19, S-22 y S-23 aprobadas. S-20 (vitrina de TV) y S-21 (check-in en smart-TV) siguen en revisión; sus hallazgos están en `docs/superpowers/revisiones-pendientes/`.
+- **Desplegado:** provisional en Easypanel (`docs/ops/easypanel.md`): imagen del `Dockerfile`, esquema con `prisma db push` al arrancar, alta del primer administrador con `tools/crear-administrador.mjs`.
+- **Preferencia del propietario:** cada código (ADR-nnn, S-nn, REQ…) que se mencione lleva al lado una descripción simple.
+
+/`toFixed(2)` del panel; `CurrencyInput` con prefijo «S/».
+- Quitado todo el subsistema de tasa de cambio/BCV y bolívares del dominio, la infraestructura, el panel, el check-in y la vitrina (tasa vigente, líneas en Bs, equivalentes, avisos del servidor, `tasaBcvFija`/`tasaActual`). Tipos de método de pago: Efectivo, Billetera digital (Yape/Plin), Tarjeta, Transferencia y Depósito.
+- Hora de Lima: `fechaCaracas` pasa a `packages/domain/utils/fechaLima.ts` (UTC-5 fijo, con pruebas); `es-VE` → `es-PE`, `America/Caracas` → `America/Lima` y `TZ=America/Lima` en los Dockerfile.
+- Esquema Prisma solo aditivo (valores por defecto, PEN, valores nuevos del enum): las columnas y tablas viejas (`tasaCambio`, `montoBs`, `TasaCambio`, `MiembroReferencia`, `PadronHoja`…) **siguen en la base** y se borran en la línea base (S-15). Las columnas con sufijo USD (`precioUSD`, `costoUSD`…) conservan el nombre pero ya significan soles.
+- Verificado: pruebas del dominio (375), check-in (50) y vitrina (65) en verde; `tsc` de web-admin sin errores; lint sin errores; `next build` de web-admin compila.
+
+**Qué no funcionó / pendiente**
+- Siguen sin retirar: el padrón de Excel (`configuraciones/excel`, `ActivarMiembroDesdePadron`, `MiembroReferencia`, «Por regularizar»/`vieneDelExcel`, dependencia `xlsx`) y la marca vieja «Adrenalina» en `verificar-autorizacion.ts`, `ThemeStyleTag.tsx` y la vitrina-tv. Es la otra mitad de S-10; va en un commit aparte porque toca el flujo del check-in.
+- Los mensajes de error del panel aún tienen voseo («Agregá», «Elegí»): pasar a tuteo.
+
+**Siguiente**
+1. Retirar el padrón de Excel y lo «Por regularizar» (S-10) y los restos de «Adrenalina».
+2. Tramo 2 de la ruta ágil.
+3. Lanzar el workflow `apk` (sigue sin ejecutarse).
+
 ## Sesión 2026-11-13 (noche, 3) — Workflow de los APK
 **Qué se hizo**
 - `.github/workflows/apk.yml` (manual, `workflow_dispatch`): para Check-in y Vitrina hace `npm ci`, build del export estático, `npm run sync` de Capacitor, `gradlew assembleDebug` (Java 21) y sube el APK cifrado con `openssl` (AES-256, `APK_PASSPHRASE`) como artefacto de 14 días. Descifrado y pasos en `apps/checkin-tv/README.md` §3.

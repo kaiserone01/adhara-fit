@@ -8,6 +8,24 @@ Bitácora de sesiones: la más reciente arriba, solo se añaden entradas. El his
 - **Desplegado:** provisional en Easypanel (`docs/ops/easypanel.md`): imagen del `Dockerfile`, esquema con `prisma db push` al arrancar, alta del primer administrador con `tools/crear-administrador.mjs`.
 - **Preferencia del propietario:** cada código (ADR-nnn, S-nn, REQ…) que se mencione lleva al lado una descripción simple.
 
+## Sesión 2026-11-13 (noche, 16) — Tramo 4 (parte 3): consentimiento y avisos legales (S-13)
+**Qué se hizo**
+- Esquema (solo tablas y columnas nuevas): `TextoLegal` (versiones inmutables por tipo: consentimiento, política de privacidad, aviso del Libro de Reclamaciones), `ConsentimientoMiembro` (versión aceptada, medio pantalla/papel, quién y cuándo, revocación con motivo) y `razonSocial`, `ruc`, `direccion` opcionales en `Organizacion`.
+- Dominio: `publicarTextoLegal` (20 a 20 000 caracteres; la versión 1 siempre es sustancial), `registrarConsentimiento` (exige texto publicado y socio no eliminado), `revocarConsentimiento` (motivo obligatorio, no borra datos) y `estadoConsentimiento` (pendiente, aceptado, desactualizado si hay una versión sustancial más nueva, revocado). Repos Prisma en `PrismaConsentimientoRepository.ts`.
+- Web: pestaña «Textos legales» en Configuraciones (datos del negocio, publicar versión nueva, historial), `/privacidad` y `/libro-de-reclamaciones` (imprimible A4 con datos del negocio), casilla y medio de aceptación obligatorios en el alta cuando hay texto publicado (aviso si falta publicarlo), panel de consentimiento en la ficha (registrar y revocar) y botón «Sin consentimiento (N)» en la lista de socios.
+
+**Qué funcionó**
+- Dominio 298 pruebas (6 nuevas), `tools` 116, `tsc` limpio, lint sin errores (5 avisos previos), build correcto.
+
+**Qué no funcionó / a tener en cuenta**
+- Los textos no vienen redactados: el propietario debe publicar los que revise su abogado (asumido, por validar). No se crearon borradores en `docs/legal/`.
+- No hecho: documento enmascarado en la lista y búsqueda en el servidor, insignia de estado por fila en la lista (solo el filtro y el contador), prueba de concurrencia de la publicación (dos publicaciones simultáneas chocarían con la restricción única y fallarían con error).
+- Sin comprobación de permisos (rol único, S-23).
+
+**Siguiente**
+1. Publicar los tres textos en Configuraciones → Textos legales y probar el alta con consentimiento, la ficha y el filtro.
+2. Marca y diseño (S-12, S-19) cuando el propietario lo indique; después Tramo 5 (vitrina TV, check-in smart-TV) y Tramo 6 (seguridad, operación, limpieza legacy).
+
 ## Sesión 2026-11-13 (noche, 15) — Tramo 4 (parte 2): reportes (S-14)
 **Qué se hizo**
 - Reportes nuevos en el menú «Reportes» (con pestañas y «Histórico de pagos»): `/reportes/morosos` (vencimiento anterior a hoy de Lima, días de atraso, último cobro no anulado, y aparte «Sin primer cobro»), `/reportes/por-vencer` (entre hoy y hoy + N días, N de 1 a 30, 7 por defecto) y `/reportes/ingresos` (por día o mes de Lima, por método y por concepto —membresía, cambio de plan, producto—, ventas por producto; no suma anulados e incluye cobros de socios eliminados; rango máximo 366 días o 36 meses).

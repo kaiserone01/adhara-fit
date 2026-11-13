@@ -98,6 +98,7 @@ export function FormularioMiembro({
   totalPagos,
   valoresIniciales,
   cambioPlan,
+  consentimiento,
 }: {
   accion: (estado: EstadoFormularioMiembro, formData: FormData) => Promise<EstadoFormularioMiembro>;
   // Entrenadores activos (S-18: un solo gimnasio, sin filtro por sede).
@@ -132,6 +133,8 @@ export function FormularioMiembro({
     diasCicloActual: number;
     planes: PlanParaCambio[];
   } | null;
+  // Solo en el alta (S-13): texto de consentimiento vigente, o null si todavía no se publicó ninguno.
+  consentimiento?: { version: number; contenido: string } | null;
 }) {
   const [estado, enviar, enviando] = useActionState(accion, {});
   const esEdicion = !!valoresIniciales;
@@ -526,6 +529,34 @@ export function FormularioMiembro({
               );
             })}
           </div>
+          )}
+
+          {!esEdicion && consentimiento === null && (
+            <p className="mt-4 rounded-lg border p-3 text-sm" style={{ borderColor: "var(--gx-edge)", color: "var(--gx-muted)" }}>
+              Falta publicar el texto de consentimiento de datos personales (Configuraciones → Textos legales). El socio se creará sin consentimiento registrado.
+            </p>
+          )}
+          {!esEdicion && consentimiento && (
+            <fieldset className="mt-4 flex flex-col gap-2 rounded-lg border p-3 text-sm" style={{ borderColor: "var(--gx-edge)", color: "var(--gx-muted)" }}>
+              <legend className="px-1 font-medium" style={{ color: "var(--gx-ink)" }}>
+                Consentimiento de datos personales (versión {consentimiento.version})
+              </legend>
+              <details>
+                <summary className="cursor-pointer">Leer el texto</summary>
+                <p className="mt-2 whitespace-pre-wrap">{consentimiento.contenido}</p>
+              </details>
+              <label className="flex items-start gap-2">
+                <input type="checkbox" name="consentimientoAceptado" required className="mt-1" />
+                <span>El socio leyó y aceptó el tratamiento de sus datos personales.</span>
+              </label>
+              <label className="flex flex-col gap-1.5">
+                Cómo lo aceptó
+                <select name="consentimientoMedio" defaultValue="PANTALLA" className="min-h-11 rounded-lg border px-3 gx-campo">
+                  <option value="PANTALLA">En pantalla</option>
+                  <option value="PAPEL">En papel firmado</option>
+                </select>
+              </label>
+            </fieldset>
           )}
 
           <label className="mt-4 flex flex-col gap-1.5 text-sm" style={{ color: "var(--gx-muted)" }}>

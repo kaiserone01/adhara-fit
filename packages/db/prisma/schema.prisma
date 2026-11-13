@@ -18,7 +18,12 @@ model Organizacion {
   slug      String   @unique
   plan      String   @default("basico")
   createdAt DateTime @default(now())
+  // S-13: datos del negocio para el aviso del Libro de Reclamaciones (se editan en «Textos legales»).
+  razonSocial String?
+  ruc         String?
+  direccion   String?
 
+  textosLegales        TextoLegal[]
   sucursales           Sucursal[]
   usuariosAdmin        UsuarioAdmin[]
   miembros             Miembro[]
@@ -88,6 +93,9 @@ model UsuarioAdmin {
   createdAt      DateTime     @default(now())
 
   registrosAuditoria     RegistroAuditoria[]
+  textosLegalesPublicados TextoLegal[]
+  consentimientosRegistrados ConsentimientoMiembro[] @relation("ConsentimientosRegistrados")
+  consentimientosRevocados   ConsentimientoMiembro[] @relation("ConsentimientosRevocados")
   miembrosEliminados     Miembro[]             @relation("MiembrosEliminados")
   sesiones               Sesion[]
   turnos                 Turno[]
@@ -180,8 +188,54 @@ model Miembro {
   suscripciones        Suscripcion[]
   cambiosPlanAuditoria CambioPlanAuditoria[]
   deudasProducto       DeudaProducto[]
+  consentimientos      ConsentimientoMiembro[]
 
   @@index([estado, fechaVencimiento]) // S-14: morosos y por vencer
+}
+
+// S-13: textos legales versionados e inmutables (el gimnasio publica el texto que revisó su abogado).
+enum TipoTextoLegal {
+  CONSENTIMIENTO
+  POLITICA_PRIVACIDAD
+  AVISO_RECLAMACIONES
+}
+
+model TextoLegal {
+  id               String         @id @default(cuid())
+  organizacionId   String
+  organizacion     Organizacion   @relation(fields: [organizacionId], references: [id])
+  tipo             TipoTextoLegal
+  version          Int
+  contenido        String
+  cambioSustancial Boolean // una versión nueva solo obliga a aceptar de nuevo si es sustancial (la 1 siempre lo es)
+  publicadoEn      DateTime       @default(now())
+  publicadoPorId   String
+  publicadoPor     UsuarioAdmin   @relation(fields: [publicadoPorId], references: [id])
+
+  @@unique([organizacionId, tipo, version])
+}
+
+enum MedioConsentimiento {
+  PANTALLA
+  PAPEL
+}
+
+// S-13: aceptación del consentimiento de datos personales (la registra el administrador en nombre del socio).
+model ConsentimientoMiembro {
+  id             String              @id @default(cuid())
+  miembroId      String
+  miembro        Miembro             @relation(fields: [miembroId], references: [id])
+  version        Int // versión del texto CONSENTIMIENTO que se aceptó
+  medio          MedioConsentimiento
+  aceptadoEn     DateTime            @default(now())
+  registradoPorId String
+  registradoPor  UsuarioAdmin        @relation("ConsentimientosRegistrados", fields: [registradoPorId], references: [id])
+  revocadoEn     DateTime?
+  revocadoPorId  String?
+  revocadoPor    UsuarioAdmin?       @relation("ConsentimientosRevocados", fields: [revocadoPorId], references: [id])
+  revocadoMotivo String?
+
+  @@index([miembroId, aceptadoEn])
 }
 
 enum EstadoMiembro {

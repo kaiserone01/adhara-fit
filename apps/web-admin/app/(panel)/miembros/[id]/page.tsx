@@ -19,6 +19,14 @@ import { MiembroFueraDeSucursal } from "./MiembroFueraDeSucursal";
 import { FormularioMiembro } from "../FormularioMiembro";
 import { actualizarMiembroAction } from "../actions";
 import { PageHeader } from "@gym-app/ui/components/PageHeader";
+import { PanelConsentimiento } from "../PanelConsentimiento";
+import {
+  PrismaConsentimientoRepository,
+  PrismaTextoLegalRepository,
+} from "@gym-app/infrastructure/persistence/prisma/PrismaConsentimientoRepository";
+import { estadoConsentimiento } from "@gym-app/domain/entities/Consentimiento";
+
+const FORMATO_FECHA_CONSENTIMIENTO = new Intl.DateTimeFormat("es-PE", { timeZone: "America/Lima", day: "2-digit", month: "2-digit", year: "numeric" });
 
 // OJO: nunca usar fecha.toISOString() acá — convierte a UTC primero, y de
 // noche (pasadas las 8pm en Venezuela, UTC-4) eso salta al día siguiente.
@@ -95,12 +103,32 @@ export default async function PaginaEditarMiembro({ params }: { params: Promise<
     .slice(0, 5)
     .map((pago) => ({ id: pago.id, fechaInicioCiclo: pago.fechaInicioCiclo, fechaFinCiclo: pago.fechaFinCiclo }));
 
+  const repoTextos = new PrismaTextoLegalRepository(prisma);
+  const [textoConsentimiento, versionSustancial, ultimoConsentimiento] = await Promise.all([
+    repoTextos.vigente(usuario.organizacionId, "CONSENTIMIENTO"),
+    repoTextos.versionSustancialMaxima(usuario.organizacionId, "CONSENTIMIENTO"),
+    new PrismaConsentimientoRepository(prisma).ultimoDeMiembro(id),
+  ]);
+  const estadoDeConsentimiento = estadoConsentimiento(ultimoConsentimiento, versionSustancial);
+  const detalleConsentimiento = ultimoConsentimiento
+    ? `Versión ${ultimoConsentimiento.version}, ${ultimoConsentimiento.medio === "PAPEL" ? "en papel" : "en pantalla"}, ${FORMATO_FECHA_CONSENTIMIENTO.format(ultimoConsentimiento.aceptadoEn)}${
+        ultimoConsentimiento.revocadoEn ? ` · revocado el ${FORMATO_FECHA_CONSENTIMIENTO.format(ultimoConsentimiento.revocadoEn)}` : ""
+      }`
+    : null;
+
   return (
     <div className="max-w-7xl p-6 lg:px-8 lg:py-6">
       <div className="mb-4 flex items-center justify-between gap-4">
         <PageHeader>Editar miembro</PageHeader>
         <BotonBajaMiembro id={id} nombre={miembro.nombre} accion="eliminar" />
       </div>
+
+      <PanelConsentimiento
+        miembroId={id}
+        estado={estadoDeConsentimiento}
+        hayTexto={!!textoConsentimiento}
+        detalle={detalleConsentimiento}
+      />
 
       <FormularioMiembro
         accion={actualizarMiembroAction.bind(null, id)}

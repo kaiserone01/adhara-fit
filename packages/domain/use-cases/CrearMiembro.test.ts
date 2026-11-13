@@ -58,10 +58,10 @@ describe("crearMiembro (S-06)", () => {
     expect(a.creados.length + b.creados.length).toBe(0);
   });
 
-  it("CE recibe el siguiente código de 4 dígitos", async () => {
+  it("CE entra con su propio número: no recibe código de socio", async () => {
     const { miembros, creados } = repo({ maximo: 9 });
-    await crearMiembro({ miembros }, { ...base, tipoDocumento: "CE", numeroDocumento: "abc123456" });
-    expect(creados[0]).toMatchObject({ numeroDocumento: "ABC123456", codigoSocio: "0010" });
+    await crearMiembro({ miembros }, { ...base, tipoDocumento: "CE", numeroDocumento: "001234567" });
+    expect(creados[0]).toMatchObject({ tipoDocumento: "CE", numeroDocumento: "001234567", codigoSocio: null });
   });
 });
 

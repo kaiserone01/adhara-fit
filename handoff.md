@@ -8,6 +8,27 @@ Bitácora de sesiones: la más reciente arriba, solo se añaden entradas. El his
 - **Desplegado:** provisional en Easypanel (`docs/ops/easypanel.md`): imagen del `Dockerfile`, esquema con `prisma db push` al arrancar, alta del primer administrador con `tools/crear-administrador.mjs`.
 - **Preferencia del propietario:** cada código (ADR-nnn, S-nn, REQ…) que se mencione lleva al lado una descripción simple.
 
+## Sesión 2026-11-13 (noche, 22) — Ajustes del propietario: CE sin código, métodos con su nombre, reportes ocultos, alta sin primer pago
+**Qué se hizo**
+- **CE sin código de socio:** ya no se asigna ningún código nuevo (`requiereCodigoSocio` devuelve siempre `false`); se quitó el aviso «Se le asignará un código de 4 dígitos» y el CE entra con su propio número. El CE pasa a ser **solo dígitos (9 a 12)**, porque en el check-in se teclea con el numpad (un CE con letras no podría entrar). Los códigos ya asignados siguen sirviendo en el check-in y se muestran en la ficha. El kiosco dice «Ingresa tu DNI o carné de extranjería». Pruebas de dominio actualizadas (no borradas).
+- **Métodos de pago con su nombre:** el protagonista es el método («Yape», «BCP», «Efectivo») con su logo; el tipo queda como etiqueta discreta («billetera», «transferencia»). Nuevo `nombreVisibleMetodo` y componente `LogoMetodo` (logo subido o, sin logo, un monograma con el nombre). El selector de cobro pasó de dos pasos (tipo y luego banco) a una sola fila de métodos. El nombre guardado en cada cobro nuevo es «Yape» o «BCP» (los cobros antiguos conservan «Billetera digital - Yape»).
+- **Reportes ocultos:** `lib/funciones.ts` con `REPORTES_VISIBLES = false`: sin entrada en el menú (escritorio y móvil), sin enlaces en la lista de socios y rutas `/reportes/*` con 404. El código sigue; para mostrarlos basta poner `true`.
+- **Alta de socio sin primer pago:** el formulario queda en dos tarjetas (Datos personales y Plan de membresía); se quitaron «Primer pago», el resumen de confirmación y el botón Guardar de Datos personales. En Plan de membresía van «Guardar» y «Guardar y cobrar»; este último lleva a `/cobros?cobrar=<id>` (abre el cobro con el socio elegido; deshabilitado si el plan no tiene costo). `crearMiembroAction` ya no registra pagos.
+
+**Qué funcionó**
+- Dominio 309 pruebas, kiosco 52, `tools` 120, `tsc` limpio, lint sin errores, build correcto.
+
+**Qué no funcionó / a tener en cuenta**
+- Los logos reales de Yape y BCP no están en el repositorio (son marcas ajenas): hay que subirlos en Configuraciones → Métodos de pago → Editar (campo Logo). Mientras tanto se ve un monograma («BCP», «YA»).
+- Si un método de billetera no tiene nombre cargado, se mostrará «Billetera digital»: ponerle «Yape» en Editar.
+- El APK del check-in lleva el kiosco empaquetado: para ver el texto nuevo («DNI o carné de extranjería») hay que volver a compilar el APK.
+- Los reportes por método agruparán por separado los cobros antiguos («Billetera digital - Yape») y los nuevos («Yape»).
+- El flujo de la ficha (editar socio) no cambió: allí Guardar sigue en Datos personales.
+
+**Siguiente**
+1. Subir los logos de Yape y BCP; probar el alta con «Guardar y cobrar» y el cobro con el nuevo selector.
+2. Probar el despliegue y hacer un respaldo; marca y diseño (S-19), APK y limpieza del esquema cuando corresponda.
+
 ## Sesión 2026-11-13 (noche, 21) — Se retira el consentimiento y lo legal del sistema (S-13), por decisión del propietario
 **Qué se hizo**
 - El propietario indicó que el consentimiento de datos personales se firma en contrato físico y que lo legal, las facturas y lo comercial y tributario se manejan por otros canales: el sistema es de apoyo logístico y organizativo. Se retiró todo S-13: pestaña «Textos legales», `/privacidad`, `/libro-de-reclamaciones`, casilla y medio de aceptación del alta, panel de consentimiento de la ficha, filtro «Sin consentimiento» de la lista, casos de uso, entidades, puertos, repositorios Prisma y sus pruebas (6).

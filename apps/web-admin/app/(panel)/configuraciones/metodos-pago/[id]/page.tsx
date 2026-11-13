@@ -4,7 +4,7 @@ import { obtenerUsuarioDeSesionActual } from "@/lib/sesion";
 import { PrismaMetodoPagoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaMetodoPagoRepository";
 import { FormularioMetodoPago } from "../FormularioMetodoPago";
 import { actualizarMetodoPagoAction } from "../../actions";
-import { ETIQUETA_TIPO_METODO_PAGO } from "../../metodosPagoUI";
+import { nombreVisibleMetodo } from "../../metodosPagoUI";
 import { PageHeader } from "@gym-app/ui/components/PageHeader";
 
 export default async function PaginaEditarMetodoPago({ params }: { params: Promise<{ id: string }> }) {
@@ -20,7 +20,7 @@ export default async function PaginaEditarMetodoPago({ params }: { params: Promi
   return (
     <div className="max-w-lg">
       <div className="mb-6">
-        <PageHeader>Editar {ETIQUETA_TIPO_METODO_PAGO[metodo.tipo]}</PageHeader>
+        <PageHeader>Editar {nombreVisibleMetodo(metodo)}</PageHeader>
       </div>
       <FormularioMetodoPago
         accion={actualizarMetodoPagoAction.bind(null, id)}

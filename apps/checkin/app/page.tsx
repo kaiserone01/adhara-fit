@@ -215,7 +215,7 @@ export default function PaginaCheckIn() {
 
       <div className="flex w-full flex-col items-center gap-2">
         <h1 className="text-7xl" style={{ fontFamily: '"Bebas Neue", sans-serif', letterSpacing: "0.02em" }}>
-          Ingresa tu documento o código de socio
+          Ingresa tu DNI o carné de extranjería
         </h1>
 
         {sinInput ? (

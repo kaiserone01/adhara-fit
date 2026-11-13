@@ -30,18 +30,6 @@ import { PrismaSucursalRepository } from "@gym-app/infrastructure/persistence/pr
 import { PrismaUnidadDeTrabajo } from "@gym-app/infrastructure/persistence/prisma/PrismaUnidadDeTrabajo";
 import { storageR2 } from "@/lib/storageR2";
 import {
-  registrarPago,
-  MesesInvalidosError,
-  MiembroNoEncontradoError as PagoMiembroNoEncontradoError,
-  MiembroFueraDeSucursalError as PagoMiembroFueraDeSucursalError,
-  PlanNoEncontradoError,
-  PlanInactivoError,
-  MontoInvalidoError,
-  MontoDistintoDelPrecioError,
-  FechaPagoFuturaError,
-  PlanDistintoConVencimientoVigenteError,
-} from "@gym-app/domain/use-cases/RegistrarPago";
-import {
   eliminarMiembro,
   restaurarMiembro,
   MiembroNoEncontradoError as BajaMiembroNoEncontradoError,
@@ -107,36 +95,24 @@ function esErrorDeDocumento(error: unknown): error is Error {
   );
 }
 
+// El alta solo registra al socio y su plan elegido. El primer cobro se hace desde Cobros: «Guardar y cobrar» lleva
+// allí con el socio ya elegido (el cobro es siempre el mismo flujo, con su método, idempotencia y vencimiento).
 export async function crearMiembroAction(
   _estadoPrevio: EstadoFormularioMiembro,
   formData: FormData
 ): Promise<EstadoFormularioMiembro> {
   const sesion = await obtenerUsuarioDeSesionActual();
   if (!sesion) redirect("/login");
-  const { usuario, sucursalActivaId } = sesion;
+  const { usuario } = sesion;
 
   const nombre = formData.get("nombre")?.toString().trim();
   const documento = leerDocumento(formData);
   const sucursalId = formData.get("sucursalId")?.toString();
   const precioPlan = Number(formData.get("precioPlan"));
-  // Primer pago (S-04): único, completo, con un solo método. Meses que cubre (1 a 6); el dominio valida el rango.
-  const meses = Number(formData.get("meses")?.toString() || 1);
-  const montoPago = Math.round(precioPlan * meses * 100) / 100;
-  const metodo = formData.get("metodo")?.toString();
-  const metodoPagoId = formData.get("metodoPagoId")?.toString() || null;
-  const numeroOperacion = formData.get("numeroOperacion")?.toString().trim() || null;
-  // Sede elegida en el selector "Sede del pago" (ver SelectorMetodoPago);
-  // si no vino, se cae a la sede activa de la sesión.
-  const sucursalIdPago = formData.get("sucursalIdPago")?.toString() || sucursalActivaId;
+  const cobrarDespues = formData.get("despues")?.toString() === "cobrar";
 
   if (!nombre || !documento.numeroDocumento || !sucursalId || Number.isNaN(precioPlan)) {
     return { error: "Nombre, documento y sede son requeridos." };
-  }
-  // Un plan de cortesía ($0) no tiene nada que cobrar — el método de pago
-  // solo es obligatorio cuando hay un monto real de por medio (ver diseño
-  // acordado, membresías con beneficio que no pagan en el gym).
-  if (precioPlan > 0 && (!metodo || !metodoPagoId)) {
-    return { error: "Elige un método de pago." };
   }
 
   const planId = resolverPlanId(formData);
@@ -160,7 +136,7 @@ export async function crearMiembroAction(
         tipoDocumento: documento.tipoDocumento,
         numeroDocumento: documento.numeroDocumento,
         // Viene del formulario (puede ser pasada: miembros anotados en cuaderno); si falta, hoy: el instante en
-        // que empieza el día calendario de Lima, que es la medianoche local de Venezuela sin depender de la zona del servidor.
+        // que empieza el día calendario de Lima.
         fechaInscripcion: leerFecha(formData.get("fechaInscripcion")) ?? inicioDelDiaLima(new Date()),
         fechaNacimiento: null,
         celular: formData.get("celular")?.toString() || null,
@@ -177,63 +153,12 @@ export async function crearMiembroAction(
     throw error;
   }
 
-  // El miembro ya quedó creado en este punto — un error acá abajo no lo
-  // deshace, así que solo se manejan los errores de dominio esperables;
-  // cualquier otra cosa se deja propagar (el miembro queda creado, sin
-  // pago, y se puede registrar a mano desde su ficha).
-  // Un plan sin costo no genera cobro (no hay cortesías): el socio queda creado sin vencimiento.
-  if (precioPlan <= 0) {
-    revalidatePath("/miembros");
-    redirect(conMensajeOk("/miembros", "Miembro creado."));
-  }
-
-  if (!sucursalIdPago) {
-    return {
-      error: "El miembro se creó, pero no se pudo registrar el pago inicial: no se pudo determinar en qué sucursal se registra el pago.",
-    };
-  }
-
-  // La fecha de inscripción es también la del primer pago (puede ser pasada: socios anotados en cuaderno);
-  // se interpreta como día de Lima. Si es hoy, se usa el instante actual.
-  const textoInscripcion = formData.get("fechaInscripcion")?.toString();
-  const fechaPago = textoInscripcion ? new Date(`${textoInscripcion}T12:00:00-05:00`) : undefined;
-
-  try {
-    await registrarPago(
-      { unidad: new PrismaUnidadDeTrabajo(prisma) },
-      {
-        organizacionId: usuario.organizacionId,
-        miembroId: miembro.id,
-        planId,
-        fechaPago: fechaPago && !Number.isNaN(fechaPago.getTime()) ? fechaPago : undefined,
-        meses,
-        linea: { monto: montoPago, metodo: metodo ?? "", metodoPagoId, numeroOperacion },
-        sucursalId: sucursalIdPago,
-        registradoPorId: usuario.id,
-        cobroId: randomUUID(),
-      }
-    );
-  } catch (error) {
-    if (
-      error instanceof PagoMiembroNoEncontradoError ||
-      error instanceof PagoMiembroFueraDeSucursalError ||
-      error instanceof PlanNoEncontradoError ||
-      error instanceof PlanInactivoError ||
-      error instanceof MontoInvalidoError ||
-      error instanceof MontoDistintoDelPrecioError ||
-      error instanceof FechaPagoFuturaError ||
-      error instanceof PlanDistintoConVencimientoVigenteError ||
-      error instanceof MesesInvalidosError
-    ) {
-      return { error: `El miembro se creó, pero no se pudo registrar el pago inicial: ${error.message}` };
-    }
-    throw error;
-  }
-
   revalidatePath("/miembros");
-  revalidatePath("/planes");
-  revalidatePath("/pagos");
-  redirect(conMensajeOk("/miembros", "Miembro creado y pago inicial registrado."));
+  // Un plan sin costo no tiene nada que cobrar: aunque se pida cobrar, el socio queda guardado y se vuelve a la lista.
+  if (cobrarDespues && precioPlan > 0) {
+    redirect(`/cobros?cobrar=${encodeURIComponent(miembro.id)}`);
+  }
+  redirect(conMensajeOk("/miembros", "Miembro creado."));
 }
 
 export async function actualizarMiembroAction(

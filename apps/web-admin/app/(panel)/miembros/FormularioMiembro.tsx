@@ -7,12 +7,10 @@ import { useRouter } from "next/navigation";
 import { Button } from "@gym-app/ui/components/Button";
 import { Input } from "@gym-app/ui/components/Input";
 import { InputFecha } from "@gym-app/ui/components/InputFecha";
-import { MAX_MESES_POR_PAGO } from "@gym-app/domain/entities/Pago";
 import { Card } from "@gym-app/ui/components/Card";
 import { Badge } from "@gym-app/ui/components/Badge";
 import { useFeedback } from "@gym-app/ui/components/FeedbackOverlay";
 import { actualizarFotoMiembroAction, type EstadoFormularioMiembro } from "./actions";
-import { SelectorMetodoPago } from "../pagos/SelectorMetodoPago";
 import { FormularioCambiarPlan, type PlanParaCambio } from "./FormularioCambiarPlan";
 import { cambiarPlanAction } from "../pagos/actions";
 import { SelectorFotoPerfil } from "./SelectorFotoPerfil";
@@ -21,7 +19,6 @@ import type { SucursalResumen } from "@gym-app/domain/entities/SucursalResumen";
 import type { Plan } from "@gym-app/domain/entities/Plan";
 import type { MetodoPago } from "@gym-app/domain/entities/MetodoPago";
 import {
-  descripcionDocumento,
   ETIQUETA_TIPO_DOCUMENTO,
   TIPOS_DOCUMENTO,
   type TipoDocumento,
@@ -55,12 +52,6 @@ function hoyISO(): string {
   return `${anio}-${mes}-${dia}`;
 }
 
-function formatearFecha(fechaISO: string): string {
-  if (!fechaISO) return "—";
-  const [anio, mes, dia] = fechaISO.split("-");
-  return `${dia}/${mes}/${anio}`;
-}
-
 function formatearFechaCorta(fecha: Date): string {
   return new Date(fecha).toLocaleDateString("es-PE", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
@@ -72,17 +63,6 @@ function iniciales(nombre: string): string {
     .slice(0, 2)
     .map((parte) => parte[0]?.toUpperCase())
     .join("");
-}
-
-function Fila({ label, valor }: { label: string; valor: string }) {
-  return (
-    <div className="flex justify-between gap-3">
-      <dt style={{ color: "var(--gx-muted)" }}>{label}</dt>
-      <dd className="text-right font-medium" style={{ color: "var(--gx-ink)" }}>
-        {valor}
-      </dd>
-    </div>
-  );
 }
 
 export function FormularioMiembro({
@@ -184,12 +164,6 @@ export function FormularioMiembro({
     return valoresIniciales.planId ?? "";
   });
   const [precio, setPrecio] = useState<string>(String(valoresIniciales?.precioPlan ?? planesActivos[0]?.precioUSD ?? ""));
-  const [seleccionMetodo, setSeleccionMetodo] = useState<{
-    metodoPagoId: string | null;
-    metodo: string;
-    numeroOperacion: string;
-  }>({ metodoPagoId: null, metodo: "", numeroOperacion: "" });
-  const [mostrarTicket, setMostrarTicket] = useState(false);
   const router = useRouter();
   // El cambio de plan (S-07) es un formulario aparte, en un modal fuera del formulario de la ficha.
   const [cambiandoPlan, setCambiandoPlan] = useState(false);
@@ -197,24 +171,7 @@ export function FormularioMiembro({
   const planSeleccionado = planesActivos.find((p) => p.id === planId);
 
   const precioActual = Number(precio) || 0;
-  // Meses que cubre el primer pago (1 a MAX_MESES_POR_PAGO): el total y la duración del ciclo se multiplican.
-  // El pago es único, completo y con un solo método (S-04).
-  const [meses, setMeses] = useState(1);
-  const precioCiclo = Math.round(precioActual * meses * 100) / 100;
-  const montoAPagar = precioCiclo;
-  const [errorMontoHoy, setErrorMontoHoy] = useState<string | null>(null);
-  // En pantallas angostas el resumen y los avisos del pago quedan lejos del botón Guardar: se lleva la vista hasta ellos.
-  const ticketRef = useRef<HTMLDivElement>(null);
-  const errorPagoRef = useRef<HTMLParagraphElement>(null);
-  useEffect(() => {
-    if (mostrarTicket) ticketRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, [mostrarTicket]);
-  useEffect(() => {
-    if (errorMontoHoy) errorPagoRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, [errorMontoHoy]);
   const nombrePlanActual = planSeleccionado?.nombre ?? "—";
-  const nombreEntrenadorActual = entrenadores.find((e) => e.id === entrenadorId)?.nombre ?? null;
-  const nombreMetodoPagoActual = seleccionMetodo.metodo || null;
   // El ciclo más reciente (por fechaFinCiclo) entre los que tienen datos
   // de ciclo — su fechaInicioCiclo es la "última fecha de renovación", y
   // su fechaFinCiclo es la fecha de vencimiento vigente (próximo cobro).
@@ -258,15 +215,7 @@ export function FormularioMiembro({
     const form = formRef.current;
     if (!form) return;
     if (!form.reportValidity()) return;
-
-    if (!esEdicion && precioActual > 0 && !seleccionMetodo.metodoPagoId) {
-      setErrorMontoHoy("Elige el método de pago.");
-      return;
-    }
-    setErrorMontoHoy(null);
-    // Al editar se guarda directo (el aviso de "Cambios guardados" sale tras el redirect); el resumen es solo del alta.
-    if (esEdicion) form.requestSubmit();
-    else setMostrarTicket(true);
+    form.requestSubmit();
   }
 
   function manejarCambioFoto(archivo: File) {
@@ -303,7 +252,7 @@ export function FormularioMiembro({
       </p>
     )}
 
-    <div className={`grid grid-cols-1 gap-6 ${esEdicion ? "lg:grid-cols-2" : "lg:grid-cols-3"}`}>
+    <div className={`grid grid-cols-1 gap-6 lg:grid-cols-2`}>
       {/* display: contents — Datos personales y Plan de membresía quedan como
           celdas independientes de la grilla de 3 columnas, pero sus campos
           (incluidos los de la card de Plan) siguen siendo hijos reales de
@@ -313,16 +262,6 @@ export function FormularioMiembro({
         <input type="hidden" name="planId" value={planId} />
         <input type="hidden" name="precioPlan" value={precioActual} />
         <input type="hidden" name="planNombre" value={nombrePlanActual} />
-        {!esEdicion && (
-          <>
-            <input type="hidden" name="montoInicial" value={montoAPagar} />
-            {meses > 1 && <input type="hidden" name="meses" value={meses} />}
-            <input type="hidden" name="metodo" value={seleccionMetodo.metodo} />
-            <input type="hidden" name="metodoPagoId" value={seleccionMetodo.metodoPagoId ?? ""} />
-            <input type="hidden" name="numeroOperacion" value={seleccionMetodo.numeroOperacion} />
-          </>
-        )}
-
         <Card className="lg:col-start-1 lg:row-start-1">
           <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide" style={{ color: "var(--gx-muted)" }}>
             Datos personales
@@ -385,9 +324,9 @@ export function FormularioMiembro({
                 Código de socio (para registrar su asistencia): <strong style={{ color: "var(--gx-ink)" }}>{codigoSocioActual}</strong>
               </p>
             )}
-            {!codigoSocioActual && tipoDocumento !== "DNI" && (
+            {tipoDocumento === "CE" && (
               <p className="text-sm" style={{ color: "var(--gx-muted)" }}>
-                Se le asignará un código de socio de 4 dígitos al guardar.
+                El socio registra su asistencia con el número de su carné de extranjería (solo números).
               </p>
             )}
 
@@ -418,12 +357,16 @@ export function FormularioMiembro({
             )}
           </div>
 
-          <Button type="button" className="mt-6 w-full" onClick={manejarClickGuardar} disabled={enviando}>
-            Guardar
-          </Button>
-          <span className="mt-2 block text-xs" style={{ color: "var(--gx-muted-dim)" }}>
-            Guarda estos datos junto con el entrenador y el plan del cuadro de al lado.
-          </span>
+          {esEdicion && (
+            <>
+              <Button type="button" className="mt-6 w-full" onClick={manejarClickGuardar} disabled={enviando}>
+                Guardar
+              </Button>
+              <span className="mt-2 block text-xs" style={{ color: "var(--gx-muted-dim)" }}>
+                Guarda estos datos junto con el entrenador y el plan del cuadro de al lado.
+              </span>
+            </>
+          )}
         </Card>
 
         <Card className="lg:col-start-2 lg:row-start-1">
@@ -545,6 +488,17 @@ export function FormularioMiembro({
             </select>
           </label>
 
+          {!esEdicion && (
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <Button type="submit" name="despues" value="listo" variant="secundario" className="flex-1" disabled={enviando}>
+                {enviando ? "Guardando..." : "Guardar"}
+              </Button>
+              <Button type="submit" name="despues" value="cobrar" className="flex-1" disabled={enviando || precioActual <= 0}>
+                Guardar y cobrar
+              </Button>
+            </div>
+          )}
+
           {esEdicion && (
             <div className="mt-4 flex flex-col gap-3">
               {miembroId && (
@@ -560,146 +514,6 @@ export function FormularioMiembro({
           )}
         </Card>
       </form>
-
-      {/* Primer pago (solo al crear un miembro) / ticket de confirmación —
-          formulario propio, fuera de "formulario-miembro" a propósito (no se
-          pueden anidar <form>). En edición no hay columna acá salvo mientras
-          se confirma el ticket — los pagos se registran desde Caja. */}
-      {!esEdicion && (
-      <div className="lg:col-start-3 lg:row-start-1">
-        {!mostrarTicket ? (
-            <Card>
-              <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide" style={{ color: "var(--gx-muted)" }}>
-                Primer pago
-              </h2>
-              <p className="mb-4 text-xs" style={{ color: "var(--gx-muted)" }}>
-                Se registra en el mismo paso que creás al miembro, así queda activo desde hoy sin
-                tener que entrar después a &quot;Registrar pago&quot;.
-              </p>
-
-              {precioActual > 0 && (
-                <div className="mb-4">
-                  <p className="mb-2 text-sm font-semibold" style={{ color: "var(--gx-ink)" }}>
-                    Meses a pagar
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {Array.from({ length: MAX_MESES_POR_PAGO }, (_, i) => i + 1).map((n) => (
-                      <Button
-                        key={n}
-                        type="button"
-                        variant={meses === n ? "primario" : "secundario"}
-                        onClick={() => {
-                          setMeses(n);
-                          setErrorMontoHoy(null);
-                        }}
-                      >
-                        {n}
-                      </Button>
-                    ))}
-                  </div>
-                  {meses > 1 && (
-                    <p className="mt-2 text-sm font-bold" style={{ color: "var(--gx-ink)" }}>
-                      Total de {meses} meses: {formatearSoles(precioCiclo)}. Se paga completo.
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {precioActual > 0 ? (
-                <>
-                  <p className="mb-4 text-sm font-bold" style={{ color: "var(--gx-ink)" }}>
-                    Total a pagar: {formatearSoles(precioCiclo)}. Se paga completo con un solo método.
-                  </p>
-                  <SelectorMetodoPago metodos={metodosPago} onCambio={setSeleccionMetodo} idFormulario={idFormulario} />
-                  {errorMontoHoy && (
-                    <p ref={errorPagoRef} className="mt-2 text-sm" style={{ color: "var(--gx-bad)" }}>
-                      {errorMontoHoy}
-                    </p>
-                  )}
-                </>
-              ) : (
-                <p className="text-sm" style={{ color: "var(--gx-muted)" }}>
-                  Este plan no tiene costo — no hace falta elegir método de pago.
-                </p>
-              )}
-            </Card>
-        ) : (
-          <div
-            ref={ticketRef}
-            className="resplandor-confirmacion rounded-2xl border-2 border-dashed p-5"
-            style={{ borderColor: "var(--gx-edge)", background: "var(--gx-surface)" }}
-          >
-            <p
-              className="text-center text-xs font-semibold uppercase tracking-widest"
-              style={{ color: "var(--gx-muted)" }}
-            >
-              Resumen del nuevo miembro
-            </p>
-
-            <div className="my-3 flex justify-center">
-              <div
-                className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full text-lg font-semibold"
-                style={{ background: "var(--gx-surface-2)", color: "var(--gx-muted)" }}
-              >
-                {fotoPreview ? (
-                  // eslint-disable-next-line @next/next/no-img-element -- vista previa de un archivo elegido en el cliente, no un asset del proyecto
-                  <img src={fotoPreview} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  iniciales(nombre || "?")
-                )}
-              </div>
-            </div>
-
-            <div className="my-3 border-t border-dashed" style={{ borderColor: "var(--gx-edge)" }} />
-
-            <dl className="flex flex-col gap-2 text-sm">
-              <Fila label="Nombre" valor={nombre || "—"} />
-              <Fila label="Documento" valor={numeroDocumento ? descripcionDocumento(tipoDocumento, numeroDocumento) : "—"} />
-              {codigoSocioActual && <Fila label="Código de socio" valor={codigoSocioActual} />}
-              <Fila label="Celular" valor={celular || "—"} />
-              <Fila label="Inscripción" valor={formatearFecha(fechaInscripcion)} />
-              <Fila label="Plan" valor={meses > 1 ? `${nombrePlanActual} · ${meses} meses` : nombrePlanActual} />
-              <Fila label="Entrenador" valor={nombreEntrenadorActual ?? "Sin entrenador"} />
-              <Fila label="Método de pago" valor={nombreMetodoPagoActual ?? "—"} />
-            </dl>
-
-            <div className="my-3 border-t border-dashed" style={{ borderColor: "var(--gx-edge)" }} />
-
-            <div className="flex items-baseline justify-between">
-              <span className="text-sm font-medium" style={{ color: "var(--gx-muted)" }}>
-                Total
-              </span>
-              <span className="text-2xl font-bold" style={{ color: "var(--gx-ink)" }}>
-                {formatearSoles(montoAPagar)}
-              </span>
-            </div>
-
-            <p className="mt-5 text-center text-sm font-medium" style={{ color: "var(--gx-muted)" }}>
-              ¿Está seguro de la información suministrada?
-            </p>
-
-            <div className="mt-3 flex gap-3">
-              <Button
-                type="button"
-                variant="secundario"
-                className="flex-1"
-                onClick={() => setMostrarTicket(false)}
-              >
-                No, editar
-              </Button>
-              <Button
-                type="button"
-                className="flex-1"
-                disabled={enviando}
-                onClick={() => formRef.current?.requestSubmit()}
-              >
-                {enviando ? "Guardando..." : "Sí, guardar"}
-              </Button>
-            </div>
-          </div>
-        )}
-      </div>
-      )}
 
       {esEdicion && ultimosCiclos.length > 0 && (
         <Card className={`lg:col-start-1 lg:row-start-2 lg:col-span-2`}>

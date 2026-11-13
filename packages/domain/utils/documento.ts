@@ -7,10 +7,11 @@ export const ETIQUETA_TIPO_DOCUMENTO: Record<TipoDocumento, string> = {
   CE: "CE",
 };
 
-// Longitudes por tipo (asumido, por validar): DNI 8 dígitos; CE 9–12 alfanuméricos.
+// Longitudes por tipo (asumido, por validar): DNI 8 dígitos; CE 9–12 dígitos (solo números: el socio lo teclea en el
+// teclado numérico del check-in, así que un CE con letras no podría entrar).
 const FORMATOS: Record<TipoDocumento, RegExp> = {
   DNI: /^[0-9]{8}$/,
-  CE: /^[A-Z0-9]{9,12}$/,
+  CE: /^[0-9]{9,12}$/,
 };
 
 /** Documento para los reportes: 5 puntos y los últimos 3 caracteres («•••••678»); solo puntos si tiene menos de 3. */
@@ -46,9 +47,12 @@ export function esCodigoSocio(identificador: string): boolean {
   return /^[0-9]{4}$/.test(identificador.trim());
 }
 
-/** Los tipos que no se pueden digitar en el teclado numérico reciben un código de socio. */
-export function requiereCodigoSocio(tipo: TipoDocumento): boolean {
-  return tipo !== "DNI";
+/**
+ * Ningún tipo recibe ya un código de socio nuevo: el socio entra con su DNI o su carné de extranjería (decisión del
+ * propietario, 2026-11-13). Los códigos ya asignados siguen sirviendo para registrar asistencia.
+ */
+export function requiereCodigoSocio(_tipo: TipoDocumento): boolean {
+  return false;
 }
 
 export function formatearCodigoSocio(numero: number): string {

@@ -9,6 +9,7 @@ import { BarraUsuario } from "./BarraUsuario";
 import { EncabezadoSidebar } from "./EncabezadoSidebar";
 import { NavegacionMobile } from "./NavegacionMobile";
 import { ProveedorEnSala, ContadorEnSala, AvisoCobros } from "./en-sala/ContextoEnSala";
+import { REPORTES_VISIBLES } from "@/lib/funciones";
 
 export default async function PanelLayout({ children }: { children: React.ReactNode }) {
   const sesion = await obtenerUsuarioDeSesionActual();
@@ -38,7 +39,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
               { href: "/miembros", label: "Miembros" },
               { href: "/cobros", label: "Cobros" },
               { href: "/productos", label: "Productos" },
-              { href: "/reportes", label: "Reportes" },
+              ...(REPORTES_VISIBLES ? [{ href: "/reportes", label: "Reportes" }] : []),
               // Planes y Administradores se administran desde las tabs de Configuraciones.
               { href: "/configuraciones", label: "Configuraciones" },
             ]}

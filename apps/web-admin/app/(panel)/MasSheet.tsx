@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Sheet } from "@gym-app/ui/components/Sheet";
 import { BarraUsuario } from "./BarraUsuario";
+import { REPORTES_VISIBLES } from "@/lib/funciones";
 
 export function MasSheet({
   abierto,
@@ -18,7 +19,7 @@ export function MasSheet({
   // Planes y Administradores se administran desde las tabs de Configuraciones.
   const enlaces = [
     { href: "/productos", label: "Productos" },
-    { href: "/reportes", label: "Reportes" },
+    ...(REPORTES_VISIBLES ? [{ href: "/reportes", label: "Reportes" }] : []),
     { href: "/configuraciones", label: "Configuraciones" },
   ];
 

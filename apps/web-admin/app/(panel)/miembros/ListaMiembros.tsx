@@ -11,6 +11,7 @@ import { DiasDisponibles, diasHastaVencimiento } from "./vencimiento";
 import type { Miembro } from "@gym-app/domain/entities/Miembro";
 import type { Plan } from "@gym-app/domain/entities/Plan";
 import type { SucursalResumen } from "@gym-app/domain/entities/SucursalResumen";
+import { REPORTES_VISIBLES } from "@/lib/funciones";
 
 const MINIMO_CARACTERES_BUSQUEDA = 3;
 
@@ -150,12 +151,16 @@ export function ListaMiembros({
           </select>
         </label>
 
-        <Link href="/reportes/morosos" className="self-center text-sm font-medium hover:underline" style={{ color: "var(--gx-accent)" }}>
-          Ver morosos
-        </Link>
-        <Link href="/reportes/por-vencer" className="self-center text-sm font-medium hover:underline" style={{ color: "var(--gx-accent)" }}>
-          Ver por vencer
-        </Link>
+        {REPORTES_VISIBLES && (
+          <>
+            <Link href="/reportes/morosos" className="self-center text-sm font-medium hover:underline" style={{ color: "var(--gx-accent)" }}>
+              Ver morosos
+            </Link>
+            <Link href="/reportes/por-vencer" className="self-center text-sm font-medium hover:underline" style={{ color: "var(--gx-accent)" }}>
+              Ver por vencer
+            </Link>
+          </>
+        )}
 
         <Button type="button" variant="secundario" onClick={limpiarFiltros}>
           Limpiar

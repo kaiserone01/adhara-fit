@@ -1,39 +1,32 @@
 import { describe, expect, test } from "vitest";
 import { listarEnSala, listarHistorialSala, requiereCobro } from "./ListarEnSala";
 import type { ICheckInRepository } from "../ports/ICheckInRepository";
-import type { ISuscripcionRepository } from "../ports/ISuscripcionRepository";
-import type { ISucursalRepository } from "../ports/ISucursalRepository";
 import type { CheckInEnSala } from "../entities/CheckIn";
-import type { Suscripcion } from "../entities/Suscripcion";
 
+// 29/09/2026 10:00 en Lima.
 const AHORA = new Date("2026-09-29T15:00:00Z");
 const DIA = 86_400_000;
+// Inicio del día de Lima de AHORA (05:00Z): el último día con acceso es el del vencimiento, inclusive.
+const HOY = new Date("2026-09-29T05:00:00Z");
 
-function checkIn(id: string, miembroId: string, minutosAtras: number, fechaVencimiento: Date | null, salidaAt: Date | null = null, planFrecuencia: CheckInEnSala["miembro"]["planFrecuencia"] = "MENSUAL"): CheckInEnSala {
+function checkIn(id: string, miembroId: string, minutosAtras: number, fechaVencimiento: Date | null, salidaAt: Date | null = null): CheckInEnSala {
   return {
     id,
     miembroId,
     fechaHora: new Date(AHORA.getTime() - minutosAtras * 60_000),
     salidaAt,
-    miembro: { nombre: `Miembro ${miembroId}`, fotoUrl: null, sucursalId: null, fechaVencimiento, planNombre: null, planFrecuencia },
+    miembro: { nombre: `Miembro ${miembroId}`, fotoUrl: null, sucursalId: null, fechaVencimiento, planNombre: null, planFrecuencia: "MENSUAL" },
   };
 }
 
-function deps(abiertos: CheckInEnSala[], miembrosConSuscripcion: string[], diasGracia = 0) {
+function deps(abiertos: CheckInEnSala[]) {
   const checkIns = { listarEnSala: async () => abiertos, listarDesde: async () => abiertos } as unknown as ICheckInRepository;
-  const suscripciones = {
-    buscarActivaVigentePorMiembro: async (miembroId: string) =>
-      miembrosConSuscripcion.includes(miembroId) ? ({ fechaLimiteAbono: null } as Suscripcion) : null,
-  } as unknown as ISuscripcionRepository;
-  const sucursales = { buscarPorId: async () => ({ diasGracia }) } as unknown as ISucursalRepository;
-  return { checkIns, suscripciones, sucursales };
+  return { checkIns };
 }
 
 describe("requiereCobro", () => {
-  test("alerta solo en vencido, en_gracia y abono_vencido", () => {
+  test("alerta solo en vencido", () => {
     expect(requiereCobro("vencido")).toBe(true);
-    expect(requiereCobro("en_gracia")).toBe(true);
-    expect(requiereCobro("abono_vencido")).toBe(true);
     expect(requiereCobro("activo")).toBe(false);
     expect(requiereCobro("sucursal_incorrecta")).toBe(false);
   });
@@ -43,59 +36,49 @@ describe("listarEnSala", () => {
   const input = { organizacionId: "org", sucursalId: "suc", ahora: AHORA };
 
   test("pone primero a quienes hay que cobrar y recalcula el estado en vivo", async () => {
-    const vencido = new Date(AHORA.getTime() - 30 * DIA);
-    const personas = await listarEnSala(
-      deps([checkIn("c1", "vigente", 5, null), checkIn("c2", "moroso", 20, vencido)], ["vigente"]),
-      input
-    );
+    const vencido = new Date(HOY.getTime() - 30 * DIA);
+    const vigente = new Date(HOY.getTime() + 10 * DIA);
+    const personas = await listarEnSala(deps([checkIn("c1", "vigente", 5, vigente), checkIn("c2", "moroso", 20, vencido)]), input);
     expect(personas.map((p) => [p.miembroId, p.estado, p.requiereCobro])).toEqual([
       ["moroso", "vencido", true],
       ["vigente", "activo", false],
     ]);
   });
 
-  test("si el miembro pagó después de entrar, ya no requiere cobro", async () => {
-    const vencido = new Date(AHORA.getTime() - 30 * DIA);
-    const [persona] = await listarEnSala(deps([checkIn("c1", "m1", 5, vencido)], ["m1"]), input);
-    expect(persona.requiereCobro).toBe(false);
+  test("el día del vencimiento todavía tiene acceso; al día siguiente está vencido (sin días de gracia)", async () => {
+    const [venceHoy] = await listarEnSala(deps([checkIn("c1", "m1", 5, HOY)]), input);
+    expect(venceHoy.estado).toBe("activo");
+    expect(venceHoy.requiereCobro).toBe(false);
+
+    const [venciAyer] = await listarEnSala(deps([checkIn("c1", "m1", 5, new Date(HOY.getTime() - DIA))]), input);
+    expect(venciAyer.estado).toBe("vencido");
+    expect(venciAyer.requiereCobro).toBe(true);
   });
 
-  test("marca en_gracia dentro de los días de gracia de la sucursal", async () => {
-    const vencidoHace1Dia = new Date(AHORA.getTime() - DIA);
-    const [persona] = await listarEnSala(deps([checkIn("c1", "m1", 5, vencidoHace1Dia)], [], 3), input);
-    expect(persona.estado).toBe("en_gracia");
-    expect(persona.requiereCobro).toBe(true);
-  });
-
-  test("la gracia de la sede solo cuenta para planes mensuales: uno semanal vencido ayer ya está vencido", async () => {
-    const vencidoHace1Dia = new Date(AHORA.getTime() - DIA);
-    const personas = await listarEnSala(
-      deps([checkIn("c1", "mensual", 5, vencidoHace1Dia), checkIn("c2", "semanal", 6, vencidoHace1Dia, null, "SEMANAL")], [], 3),
-      input
-    );
-    expect(Object.fromEntries(personas.map((p) => [p.miembroId, p.estado]))).toEqual({ mensual: "en_gracia", semanal: "vencido" });
+  test("sin vencimiento registrado se considera vencido", async () => {
+    const [persona] = await listarEnSala(deps([checkIn("c1", "m1", 5, null)]), input);
+    expect(persona.estado).toBe("vencido");
   });
 
   test("un miembro con dos check-ins abiertos aparece una sola vez (el más reciente)", async () => {
-    const personas = await listarEnSala(
-      deps([checkIn("nuevo", "m1", 5, null), checkIn("viejo", "m1", 90, null)], ["m1"]),
-      input
-    );
+    const vigente = new Date(HOY.getTime() + 10 * DIA);
+    const personas = await listarEnSala(deps([checkIn("nuevo", "m1", 5, vigente), checkIn("viejo", "m1", 90, vigente)]), input);
     expect(personas.map((p) => p.checkInId)).toEqual(["nuevo"]);
   });
 
   test("sin check-ins abiertos devuelve lista vacía", async () => {
-    expect(await listarEnSala(deps([], []), input)).toEqual([]);
+    expect(await listarEnSala(deps([]), input)).toEqual([]);
   });
 });
 
 describe("listarHistorialSala", () => {
   const base = { organizacionId: "org", sucursalId: "suc", ahora: AHORA };
+  const vigente = new Date(HOY.getTime() + 10 * DIA);
 
   test("incluye a quien ya salió, con su hora de salida, y mantiene el orden por entrada", async () => {
     const salida = new Date(AHORA.getTime() - 10 * 60_000);
     const personas = await listarHistorialSala(
-      deps([checkIn("c1", "m1", 5, null), checkIn("c2", "m2", 120, null, salida)], ["m1", "m2"]),
+      deps([checkIn("c1", "m1", 5, vigente), checkIn("c2", "m2", 120, vigente, salida)]),
       { ...base, rango: "24h" }
     );
     expect(personas.map((p) => [p.miembroId, p.salidaAt])).toEqual([
@@ -105,9 +88,8 @@ describe("listarHistorialSala", () => {
   });
 
   test("una fila por persona (la entrada más reciente) y estado de pago recalculado hoy", async () => {
-    const vencido = new Date(AHORA.getTime() - 30 * DIA);
     const personas = await listarHistorialSala(
-      deps([checkIn("nuevo", "m1", 5, vencido), checkIn("viejo", "m1", 600, vencido)], ["m1"]),
+      deps([checkIn("nuevo", "m1", 5, vigente), checkIn("viejo", "m1", 600, vigente)]),
       { ...base, rango: "hoy" }
     );
     expect(personas.map((p) => [p.checkInId, p.estado])).toEqual([["nuevo", "activo"]]);
@@ -115,7 +97,7 @@ describe("listarHistorialSala", () => {
 
   test("pide al repositorio desde las últimas 24 horas o desde el inicio del día de Lima", async () => {
     const desdes: Date[] = [];
-    const d = deps([], []);
+    const d = deps([]);
     d.checkIns = { listarDesde: async (_s: string, desde: Date) => (desdes.push(desde), []) } as unknown as ICheckInRepository;
     await listarHistorialSala(d, { ...base, rango: "24h" });
     await listarHistorialSala(d, { ...base, rango: "hoy" });

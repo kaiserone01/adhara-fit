@@ -10,13 +10,11 @@ export interface ISuscripcionRepository {
   // Regularización de fechas (aviso "Por regularizar"): fija inicio/fin de la Suscripcion más reciente
   // del miembro (y la deja ACTIVA), opcionalmente con otro plan. Devuelve false si el miembro no tiene ninguna.
   // fechaLimiteAbono: si se pasa (también null), reemplaza el plazo de abono de ese ciclo; si se omite, no se toca.
-  ajustarCicloMasReciente(miembroId: string, inicio: Date, fin: Date, planId?: string, fechaLimiteAbono?: Date | null): Promise<boolean>;
-  crear(datos: { miembroId: string; planId: string; inicio: Date; fin: Date; fechaLimiteAbono: Date | null }): Promise<Suscripcion>;
+  // inicio null = no tocar el inicio existente.
+  ajustarCicloMasReciente(miembroId: string, inicio: Date | null, fin: Date, planId?: string): Promise<boolean>;
+  crear(datos: { miembroId: string; planId: string; inicio: Date; fin: Date }): Promise<Suscripcion>;
   // Cambia el plan de una Suscripcion sin tocar inicio/fin — usado al subir
   // de plan cobrando solo la diferencia (ver CambiarPlanConPago), donde el
   // ciclo ya pagado no se extiende.
   cambiarPlan(id: string, planId: string): Promise<Suscripcion>;
-  // Actualiza (o limpia, con null) el plazo de acceso que otorga el monto
-  // abonado hasta ahora en el ciclo — ver packages/domain/entities/ReglaAbono.ts.
-  actualizarFechaLimiteAbono(id: string, fechaLimiteAbono: Date | null): Promise<Suscripcion>;
 }

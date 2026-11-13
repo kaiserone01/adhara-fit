@@ -8,7 +8,6 @@ type FilaSuscripcion = {
   planId: string;
   inicio: Date;
   fin: Date;
-  fechaLimiteAbono: Date | null;
   estado: Suscripcion["estado"];
 };
 
@@ -19,7 +18,6 @@ function mapear(suscripcion: FilaSuscripcion): Suscripcion {
     planId: suscripcion.planId,
     inicio: suscripcion.inicio,
     fin: suscripcion.fin,
-    fechaLimiteAbono: suscripcion.fechaLimiteAbono,
     estado: suscripcion.estado,
   };
 }
@@ -76,12 +74,12 @@ export class PrismaSuscripcionRepository implements ISuscripcionRepository {
     return mapear(suscripcion);
   }
 
-  async ajustarCicloMasReciente(miembroId: string, inicio: Date, fin: Date, planId?: string, fechaLimiteAbono?: Date | null): Promise<boolean> {
+  async ajustarCicloMasReciente(miembroId: string, inicio: Date | null, fin: Date, planId?: string): Promise<boolean> {
     const reciente = await this.prisma.suscripcion.findFirst({ where: { miembroId }, orderBy: { fin: "desc" } });
     if (!reciente) return false;
     await this.prisma.suscripcion.update({
       where: { id: reciente.id },
-      data: { inicio, fin, estado: "ACTIVA", ...(planId ? { planId } : {}), ...(fechaLimiteAbono !== undefined ? { fechaLimiteAbono } : {}) },
+      data: { ...(inicio ? { inicio } : {}), fin, estado: "ACTIVA", ...(planId ? { planId } : {}) },
     });
     return true;
   }
@@ -100,7 +98,6 @@ export class PrismaSuscripcionRepository implements ISuscripcionRepository {
     planId: string;
     inicio: Date;
     fin: Date;
-    fechaLimiteAbono: Date | null;
   }): Promise<Suscripcion> {
     const suscripcion = await this.prisma.suscripcion.create({
       data: {
@@ -108,18 +105,8 @@ export class PrismaSuscripcionRepository implements ISuscripcionRepository {
         planId: datos.planId,
         inicio: datos.inicio,
         fin: datos.fin,
-        fechaLimiteAbono: datos.fechaLimiteAbono,
         estado: "ACTIVA",
       },
-    });
-
-    return mapear(suscripcion);
-  }
-
-  async actualizarFechaLimiteAbono(id: string, fechaLimiteAbono: Date | null): Promise<Suscripcion> {
-    const suscripcion = await this.prisma.suscripcion.update({
-      where: { id },
-      data: { fechaLimiteAbono },
     });
 
     return mapear(suscripcion);

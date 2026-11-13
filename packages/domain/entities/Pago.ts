@@ -20,26 +20,17 @@ export interface Pago {
   // Correlaciona las N filas de un mismo pago combinado (ver
   // registrarPago) — null en pagos de una sola línea.
   grupoPagoId: string | null;
+  // S-04: identificador del cobro y vencimiento previo (la anulación lo restaura); null en pagos que no son cobros de membresía.
+  cobroId?: string | null;
+  vencimientoAnterior?: Date | null;
   // Venta de producto: cada Pago es una línea de método de la venta.
   productoId?: string | null;
   productoNombre?: string | null;
   cantidad?: number | null;
 }
 
-// Máximo de días hacia atrás para fechar un pago retroactivo (ver RegistrarPago).
-export const MAX_DIAS_ATRAS_PAGO_RETROACTIVO = 365;
-// Máximo de días hacia atrás para fechar el pago de un miembro normal (sin regularización): cubre fines de semana y olvidos.
-export const MAX_DIAS_ATRAS_PAGO_FECHADO = 90;
-
 // Meses que puede cubrir un solo pago adelantado (el precio y la duración del ciclo se multiplican).
 export const MAX_MESES_POR_PAGO = 6;
-
-// Diferencia que se acepta sin tratar el pago como abono con plazo: faltantes o sobrantes por centavos o unos
-// soles (transferencia o tarjeta rechazadas por poco, efectivo redondeado). Hasta S/ 1, sin pasar del 10% del precio
-// (en un plan de S/ 3, S/ 1 sería un tercio). El faltante queda como saldo pendiente, pero el acceso cubre el ciclo completo.
-export function toleranciaDiferenciaPagoUSD(precioUSD: number): number {
-  return Math.min(1, precioUSD * 0.1);
-}
 
 export interface DatosNuevoPago {
   miembroId: string | null;
@@ -52,24 +43,12 @@ export interface DatosNuevoPago {
   fechaInicioCiclo: Date | null;
   fechaFinCiclo: Date | null;
   grupoPagoId: string | null;
-  fechaPago?: Date; // solo para pagos retroactivos (fecha pasada); por defecto, ahora
+  fechaPago?: Date; // fecha del pago (puede ser pasada); por defecto, ahora
+  cobroId?: string | null;
+  vencimientoAnterior?: Date | null;
   productoId?: string | null;
   productoNombre?: string | null;
   cantidad?: number | null;
-}
-
-// Pagos de fondos fraccionados/mixtos ("abonos") — varios Pago pueden
-// compartir el mismo ciclo (misma fechaFinCiclo) hasta completar el precio
-// del plan. Estos dos helpers son la única fuente de verdad de "qué pagos
-// pertenecen a este ciclo" y "cuánto suman" — los usa tanto RegistrarPago
-// (para decidir si un pago nuevo arranca un ciclo o completa uno abierto)
-// como las pantallas que muestran el saldo pendiente y agrupan los abonos.
-export function pagosVigentesDelCiclo(pagos: Pago[], fechaFinCiclo: Date): Pago[] {
-  return pagos.filter((pago) => !pago.anuladoEn && pago.fechaFinCiclo?.getTime() === fechaFinCiclo.getTime());
-}
-
-export function totalPagado(pagos: Pago[]): number {
-  return pagos.reduce((suma, pago) => suma + pago.monto, 0);
 }
 
 export interface DatosLineaPago {
@@ -103,9 +82,7 @@ export class MontoLineasNoCubreObjetivoError extends Error {
 
 // Única fuente de verdad para validar líneas de un pago (una o varias,
 // según la modalidad). Dos modos:
-// - "conAbono" (RegistrarPago.ts): permite que la suma quede por debajo
-//   del precio del plan — es un abono parcial válido, cuyo mínimo lo
-//   valida ReglaAbono.ts más adelante en ese use-case.
+// - "conAbono": acepta cualquier suma positiva (ventas de producto).
 // - "exacto" (CambiarPlanConPago.ts): exige que la suma coincida
 //   exactamente con `montoObjetivo` — no hay abono parcial sobre la
 //   diferencia de un cambio de plan.

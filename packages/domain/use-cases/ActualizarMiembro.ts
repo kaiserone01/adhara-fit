@@ -1,10 +1,10 @@
 import { IMemberRepository } from "../ports/IMemberRepository";
 import { IPlanRepository } from "../ports/IPlanRepository";
 import { ISuscripcionRepository } from "../ports/ISuscripcionRepository";
-import { IPagoRepository } from "../ports/IPagoRepository";
 import { ISucursalRepository } from "../ports/ISucursalRepository";
 import { Miembro, CambiosMiembro } from "../entities/Miembro";
-import { prorratearVencimiento } from "./CalcularVencimientoPlan";
+import { fijarVencimiento } from "./FijarVencimiento";
+import { diaLima } from "../utils/vencimiento";
 import { MiembroFueraDeSucursalError } from "./ObtenerMiembro";
 import { DocumentoDuplicadoError, DocumentoInvalidoError } from "../entities/ErroresMiembro";
 import { normalizarDocumento, requiereCodigoSocio, validarDocumento } from "../utils/documento";
@@ -36,7 +36,6 @@ export async function actualizarMiembro(
     planes: IPlanRepository;
     suscripciones: ISuscripcionRepository;
     sucursales: ISucursalRepository;
-    pagos: IPagoRepository;
   },
   input: { organizacionId: string; id: string; sucursalActivaId: string; cambios: CambiosMiembro }
 ): Promise<Miembro> {
@@ -94,58 +93,19 @@ export async function actualizarMiembro(
     throw new MiembroNoEncontradoError();
   }
 
-  if (cambiaFechas && vencimientoFinal) {
-    // Ciclo [fecha de pago, vencimiento]; sin una fecha de pago válida, el inicio es el vencimiento - días del plan.
-    let inicio = pagoFinal && pagoFinal.getTime() < vencimientoFinal.getTime() ? pagoFinal : null;
-    if (!inicio) {
-      const plan = antes.planId ? await deps.planes.buscarPorId(input.organizacionId, antes.planId) : null;
-      inicio = new Date(vencimientoFinal);
-      inicio.setDate(inicio.getDate() - (plan?.diasCiclo ?? 30));
-    }
-    const planNuevoId = cambiaDePlan ? (input.cambios.planId as string) : undefined;
-    // Los pagos del ciclo vigente terminan donde terminaba su vencimiento: si este se corre, ellos también (el saldo
-    // pendiente y los abonos buscan los pagos del ciclo por esa fecha de fin).
-    if (antes.fechaVencimiento && antes.fechaVencimiento.getTime() !== vencimientoFinal.getTime()) {
-      await deps.pagos.moverFinCiclo(input.id, antes.fechaVencimiento, vencimientoFinal);
-    }
-    const sincronizada = await deps.suscripciones.ajustarCicloMasReciente(input.id, inicio, vencimientoFinal, planNuevoId);
-    // Sin ninguna Suscripcion el checkin seguiría mostrando "vencido": se crea.
-    const planId = planNuevoId ?? antes.planId;
-    if (!sincronizada && planId) {
-      await deps.suscripciones.crear({ miembroId: input.id, planId, inicio, fin: vencimientoFinal, fechaLimiteAbono: null });
-    }
-  }
-
-  // Si el miembro cambió de Plan (sin que medie un pago nuevo) y tiene una
-  // Suscripcion activa vigente del plan anterior, se prorratea su
-  // vencimiento a la duración del nuevo plan (ver diseño acordado). Si no
-  // tiene suscripción activa, no hay nada que recalcular.
-  if (cambiaDePlan && antes.planId) {
-    const ahora = new Date();
-    const activa = await deps.suscripciones.buscarActivaVigentePorMiembroYPlan(input.id, antes.planId, ahora);
-
-    if (activa) {
-      const [planViejo, planNuevo] = await Promise.all([
-        deps.planes.buscarPorId(input.organizacionId, antes.planId),
-        deps.planes.buscarPorId(input.organizacionId, input.cambios.planId as string),
-      ]);
-
-      if (!planNuevo) {
-        throw new PlanNoEncontradoError();
-      }
-
-      if (planViejo) {
-        const nuevoFin = prorratearVencimiento(activa.inicio, ahora, planViejo.diasCiclo, planNuevo.diasCiclo);
-        await deps.suscripciones.extenderFin(activa.id, nuevoFin);
-      }
-
-      // Sin esto, la Suscripcion activa seguía apuntando al plan viejo por
-      // dentro (aunque Miembro.planId ya mostrara el nuevo) — cualquier
-      // pago posterior que buscara "la suscripción activa DE ESTE plan"
-      // no la encontraba y arrancaba un ciclo nuevo en vez de extender el
-      // que ya existía (ver diseño acordado, bug real reportado).
-      await deps.suscripciones.cambiarPlan(activa.id, input.cambios.planId as string);
-    }
+  // Ajuste manual de las fechas desde la ficha: pasa por fijarVencimiento, igual que el cobro y la anulación, para que
+  // Miembro.fechaVencimiento y Suscripcion.fin sigan siendo siempre la misma fecha.
+  // Cambiar de plan con un vencimiento ya registrado también pasa por ahí, para que la suscripción siga al plan.
+  if ((cambiaFechas || cambiaDePlan) && vencimientoFinal) {
+    const dia = (f: Date) => diaLima(f);
+    const inicio = pagoFinal && pagoFinal.getTime() < vencimientoFinal.getTime() ? dia(pagoFinal) : null;
+    await fijarVencimiento(deps, {
+      miembroId: input.id,
+      planId: cambiaDePlan ? (input.cambios.planId as string) : antes.planId,
+      inicio,
+      fin: dia(vencimientoFinal),
+      fechaUltimoPago: pagoFinal ? dia(pagoFinal) : null,
+    });
   }
 
   return actualizado;

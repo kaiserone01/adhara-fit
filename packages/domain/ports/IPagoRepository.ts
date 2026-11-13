@@ -3,10 +3,8 @@ import { Pago, DatosNuevoPago } from "../entities/Pago";
 export interface IPagoRepository {
   crear(datos: DatosNuevoPago): Promise<Pago>;
   listarPorMiembro(miembroId: string): Promise<Pago[]>;
-  // Pagos de miembros de la organización, no anulados, cuyo ciclo termina después de `ahora` (base de los saldos de membresía).
-  listarConCicloAbierto(organizacionId: string, ahora: Date): Promise<Pago[]>;
-  // Mueve el fin del ciclo de los pagos del miembro que terminaban en `finAnterior` (cuando se ajusta a mano su vencimiento).
-  moverFinCiclo(miembroId: string, finAnterior: Date, finNuevo: Date): Promise<void>;
+  // S-04: el mismo cobroId no se registra dos veces.
+  buscarPorCobroId(cobroId: string): Promise<Pago | null>;
   listarPorOrganizacion(organizacionId: string): Promise<Pago[]>;
   listarPorOrganizacionYRango(organizacionId: string, desde: Date, hasta: Date): Promise<Pago[]>;
   // Días (medianoche UTC de la fecha de Lima) con al menos un cobro en la organización, para el calendario del historial.

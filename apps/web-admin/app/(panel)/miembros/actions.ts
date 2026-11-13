@@ -7,7 +7,6 @@ import { prisma } from "@/lib/prisma";
 import { obtenerUsuarioDeSesionActual } from "@/lib/sesion";
 import { PrismaMemberRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaMemberRepository";
 import { PrismaPlanRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPlanRepository";
-import { PrismaPagoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPagoRepository";
 import { PrismaSuscripcionRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSuscripcionRepository";
 import { esTipoDocumento, type TipoDocumento } from "@gym-app/domain/utils/documento";
 import { validarEntrenadorDeMiembro } from "./validarEntrenadorDeMiembro";
@@ -28,21 +27,19 @@ import {
 import { calcularCambiosFechas } from "@gym-app/domain/utils/cambiosFechasFicha";
 import { inicioDelDiaLima } from "@gym-app/domain/utils/fechaLima";
 import { PrismaSucursalRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSucursalRepository";
-import { PrismaReglaAbonoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaReglaAbonoRepository";
+import { PrismaUnidadDeTrabajo } from "@gym-app/infrastructure/persistence/prisma/PrismaUnidadDeTrabajo";
 import { storageR2 } from "@/lib/storageR2";
 import {
   registrarPago,
   MesesInvalidosError,
-  MesesRequierenPagoCompletoError,
-  MesesNoDisponiblesError,
   MiembroNoEncontradoError as PagoMiembroNoEncontradoError,
   MiembroFueraDeSucursalError as PagoMiembroFueraDeSucursalError,
   PlanNoEncontradoError,
   PlanInactivoError,
   MontoInvalidoError,
-  AbonoNoPermitidoError,
-  AbonoMenorAlMinimoError,
-  FechaPagoInvalidaError,
+  MontoDistintoDelPrecioError,
+  FechaPagoFuturaError,
+  PlanDistintoConVencimientoVigenteError,
 } from "@gym-app/domain/use-cases/RegistrarPago";
 import { eliminarMiembro } from "@gym-app/domain/use-cases/EliminarMiembro";
 import { conMensajeOk } from "../redirectConMensaje";
@@ -65,23 +62,6 @@ function resolverPlanId(formData: FormData): string | null {
 }
 
 // "yyyy-mm-dd" del <input type="date"> → fecha local a las 00:00; vacío o inválido → null.
-// Líneas del primer pago dividido en dos métodos. null si no vienen o no son válidas (se usa el pago de una sola línea).
-function leerLineasDePago(valor: FormDataEntryValue | null) {
-  try {
-    const lineas = JSON.parse(valor?.toString() ?? "");
-    if (!Array.isArray(lineas) || lineas.length === 0) return null;
-    const validas = lineas.map((l) => ({
-      monto: Number(l.monto),
-      metodo: String(l.metodo ?? ""),
-      metodoPagoId: l.metodoPagoId ? String(l.metodoPagoId) : null,
-      numeroOperacion: l.numeroOperacion ? String(l.numeroOperacion) : null,
-    }));
-    return validas.every((l) => l.monto > 0 && l.metodoPagoId) ? validas : null;
-  } catch {
-    return null;
-  }
-}
-
 function leerFecha(valor: FormDataEntryValue | null): Date | null {
   const texto = valor?.toString();
   if (!texto) return null;
@@ -131,13 +111,9 @@ export async function crearMiembroAction(
   const documento = leerDocumento(formData);
   const sucursalId = formData.get("sucursalId")?.toString();
   const precioPlan = Number(formData.get("precioPlan"));
-  // Primer pago: por defecto el precio completo; menos que eso se registra como abono.
-  const montoInicial = Number(formData.get("montoInicial"));
-  // Meses que cubre el primer pago (1 a 6); el dominio valida el rango.
+  // Primer pago (S-04): único, completo, con un solo método. Meses que cubre (1 a 6); el dominio valida el rango.
   const meses = Number(formData.get("meses")?.toString() || 1);
-  const montoPago = montoInicial > 0 ? montoInicial : precioPlan * meses;
-  // Primer pago dividido en dos métodos: llega como JSON desde el formulario (null = un solo método, como siempre).
-  const lineasDivididas = leerLineasDePago(formData.get("lineas"));
+  const montoPago = Math.round(precioPlan * meses * 100) / 100;
   const metodo = formData.get("metodo")?.toString();
   const metodoPagoId = formData.get("metodoPagoId")?.toString() || null;
   const numeroOperacion = formData.get("numeroOperacion")?.toString().trim() || null;
@@ -151,7 +127,7 @@ export async function crearMiembroAction(
   // Un plan de cortesía ($0) no tiene nada que cobrar — el método de pago
   // solo es obligatorio cuando hay un monto real de por medio (ver diseño
   // acordado, membresías con beneficio que no pagan en el gym).
-  if (precioPlan > 0 && lineasDivididas === null && (!metodo || !metodoPagoId)) {
+  if (precioPlan > 0 && (!metodo || !metodoPagoId)) {
     return { error: "Elige un método de pago." };
   }
 
@@ -197,43 +173,36 @@ export async function crearMiembroAction(
   // deshace, así que solo se manejan los errores de dominio esperables;
   // cualquier otra cosa se deja propagar (el miembro queda creado, sin
   // pago, y se puede registrar a mano desde su ficha).
+  // Un plan sin costo no genera cobro (no hay cortesías): el socio queda creado sin vencimiento.
+  if (precioPlan <= 0) {
+    revalidatePath("/miembros");
+    redirect(conMensajeOk("/miembros", "Miembro creado."));
+  }
+
   if (!sucursalIdPago) {
     return {
       error: "El miembro se creó, pero no se pudo registrar el pago inicial: no se pudo determinar en qué sucursal se registra el pago.",
     };
   }
 
+  // La fecha de inscripción es también la del primer pago (puede ser pasada: socios anotados en cuaderno);
+  // se interpreta como día de Lima. Si es hoy, se usa el instante actual.
+  const textoInscripcion = formData.get("fechaInscripcion")?.toString();
+  const fechaPago = textoInscripcion ? new Date(`${textoInscripcion}T12:00:00-05:00`) : undefined;
+
   try {
     await registrarPago(
-      {
-        pagos: new PrismaPagoRepository(prisma),
-        suscripciones: new PrismaSuscripcionRepository(prisma),
-        miembros: new PrismaMemberRepository(prisma),
-        planes: new PrismaPlanRepository(prisma),
-        sucursales: new PrismaSucursalRepository(prisma),
-        reglasAbono: new PrismaReglaAbonoRepository(prisma),
-      },
+      { unidad: new PrismaUnidadDeTrabajo(prisma) },
       {
         organizacionId: usuario.organizacionId,
         miembroId: miembro.id,
         planId,
-        // El pago inicial lleva la fecha de inscripción: con una fecha pasada el ciclo y el vencimiento
-        // cuentan desde ese día (ver primerPagoDeInscripcion).
-        fechaPago: miembro.fechaInscripcion ?? undefined,
-        primerPagoDeInscripcion: true,
+        fechaPago: fechaPago && !Number.isNaN(fechaPago.getTime()) ? fechaPago : undefined,
         meses,
-        // Si pagó de más: guardar el sobrante como saldo a favor (si no, es de otro cobro y solo queda registrado).
-        excedenteASaldoAFavor: formData.get("excedente")?.toString() === "saldo",
-        lineas: lineasDivididas ?? [
-          {
-            monto: montoPago,
-            metodo: metodo || "Cortesía",
-            metodoPagoId,
-            numeroOperacion,
-          },
-        ],
+        linea: { monto: montoPago, metodo: metodo ?? "", metodoPagoId, numeroOperacion },
         sucursalId: sucursalIdPago,
         registradoPorId: usuario.id,
+        cobroId: randomUUID(),
       }
     );
   } catch (error) {
@@ -243,12 +212,10 @@ export async function crearMiembroAction(
       error instanceof PlanNoEncontradoError ||
       error instanceof PlanInactivoError ||
       error instanceof MontoInvalidoError ||
-      error instanceof AbonoNoPermitidoError ||
-      error instanceof AbonoMenorAlMinimoError ||
-      error instanceof FechaPagoInvalidaError ||
-      error instanceof MesesInvalidosError ||
-      error instanceof MesesRequierenPagoCompletoError ||
-      error instanceof MesesNoDisponiblesError
+      error instanceof MontoDistintoDelPrecioError ||
+      error instanceof FechaPagoFuturaError ||
+      error instanceof PlanDistintoConVencimientoVigenteError ||
+      error instanceof MesesInvalidosError
     ) {
       return { error: `El miembro se creó, pero no se pudo registrar el pago inicial: ${error.message}` };
     }
@@ -302,7 +269,6 @@ export async function actualizarMiembroAction(
         planes: new PrismaPlanRepository(prisma),
         suscripciones: new PrismaSuscripcionRepository(prisma),
         sucursales: new PrismaSucursalRepository(prisma),
-        pagos: new PrismaPagoRepository(prisma),
       },
       {
         organizacionId: usuario.organizacionId,
@@ -364,7 +330,6 @@ export async function actualizarFotoMiembroAction(
         planes: new PrismaPlanRepository(prisma),
         suscripciones: new PrismaSuscripcionRepository(prisma),
         sucursales: new PrismaSucursalRepository(prisma),
-        pagos: new PrismaPagoRepository(prisma),
       },
       { organizacionId: usuario.organizacionId, id, sucursalActivaId, cambios: { fotoUrl } }
     );
@@ -391,7 +356,6 @@ export async function darDeBajaAction(id: string): Promise<void> {
       planes: new PrismaPlanRepository(prisma),
       suscripciones: new PrismaSuscripcionRepository(prisma),
       sucursales: new PrismaSucursalRepository(prisma),
-      pagos: new PrismaPagoRepository(prisma),
     },
     { organizacionId: usuario.organizacionId, id, sucursalActivaId, cambios: { activo: false } }
   );
@@ -410,7 +374,6 @@ export async function reactivarAction(id: string): Promise<void> {
       planes: new PrismaPlanRepository(prisma),
       suscripciones: new PrismaSuscripcionRepository(prisma),
       sucursales: new PrismaSucursalRepository(prisma),
-      pagos: new PrismaPagoRepository(prisma),
     },
     { organizacionId: usuario.organizacionId, id, sucursalActivaId, cambios: { activo: true } }
   );

@@ -1,23 +1,24 @@
-// POST /api/pagos            — registra un pago; crea/extiende la Suscripcion ACTIVA del Plan indicado.
+// POST /api/pagos            — registra el cobro de una membresía (un solo pago completo; S-04). Cuerpo: miembroId, planId,
+//                              monto, metodo, cobroId (UUID; reenviarlo no duplica el cobro) y, opcionales, metodoPagoId,
+//                              numeroOperacion, meses (1 a 6) y fechaPago (yyyy-mm-dd, nunca futura).
 // GET  /api/pagos            — lista todos los pagos de la organización (más reciente primero).
 // GET  /api/pagos?miembroId= — lista el historial de pagos de ese miembro.
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { obtenerUsuarioDeSesion } from "@/lib/sesion";
 import { PrismaPagoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPagoRepository";
-import { PrismaSuscripcionRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSuscripcionRepository";
 import { PrismaMemberRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaMemberRepository";
-import { PrismaPlanRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPlanRepository";
-import { PrismaSucursalRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSucursalRepository";
-import { PrismaReglaAbonoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaReglaAbonoRepository";
+import { PrismaUnidadDeTrabajo } from "@gym-app/infrastructure/persistence/prisma/PrismaUnidadDeTrabajo";
 import {
   registrarPago,
   MiembroNoEncontradoError as RegistrarPagoMiembroNoEncontradoError,
-  MiembroFueraDeSucursalError,
   PlanNoEncontradoError as RegistrarPagoPlanNoEncontradoError,
   PlanInactivoError,
-  AbonoNoPermitidoError,
-  AbonoMenorAlMinimoError,
+  MontoInvalidoError,
+  MontoDistintoDelPrecioError,
+  FechaPagoFuturaError,
+  PlanDistintoConVencimientoVigenteError,
+  MesesInvalidosError,
 } from "@gym-app/domain/use-cases/RegistrarPago";
 import {
   listarPagos,
@@ -61,9 +62,9 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
 
-    if (!body.miembroId || !body.planId || body.monto === undefined || !body.metodo) {
+    if (!body.miembroId || !body.planId || body.monto === undefined || !body.metodo || !body.cobroId) {
       return NextResponse.json(
-        { error: "miembroId, planId, monto y metodo son requeridos." },
+        { error: "miembroId, planId, monto, metodo y cobroId son requeridos." },
         { status: 400 }
       );
     }
@@ -79,48 +80,41 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Esta ruta API sigue siendo de una sola línea (no soporta pago
-    // combinado desde afuera todavía) — se envuelve el monto/método plano
-    // en un array de una sola línea para calzar con la nueva firma de
-    // registrarPago.
-    const pagos = await registrarPago(
-      {
-        pagos: new PrismaPagoRepository(prisma),
-        suscripciones: new PrismaSuscripcionRepository(prisma),
-        miembros: new PrismaMemberRepository(prisma),
-        planes: new PrismaPlanRepository(prisma),
-        sucursales: new PrismaSucursalRepository(prisma),
-        reglasAbono: new PrismaReglaAbonoRepository(prisma),
-      },
+    const pago = await registrarPago(
+      { unidad: new PrismaUnidadDeTrabajo(prisma) },
       {
         organizacionId: usuario.organizacionId,
         miembroId: body.miembroId,
         planId: body.planId,
-        lineas: [
-          {
-            monto: body.monto,
-            metodo: body.metodo,
-            metodoPagoId: body.metodoPagoId ?? null,
-            numeroOperacion: body.numeroOperacion ?? null,
-          },
-        ],
+        linea: {
+          monto: body.monto,
+          metodo: body.metodo,
+          metodoPagoId: body.metodoPagoId ?? null,
+          numeroOperacion: body.numeroOperacion ?? null,
+        },
         sucursalId: sucursalActivaId,
         registradoPorId: usuario.id,
+        cobroId: String(body.cobroId),
+        ...(body.fechaPago ? { fechaPago: new Date(`${body.fechaPago}T12:00:00-05:00`) } : {}),
+        ...(body.meses !== undefined ? { meses: Number(body.meses) } : {}),
       }
     );
 
-    return NextResponse.json(pagos[0], { status: 201 });
+    return NextResponse.json(pago, { status: 201 });
   } catch (error) {
     if (error instanceof RegistrarPagoMiembroNoEncontradoError || error instanceof RegistrarPagoPlanNoEncontradoError) {
       return NextResponse.json({ error: error.message }, { status: 404 });
     }
-    if (error instanceof MiembroFueraDeSucursalError) {
-      return NextResponse.json({ error: error.message }, { status: 403 });
+    if (error instanceof PlanDistintoConVencimientoVigenteError) {
+      return NextResponse.json({ error: error.message }, { status: 409 });
     }
-    if (error instanceof PlanInactivoError) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
-    }
-    if (error instanceof AbonoNoPermitidoError || error instanceof AbonoMenorAlMinimoError) {
+    if (
+      error instanceof PlanInactivoError ||
+      error instanceof MontoInvalidoError ||
+      error instanceof MontoDistintoDelPrecioError ||
+      error instanceof FechaPagoFuturaError ||
+      error instanceof MesesInvalidosError
+    ) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
     console.error("Error al registrar pago:", error);

@@ -3,7 +3,6 @@ export interface Sucursal {
   organizacionId: string;
   nombre: string;
   direccion: string | null;
-  diasGracia: number;
   activo: boolean;
   apiKey: string;
   reposoFrases: string[];
@@ -14,7 +13,6 @@ export interface Sucursal {
 export interface CambiosSucursal {
   nombre?: string;
   direccion?: string | null;
-  diasGracia?: number;
   activo?: boolean;
   reposoFrases?: string[];
   reposoImagenUrl?: string | null;
@@ -25,5 +23,4 @@ export interface DatosNuevaSucursal {
   organizacionId: string;
   nombre: string;
   direccion: string | null;
-  diasGracia: number;
 }

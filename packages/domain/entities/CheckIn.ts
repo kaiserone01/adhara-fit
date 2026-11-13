@@ -1,6 +1,6 @@
 import type { FrecuenciaPago } from "./Plan";
 
-export type EstadoCheckIn = "activo" | "en_gracia" | "vencido" | "abono_vencido" | "sucursal_incorrecta";
+export type EstadoCheckIn = "activo" | "vencido" | "sucursal_incorrecta";
 
 export interface CheckIn {
   id: string;

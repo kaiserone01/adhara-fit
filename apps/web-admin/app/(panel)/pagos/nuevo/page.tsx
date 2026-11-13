@@ -8,7 +8,6 @@ import { listarMiembros } from "@gym-app/domain/use-cases/ListarMiembros";
 import { listarPlanes } from "@gym-app/domain/use-cases/ListarPlanes";
 import { listarMetodosPagoActivos } from "@gym-app/domain/use-cases/ListarMetodosPago";
 import { FormularioPago } from "../FormularioPago";
-import { registrarPagoAction } from "../actions";
 import { PageHeader } from "@gym-app/ui/components/PageHeader";
 
 export default async function PaginaNuevoPago() {
@@ -31,7 +30,6 @@ export default async function PaginaNuevoPago() {
         <PageHeader>Registrar pago</PageHeader>
       </div>
       <FormularioPago
-        accion={registrarPagoAction}
         miembros={miembrosActivos}
         planes={planesActivos}
         metodosPago={metodosPago}

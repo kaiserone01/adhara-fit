@@ -7,8 +7,6 @@ import { prisma } from "@/lib/prisma";
 import { jsonCheckin, opcionesCheckin, sucursalDeCheckin } from "@/lib/checkin";
 import { PrismaMemberRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaMemberRepository";
 import { PrismaCheckInRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaCheckInRepository";
-import { PrismaSuscripcionRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSuscripcionRepository";
-import { PrismaPlanRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPlanRepository";
 import { PrismaSucursalRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSucursalRepository";
 import { registrarCheckIn, MiembroNoEncontradoError } from "@gym-app/domain/use-cases/RegistrarCheckIn";
 
@@ -34,9 +32,7 @@ export async function POST(req: NextRequest) {
       {
         miembros: new PrismaMemberRepository(prisma),
         checkIns: new PrismaCheckInRepository(prisma),
-        suscripciones: new PrismaSuscripcionRepository(prisma),
         sucursales: new PrismaSucursalRepository(prisma),
-        planes: new PrismaPlanRepository(prisma),
       },
       { organizacionId: sucursal.organizacionId, sucursalId: sucursal.id, identificador }
     );
@@ -50,8 +46,6 @@ export async function POST(req: NextRequest) {
         estado: resultado.estado,
         sucursalAsignadaNombre: resultado.sucursalAsignadaNombre,
         sucursalAsignadaDireccion: resultado.sucursalAsignadaDireccion,
-        diasGraciaRestantes: resultado.diasGraciaRestantes,
-        tieneGraciaConfigurada: resultado.tieneGraciaConfigurada,
         esCumpleanos: resultado.esCumpleanos,
       },
       200

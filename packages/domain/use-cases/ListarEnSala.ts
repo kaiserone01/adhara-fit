@@ -1,15 +1,10 @@
 import { ICheckInRepository } from "../ports/ICheckInRepository";
-import { ISuscripcionRepository } from "../ports/ISuscripcionRepository";
-import { ISucursalRepository } from "../ports/ISucursalRepository";
-import { diasGraciaParaPlan } from "../entities/Plan";
 import { CheckInEnSala, EstadoCheckIn } from "../entities/CheckIn";
 import { inicioDelDiaLima } from "../utils/fechaLima";
 import { validarAccesoSucursal } from "./ValidarAccesoSucursalPorPlan";
 
 export interface ListarEnSalaDeps {
   checkIns: ICheckInRepository;
-  suscripciones: ISuscripcionRepository;
-  sucursales: ISucursalRepository;
 }
 
 export interface PersonaEnSala {
@@ -28,7 +23,7 @@ export interface PersonaEnSala {
 }
 
 export function requiereCobro(estado: EstadoCheckIn): boolean {
-  return estado === "vencido" || estado === "en_gracia" || estado === "abono_vencido";
+  return estado === "vencido";
 }
 
 export async function listarEnSala(
@@ -38,7 +33,7 @@ export async function listarEnSala(
   const ahora = input.ahora ?? new Date();
   const abiertos = await deps.checkIns.listarEnSala(input.sucursalId, inicioDelDiaLima(ahora));
   // Los que hay que cobrar primero; dentro de cada grupo, el más reciente arriba.
-  return (await armarPersonas(deps, input, abiertos, ahora)).sort((a, b) => Number(b.requiereCobro) - Number(a.requiereCobro));
+  return armarPersonas(deps, input, abiertos, ahora).sort((a, b) => Number(b.requiereCobro) - Number(a.requiereCobro));
 }
 
 export type RangoHistorialSala = "hoy" | "24h";
@@ -54,34 +49,20 @@ export async function listarHistorialSala(
   return armarPersonas(deps, input, await deps.checkIns.listarDesde(input.sucursalId, desde), ahora);
 }
 
-async function armarPersonas(
-  deps: ListarEnSalaDeps,
+function armarPersonas(
+  _deps: ListarEnSalaDeps,
   input: { organizacionId: string; sucursalId: string },
   abiertos: CheckInEnSala[],
   ahora: Date
-): Promise<PersonaEnSala[]> {
+): PersonaEnSala[] {
   if (abiertos.length === 0) return [];
-
-  const sucursal = await deps.sucursales.buscarPorId(input.organizacionId, input.sucursalId);
-  const diasGraciaSede = sucursal?.diasGracia ?? 0;
 
   // Un miembro puede tener varios check-ins en el rango: se muestra solo el más reciente.
   const vistos = new Set<string>();
   const unicos = abiertos.filter((c) => !vistos.has(c.miembroId) && vistos.add(c.miembroId));
 
-  return Promise.all(
-    unicos.map(async (c): Promise<PersonaEnSala> => {
-      const suscripcion = await deps.suscripciones.buscarActivaVigentePorMiembro(c.miembroId, ahora);
-      const estado = await validarAccesoSucursal(
-        { suscripciones: deps.suscripciones },
-        c.miembroId,
-        c.miembro.sucursalId,
-        input.sucursalId,
-        c.miembro.fechaVencimiento,
-        diasGraciaParaPlan(diasGraciaSede, c.miembro.planFrecuencia),
-        suscripcion?.fechaLimiteAbono ?? null,
-        ahora
-      );
+  return unicos.map((c): PersonaEnSala => {
+      const estado = validarAccesoSucursal(c.miembro.sucursalId, input.sucursalId, c.miembro.fechaVencimiento, ahora);
       return {
         checkInId: c.id,
         miembroId: c.miembroId,
@@ -94,6 +75,5 @@ async function armarPersonas(
         estado,
         requiereCobro: requiereCobro(estado),
       };
-    })
-  );
+    });
 }

@@ -16,10 +16,9 @@ function crearDeps(miembro: Partial<Miembro>) {
         ...miembro,
       }),
     },
-    // Un check-in reciente existente corta antes de validar la suscripción.
+    // Un check-in reciente existente corta antes de validar el vencimiento.
     checkIns: { buscarRecientePorMiembroYSucursal: async () => ({ estadoAlMomento: "activo" }) },
-    suscripciones: {},
-    sucursales: { buscarPorId: async () => ({ diasGracia: 0, nombre: "Sede Principal", direccion: null }) },
+    sucursales: { buscarPorId: async () => ({ nombre: "Sede Principal", direccion: null }) },
   } as unknown as Parameters<typeof registrarCheckIn>[0];
 }
 
@@ -53,8 +52,7 @@ describe("registrarCheckIn — identificador (S-06)", () => {
         buscarPorDocumento: async (n: string) => (consultas.push("doc:" + n), miembro),
       },
       checkIns: { buscarRecientePorMiembroYSucursal: async () => ({ estadoAlMomento: "activo" }) },
-      suscripciones: {},
-      sucursales: { buscarPorId: async () => ({ diasGracia: 0, nombre: "Sede", direccion: null }) },
+      sucursales: { buscarPorId: async () => ({ nombre: "Sede", direccion: null }) },
     } as unknown as Parameters<typeof registrarCheckIn>[0];
     await registrarCheckIn(deps, { ...input, identificador: " 0042 " });
     await registrarCheckIn(deps, { ...input, identificador: "ab-123 456" });
@@ -67,11 +65,14 @@ describe("registrarCheckIn — identificador (S-06)", () => {
   });
 });
 
-describe("registrarCheckIn — días de gracia solo para planes mensuales", () => {
+describe("registrarCheckIn — estado de acceso (sin días de gracia)", () => {
+  // 08/10/2026 10:00 en Lima; el vencimiento es el inicio del día de Lima (05:00Z).
+  const AHORA = new Date("2026-10-08T15:00:00Z");
+  const HOY = new Date("2026-10-08T05:00:00Z");
   const DIA = 24 * 60 * 60 * 1000;
 
-  function depsConPlan(frecuencia: string | null) {
-    const creados: unknown[] = [];
+  function depsConVencimiento(fechaVencimiento: Date | null, sucursalDelMiembro: string | null = null) {
+    const creados: { estadoAlMomento: string }[] = [];
     const deps = {
       miembros: {
         buscarPorDocumento: async () => ({
@@ -79,43 +80,54 @@ describe("registrarCheckIn — días de gracia solo para planes mensuales", () =
           nombre: "Ana Pérez",
           fotoUrl: null,
           entrenadorNombre: null,
-          fechaVencimiento: new Date(Date.now() - DIA),
-          sucursalId: null,
+          fechaVencimiento,
+          sucursalId: sucursalDelMiembro,
           fechaNacimiento: null,
-          planId: frecuencia ? "plan1" : null,
         }),
       },
       checkIns: {
         buscarRecientePorMiembroYSucursal: async () => null,
-        crear: async (datos: unknown) => {
+        crear: async (datos: { estadoAlMomento: string }) => {
           creados.push(datos);
         },
       },
-      suscripciones: { buscarActivaVigentePorMiembro: async () => null },
-      sucursales: { buscarPorId: async () => ({ diasGracia: 3, nombre: "Sede Principal", direccion: null }) },
-      planes: { buscarPorId: async () => (frecuencia ? { id: "plan1", frecuencia } : null) },
+      sucursales: { buscarPorId: async () => ({ nombre: "Sede Principal", direccion: null }) },
     } as unknown as Parameters<typeof registrarCheckIn>[0];
     return { deps, creados };
   }
 
-  test("plan mensual vencido ayer, con 3 días de gracia en la sede: en gracia", async () => {
-    const resultado = await registrarCheckIn(depsConPlan("MENSUAL").deps, input);
-    expect(resultado.estado).toBe("en_gracia");
-    expect(resultado.diasGraciaRestantes).toBeGreaterThan(0);
-    expect(resultado.tieneGraciaConfigurada).toBe(true);
+  test("vencimiento futuro: activo", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(AHORA);
+    const resultado = await registrarCheckIn(depsConVencimiento(new Date(HOY.getTime() + 5 * DIA)).deps, input);
+    expect(resultado.estado).toBe("activo");
   });
 
-  test("plan semanal, diario o de otra duración: vencido, sin gracia (aunque la sede tenga días de gracia)", async () => {
-    for (const frecuencia of ["SEMANAL", "DIARIO", "QUINCENAL", "SEMESTRAL", "ANUAL", "PERSONALIZADO"]) {
-      const resultado = await registrarCheckIn(depsConPlan(frecuencia).deps, input);
-      expect(resultado.estado, frecuencia).toBe("vencido");
-      expect(resultado.diasGraciaRestantes, frecuencia).toBeNull();
-      expect(resultado.tieneGraciaConfigurada, frecuencia).toBe(false);
-    }
+  test("el día del vencimiento todavía es activo (último día con acceso, inclusive)", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(AHORA);
+    const { deps, creados } = depsConVencimiento(HOY);
+    expect((await registrarCheckIn(deps, input)).estado).toBe("activo");
+    expect(creados[0].estadoAlMomento).toBe("activo");
   });
 
-  test("sin plan asignado: vencido, sin gracia", async () => {
-    const resultado = await registrarCheckIn(depsConPlan(null).deps, input);
+  test("vencido ayer: vencido, sin período de gracia", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(AHORA);
+    const resultado = await registrarCheckIn(depsConVencimiento(new Date(HOY.getTime() - DIA)).deps, input);
     expect(resultado.estado).toBe("vencido");
+  });
+
+  test("sin vencimiento registrado: vencido", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(AHORA);
+    expect((await registrarCheckIn(depsConVencimiento(null).deps, input)).estado).toBe("vencido");
+  });
+
+  test("socio de otra sede: sucursal_incorrecta aunque esté al día", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(AHORA);
+    const resultado = await registrarCheckIn(depsConVencimiento(new Date(HOY.getTime() + 5 * DIA), "otra").deps, input);
+    expect(resultado.estado).toBe("sucursal_incorrecta");
   });
 });

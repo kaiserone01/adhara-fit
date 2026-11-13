@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { obtenerUsuarioDeSesionActual } from "@/lib/sesion";
 import { PrismaPagoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPagoRepository";
 import { PrismaProductoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaProductoRepository";
+import { PrismaUnidadDeTrabajo } from "@gym-app/infrastructure/persistence/prisma/PrismaUnidadDeTrabajo";
 import {
   venderProducto,
   ProductoNoEncontradoError,
@@ -19,6 +20,7 @@ import {
   PagoNoEncontradoError,
   PagoYaAnuladoError,
   MotivoRequeridoError as MotivoRequeridoAnular,
+  SoloUltimoCobroError,
 } from "@gym-app/domain/use-cases/AnularPago";
 
 export interface EstadoAnularPago {
@@ -42,16 +44,15 @@ export async function anularPagoAction(
 
   try {
     await anularPago(
-      {
-        pagos: new PrismaPagoRepository(prisma),
-      },
+      { unidad: new PrismaUnidadDeTrabajo(prisma) },
       { organizacionId: usuario.organizacionId, pagoId, anuladoPorId: usuario.id, motivo }
     );
   } catch (error) {
     if (
       error instanceof PagoNoEncontradoError ||
       error instanceof PagoYaAnuladoError ||
-      error instanceof MotivoRequeridoAnular
+      error instanceof MotivoRequeridoAnular ||
+      error instanceof SoloUltimoCobroError
     ) {
       return { error: error.message };
     }
@@ -60,6 +61,7 @@ export async function anularPagoAction(
 
   revalidatePath("/cobros");
   revalidatePath("/pagos");
+  revalidatePath("/miembros");
   return { ok: "Cobro anulado." };
 }
 

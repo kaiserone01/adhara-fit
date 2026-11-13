@@ -14,7 +14,7 @@ import {
   ConfirmacionInvalidaError,
 } from "@gym-app/domain/use-cases/ActualizarFrecuenciaPlan";
 import { eliminarPlan } from "@gym-app/domain/use-cases/EliminarPlan";
-import type { FrecuenciaPago, TipoMinimoAbono } from "@gym-app/domain/entities/Plan";
+import type { FrecuenciaPago } from "@gym-app/domain/entities/Plan";
 import { conMensajeOk } from "../redirectConMensaje";
 
 export interface EstadoFormularioPlan {
@@ -26,20 +26,6 @@ export interface EstadoFormularioPlan {
 // se envían cuando el formulario tiene marcado "Mínimo de abono
 // personalizado" (ver FormularioPlan.tsx), así que su ausencia significa
 // "sin mínimo propio, hereda el de la frecuencia".
-function leerCamposDeAbono(formData: FormData): {
-  permitePagoParcial: boolean;
-  minimoAbonoTipo: TipoMinimoAbono | null;
-  minimoAbonoValor: number | null;
-} {
-  const permitePagoParcial = formData.get("permitePagoParcial")?.toString() === "on";
-  const minimoAbonoTipoRaw = formData.get("minimoAbonoTipo")?.toString();
-  const minimoAbonoValorRaw = formData.get("minimoAbonoValor")?.toString();
-  const minimoAbonoTipo =
-    minimoAbonoTipoRaw === "DIAS" || minimoAbonoTipoRaw === "PORCENTAJE" ? minimoAbonoTipoRaw : null;
-  const minimoAbonoValor = minimoAbonoTipo !== null && minimoAbonoValorRaw ? Number(minimoAbonoValorRaw) : null;
-  return { permitePagoParcial, minimoAbonoTipo, minimoAbonoValor };
-}
-
 export async function crearPlanAction(
   _estadoPrevio: EstadoFormularioPlan,
   formData: FormData
@@ -54,7 +40,6 @@ export async function crearPlanAction(
   const incluyeEntrenador = formData.get("incluyeEntrenador")?.toString() === "on";
   const multisede = formData.get("multisede")?.toString() === "on";
   const precioUSD = Number(formData.get("precioUSD"));
-  const { permitePagoParcial, minimoAbonoTipo, minimoAbonoValor } = leerCamposDeAbono(formData);
 
   if (!nombre || !frecuencia || !diasCiclo || diasCiclo <= 0 || Number.isNaN(precioUSD)) {
     return { error: "Nombre, frecuencia, duración del ciclo y precio son requeridos." };
@@ -70,9 +55,6 @@ export async function crearPlanAction(
       incluyeEntrenador,
       precioUSD,
       multisede,
-      permitePagoParcial,
-      minimoAbonoTipo,
-      minimoAbonoValor,
     }
   );
 
@@ -92,7 +74,6 @@ export async function actualizarPlanAction(
   const nombre = formData.get("nombre")?.toString().trim();
   const precioUSD = Number(formData.get("precioUSD"));
   const multisede = formData.get("multisede")?.toString() === "on";
-  const { permitePagoParcial, minimoAbonoTipo, minimoAbonoValor } = leerCamposDeAbono(formData);
 
   if (!nombre || Number.isNaN(precioUSD)) {
     return { error: "Nombre y precio son requeridos." };
@@ -104,7 +85,7 @@ export async function actualizarPlanAction(
       {
         organizacionId: usuario.organizacionId,
         id,
-        cambios: { nombre, precioUSD, multisede, permitePagoParcial, minimoAbonoTipo, minimoAbonoValor },
+        cambios: { nombre, precioUSD, multisede },
       }
     );
   } catch (error) {

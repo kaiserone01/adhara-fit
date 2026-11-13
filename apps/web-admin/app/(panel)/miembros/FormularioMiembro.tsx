@@ -7,13 +7,12 @@ import { Button } from "@gym-app/ui/components/Button";
 import { Input } from "@gym-app/ui/components/Input";
 import { InputFecha } from "@gym-app/ui/components/InputFecha";
 import { CurrencyInput } from "@gym-app/ui/components/CurrencyInput";
-import { MAX_MESES_POR_PAGO, toleranciaDiferenciaPagoUSD } from "@gym-app/domain/entities/Pago";
+import { MAX_MESES_POR_PAGO } from "@gym-app/domain/entities/Pago";
 import { Card } from "@gym-app/ui/components/Card";
 import { Badge } from "@gym-app/ui/components/Badge";
 import { useFeedback } from "@gym-app/ui/components/FeedbackOverlay";
 import { actualizarFotoMiembroAction, type EstadoFormularioMiembro } from "./actions";
 import { SelectorMetodoPago } from "../pagos/SelectorMetodoPago";
-import { LineaPagoMiembroCampos, type LineaPagoMiembro } from "./LineaPagoMiembro";
 import { ProveedorCambiosSinGuardar } from "./ContextoCambiosSinGuardar";
 import { SelectorFotoPerfil } from "./SelectorFotoPerfil";
 import type { EntrenadorResumen } from "@gym-app/domain/entities/EntrenadorResumen";
@@ -105,8 +104,6 @@ export function FormularioMiembro({
   metodosPago,
   miembroId,
   ultimosCiclos,
-  saldoPendiente,
-  accesoHastaAbono,
   totalPagos,
   valoresIniciales,
   tieneCicloVigente,
@@ -132,13 +129,6 @@ export function FormularioMiembro({
   // previos a esta funcionalidad no tienen fechaInicioCiclo/
   // fechaFinCiclo y no aparecen aquí) — solo se usa en modo edición.
   ultimosCiclos: { id: string; fechaInicioCiclo: Date | null; fechaFinCiclo: Date | null }[];
-  // Cuánto falta para completar el ciclo vigente — se muestra dentro de la
-  // tarjeta de Plan de membresía. Undefined o 0 significa que no hay saldo
-  // pendiente (ver diseño acordado: los pagos se registran desde Caja, acá
-  // solo se informa si debe algo).
-  saldoPendiente?: number;
-  // yyyy-mm-dd: hasta cuándo alcanza el acceso con lo abonado, si hay saldo pendiente con plazo de abono.
-  accesoHastaAbono?: string;
   // Cantidad total de pagos del miembro — solo para el contador del link
   // "Ver historial de pagos". Undefined en modo creación.
   totalPagos?: number;
@@ -183,7 +173,7 @@ export function FormularioMiembro({
   // para no perder el dato al mostrar el formulario.
   const sucursalesConActual =
     valoresIniciales && valoresIniciales.sucursalId && !sucursales.some((s) => s.id === valoresIniciales.sucursalId)
-      ? [...sucursales, { id: valoresIniciales.sucursalId, nombre: "(sede actual)", direccion: null, diasGracia: 0, activo: true }]
+      ? [...sucursales, { id: valoresIniciales.sucursalId, nombre: "(sede actual)", direccion: null, activo: true }]
       : sucursales;
 
   const planesActivos = planes.filter(
@@ -234,27 +224,12 @@ export function FormularioMiembro({
   // precio de algo que ya se definió como gratuito.
   const planEsCortesia = planSeleccionado?.precioUSD === 0;
   const precioActual = Number(precio) || 0;
-  // Primer pago de un miembro nuevo: vacío = el precio completo; menos que el precio queda como abono.
-  // null = sin tocar (se ve el precio del plan); "" = el cajero borró el campo para escribir otro monto.
-  const [montoHoy, setMontoHoy] = useState<string | null>(null);
   // Meses que cubre el primer pago (1 a MAX_MESES_POR_PAGO): el total y la duración del ciclo se multiplican.
+  // El pago es único, completo y con un solo método (S-04).
   const [meses, setMeses] = useState(1);
-  const precioCiclo = precioActual * meses;
+  const precioCiclo = Math.round(precioActual * meses * 100) / 100;
+  const montoAPagar = precioCiclo;
   const [errorMontoHoy, setErrorMontoHoy] = useState<string | null>(null);
-  // Primer pago dividido en dos métodos (p. ej. dos pagos móviles): cada línea trae su método y su monto.
-  const [dividirPago, setDividirPago] = useState(false);
-  const [lineasDivididas, setLineasDivididas] = useState<{ id: number; linea: LineaPagoMiembro | null }[]>([
-    { id: 1, linea: null },
-    { id: 2, linea: null },
-  ]);
-  const [siguienteIdLinea, setSiguienteIdLinea] = useState(3);
-  const totalDividido = lineasDivididas.reduce((suma, { linea }) => suma + (linea?.monto ?? 0), 0);
-  const montoAPagar = dividirPago ? Math.round(totalDividido * 100) / 100 : montoHoy === null ? precioCiclo : Number(montoHoy) || 0;
-  const esAbonoInicial = montoAPagar > 0 && montoAPagar < precioCiclo;
-  // Lo pagado supera el precio (wifi u otro cobro, o pagar de más): sin límite; se elige qué hacer con el sobrante.
-  const hayExcedente = precioActual > 0 && montoAPagar - precioCiclo > 0.005;
-  const excedenteUSD = Math.max(0, montoAPagar - precioCiclo);
-  const [excedente, setExcedente] = useState<"otro" | "saldo">("otro");
   // En pantallas angostas el resumen y los avisos del pago quedan lejos del botón Guardar: se lleva la vista hasta ellos.
   const ticketRef = useRef<HTMLDivElement>(null);
   const errorPagoRef = useRef<HTMLParagraphElement>(null);
@@ -266,9 +241,7 @@ export function FormularioMiembro({
   }, [errorMontoHoy]);
   const nombrePlanActual = planSeleccionado?.nombre ?? "—";
   const nombreEntrenadorActual = entrenadores.find((e) => e.id === entrenadorId)?.nombre ?? null;
-  const nombreMetodoPagoActual = dividirPago
-    ? lineasDivididas.map(({ linea }) => linea?.metodo).filter(Boolean).join(" + ") || null
-    : seleccionMetodo.metodo || null;
+  const nombreMetodoPagoActual = seleccionMetodo.metodo || null;
   // El ciclo más reciente (por fechaFinCiclo) entre los que tienen datos
   // de ciclo — su fechaInicioCiclo es la "última fecha de renovación", y
   // su fechaFinCiclo es la fecha de vencimiento vigente (próximo cobro).
@@ -323,22 +296,8 @@ export function FormularioMiembro({
     }
 
     setErrorPrecio(null);
-    if (!esEdicion && dividirPago) {
-      const incompleta = lineasDivididas.findIndex(({ linea }) => !linea || !linea.metodoPagoId || linea.monto <= 0);
-      if (incompleta >= 0) {
-        setErrorMontoHoy(
-          lineasDivididas[incompleta].linea?.metodoPagoId
-            ? `Pago ${incompleta + 1}: falta el monto.`
-            : `Pago ${incompleta + 1}: falta elegir el método completo (el banco o la moneda).`
-        );
-        return;
-      }
-    } else if (!esEdicion && precioActual > 0 && montoAPagar <= 0) {
-      setErrorMontoHoy("El monto a pagar debe ser mayor a 0.");
-      return;
-    }
-    if (!esEdicion && meses > 1 && precioCiclo - montoAPagar > toleranciaDiferenciaPagoUSD(precioCiclo)) {
-      setErrorMontoHoy(`Para pagar ${meses} meses el monto debe cubrir el total (${formatearSoles(precioCiclo)}).`);
+    if (!esEdicion && precioActual > 0 && !seleccionMetodo.metodoPagoId) {
+      setErrorMontoHoy("Elige el método de pago.");
       return;
     }
     setErrorMontoHoy(null);
@@ -395,27 +354,6 @@ export function FormularioMiembro({
           <>
             <input type="hidden" name="montoInicial" value={montoAPagar} />
             {meses > 1 && <input type="hidden" name="meses" value={meses} />}
-            <input type="hidden" name="excedente" value={hayExcedente ? excedente : ""} />
-            {dividirPago && (
-              <input
-                type="hidden"
-                name="lineas"
-                value={JSON.stringify(
-                  lineasDivididas.flatMap(({ linea }) =>
-                    linea
-                      ? [
-                          {
-                            monto: Math.round(linea.monto * 100) / 100,
-                            metodo: linea.metodo,
-                            metodoPagoId: linea.metodoPagoId,
-                            numeroOperacion: linea.numeroOperacion || null,
-                          },
-                        ]
-                      : []
-                  )
-                )}
-              />
-            )}
             <input type="hidden" name="metodo" value={seleccionMetodo.metodo} />
             <input type="hidden" name="metodoPagoId" value={seleccionMetodo.metodoPagoId ?? ""} />
             <input type="hidden" name="numeroOperacion" value={seleccionMetodo.numeroOperacion} />
@@ -605,7 +543,7 @@ export function FormularioMiembro({
                   ¿Cambiar el plan?
                 </h3>
                 <p className="mt-2 text-sm" style={{ color: "var(--gx-muted)" }}>
-                  Se va a cambiar el plan de membresía. Si el miembro tiene una suscripción activa, su fecha de vencimiento se recalcula (prorrateo) a la nueva frecuencia. ¿Estás seguro?
+                  Se va a cambiar el plan de membresía del socio. ¿Estás seguro?
                 </p>
                 <div className="mt-4 flex gap-3">
                   <Button
@@ -767,21 +705,6 @@ export function FormularioMiembro({
 
           {esEdicion && (
             <div className="mt-4 flex flex-col gap-3">
-              {!!saldoPendiente && saldoPendiente > 0 && (
-                <div
-                  className="flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium"
-                  style={{ background: "color-mix(in srgb, var(--gx-accent) 15%, transparent)", color: "var(--gx-accent)" }}
-                >
-                  <span>Saldo pendiente</span>
-                  <span>{formatearSoles(saldoPendiente)}</span>
-                </div>
-              )}
-              {!!saldoPendiente && saldoPendiente > 0 && accesoHastaAbono && (
-                <p className="text-sm" style={{ color: "var(--gx-muted)" }}>
-                  Acceso por el abono hasta el <strong style={{ color: "var(--gx-ink)" }}>{formatearFecha(accesoHastaAbono)}</strong>.
-                  Si no paga el saldo antes, se le bloquea el acceso.
-                </p>
-              )}
               {miembroId && (
                 <Link
                   href={`/miembros/${miembroId}/pagos`}
@@ -825,7 +748,6 @@ export function FormularioMiembro({
                         variant={meses === n ? "primario" : "secundario"}
                         onClick={() => {
                           setMeses(n);
-                          setMontoHoy(null);
                           setErrorMontoHoy(null);
                         }}
                       >
@@ -835,148 +757,28 @@ export function FormularioMiembro({
                   </div>
                   {meses > 1 && (
                     <p className="mt-2 text-sm font-bold" style={{ color: "var(--gx-ink)" }}>
-                      Total de {meses} meses: {formatearSoles(precioCiclo)}. Se paga completo; puedes repartirlo en varios métodos.
+                      Total de {meses} meses: {formatearSoles(precioCiclo)}. Se paga completo.
                     </p>
                   )}
                 </div>
               )}
 
-              {precioActual > 0 && planSeleccionado?.permitePagoParcial !== false && !dividirPago && meses === 1 && (
-                <div className="mb-4">
-                  <CurrencyInput
-                    name="montoHoy"
-                    label="Monto a pagar hoy"
-                   
-                    value={montoHoy ?? String(precioCiclo)}
-                    onChange={(valor) => {
-                      setMontoHoy(valor);
-                      setErrorMontoHoy(null);
-                    }}
-                  />
-                  {esAbonoInicial && (
-                    <p className="mt-2 text-sm font-bold" style={{ color: "var(--gx-ink)" }}>
-                      {precioCiclo - montoAPagar <= toleranciaDiferenciaPagoUSD(precioCiclo)
-                        ? "Diferencia aceptada: el acceso cubre el ciclo completo y quedan "
-                        : "Queda como abono: el acceso se da en proporción a lo pagado y quedan "}
-                      {formatearSoles((precioCiclo - montoAPagar))} pendientes.
-                    </p>
-                  )}
-                  {errorMontoHoy && (
-                    <p ref={errorPagoRef} className="mt-1 text-sm" style={{ color: "var(--gx-bad)" }}>
-                      {errorMontoHoy}
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {precioActual > 0 && dividirPago ? (
+              {precioActual > 0 ? (
                 <>
-                  {lineasDivididas.map(({ id }, indice) => (
-                    <LineaPagoMiembroCampos
-                      key={id}
-                      nombre={`pago${id}`}
-                      titulo={`Pago ${indice + 1}`}
-                      metodosPago={metodosPago}
-                      idFormulario={idFormulario}
-                      onCambio={(linea) => {
-                        // El aviso del pago se borra solo en cuanto se corrige algo.
-                        setErrorMontoHoy(null);
-                        setLineasDivididas((previas) => previas.map((previa) => (previa.id === id ? { id, linea } : previa)));
-                      }}
-                      onQuitar={
-                        lineasDivididas.length > 2
-                          ? () => setLineasDivididas((previas) => previas.filter((previa) => previa.id !== id))
-                          : undefined
-                      }
-                    />
-                  ))}
-                  <Button
-                    type="button"
-                    variant="secundario"
-                    className="mb-3 w-full"
-                    onClick={() => {
-                      setLineasDivididas((previas) => [...previas, { id: siguienteIdLinea, linea: null }]);
-                      setSiguienteIdLinea((n) => n + 1);
-                    }}
-                  >
-                    Agregar otro método de pago
-                  </Button>
-                  <p className="mb-2 text-sm font-bold" style={{ color: "var(--gx-ink)" }}>
-                    Total de los pagos: <strong style={{ color: "var(--gx-ink)" }}>{formatearSoles(montoAPagar)}</strong> de {formatearSoles(precioCiclo)}
-                    {esAbonoInicial && (
-                      <>
-                        {" "}
-                        — quedan {formatearSoles((precioCiclo - montoAPagar))} pendientes
-                        {precioCiclo - montoAPagar <= toleranciaDiferenciaPagoUSD(precioCiclo) ? " (diferencia aceptada)" : " (abono)"}.
-                      </>
-                    )}
+                  <p className="mb-4 text-sm font-bold" style={{ color: "var(--gx-ink)" }}>
+                    Total a pagar: {formatearSoles(precioCiclo)}. Se paga completo con un solo método.
                   </p>
+                  <SelectorMetodoPago metodos={metodosPago} onCambio={setSeleccionMetodo} idFormulario={idFormulario} />
                   {errorMontoHoy && (
-                    <p ref={errorPagoRef} className="mb-2 text-sm" style={{ color: "var(--gx-bad)" }}>
+                    <p ref={errorPagoRef} className="mt-2 text-sm" style={{ color: "var(--gx-bad)" }}>
                       {errorMontoHoy}
                     </p>
                   )}
                 </>
-              ) : precioActual > 0 ? (
-                <SelectorMetodoPago
-                  metodos={metodosPago}
-                  onCambio={setSeleccionMetodo}
-                  idFormulario={idFormulario}
-                />
               ) : (
                 <p className="text-sm" style={{ color: "var(--gx-muted)" }}>
                   Este plan no tiene costo — no hace falta elegir método de pago.
                 </p>
-              )}
-
-              {hayExcedente && (
-                <fieldset className="mt-4 flex flex-col gap-2 rounded-lg border p-3 text-sm" style={{ borderColor: "var(--gx-edge)" }}>
-                  <legend className="px-1 font-bold" style={{ color: "var(--gx-ink)" }}>
-                    Sobran {formatearSoles(excedenteUSD)}. ¿Qué hacemos con ese dinero?
-                  </legend>
-                  {excedenteUSD > precioCiclo && (
-                    <p className="text-sm" style={{ color: "var(--gx-bad)" }}>
-                      Sobra más que el precio del plan: revisa que no hayas escrito bolívares en un campo de dólares.
-                    </p>
-                  )}
-                  <label className="flex min-h-11 items-center gap-2 font-bold" style={{ color: "var(--gx-ink)" }}>
-                    <input
-                      type="radio"
-                      checked={excedente === "otro"}
-                      onChange={() => setExcedente("otro")}
-                      className="h-5 w-5 accent-[var(--gx-accent)]"
-                    />
-                    Es de otro cobro (wifi u otra cosa): solo queda registrado
-                  </label>
-                  <label className="flex min-h-11 items-center gap-2 font-bold" style={{ color: "var(--gx-ink)" }}>
-                    <input
-                      type="radio"
-                      checked={excedente === "saldo"}
-                      onChange={() => setExcedente("saldo")}
-                      className="h-5 w-5 accent-[var(--gx-accent)]"
-                    />
-                    Guardarlo como saldo a favor para su próximo pago
-                  </label>
-                </fieldset>
-              )}
-
-              {precioActual > 0 && (
-                <Button
-                  type="button"
-                  variant="secundario"
-                  className="mt-4 w-full"
-                  onClick={() => {
-                    setDividirPago((v) => !v);
-                    setErrorMontoHoy(null);
-                    setLineasDivididas([
-                      { id: 1, linea: null },
-                      { id: 2, linea: null },
-                    ]);
-                    setSiguienteIdLinea(3);
-                  }}
-                >
-                  {dividirPago ? "Pagar con un solo método" : "Dividir el pago en dos métodos"}
-                </Button>
               )}
             </Card>
         ) : (
@@ -1023,22 +825,12 @@ export function FormularioMiembro({
 
             <div className="flex items-baseline justify-between">
               <span className="text-sm font-medium" style={{ color: "var(--gx-muted)" }}>
-                {esAbonoInicial ? "Abono hoy" : "Total"}
+                Total
               </span>
               <span className="text-2xl font-bold" style={{ color: "var(--gx-ink)" }}>
                 {formatearSoles(montoAPagar)}
               </span>
             </div>
-            {esAbonoInicial && (
-              <p className="text-right text-sm" style={{ color: "var(--gx-muted)" }}>
-                Pendiente {formatearSoles((precioCiclo - montoAPagar))} de {formatearSoles(precioCiclo)}
-              </p>
-            )}
-            {hayExcedente && (
-              <p className="text-right text-sm" style={{ color: "var(--gx-muted)" }}>
-                Sobran {formatearSoles(excedenteUSD)} — {excedente === "saldo" ? "se guardan como saldo a favor" : "de otro cobro"}
-              </p>
-            )}
 
             <p className="mt-5 text-center text-sm font-medium" style={{ color: "var(--gx-muted)" }}>
               ¿Está seguro de la información suministrada?

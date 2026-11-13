@@ -6,7 +6,7 @@ import { Input } from "@gym-app/ui/components/Input";
 import { CurrencyInput } from "@gym-app/ui/components/CurrencyInput";
 import { useFeedback } from "@gym-app/ui/components/FeedbackOverlay";
 import type { EstadoFormularioPlan } from "./actions";
-import type { FrecuenciaPago, TipoMinimoAbono } from "@gym-app/domain/entities/Plan";
+import type { FrecuenciaPago } from "@gym-app/domain/entities/Plan";
 
 export interface ValoresFormularioPlan {
   nombre: string;
@@ -15,9 +15,6 @@ export interface ValoresFormularioPlan {
   incluyeEntrenador: boolean;
   precioUSD: number;
   multisede: boolean;
-  permitePagoParcial: boolean;
-  minimoAbonoTipo: TipoMinimoAbono | null;
-  minimoAbonoValor: number | null;
 }
 
 const ETIQUETA_FRECUENCIA: Record<FrecuenciaPago, string> = {
@@ -73,12 +70,6 @@ export function FormularioPlan({
   const diasCicloEfectivo = esPersonalizado
     ? Number(diasCicloPersonalizado) || 0
     : DIAS_CICLO_POR_FRECUENCIA_FIJA[frecuencia];
-  const [permitePagoParcial, setPermitePagoParcial] = useState(valoresIniciales?.permitePagoParcial ?? true);
-  const [tieneMinimoPropio, setTieneMinimoPropio] = useState(
-    valoresIniciales?.minimoAbonoTipo !== null && valoresIniciales?.minimoAbonoTipo !== undefined
-  );
-  const [minimoAbonoTipo, setMinimoAbonoTipo] = useState<TipoMinimoAbono>(valoresIniciales?.minimoAbonoTipo ?? "DIAS");
-  const [minimoAbonoValor, setMinimoAbonoValor] = useState(String(valoresIniciales?.minimoAbonoValor ?? ""));
 
   return (
     <>
@@ -133,58 +124,6 @@ export function FormularioPlan({
               Incluye entrenador personal
             </label>
           </>
-        )}
-
-        <label className="flex min-h-11 items-center gap-2 text-sm" style={{ color: "var(--gx-muted)" }}>
-          <input
-            type="checkbox"
-            name="permitePagoParcial"
-            checked={permitePagoParcial}
-            onChange={(e) => setPermitePagoParcial(e.target.checked)}
-            className="gx-check"
-          />
-          Permite pago parcial (abono)
-        </label>
-
-        {permitePagoParcial && (
-          <div className="flex flex-col gap-2 rounded-lg border p-3" style={{ borderColor: "var(--gx-edge)" }}>
-            <label className="flex items-center gap-2 text-sm" style={{ color: "var(--gx-muted)" }}>
-              <input
-                type="checkbox"
-                checked={tieneMinimoPropio}
-                onChange={(e) => setTieneMinimoPropio(e.target.checked)}
-                className="gx-check"
-              />
-              Mínimo de abono personalizado para este plan
-            </label>
-
-            {tieneMinimoPropio ? (
-              <div className="flex items-end gap-3">
-                <select
-                  name="minimoAbonoTipo"
-                  value={minimoAbonoTipo}
-                  onChange={(e) => setMinimoAbonoTipo(e.target.value as TipoMinimoAbono)}
-                  className="min-h-11 rounded-lg border px-3 gx-campo"
-                >
-                  <option value="DIAS">Días</option>
-                  <option value="PORCENTAJE">Porcentaje</option>
-                </select>
-                <Input
-                  name="minimoAbonoValor"
-                  label={minimoAbonoTipo === "DIAS" ? "Días mínimos" : "Porcentaje mínimo"}
-                  type="number"
-                  min={0}
-                  value={minimoAbonoValor}
-                  onChange={(e) => setMinimoAbonoValor(e.target.value)}
-                />
-              </div>
-            ) : (
-              <p className="text-xs" style={{ color: "var(--gx-muted)" }}>
-                Usa el mínimo configurado en Configuraciones → Reglas de abono
-                para la frecuencia {ETIQUETA_FRECUENCIA[valoresIniciales?.frecuencia ?? "MENSUAL"]}.
-              </p>
-            )}
-          </div>
         )}
 
         {esEdicion && (

@@ -5,7 +5,7 @@ import { formatearSoles } from "@gym-app/domain/utils/formatearSoles";
 import { useEffect, useMemo, useState } from "react";
 import { normalizarTexto } from "@/lib/normalizarTexto";
 import type { Miembro } from "@gym-app/domain/entities/Miembro";
-import type { FrecuenciaPago, TipoMinimoAbono } from "@gym-app/domain/entities/Plan";
+import type { FrecuenciaPago } from "@gym-app/domain/entities/Plan";
 
 // Solo los campos que este modal necesita mostrar del plan — evita atar
 // este componente al tipo Plan completo del dominio (activo, etc. no se
@@ -19,9 +19,6 @@ export interface PlanParaModal {
   multisede: boolean;
   frecuencia: FrecuenciaPago;
   diasCiclo: number;
-  permitePagoParcial: boolean;
-  minimoAbonoTipo: TipoMinimoAbono | null;
-  minimoAbonoValor: number | null;
   // Necesario para "Cambiar plan" en el Paso 2 del wizard de Caja — el
   // formulario de cambio de plan (FormularioCambiarPlan) exige elegir
   // entrenador cuando el plan nuevo lo incluye.
@@ -68,10 +65,9 @@ export interface MiembroConPlan {
   // vigente, y el selector de entrenador se filtra por sucursal.
   sucursalId: string | null;
   entrenadorId: string | null;
-  // Crédito generado por un cambio de plan a la baja (ver
-  // CambiarPlanConPago) — se muestra como aviso informativo antes de
-  // pagar, ya que se descuenta automáticamente del monto a cobrar.
-  saldoAFavorUSD: number;
+  // Plan asignado y precio acordado del socio: el cobro de su plan actual usa ese precio.
+  planId: string | null;
+  precioPlan: number;
 }
 
 export function aMiembroConPlan(m: Miembro, planesPorId: Map<string, PlanParaModal>): MiembroConPlan {
@@ -85,7 +81,8 @@ export function aMiembroConPlan(m: Miembro, planesPorId: Map<string, PlanParaMod
     plan: m.planId ? planesPorId.get(m.planId) : undefined,
     sucursalId: m.sucursalId,
     entrenadorId: m.entrenadorId,
-    saldoAFavorUSD: m.saldoAFavorUSD,
+    planId: m.planId,
+    precioPlan: m.precioPlan,
   };
 }
 

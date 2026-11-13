@@ -35,20 +35,16 @@ describe("caraDeResultado", () => {
   });
 
   it("los demás estados pasan tal cual, aunque la fecha ya haya pasado", () => {
-    expect(caraDeResultado({ estado: "en_gracia", fechaVencimiento: enDias(-2) }, AHORA).cara).toBe("en_gracia");
     expect(caraDeResultado({ estado: "vencido", fechaVencimiento: enDias(-40) }, AHORA).cara).toBe("vencido");
-    expect(caraDeResultado({ estado: "abono_vencido", fechaVencimiento: null }, AHORA).cara).toBe("abono_vencido");
     expect(caraDeResultado({ estado: "sucursal_incorrecta", fechaVencimiento: null }, AHORA).cara).toBe("sucursal_incorrecta");
   });
 });
 
 describe("tonoDeCara", () => {
-  it("verde con acceso, ámbar en gracia, rojo en el resto", () => {
+  it("verde con acceso, rojo en el resto", () => {
     expect(tonoDeCara("permitido")).toBe("verde");
     expect(tonoDeCara("por_vencer")).toBe("verde");
-    expect(tonoDeCara("en_gracia")).toBe("ambar");
     expect(tonoDeCara("vencido")).toBe("rojo");
-    expect(tonoDeCara("abono_vencido")).toBe("rojo");
     expect(tonoDeCara("sucursal_incorrecta")).toBe("rojo");
   });
 });

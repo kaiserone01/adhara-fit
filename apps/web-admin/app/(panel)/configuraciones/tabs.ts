@@ -3,7 +3,6 @@
 // pero muestran la misma barra de tabs (ver diseño acordado).
 export const TABS_CONFIGURACIONES = [
   { href: "/configuraciones/metodos-pago", label: "Métodos de pago" },
-  { href: "/configuraciones/reglas-abono", label: "Reglas de abono" },
   { href: "/planes", label: "Planes" },
   { href: "/usuarios", label: "Administradores" },
   { href: "/entrenadores", label: "Entrenadores" },

@@ -18,6 +18,8 @@ type FilaPago = {
   anuladoPorId: string | null;
   motivoAnulacion: string | null;
   grupoPagoId: string | null;
+  cobroId: string | null;
+  vencimientoAnterior: Date | null;
   productoId: string | null;
   productoNombre: string | null;
   cantidad: number | null;
@@ -40,6 +42,8 @@ function mapear(pago: FilaPago): Pago {
     anuladoPorId: pago.anuladoPorId,
     motivoAnulacion: pago.motivoAnulacion,
     grupoPagoId: pago.grupoPagoId,
+    cobroId: pago.cobroId,
+    vencimientoAnterior: pago.vencimientoAnterior,
     productoId: pago.productoId,
     productoNombre: pago.productoNombre,
     cantidad: pago.cantidad,
@@ -62,6 +66,8 @@ export class PrismaPagoRepository implements IPagoRepository {
         fechaInicioCiclo: datos.fechaInicioCiclo,
         fechaFinCiclo: datos.fechaFinCiclo,
         grupoPagoId: datos.grupoPagoId,
+        cobroId: datos.cobroId ?? null,
+        vencimientoAnterior: datos.vencimientoAnterior ?? null,
         ...(datos.fechaPago ? { fechaPago: datos.fechaPago } : {}),
         productoId: datos.productoId ?? null,
         productoNombre: datos.productoNombre ?? null,
@@ -71,15 +77,9 @@ export class PrismaPagoRepository implements IPagoRepository {
     return mapear(pago);
   }
 
-  async listarConCicloAbierto(organizacionId: string, ahora: Date): Promise<Pago[]> {
-    const pagos = await this.prisma.pago.findMany({
-      where: { miembro: { organizacionId }, anuladoEn: null, fechaFinCiclo: { gt: ahora } },
-    });
-    return pagos.map(mapear);
-  }
-
-  async moverFinCiclo(miembroId: string, finAnterior: Date, finNuevo: Date): Promise<void> {
-    await this.prisma.pago.updateMany({ where: { miembroId, fechaFinCiclo: finAnterior }, data: { fechaFinCiclo: finNuevo } });
+  async buscarPorCobroId(cobroId: string): Promise<Pago | null> {
+    const pago = await this.prisma.pago.findUnique({ where: { cobroId } });
+    return pago ? mapear(pago) : null;
   }
 
   async listarPorMiembro(miembroId: string): Promise<Pago[]> {

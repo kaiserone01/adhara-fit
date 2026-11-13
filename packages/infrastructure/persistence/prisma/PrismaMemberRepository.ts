@@ -148,7 +148,12 @@ export class PrismaMemberRepository implements IMemberRepository {
     });
   }
 
-  async actualizarFechasPago(id: string, fechaUltimoPago: Date, fechaVencimiento: Date): Promise<void> {
+  async bloquearPorId(id: string): Promise<void> {
+    // Solo tiene efecto dentro de una transacción (PrismaUnidadDeTrabajo): serializa cobros y anulaciones del mismo socio.
+    await this.prisma.$queryRaw`SELECT "id" FROM "Miembro" WHERE "id" = ${id} FOR UPDATE`;
+  }
+
+  async actualizarFechasPago(id: string, fechaUltimoPago: Date | null, fechaVencimiento: Date): Promise<void> {
     await this.prisma.miembro.update({
       where: { id },
       data: { fechaUltimoPago, fechaVencimiento },

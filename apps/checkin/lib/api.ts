@@ -6,7 +6,7 @@ export function fijarUrlApi(url: string): void {
   urlApi = url;
 }
 
-export type EstadoCheckIn = "activo" | "en_gracia" | "vencido" | "abono_vencido" | "sucursal_incorrecta";
+export type EstadoCheckIn = "activo" | "vencido" | "sucursal_incorrecta";
 
 export interface ResultadoCheckIn {
   nombre: string;
@@ -17,11 +17,6 @@ export interface ResultadoCheckIn {
   estado: EstadoCheckIn;
   sucursalAsignadaNombre: string;
   sucursalAsignadaDireccion: string | null;
-  diasGraciaRestantes: number | null;
-  // false cuando la sucursal donde ocurrió el check-in tiene "Días de
-  // gracia" en 0 — el concepto de período de gracia no aplica ahí, y la
-  // presentación no debe mencionarlo en ningún mensaje.
-  tieneGraciaConfigurada: boolean;
   // Opcional: un API viejo no lo envía (el checkin lo trata como "no es cumpleaños").
   esCumpleanos?: boolean;
 }

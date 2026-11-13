@@ -8,7 +8,6 @@ import { PrismaPagoRepository } from "@gym-app/infrastructure/persistence/prisma
 import { PrismaSucursalRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSucursalRepository";
 import { obtenerMiembro, MiembroNoEncontradoError, MiembroFueraDeSucursalError } from "@gym-app/domain/use-cases/ObtenerMiembro";
 import { listarPagos } from "@gym-app/domain/use-cases/ListarPagos";
-import { pagosVigentesDelCiclo, type Pago } from "@gym-app/domain/entities/Pago";
 import { Card } from "@gym-app/ui/components/Card";
 import { PageHeader } from "@gym-app/ui/components/PageHeader";
 import { MiembroFueraDeSucursal } from "../MiembroFueraDeSucursal";
@@ -21,22 +20,6 @@ function formatearRangoCiclo(inicio: Date | null, fin: Date | null): string {
   if (!inicio || !fin) return "—";
   const opciones: Intl.DateTimeFormatOptions = { day: "2-digit", month: "2-digit" };
   return `${new Date(inicio).toLocaleDateString("es-PE", opciones)} → ${new Date(fin).toLocaleDateString("es-PE", opciones)}`;
-}
-
-// Pagos fraccionados/mixtos: cuando varios Pago comparten el mismo ciclo
-// (mismo fechaFinCiclo), se etiquetan como "Abono 1 de 2", etc., para que
-// se vea a qué pago pertenece cada uno (ver diseño acordado, roadmap
-// punto d). Si todos son partes de un mismo cobro dividido en varios métodos (mismo grupoPagoId), son
-// "Pago 1 de 2" y no abonos. Un pago que no comparte ciclo con ningún otro no lleva etiqueta.
-function etiquetaAbono(pago: Pago, todos: Pago[]): string | null {
-  if (!pago.fechaFinCiclo || pago.anuladoEn) return null;
-  const delMismoCiclo = pagosVigentesDelCiclo(todos, pago.fechaFinCiclo).sort(
-    (a, b) => a.fechaPago.getTime() - b.fechaPago.getTime()
-  );
-  if (delMismoCiclo.length <= 1) return null;
-  const posicion = delMismoCiclo.findIndex((p) => p.id === pago.id) + 1;
-  const cobroDividido = pago.grupoPagoId !== null && delMismoCiclo.every((p) => p.grupoPagoId === pago.grupoPagoId);
-  return `${cobroDividido ? "Pago" : "Abono"} ${posicion} de ${delMismoCiclo.length}`;
 }
 
 export default async function PaginaHistorialPagos({ params }: { params: Promise<{ id: string }> }) {
@@ -105,9 +88,9 @@ export default async function PaginaHistorialPagos({ params }: { params: Promise
                   </td>
                   <td className="py-2" style={{ color: "var(--gx-ink)" }}>
                     {formatearRangoCiclo(pago.fechaInicioCiclo, pago.fechaFinCiclo)}
-                    {etiquetaAbono(pago, pagos) && (
-                      <span className="ml-2 text-xs font-medium" style={{ color: "var(--gx-accent)" }}>
-                        {etiquetaAbono(pago, pagos)}
+                    {pago.anuladoEn && (
+                      <span className="ml-2 text-xs font-medium" style={{ color: "var(--gx-bad)" }}>
+                        Anulado
                       </span>
                     )}
                   </td>
@@ -142,9 +125,9 @@ export default async function PaginaHistorialPagos({ params }: { params: Promise
               <span>{pago.metodo}</span>
               <span>
                 Ciclo: {formatearRangoCiclo(pago.fechaInicioCiclo, pago.fechaFinCiclo)}
-                {etiquetaAbono(pago, pagos) && (
-                  <span className="ml-2 font-medium" style={{ color: "var(--gx-accent)" }}>
-                    {etiquetaAbono(pago, pagos)}
+                {pago.anuladoEn && (
+                  <span className="ml-2 font-medium" style={{ color: "var(--gx-bad)" }}>
+                    Anulado
                   </span>
                 )}
               </span>

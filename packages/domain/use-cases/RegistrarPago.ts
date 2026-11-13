@@ -1,24 +1,8 @@
-import { resolverCobroPasado } from "./resolverCobroPasado";
-import { randomUUID } from "node:crypto";
-import { IPagoRepository } from "../ports/IPagoRepository";
-import { ISuscripcionRepository } from "../ports/ISuscripcionRepository";
-import { IMemberRepository } from "../ports/IMemberRepository";
-import { IPlanRepository } from "../ports/IPlanRepository";
-import { ISucursalRepository } from "../ports/ISucursalRepository";
-import { IReglaAbonoRepository } from "../ports/IReglaAbonoRepository";
-import {
-  Pago,
-  pagosVigentesDelCiclo,
-  totalPagado,
-  validarLineasDePago,
-  LineasDePagoInvalidasError,
-  MAX_DIAS_ATRAS_PAGO_RETROACTIVO,
-  MAX_DIAS_ATRAS_PAGO_FECHADO,
-  MAX_MESES_POR_PAGO,
-  toleranciaDiferenciaPagoUSD,
-} from "../entities/Pago";
-import { resolverReglaAbono, calcularMontoMinimoAbono, calcularFechaLimiteAbono } from "../entities/ReglaAbono";
-import type { Plan } from "../entities/Plan";
+import type { IUnidadDeTrabajo } from "../ports/IUnidadDeTrabajo";
+import type { Pago } from "../entities/Pago";
+import { MAX_MESES_POR_PAGO } from "../entities/Pago";
+import { aCentavos, diaLima, estaVigente, sumarDiasCalendario } from "../utils/vencimiento";
+import { fijarVencimiento } from "./FijarVencimiento";
 import { MiembroFueraDeSucursalError } from "./ObtenerMiembro";
 
 export { MiembroFueraDeSucursalError };
@@ -41,69 +25,36 @@ export class PlanInactivoError extends Error {
   }
 }
 
-// Un monto en S/ 0 (o negativo) contra un plan que SÍ cuesta algo no es un
-// abono válido — sin este chequeo, un $0 tipeado por error (ej. campo
-// vaciado sin querer) igual adelantaba el vencimiento y daba acceso
-// gratis. Un plan de cortesía real (miembro.precioPlan === 0) sigue
-// pudiendo registrar su pago en S/ 0 sin problema.
-export class MontoInvalidoError extends Error {
-  constructor() {
-    super("El monto tiene que ser mayor a S/ 0 — este plan no es de cortesía.");
-  }
-}
-
-export { LineasDePagoInvalidasError };
-
-// El plan tiene permitePagoParcial=false — no se puede registrar un abono
-// (monto menor al precio del plan) contra él. El pago combinado NO está
-// sujeto a esta restricción (ver diseño acordado).
-export class AbonoNoPermitidoError extends Error {
-  constructor() {
-    super("Este plan no admite pagos parciales (abonos) — el monto debe cubrir el precio completo.");
-  }
-}
-
-// El monto acumulado del ciclo (tras este pago) no alcanza el mínimo que
-// exige la regla de abono efectiva (del plan o de su frecuencia).
-export class AbonoMenorAlMinimoError extends Error {
-  constructor(minimoUSD: number) {
-    super(`El abono mínimo para este plan es S/ ${minimoUSD.toFixed(2)}.`);
-  }
-}
-
 export class MesesInvalidosError extends Error {
   constructor() {
     super(`Los meses a pagar deben ser un número entero entre 1 y ${MAX_MESES_POR_PAGO}.`);
   }
 }
 
-// Con más de un mes el pago debe cubrir el total (varios métodos sí, abonos por cuotas no).
-export class MesesRequierenPagoCompletoError extends Error {
+export class MontoInvalidoError extends Error {
   constructor() {
-    super("Para pagar más de un mes el monto debe cubrir el total de los meses (puedes repartirlo en varios métodos).");
+    super("El monto debe ser mayor a S/ 0 y llevar un método de pago.");
   }
 }
 
-// Más de un mes solo si el ciclo vigente no tiene un abono pendiente.
-export class MesesNoDisponiblesError extends Error {
+// El cobro es un solo pago completo: el monto debe ser exactamente el precio acordado por los meses pagados.
+export class MontoDistintoDelPrecioError extends Error {
+  constructor(precioTotal: number) {
+    super(`El monto debe ser exactamente S/ ${precioTotal.toFixed(2)}: el cobro es un solo pago completo.`);
+  }
+}
+
+export class FechaPagoFuturaError extends Error {
   constructor() {
-    super("No se pueden sumar meses mientras haya un abono pendiente en el ciclo vigente: cobra primero ese saldo.");
+    super("La fecha del pago no puede ser posterior a hoy.");
   }
 }
 
-export class FechaPagoInvalidaError extends Error {
-  constructor(maxDias: number = MAX_DIAS_ATRAS_PAGO_RETROACTIVO) {
-    super(`La fecha del pago debe estar entre hoy y los últimos ${maxDias} días.`);
+// Mientras haya un vencimiento vigente, cobrar otro plan es un cambio de plan (S-07), no un cobro.
+export class PlanDistintoConVencimientoVigenteError extends Error {
+  constructor() {
+    super("El socio tiene un vencimiento vigente con otro plan: usa «Cambiar de plan» en su ficha.");
   }
-}
-
-export interface RegistrarPagoDeps {
-  pagos: IPagoRepository;
-  suscripciones: ISuscripcionRepository;
-  miembros: IMemberRepository;
-  planes: IPlanRepository;
-  sucursales: ISucursalRepository;
-  reglasAbono: IReglaAbonoRepository;
 }
 
 export interface DatosLineaPago {
@@ -113,347 +64,94 @@ export interface DatosLineaPago {
   numeroOperacion: string | null;
 }
 
-// Crédito que de verdad hace falta para completar lo que falta del ciclo después de este pago (nunca más que eso).
-function saldoNecesario(saldoDisponible: number, faltante: number, montoTotal: number): number {
-  return Math.min(saldoDisponible, Math.max(0, Math.round((faltante - montoTotal) * 100) / 100));
-}
-
-// Lo que sobra del precio del ciclo y el cajero eligió guardar como saldo a favor (0 si no aplica).
-function excedenteASaldo(input: DatosRegistrarPago, montoAcumulado: number, precioObjetivo: number): number {
-  return input.excedenteASaldoAFavor ? Math.max(0, Math.round((montoAcumulado - precioObjetivo) * 100) / 100) : 0;
-}
-
 export interface DatosRegistrarPago {
   organizacionId: string;
   miembroId: string;
   planId: string;
-  // Una línea por método — un pago total o un abono simple siguen siendo
-  // un array de un solo elemento. Un pago combinado (varios métodos en un
-  // mismo cobro) trae 2+ líneas; ver diseño en
-  // docs/superpowers/specs/2026-09-26-pagos-combinados-caja-design.md.
-  lineas: DatosLineaPago[];
+  /** Un solo método de pago, por el monto completo. */
+  linea: DatosLineaPago;
   sucursalId: string;
   registradoPorId: string;
-  // Pago con fecha pasada: hasta 365 días con el aviso "Por regularizar" o con primerPagoDeInscripcion, hasta 90 para el
-  // resto de los miembros. Si es de hoy, se ignora.
+  /** Identificador del cobro (UUID generado por la pantalla): reenviar el mismo cobro no lo duplica. */
+  cobroId: string;
+  /** Fecha del pago, de cualquier antigüedad pero nunca futura. Por defecto, ahora. */
   fechaPago?: Date;
-  // Primer pago de un miembro que se acaba de inscribir con fecha pasada: permite fechaPago sin el aviso "Por regularizar".
-  primerPagoDeInscripcion?: boolean;
-  // Si lo pagado supera el precio del ciclo, el sobrante se guarda como saldo a favor del miembro (el próximo pago lo
-  // descuenta). Sin esto, el sobrante es de otro cobro (wifi, etc.) y solo queda registrado en el pago.
-  excedenteASaldoAFavor?: boolean;
-  // Meses que cubre este pago (1 a 6, por defecto 1): el precio y la duración del ciclo se multiplican. Con más de un
-  // mes el pago debe ser completo (sin abonos), pero puede repartirse en varios métodos.
+  /** Meses que cubre el pago (1 a 6, por defecto 1). */
   meses?: number;
-  // Solo con fechaPago pasada: el pago completa el abono pendiente del ciclo abierto (no abre un ciclo nuevo). El cobro
-  // Lo usa "Cobrar abono".
-  completarCicloAbierto?: boolean;
+  ahora?: Date;
 }
 
-// Valida un abono parcial (el plan debe admitirlo y el monto acumulado cubrir el mínimo de la regla) y devuelve hasta
-// cuándo da acceso lo acumulado (null si ninguna regla aplica, o si el faltante entra en la tolerancia: acceso completo).
-async function evaluarAbonoParcial(
-  deps: RegistrarPagoDeps,
-  organizacionId: string,
-  plan: Plan,
-  precioObjetivo: number,
-  montoAcumulado: number,
-  base: Date
-): Promise<Date | null> {
-  if (precioObjetivo - montoAcumulado <= toleranciaDiferenciaPagoUSD(precioObjetivo)) return null;
-  if (!plan.permitePagoParcial) {
-    throw new AbonoNoPermitidoError();
-  }
-
-  const reglaFrecuencia = await deps.reglasAbono.buscarPorOrganizacionYFrecuencia(organizacionId, plan.frecuencia);
-  const reglaEfectiva = resolverReglaAbono(
-    { minimoAbonoTipo: plan.minimoAbonoTipo, minimoAbonoValor: plan.minimoAbonoValor },
-    reglaFrecuencia
-  );
-  const montoMinimo = calcularMontoMinimoAbono(reglaEfectiva, precioObjetivo, plan.diasCiclo);
-
-  if (montoAcumulado < montoMinimo) {
-    throw new AbonoMenorAlMinimoError(montoMinimo);
-  }
-
-  return calcularFechaLimiteAbono(reglaEfectiva, montoAcumulado, precioObjetivo, base, plan.diasCiclo);
-}
-
-export async function registrarPago(deps: RegistrarPagoDeps, input: DatosRegistrarPago): Promise<Pago[]> {
-
-  validarLineasDePago(input.lineas, "conAbono");
-
+/**
+ * Registra el cobro de una membresía: un solo pago, completo, atómico. Bloquea la fila del miembro, relee tras el
+ * bloqueo y escribe pago, suscripción y vencimiento (una sola fecha, vía `fijarVencimiento`) en una transacción.
+ * El mismo `cobroId` devuelve el pago ya registrado en vez de duplicarlo.
+ */
+export async function registrarPago(deps: { unidad: IUnidadDeTrabajo }, input: DatosRegistrarPago): Promise<Pago> {
   const meses = input.meses ?? 1;
   if (!Number.isInteger(meses) || meses < 1 || meses > MAX_MESES_POR_PAGO) throw new MesesInvalidosError();
+  if (!(input.linea.monto > 0) || !input.linea.metodo) throw new MontoInvalidoError();
 
-  const miembro = await deps.miembros.buscarPorId(input.organizacionId, input.miembroId);
-  if (!miembro) {
-    throw new MiembroNoEncontradoError();
-  }
+  const ahora = input.ahora ?? new Date();
+  const fechaPago = input.fechaPago ?? ahora;
+  if (diaLima(fechaPago).getTime() > diaLima(ahora).getTime()) throw new FechaPagoFuturaError();
 
-  if (miembro.sucursalId !== null && miembro.sucursalId !== input.sucursalId) {
-    const sucursal = await deps.sucursales.buscarPorId(input.organizacionId, miembro.sucursalId);
-    throw new MiembroFueraDeSucursalError(sucursal?.nombre ?? "otra sucursal");
-  }
+  return deps.unidad.ejecutar(async (repos) => {
+    await repos.miembros.bloquearPorId(input.miembroId);
 
-  const plan = await deps.planes.buscarPorId(input.organizacionId, input.planId);
-  if (!plan) {
-    throw new PlanNoEncontradoError();
-  }
-  if (!plan.activo) {
-    throw new PlanInactivoError();
-  }
+    const yaRegistrado = await repos.pagos.buscarPorCobroId(input.cobroId);
+    if (yaRegistrado) return yaRegistrado;
 
-  // Miembro.precioPlan es el precio acordado del plan que el miembro tiene
-  // asignado ahora mismo — solo sirve como "precio objetivo del ciclo"
-  // cuando este pago es para ESE mismo plan. Si input.planId es otro (un
-  // cambio de plan hecho desde acá, sin pasar por "Cambiar de
-  // plan"/CambiarPlanConPago), miembro.precioPlan queda del plan viejo y no
-  // corresponde usarlo para decidir si esto es un abono parcial, el mínimo
-  // exigido, etc. — se usa el precio de lista del plan nuevo (ver bug
-  // reportado: un abono menor al precio nuevo, pero mayor al precio viejo,
-  // se aceptaba como pago total).
-  const huboCambioDePlan = miembro.planId !== input.planId;
-  const precioMes = huboCambioDePlan ? plan.precioUSD : miembro.precioPlan;
-  const precioObjetivo = precioMes * meses;
+    const miembro = await repos.miembros.buscarPorId(input.organizacionId, input.miembroId);
+    if (!miembro) throw new MiembroNoEncontradoError();
 
-  const montoTotal = input.lineas.reduce((suma, linea) => suma + linea.monto, 0);
+    const plan = await repos.planes.buscarPorId(input.organizacionId, input.planId);
+    if (!plan) throw new PlanNoEncontradoError();
+    if (!plan.activo) throw new PlanInactivoError();
 
-  // Saldo a favor (generado por un cambio de plan a la baja o por un pago de más guardado como crédito) — se
-  // descuenta automáticamente de lo que este pago necesita cubrir, sin importar el plan de este pago, y solo en lo
-  // que hace falta (ver saldoNecesario): si el efectivo ya cubre el ciclo, el crédito no se toca. Nunca deja
-  // el saldo negativo; el consumo se persiste junto con el resto de los cambios de este pago (más abajo), no
-  // antes, para no gastarlo si el pago falla por otra validación.
-  const saldoDisponible = miembro.saldoAFavorUSD;
+    const diaPago = diaLima(fechaPago);
+    const vigente = estaVigente(miembro.fechaVencimiento, diaPago);
+    const mismoPlan = miembro.planId === input.planId;
+    if (vigente && !mismoPlan) throw new PlanDistintoConVencimientoVigenteError();
 
-  const ahora = new Date();
+    // El precio acordado del socio solo rige para su plan actual; otro plan (sin vencimiento vigente) cuesta su precio de lista.
+    const precioMes = mismoPlan ? miembro.precioPlan : plan.precioUSD;
+    const precioTotal = Math.round(precioMes * meses * 100) / 100;
+    if (aCentavos(input.linea.monto) !== aCentavos(precioTotal)) throw new MontoDistintoDelPrecioError(precioTotal);
 
-  const inicioDeHoy = new Date(ahora);
-  inicioDeHoy.setHours(0, 0, 0, 0);
-  if (input.fechaPago && input.fechaPago < inicioDeHoy && !input.completarCicloAbierto) {
-    const saldoAConsumir = saldoNecesario(saldoDisponible, precioObjetivo, montoTotal);
-    if (precioObjetivo > 0 && montoTotal <= 0 && saldoAConsumir < precioObjetivo) throw new MontoInvalidoError();
-    return registrarPagoRetroactivo(deps, input, {
-      miembro,
-      plan,
-      huboCambioDePlan,
-      precioObjetivo,
-      meses,
-      montoTotal,
-      saldoAConsumir,
-      saldoDisponible,
-      fechaPago: input.fechaPago,
-      ahora,
-    });
-  }
+    // Si sigue vigente, el tiempo se suma al vencimiento actual; si no, cuenta desde el día del pago.
+    const base = vigente && miembro.fechaVencimiento ? diaLima(miembro.fechaVencimiento) : diaPago;
+    const fin = sumarDiasCalendario(base, plan.diasCiclo * meses);
+    const vencimientoAnterior = miembro.fechaVencimiento ? diaLima(miembro.fechaVencimiento) : sumarDiasCalendario(diaPago, -1);
 
-  const cobroPasado = input.completarCicloAbierto ? resolverCobroPasado(input.fechaPago) : null;
-
-  const activa = await deps.suscripciones.buscarActivaVigentePorMiembroYPlan(input.miembroId, input.planId, ahora);
-
-  // Pagos fraccionados/mixtos ("abonos"): un ciclo puede juntar varios
-  // Pago (distinto método/moneda cada uno) hasta llegar al precio
-  // acordado con el miembro. El acceso ya se habilita con el primer
-  // abono (el vencimiento se adelanta ahí abajo, como siempre) — lo único
-  // que cambia es que, mientras el ciclo vigente no esté saldado, un pago
-  // nuevo se suma al MISMO ciclo en vez de abrir uno adicional (ver
-  // diseño acordado con el usuario, roadmap punto d). Un pago combinado
-  // (2+ líneas en un mismo envío) se evalúa igual: la suma de sus líneas
-  // es el "monto" a los efectos de esta decisión.
-  let pagosDelCicloAbierto: Pago[] = [];
-  if (activa && activa.fin > ahora) {
-    const pagosDelMiembro = await deps.pagos.listarPorMiembro(input.miembroId);
-    pagosDelCicloAbierto = pagosVigentesDelCiclo(pagosDelMiembro, activa.fin);
-  }
-  const esAbonoDeCicloAbierto =
-    pagosDelCicloAbierto.length > 0 && totalPagado(pagosDelCicloAbierto) < precioMes;
-  if (meses > 1 && esAbonoDeCicloAbierto) throw new MesesNoDisponiblesError();
-  const pagadoPrevio = esAbonoDeCicloAbierto ? totalPagado(pagosDelCicloAbierto) : 0;
-  const saldoAConsumir = saldoNecesario(saldoDisponible, precioObjetivo - pagadoPrevio, montoTotal);
-  if (precioObjetivo > 0 && montoTotal <= 0 && pagadoPrevio + saldoAConsumir < precioObjetivo) {
-    throw new MontoInvalidoError();
-  }
-
-  let base: Date;
-  let fin: Date;
-
-  if (esAbonoDeCicloAbierto) {
-    fin = activa!.fin;
-    base = pagosDelCicloAbierto[0].fechaInicioCiclo ?? activa!.inicio;
-  } else {
-    base = activa && activa.fin > ahora ? activa.fin : ahora;
-    fin = new Date(base);
-    fin.setDate(fin.getDate() + plan.diasCiclo * meses);
-  }
-
-  // Motor de reglas de abono: solo aplica cuando el pago resultante deja
-  // el ciclo sin saldar (es decir, es un abono real, no un pago total).
-  // montoTotal ya viene calculado más arriba como suma de input.lineas.
-  const montoAcumuladoDelCiclo = pagadoPrevio + montoTotal + saldoAConsumir;
-  const esAbonoParcial = montoAcumuladoDelCiclo < precioObjetivo;
-  if (meses > 1 && precioObjetivo - montoAcumuladoDelCiclo > toleranciaDiferenciaPagoUSD(precioObjetivo)) {
-    throw new MesesRequierenPagoCompletoError();
-  }
-
-  const fechaLimiteAbonoCalculada = esAbonoParcial
-    ? await evaluarAbonoParcial(deps, input.organizacionId, plan, precioObjetivo, montoAcumuladoDelCiclo, base)
-    : null;
-
-  if (esAbonoDeCicloAbierto) {
-    await deps.suscripciones.actualizarFechaLimiteAbono(activa!.id, fechaLimiteAbonoCalculada);
-  } else {
-    if (activa) {
-      await deps.suscripciones.extenderFin(activa.id, fin);
-      await deps.suscripciones.actualizarFechaLimiteAbono(activa.id, fechaLimiteAbonoCalculada);
-    } else {
-      await deps.suscripciones.crear({
-        miembroId: input.miembroId,
-        planId: input.planId,
-        inicio: ahora,
-        fin,
-        fechaLimiteAbono: fechaLimiteAbonoCalculada,
-      });
-    }
-
-    // Cuando este pago corresponde a un plan distinto al que el miembro
-    // tenía asignado (p. ej. un cambio de plan hecho desde acá en vez de
-    // "Cambiar de plan"/CambiarPlanConPago), Miembro.precioPlan también se
-    // sincroniza con el precio del plan nuevo — si no, queda con el precio
-    // del plan viejo aunque planId ya haya cambiado (bug reportado:
-    // "Mensual con entrenador" mostrando el precio de "Semanal"). Si es el
-    // mismo plan de siempre, no se toca — preserva un precio negociado
-    // manualmente en la ficha del miembro.
-    await deps.miembros.actualizar(input.organizacionId, input.miembroId, {
-      planId: input.planId,
-      ...(huboCambioDePlan ? { precioPlan: plan.precioUSD } : {}),
-    });
-    await deps.miembros.actualizarFechasPago(input.miembroId, ahora, fin);
-  }
-
-  const saldoFinal = Math.round((saldoDisponible - saldoAConsumir + excedenteASaldo(input, montoAcumuladoDelCiclo, precioObjetivo)) * 100) / 100;
-  if (saldoFinal !== saldoDisponible) {
-    await deps.miembros.actualizar(input.organizacionId, input.miembroId, { saldoAFavorUSD: saldoFinal });
-  }
-
-  // grupoPagoId solo se genera para pagos combinados (2+ líneas) — un pago
-  // de una sola línea no necesita correlacionarse con nada.
-  const grupoPagoId = input.lineas.length > 1 ? randomUUID() : null;
-
-  const pagosCreados: Pago[] = [];
-  for (const linea of input.lineas) {
-    const pago = await deps.pagos.crear({
+    const pago = await repos.pagos.crear({
       miembroId: input.miembroId,
       sucursalId: input.sucursalId,
       registradoPorId: input.registradoPorId,
-      monto: linea.monto,
-      metodo: linea.metodo,
-      metodoPagoId: linea.metodoPagoId,
-      numeroOperacion: linea.numeroOperacion,
+      monto: input.linea.monto,
+      metodo: input.linea.metodo,
+      metodoPagoId: input.linea.metodoPagoId,
+      numeroOperacion: input.linea.numeroOperacion,
       fechaInicioCiclo: base,
       fechaFinCiclo: fin,
-      grupoPagoId,
-      ...(cobroPasado ? { fechaPago: cobroPasado.fecha } : {}),
+      grupoPagoId: null,
+      fechaPago,
+      cobroId: input.cobroId,
+      vencimientoAnterior,
     });
-    pagosCreados.push(pago);
-  }
 
-  return pagosCreados;
-}
+    await fijarVencimiento(repos, {
+      miembroId: input.miembroId,
+      planId: input.planId,
+      inicio: vigente ? null : diaPago,
+      fin,
+      fechaUltimoPago: diaPago,
+    });
 
-// Pago con fecha pasada. Mismo flujo de siempre (líneas, métodos, monto) con una sola variación: la fecha. No se
-// marca como cobro con fecha pasada. Admite abonos.
-// Regularizando (primer pago de un miembro nuevo) el ciclo nuevo reemplaza al anterior:
-// vencimiento = fecha del pago + días del plan. Para un miembro normal el ciclo se suma al
-// vigente en esa fecha, o arranca ese día si ya estaba vencido.
-async function registrarPagoRetroactivo(
-  deps: RegistrarPagoDeps,
-  input: DatosRegistrarPago,
-  ctx: {
-    miembro: { id: string };
-    plan: Plan;
-    huboCambioDePlan: boolean;
-    precioObjetivo: number;
-    meses: number;
-    montoTotal: number;
-    saldoAConsumir: number;
-    saldoDisponible: number;
-    fechaPago: Date;
-    ahora: Date;
-  }
-): Promise<Pago[]> {
-  // Regularizar (primer pago de un miembro nuevo): el ciclo se reemplaza y el tope es amplio. Un
-  // miembro normal que paga un día anterior: el ciclo se suma al vigente (o arranca ese día) y el tope es corto.
-  const regulariza = !!input.primerPagoDeInscripcion;
-  const maxDias = regulariza ? MAX_DIAS_ATRAS_PAGO_RETROACTIVO : MAX_DIAS_ATRAS_PAGO_FECHADO;
-  const limite = new Date(ctx.ahora);
-  limite.setDate(limite.getDate() - maxDias);
-  if (ctx.fechaPago < limite) throw new FechaPagoInvalidaError(maxDias);
-
-  // Un pago con fecha pasada puede ser un abono (mismas reglas de siempre: el plan debe admitirlo y cubrir el mínimo); con
-  // más de un mes debe cubrir el total. El plazo de acceso del abono cuenta desde el inicio del ciclo.
-  const montoAcumulado = ctx.montoTotal + ctx.saldoAConsumir;
-  const esAbonoParcial = montoAcumulado < ctx.precioObjetivo;
-  const faltaMasQueLaTolerancia = ctx.precioObjetivo - montoAcumulado > toleranciaDiferenciaPagoUSD(ctx.precioObjetivo);
-  if (faltaMasQueLaTolerancia && ctx.meses > 1) throw new MesesRequierenPagoCompletoError();
-  const limiteDesde = (base: Date) =>
-    esAbonoParcial
-      ? evaluarAbonoParcial(deps, input.organizacionId, ctx.plan, ctx.precioObjetivo, montoAcumulado, base)
-      : Promise.resolve(null);
-  // Se valida siempre desde la fecha del pago (el plan debe admitir abonos y cubrir el mínimo); si el ciclo arranca en
-  // otra fecha (se suma a uno vigente), el plazo se recalcula más abajo.
-  const fechaLimiteAbono = await limiteDesde(ctx.fechaPago);
-
-  const planId = input.planId;
-  let inicioCiclo = ctx.fechaPago;
-  let fin: Date;
-  if (regulariza) {
-    fin = new Date(ctx.fechaPago);
-    fin.setDate(fin.getDate() + ctx.plan.diasCiclo * ctx.meses);
-    const ajustada = await deps.suscripciones.ajustarCicloMasReciente(input.miembroId, ctx.fechaPago, fin, planId, fechaLimiteAbono);
-    if (!ajustada) {
-      await deps.suscripciones.crear({ miembroId: input.miembroId, planId, inicio: ctx.fechaPago, fin, fechaLimiteAbono });
+    // Con otro plan (sin vencimiento vigente) el socio pasa a su precio de lista; con el mismo se conserva el acordado.
+    if (!mismoPlan) {
+      await repos.miembros.actualizar(input.organizacionId, input.miembroId, { planId: input.planId, precioPlan: plan.precioUSD });
     }
-  } else {
-    const activa = await deps.suscripciones.buscarActivaVigentePorMiembroYPlan(input.miembroId, planId, ctx.fechaPago);
-    if (activa) inicioCiclo = activa.fin;
-    fin = new Date(inicioCiclo);
-    fin.setDate(fin.getDate() + ctx.plan.diasCiclo * ctx.meses);
-    const limiteCiclo = activa ? await limiteDesde(inicioCiclo) : fechaLimiteAbono;
-    if (activa) {
-      await deps.suscripciones.extenderFin(activa.id, fin);
-      await deps.suscripciones.actualizarFechaLimiteAbono(activa.id, limiteCiclo);
-    } else {
-      await deps.suscripciones.crear({ miembroId: input.miembroId, planId, inicio: inicioCiclo, fin, fechaLimiteAbono: limiteCiclo });
-    }
-  }
-  await deps.miembros.actualizar(input.organizacionId, input.miembroId, {
-    planId,
-    ...(ctx.huboCambioDePlan ? { precioPlan: ctx.plan.precioUSD } : {}),
+
+    return pago;
   });
-  await deps.miembros.actualizarFechasPago(input.miembroId, ctx.fechaPago, fin);
-  const saldoFinal = Math.round((ctx.saldoDisponible - ctx.saldoAConsumir + excedenteASaldo(input, montoAcumulado, ctx.precioObjetivo)) * 100) / 100;
-  if (saldoFinal !== ctx.saldoDisponible) {
-    await deps.miembros.actualizar(input.organizacionId, input.miembroId, { saldoAFavorUSD: saldoFinal });
-  }
-
-  const grupoPagoId = input.lineas.length > 1 ? randomUUID() : null;
-  const pagosCreados: Pago[] = [];
-  for (const linea of input.lineas) {
-    pagosCreados.push(
-      await deps.pagos.crear({
-        miembroId: input.miembroId,
-        sucursalId: input.sucursalId,
-        registradoPorId: input.registradoPorId,
-        monto: linea.monto,
-        metodo: linea.metodo,
-        metodoPagoId: linea.metodoPagoId,
-        numeroOperacion: linea.numeroOperacion,
-        fechaInicioCiclo: inicioCiclo,
-        fechaFinCiclo: fin,
-        grupoPagoId,
-        fechaPago: ctx.fechaPago,
-      })
-    );
-  }
-  return pagosCreados;
 }

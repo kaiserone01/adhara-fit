@@ -10,24 +10,20 @@ import { PrismaSuscripcionRepository } from "@gym-app/infrastructure/persistence
 import { PrismaMemberRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaMemberRepository";
 import { PrismaPlanRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPlanRepository";
 import { PrismaSucursalRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSucursalRepository";
-import { PrismaReglaAbonoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaReglaAbonoRepository";
-import type { PrismaClientOrTx } from "@gym-app/infrastructure/persistence/prisma/PrismaClientOrTx";
+import { PrismaUnidadDeTrabajo } from "@gym-app/infrastructure/persistence/prisma/PrismaUnidadDeTrabajo";
 import { PrismaCambioPlanAuditoriaRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaCambioPlanAuditoriaRepository";
 import { conMensajeOk } from "../redirectConMensaje";
 import {
   registrarPago,
-  MiembroNoEncontradoError,
   MiembroFueraDeSucursalError,
+  MiembroNoEncontradoError,
   PlanNoEncontradoError,
   PlanInactivoError,
   MontoInvalidoError,
-  LineasDePagoInvalidasError,
-  AbonoNoPermitidoError,
-  AbonoMenorAlMinimoError,
-  FechaPagoInvalidaError,
+  MontoDistintoDelPrecioError,
+  FechaPagoFuturaError,
+  PlanDistintoConVencimientoVigenteError,
   MesesInvalidosError,
-  MesesRequierenPagoCompletoError,
-  MesesNoDisponiblesError,
 } from "@gym-app/domain/use-cases/RegistrarPago";
 import {
   cambiarPlanConPago,
@@ -44,16 +40,15 @@ import {
 
 export interface EstadoFormularioPago {
   error?: string;
-  // Solo se completa cuando la acción NO redirige (origen "miembro" o
-  // "caja", ver más abajo) — el formulario sigue montado en la misma
-  // página, así que el éxito viaja por acá en vez de por ?ok= en la URL.
+  // Solo se completa cuando la acción NO redirige (origen "miembro" o "caja"): el formulario sigue montado en la
+  // misma página, así que el éxito viaja por acá en vez de por ?ok= en la URL.
   ok?: string;
-  // Fecha real de fin de ciclo tras el pago (ISO) — solo presente junto
-  // con `ok`. La usa el Paso 4 del modal de Caja para mostrar la fecha de
-  // vencimiento resultante sin recalcularla en el cliente.
+  // Vencimiento tras el pago (ISO); solo junto con `ok`.
   fechaFinCiclo?: string;
 }
 
+// Un cobro de membresía (S-04): un solo pago completo con un solo método. La pantalla manda un `cobroId` (UUID)
+// para que reenviar el mismo cobro no lo duplique.
 export async function registrarPagoAction(
   _estadoPrevio: EstadoFormularioPago,
   formData: FormData
@@ -64,102 +59,66 @@ export async function registrarPagoAction(
 
   const miembroId = formData.get("miembroId")?.toString();
   const planId = formData.get("planId")?.toString();
+  const cobroId = formData.get("cobroId")?.toString();
   const lineasRaw = formData.get("lineas")?.toString();
   const origen = formData.get("origen")?.toString();
-  // Fecha del pago (yyyy-mm-dd), para registrar un pago con fecha pasada.
-  // Vacía = hoy. Se toma al mediodía para no caer en el día anterior por zona horaria.
+  // Fecha del pago (yyyy-mm-dd), de cualquier antigüedad pero nunca futura. Vacía = ahora. Se toma al mediodía de
+  // Lima para no caer en el día anterior por zona horaria.
   const fechaPagoTexto = formData.get("fechaPago")?.toString();
-  // Sede elegida en el selector "Sede del pago" (ver SelectorMetodoPago);
-  // si no vino (formularios viejos o sin selector visible), se cae a la
-  // sede activa de la sesión.
   const sucursalIdPago = formData.get("sucursalIdPago")?.toString() || sucursalActivaId;
 
-  if (!miembroId || !planId || !lineasRaw) {
-    return { error: "Miembro, plan y al menos un método de pago son requeridos." };
+  if (!miembroId || !planId || !lineasRaw || !cobroId) {
+    return { error: "Socio, plan, método de pago e identificador del cobro son requeridos." };
   }
   if (!sucursalIdPago) {
     return { error: "No se pudo determinar en qué sucursal se registra el pago." };
   }
 
-  let lineas: Array<{
-    monto: number;
-    metodo: string;
-    metodoPagoId: string | null;
-    numeroOperacion: string | null;
-  }>;
+  let lineas: unknown;
   try {
     lineas = JSON.parse(lineasRaw);
   } catch {
     return { error: "No se pudo interpretar la información del pago." };
   }
-  if (!Array.isArray(lineas) || lineas.length === 0) {
-    return { error: "Agrega al menos una línea de pago." };
+  if (!Array.isArray(lineas) || lineas.length !== 1) {
+    return { error: "El cobro es un solo pago con un solo método." };
   }
-  // Un plan de cortesía (S/ 0) no tiene nada que cobrar — el método de pago
-  // solo es obligatorio cuando hay un monto real de por medio (ver diseño
-  // acordado, membresías con beneficio que no pagan en el gym). Se permite
-  // la única excepción de una sola línea en $0 (pago de cortesía); toda
-  // otra línea necesita monto > 0 y método elegido.
-  const esCortesia = lineas.length === 1 && lineas[0].monto === 0;
-  if (!esCortesia && lineas.some((linea) => linea.monto <= 0 || !linea.metodo || !linea.metodoPagoId)) {
-    return { error: "Cada línea del pago necesita un monto mayor a S/ 0 y un método." };
+  const linea = lineas[0] as { monto: number; metodo: string; metodoPagoId: string | null; numeroOperacion: string | null };
+  if (!(linea.monto > 0) || !linea.metodo || !linea.metodoPagoId) {
+    return { error: "El pago necesita un monto mayor a S/ 0 y un método." };
   }
 
-  // Pago combinado (más de una línea): el cliente gatea el envío en que la
-  // suma coincida con el monto objetivo, pero el servidor nunca recibía ese
-  // objetivo — un FormData armado a mano podía mandar líneas que no suman lo
-  // acordado. Solo aplica cuando montoObjetivo viene en el POST (combinado);
-  // total/abono siguen sin mandarlo... salvo que el campo del wizard ya lo
-  // postea siempre, así que esto también protege esos flujos sin cambiar su
-  // comportamiento (la única línea ya suma exactamente montoObjetivo).
-  const montoObjetivoRaw = formData.get("montoObjetivo")?.toString();
-  if (lineas.length > 1 && montoObjetivoRaw) {
-    const montoObjetivo = Number(montoObjetivoRaw);
-    const sumaLineas = lineas.reduce((suma, linea) => suma + linea.monto, 0);
-    if (!Number.isNaN(montoObjetivo) && Math.abs(sumaLineas - montoObjetivo) >= 0.01) {
-      return { error: "La suma de las líneas no coincide con el monto a pagar." };
-    }
-  }
-
-  let pagos;
+  let pago;
   try {
-    const dependencias = (cliente: PrismaClientOrTx) => ({
-      pagos: new PrismaPagoRepository(cliente),
-      suscripciones: new PrismaSuscripcionRepository(cliente),
-      miembros: new PrismaMemberRepository(cliente),
-      planes: new PrismaPlanRepository(cliente),
-      sucursales: new PrismaSucursalRepository(cliente),
-      reglasAbono: new PrismaReglaAbonoRepository(prisma),
-    });
-    const datosPago = {
-      organizacionId: usuario.organizacionId,
-      miembroId,
-      planId,
-      lineas: lineas.map((linea) => ({ ...linea, metodo: linea.metodo || "Cortesía" })),
-      sucursalId: sucursalIdPago,
-      registradoPorId: usuario.id,
-      ...(fechaPagoTexto ? { fechaPago: new Date(`${fechaPagoTexto}T12:00:00`) } : {}),
-      // Si pagó de más: guardar el sobrante como saldo a favor (si no, es de otro cobro y solo queda registrado).
-      excedenteASaldoAFavor: formData.get("excedenteSaldo")?.toString() === "1",
-      // Meses que cubre el pago (1 a 6); el dominio valida el rango.
-      meses: Number(formData.get("meses")?.toString() || 1),
-    };
-
-    pagos = await registrarPago(dependencias(prisma), datosPago);
+    pago = await registrarPago(
+      { unidad: new PrismaUnidadDeTrabajo(prisma) },
+      {
+        organizacionId: usuario.organizacionId,
+        miembroId,
+        planId,
+        linea: {
+          monto: linea.monto,
+          metodo: linea.metodo,
+          metodoPagoId: linea.metodoPagoId,
+          numeroOperacion: linea.numeroOperacion ?? null,
+        },
+        sucursalId: sucursalIdPago,
+        registradoPorId: usuario.id,
+        cobroId,
+        ...(fechaPagoTexto ? { fechaPago: new Date(`${fechaPagoTexto}T12:00:00-05:00`) } : {}),
+        meses: Number(formData.get("meses")?.toString() || 1),
+      }
+    );
   } catch (error) {
     if (
       error instanceof MiembroNoEncontradoError ||
-      error instanceof MiembroFueraDeSucursalError ||
       error instanceof PlanNoEncontradoError ||
       error instanceof PlanInactivoError ||
       error instanceof MontoInvalidoError ||
-      error instanceof LineasDePagoInvalidasError ||
-      error instanceof AbonoNoPermitidoError ||
-      error instanceof AbonoMenorAlMinimoError ||
-      error instanceof FechaPagoInvalidaError ||
-      error instanceof MesesInvalidosError ||
-      error instanceof MesesRequierenPagoCompletoError ||
-      error instanceof MesesNoDisponiblesError
+      error instanceof MontoDistintoDelPrecioError ||
+      error instanceof FechaPagoFuturaError ||
+      error instanceof PlanDistintoConVencimientoVigenteError ||
+      error instanceof MesesInvalidosError
     ) {
       return { error: error.message };
     }
@@ -175,9 +134,7 @@ export async function registrarPagoAction(
     redirect(conMensajeOk(`/miembros/${miembroId}`, "Pago registrado."));
   }
 
-  // Todas las líneas de un mismo envío comparten fechaFinCiclo — cualquiera
-  // sirve para mostrarla en el Paso 4 del wizard.
-  return { ok: "Pago registrado.", fechaFinCiclo: pagos[0]?.fechaFinCiclo?.toISOString() };
+  return { ok: "Pago registrado.", fechaFinCiclo: pago.fechaFinCiclo?.toISOString() };
 }
 
 export interface EstadoCambioPlan {

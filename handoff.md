@@ -8,6 +8,29 @@ Bitácora de sesiones: la más reciente arriba, solo se añaden entradas. El his
 - **Desplegado:** provisional en Easypanel (`docs/ops/easypanel.md`): imagen del `Dockerfile`, esquema con `prisma db push` al arrancar, alta del primer administrador con `tools/crear-administrador.mjs`.
 - **Preferencia del propietario:** cada código (ADR-nnn, S-nn, REQ…) que se mencione lleva al lado una descripción simple.
 
+## Sesión 2026-11-13 (noche, 11) — Tramo 3 (parte 3): pago único de membresía (S-04)
+**Qué se hizo**
+- Un cobro = un solo pago completo, con un solo método, por 1–6 meses. El monto debe ser exactamente el precio acordado del socio (`Miembro.precioPlan` si es su mismo plan; si no, el precio de lista) por los meses; no hay abonos, saldo a favor, pago dividido ni cortesías ($0). Un plan sin costo crea al socio sin cobro ni vencimiento.
+- Dominio: `utils/vencimiento.ts` (día de Lima, `estaVigente`, `estadoAcceso`, `aCentavos`), puerto `IUnidadDeTrabajo` + `PrismaUnidadDeTrabajo` (transacción con bloqueo `FOR UPDATE` del socio), `FijarVencimiento` (única escritura del vencimiento: `Miembro.fechaVencimiento` = `Suscripcion.fin`), `registrarPago` reescrito (idempotente por `cobroId`), `anularPago` reescrito (solo el último cobro vigente; restaura vencimiento y fecha del último pago con `Pago.vencimientoAnterior`; los pagos sin ese dato —ventas, cambio de plan— se anulan sin tocar el vencimiento).
+- Vencimiento = último día con acceso, inclusive; sin días de gracia: estados `activo` / `vencido` / `sucursal_incorrecta`. Fechas guardadas como inicio de día de Lima (05:00Z). La fecha de pago puede ser pasada (cualquier antigüedad), nunca futura.
+- Esquema (aditivo): `Pago.cobroId` (único) y `Pago.vencimientoAnterior`. Las columnas heredadas (`diasGracia`, `fechaLimiteAbono`, `saldoAFavorUSD`, campos de abono del plan, `ReglaAbono`) quedan sin uso para que `db push` no pida `--accept-data-loss`; se quitan con el reinicio limpio de S-15.
+- Panel: `cobros/FormularioCobro.tsx` único (plan, fecha, meses 1–6, total, nuevo vencimiento, método) usado por la Caja, `/pagos/nuevo` y el primer pago del alta de socio (simplificada). Se quitaron proyección/remanente de abono, reglas de abono (configuración), campos de abono del plan, `PanelPagoYCambioPlan`, `LineaPagoMiembro` y los días de gracia de la sede. Check-in: se quitaron `en_gracia`, `abono_vencido` y sus textos.
+- `actualizarMiembro` ya no prorratea al cambiar de plan; si hay vencimiento, la suscripción pasa al plan nuevo sin mover la fecha.
+- Pruebas nuevas: `RegistrarPago` (precio exacto, centavos, vigente/vence hoy/vencido, fechas pasada y futura, plan distinto, idempotencia), `AnularPago` (restaura, solo el último, ventas), `vencimiento`, `RegistrarCheckIn` y `ListarEnSala` sin gracia, `ActualizarMiembro` con `fijarVencimiento`. Ayuda de prueba: `use-cases/unidadEnMemoria.ts`. Se reemplazaron las pruebas de abonos, pagos retroactivos y meses por comportamiento ya eliminado.
+
+**Qué funcionó**
+- Dominio 268 pruebas, check-in 50, `tools` 107, `tsc` solo con el error previo de `LayoutProps`, lint sin errores (5 avisos), build correcto.
+
+**Qué no funcionó / a tener en cuenta**
+- **Asumido, por validar:** el cobro de un socio vencido cuenta desde el día del pago (no desde el vencimiento anterior); pagar N meses suma `diasCiclo × N` días; el precio acordado solo rige para el mismo plan.
+- El cambio de plan a mitad de ciclo no tiene pantalla hasta S-07 (se quitó de la Caja); `cambiarPlanAction` y `CambiarPlanConPago` siguen como código heredado, sin uso del flujo nuevo.
+- `PrismaUnidadDeTrabajo` no se probó contra PostgreSQL real (solo con la unidad en memoria); el `FOR UPDATE` y la transacción quedan por verificar en el despliegue.
+- Vitest falla con «reading 'config'» si se lanza con `npx` desde `packages/domain`; funciona con `npx vitest run --root packages/domain` desde la raíz (o `npm test` a veces).
+- Sin ejecutar: la app en el navegador.
+
+**Siguiente**
+1. S-07 (cambio de plan único): `calcularCambioPlan`/`cambiarPlan`, plan sin `incluyeEntrenador`/`frecuencia`, nueva pantalla, quitar `CambiarPlanConPago`.
+
 ## Sesión 2026-11-13 (noche, 10) — Tramo 3 (parte 2): DNI, carné de extranjería y pasaporte (S-06)
 **Qué se hizo**
 - Esquema: enum `TipoDocumento` (DNI, CE, PASAPORTE); en `Miembro`, `cedula` se reemplaza por `tipoDocumento` (por defecto DNI), `numeroDocumento` (único en todo el sistema, sin importar el tipo) y `codigoSocio` (opcional, único). Se quitó la unicidad `(organizacionId, cedula)`. `MiembroReferencia.cedula` (padrón) queda hasta S-10/S-15.

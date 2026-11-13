@@ -18,9 +18,7 @@ type Rango = "24h" | "hoy";
 
 const ETIQUETA_ESTADO: Record<EstadoCheckIn, string> = {
   activo: "Al día",
-  en_gracia: "Vencida — en gracia",
   vencido: "Vencida",
-  abono_vencido: "Abono vencido",
   sucursal_incorrecta: "Otra sucursal",
 };
 

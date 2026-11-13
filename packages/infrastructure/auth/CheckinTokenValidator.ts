@@ -22,7 +22,6 @@ export class CheckinTokenValidator implements ICheckinAuthValidator {
       organizacionId: sucursal.organizacionId,
       nombre: sucursal.nombre,
       direccion: sucursal.direccion,
-      diasGracia: sucursal.diasGracia,
       activo: sucursal.activo,
       apiKey: sucursal.apiKey,
       reposoFrases: sucursal.reposoFrases,

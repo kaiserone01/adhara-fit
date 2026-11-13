@@ -301,6 +301,11 @@ model Pago {
   // fueron un mismo cobro".
   grupoPagoId String?
 
+  // S-04: identificador del cobro (UUID generado por la pantalla); único, nulo en pagos de otras operaciones.
+  cobroId String? @unique
+  // S-04: vencimiento del socio antes de este cobro; la anulación lo restaura. Nulo en pagos que no son cobros de membresía.
+  vencimientoAnterior DateTime?
+
   // Venta de producto: cada fila Pago es una línea de método de pago de la
   // venta. productoNombre es snapshot (no cambia si se renombra el
   // producto). Sin control de stock.

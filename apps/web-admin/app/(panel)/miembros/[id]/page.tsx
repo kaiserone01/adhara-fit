@@ -5,11 +5,10 @@ import { obtenerUsuarioDeSesionActual } from "@/lib/sesion";
 import { PrismaMemberRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaMemberRepository";
 import { PrismaPagoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPagoRepository";
 import { PrismaPlanRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPlanRepository";
-import { PrismaSuscripcionRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSuscripcionRepository";
 import { PrismaMetodoPagoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaMetodoPagoRepository";
 import { obtenerMiembro, MiembroNoEncontradoError, MiembroFueraDeSucursalError } from "@gym-app/domain/use-cases/ObtenerMiembro";
 import { listarPagos } from "@gym-app/domain/use-cases/ListarPagos";
-import { pagosVigentesDelCiclo, totalPagado } from "@gym-app/domain/entities/Pago";
+import { estaVigente } from "@gym-app/domain/utils/vencimiento";
 import { PrismaSucursalRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSucursalRepository";
 import { listarPlanes } from "@gym-app/domain/use-cases/ListarPlanes";
 import { listarMetodosPagoActivos } from "@gym-app/domain/use-cases/ListarMetodosPago";
@@ -61,36 +60,15 @@ export default async function PaginaEditarMiembro({ params }: { params: Promise<
   ]);
   const entrenadores = await obtenerEntrenadoresActivos();
 
-  // Solo tiene sentido cobrar "la diferencia" cuando el ciclo actual todavía
-  // no venció — vencido, el próximo pago ya es el precio completo del plan
-  // que sea (ver diseño acordado).
-  const tieneCicloVigente = miembro.fechaVencimiento !== null && miembro.fechaVencimiento > new Date();
+  // Con la membresía vigente, el plan no se cambia gratis desde la ficha (el cambio de plan es S-07).
+  const tieneCicloVigente = estaVigente(miembro.fechaVencimiento, new Date());
 
-  // Pagos fraccionados/mixtos: si el ciclo vigente todavía no juntó el
-  // precio acordado con el miembro, esto es lo que falta — se le pasa al
-  // panel de pago para precargar el monto del próximo abono y mostrar el
-  // aviso (ver diseño acordado, roadmap punto d).
-  const pagosDelCicloVigente = miembro.fechaVencimiento ? pagosVigentesDelCiclo(pagos, miembro.fechaVencimiento) : [];
-  const saldoPendiente = tieneCicloVigente
-    ? Math.max(0, miembro.precioPlan - totalPagado(pagosDelCicloVigente))
-    : 0;
-
-  // Hasta cuándo alcanza el acceso con lo abonado (Suscripcion.fechaLimiteAbono): solo con saldo pendiente.
-  const suscripcionVigente =
-    saldoPendiente > 0
-      ? await new PrismaSuscripcionRepository(prisma).buscarActivaVigentePorMiembro(id, new Date())
-      : null;
-  const accesoHastaAbono = suscripcionVigente?.fechaLimiteAbono
-    ? formatearFechaISO(suscripcionVigente.fechaLimiteAbono)
-    : undefined;
 
   // Últimos 5 ciclos con datos de rango — listarPagos ya devuelve los
   // pagos ordenados por fechaPago desc (ver PrismaPagoRepository), así
   // que basta filtrar y tomar los primeros 5.
   const ultimosCiclos = pagos
     .filter((pago) => pago.fechaInicioCiclo !== null && pago.fechaFinCiclo !== null)
-    // Un ciclo pagado en varias partes (abonos o pago dividido) tiene varios pagos: se muestra una sola vez.
-    .filter((pago, i, todos) => todos.findIndex((p) => p.fechaFinCiclo?.getTime() === pago.fechaFinCiclo?.getTime()) === i)
     .slice(0, 5)
     .map((pago) => ({ id: pago.id, fechaInicioCiclo: pago.fechaInicioCiclo, fechaFinCiclo: pago.fechaFinCiclo }));
 
@@ -112,8 +90,6 @@ export default async function PaginaEditarMiembro({ params }: { params: Promise<
         miembroId={id}
         ultimosCiclos={ultimosCiclos}
         tieneCicloVigente={tieneCicloVigente}
-        saldoPendiente={saldoPendiente}
-        accesoHastaAbono={accesoHastaAbono}
         totalPagos={pagos.length}
         valoresIniciales={{
           nombre: miembro.nombre,

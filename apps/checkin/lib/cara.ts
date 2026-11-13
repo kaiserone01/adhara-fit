@@ -6,9 +6,7 @@ const MS_POR_DIA = 24 * 60 * 60 * 1000;
 export type CaraFicha =
   | "permitido"
   | "por_vencer"
-  | "en_gracia"
   | "vencido"
-  | "abono_vencido"
   | "sucursal_incorrecta";
 
 export type Tono = "verde" | "ambar" | "rojo";
@@ -33,7 +31,7 @@ export function caraDeResultado(
 
 export function tonoDeCara(cara: CaraFicha): Tono {
   if (cara === "permitido" || cara === "por_vencer") return "verde";
-  return cara === "en_gracia" ? "ambar" : "rojo";
+  return "rojo";
 }
 
 export function textoPorVencer(dias: number): string {

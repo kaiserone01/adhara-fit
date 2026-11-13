@@ -6,16 +6,11 @@ import { PrismaMemberRepository } from "@gym-app/infrastructure/persistence/pris
 import { PrismaPlanRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPlanRepository";
 import { PrismaProductoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaProductoRepository";
 import { PrismaMetodoPagoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaMetodoPagoRepository";
-import { PrismaReglaAbonoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaReglaAbonoRepository";
-import { PrismaEntrenadorRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaEntrenadorRepository";
 import { obtenerReporteCobros } from "@gym-app/domain/use-cases/ObtenerReporteCobros";
 import { listarMiembros } from "@gym-app/domain/use-cases/ListarMiembros";
 import { listarPlanes } from "@gym-app/domain/use-cases/ListarPlanes";
 import { listarProductos } from "@gym-app/domain/use-cases/ListarProductos";
 import { listarMetodosPagoActivos } from "@gym-app/domain/use-cases/ListarMetodosPago";
-import { listarReglasAbono } from "@gym-app/domain/use-cases/ListarReglasAbono";
-import { listarEntrenadores } from "@gym-app/domain/use-cases/ListarEntrenadores";
-import { listarAbonosPendientes } from "@gym-app/domain/use-cases/ListarAbonosPendientes";
 import { formatearSoles } from "@gym-app/domain/utils/formatearSoles";
 import { Card } from "@gym-app/ui/components/Card";
 import { Badge } from "@gym-app/ui/components/Badge";
@@ -26,7 +21,6 @@ import { BotonVenderProducto } from "./BotonVenderProducto";
 import { BotonAnularCobro } from "./BotonAnularCobro";
 import { conceptoPago } from "../pagos/conceptoPago";
 import { inicioDelDia, finDelDia } from "../fechas";
-import { cambiarPlanAction } from "../pagos/actions";
 import { venderProductoAction } from "./actions";
 
 export default async function PaginaCobros({ searchParams }: { searchParams: Promise<{ cobrar?: string }> }) {
@@ -36,7 +30,7 @@ export default async function PaginaCobros({ searchParams }: { searchParams: Pro
   const { usuario, sucursalActivaId } = sesion;
 
   const hoy = new Date();
-  const [reporte, miembros, planes, productos, metodosPago, reglasAbono, entrenadores] = await Promise.all([
+  const [reporte, miembros, planes, productos, metodosPago] = await Promise.all([
     obtenerReporteCobros(
       { pagos: new PrismaPagoRepository(prisma) },
       { organizacionId: usuario.organizacionId, desde: inicioDelDia(hoy), hasta: finDelDia(hoy) }
@@ -45,15 +39,10 @@ export default async function PaginaCobros({ searchParams }: { searchParams: Pro
     listarPlanes({ planes: new PrismaPlanRepository(prisma) }, usuario.organizacionId),
     listarProductos({ productos: new PrismaProductoRepository(prisma) }, usuario.organizacionId),
     listarMetodosPagoActivos({ metodosPago: new PrismaMetodoPagoRepository(prisma) }, usuario.organizacionId),
-    listarReglasAbono({ reglasAbono: new PrismaReglaAbonoRepository(prisma) }, usuario.organizacionId),
-    // Solo para "Cambiar plan" en el Paso 2 del asistente de cobro.
-    listarEntrenadores({ entrenadores: new PrismaEntrenadorRepository(prisma) }),
   ]);
 
   const miembrosActivos = miembros.filter((m) => m.activo);
   const planesActivos = planes.filter((p) => p.activo);
-  // Saldos de membresía (abonos pendientes): el cobro de un miembro con abono previo completa su ciclo.
-  const abonosPendientes = await listarAbonosPendientes({ pagos: new PrismaPagoRepository(prisma) }, miembros, planes);
 
   return (
     <div className="flex flex-col gap-6 p-6 pb-24 lg:p-8 lg:pb-8">
@@ -64,11 +53,7 @@ export default async function PaginaCobros({ searchParams }: { searchParams: Pro
             miembros={miembrosActivos}
             planes={planesActivos}
             metodosPago={metodosPago}
-            reglasAbono={reglasAbono}
-            entrenadores={entrenadores}
-            accionCambiarPlan={cambiarPlanAction}
             miembroInicialId={cobrar}
-            abonos={abonosPendientes}
           />
           <BotonVenderProducto accion={venderProductoAction} productos={productos.filter((p) => p.activo)} metodosPago={metodosPago} />
           <EnlaceHistoricoPagos />

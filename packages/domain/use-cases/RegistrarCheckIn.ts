@@ -1,9 +1,6 @@
 import { IMemberRepository } from "../ports/IMemberRepository";
 import { ICheckInRepository } from "../ports/ICheckInRepository";
-import { ISuscripcionRepository } from "../ports/ISuscripcionRepository";
 import { ISucursalRepository } from "../ports/ISucursalRepository";
-import { IPlanRepository } from "../ports/IPlanRepository";
-import { diasGraciaParaPlan } from "../entities/Plan";
 import { EstadoCheckIn } from "../entities/CheckIn";
 import { validarAccesoSucursal } from "./ValidarAccesoSucursalPorPlan";
 import type { Miembro } from "../entities/Miembro";
@@ -11,14 +8,11 @@ import { esCumpleanos } from "../utils/fechaLima";
 import { esCodigoSocio, normalizarDocumento } from "../utils/documento";
 
 const VENTANA_IDEMPOTENCIA_MINUTOS = 2;
-const MS_POR_DIA = 24 * 60 * 60 * 1000;
 
 export interface RegistrarCheckInDeps {
   miembros: IMemberRepository;
   checkIns: ICheckInRepository;
-  suscripciones: ISuscripcionRepository;
   sucursales: ISucursalRepository;
-  planes: IPlanRepository;
 }
 
 export interface RegistrarCheckInInput {
@@ -40,16 +34,6 @@ export interface RegistrarCheckInResultado {
   // tu sede es X en Y").
   sucursalAsignadaNombre: string;
   sucursalAsignadaDireccion: string | null;
-  // Días de gracia que le quedan al miembro en la sucursal física donde
-  // hizo el check-in — solo tiene sentido cuando estado es "en_gracia"
-  // (null en cualquier otro estado).
-  diasGraciaRestantes: number | null;
-  // Si la sucursal FÍSICA donde ocurre el check-in tiene el concepto de
-  // "período de gracia" configurado (diasGracia > 0). Cuando es false, el
-  // concepto no aplica en absoluto para esta sucursal — la presentación
-  // (checkin) no debe mencionar "período de gracia" en ningún mensaje,
-  // aunque el estado sea "vencido".
-  tieneGraciaConfigurada: boolean;
   // Si hoy (día de Lima) es su cumpleaños. La fecha de
   // nacimiento nunca sale del servidor: el checkin solo recibe este booleano.
   esCumpleanos: boolean;
@@ -78,11 +62,6 @@ export async function registrarCheckIn(
     ? await deps.sucursales.buscarPorId(input.organizacionId, miembro.sucursalId)
     : null;
 
-  const sucursalDelCheckIn = await deps.sucursales.buscarPorId(input.organizacionId, input.sucursalId);
-  // Los días de gracia de la sede solo aplican si el miembro tiene un plan mensual.
-  const plan = miembro.planId ? await deps.planes.buscarPorId(input.organizacionId, miembro.planId) : null;
-  const diasGracia = diasGraciaParaPlan(sucursalDelCheckIn?.diasGracia ?? 0, plan?.frecuencia);
-
   const base = {
     nombre: miembro.nombre,
     fotoUrl: miembro.fotoUrl,
@@ -103,43 +82,12 @@ export async function registrarCheckIn(
     desde
   );
 
-  function calcularDiasGraciaRestantes(ahora: Date): number | null {
-    if (!miembro!.fechaVencimiento || diasGracia <= 0) return null;
-    const limiteGracia = miembro!.fechaVencimiento.getTime() + diasGracia * MS_POR_DIA;
-    const restantesMs = limiteGracia - ahora.getTime();
-    if (restantesMs <= 0) return null;
-    return Math.ceil(restantesMs / MS_POR_DIA);
-  }
-
   if (existente) {
-    return {
-      ...base,
-      estado: existente.estadoAlMomento,
-      diasGraciaRestantes: existente.estadoAlMomento === "en_gracia" ? calcularDiasGraciaRestantes(new Date()) : null,
-      tieneGraciaConfigurada: diasGracia > 0,
-    };
+    return { ...base, estado: existente.estadoAlMomento };
   }
 
   const ahora = new Date();
-  // validarAccesoSucursal ya busca la suscripción activa internamente para
-  // decidir el estado — esta consulta adicional es la única forma de leer
-  // fechaLimiteAbono antes de pasarlo como parámetro, sin cambiar el tipo
-  // de retorno de esa función. Es una consulta liviana duplicada, aceptada
-  // dado el alcance de este cambio (ver diseño acordado, motor de reglas
-  // de abono).
-  const suscripcionActiva = await deps.suscripciones.buscarActivaVigentePorMiembro(miembro.id, ahora);
-  const fechaLimiteAbono = suscripcionActiva?.fechaLimiteAbono ?? null;
-
-  const estado = await validarAccesoSucursal(
-    { suscripciones: deps.suscripciones },
-    miembro.id,
-    miembro.sucursalId,
-    input.sucursalId,
-    miembro.fechaVencimiento,
-    diasGracia,
-    fechaLimiteAbono,
-    ahora
-  );
+  const estado = validarAccesoSucursal(miembro.sucursalId, input.sucursalId, miembro.fechaVencimiento, ahora);
 
   await deps.checkIns.crear({
     sucursalId: input.sucursalId,
@@ -147,10 +95,5 @@ export async function registrarCheckIn(
     estadoAlMomento: estado,
   });
 
-  return {
-    ...base,
-    estado,
-    diasGraciaRestantes: estado === "en_gracia" ? calcularDiasGraciaRestantes(ahora) : null,
-    tieneGraciaConfigurada: diasGracia > 0,
-  };
+  return { ...base, estado };
 }

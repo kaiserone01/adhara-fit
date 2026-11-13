@@ -8,7 +8,6 @@ function mapear(sucursal: {
   organizacionId: string;
   nombre: string;
   direccion: string | null;
-  diasGracia: number;
   activo: boolean;
   apiKey: string;
   reposoFrases: string[];
@@ -20,7 +19,6 @@ function mapear(sucursal: {
     organizacionId: sucursal.organizacionId,
     nombre: sucursal.nombre,
     direccion: sucursal.direccion,
-    diasGracia: sucursal.diasGracia,
     activo: sucursal.activo,
     apiKey: sucursal.apiKey,
     reposoFrases: sucursal.reposoFrases,
@@ -45,7 +43,7 @@ export class PrismaSucursalRepository implements ISucursalRepository {
   async listarPorOrganizacion(organizacionId: string): Promise<SucursalResumen[]> {
     return this.prisma.sucursal.findMany({
       where: { organizacionId },
-      select: { id: true, nombre: true, direccion: true, diasGracia: true, activo: true },
+      select: { id: true, nombre: true, direccion: true, activo: true },
       orderBy: { nombre: "asc" },
     });
   }
@@ -56,7 +54,6 @@ export class PrismaSucursalRepository implements ISucursalRepository {
         organizacionId: datos.organizacionId,
         nombre: datos.nombre,
         direccion: datos.direccion,
-        diasGracia: datos.diasGracia,
       },
     });
     return mapear(sucursal);

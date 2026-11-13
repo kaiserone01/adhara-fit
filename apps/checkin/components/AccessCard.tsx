@@ -24,14 +24,12 @@ function formatearFecha(iso: string | null): string {
 const ETIQUETA_CARA: Record<CaraFicha, string> = {
   permitido: "Acceso permitido",
   por_vencer: "Acceso permitido",
-  en_gracia: "Membresía vencida — período de gracia",
   vencido: "Membresía vencida",
-  abono_vencido: "Plazo de abono vencido",
   sucursal_incorrecta: "Acceso denegado",
 };
 
 // Caras con acceso: llevan el saludo.
-const CARAS_CON_ACCESO: readonly CaraFicha[] = ["permitido", "por_vencer", "en_gracia"];
+const CARAS_CON_ACCESO: readonly CaraFicha[] = ["permitido", "por_vencer"];
 
 const ETIQUETA_DATO = "text-2xl font-bold uppercase";
 const ESTILO_ETIQUETA = { letterSpacing: "0.1em", color: "var(--gx-muted-dim)" };
@@ -127,15 +125,9 @@ export function AccessCard({
             </div>
           ) : (
             <>
-              {(cara === "en_gracia" || cara === "vencido" || cara === "abono_vencido") && (
+              {cara === "vencido" && (
                 <p className="border-t pt-6 text-3xl font-medium" style={{ borderColor: "var(--gx-edge)", color: "var(--gx-warn)" }}>
-                  {cara === "en_gracia"
-                    ? `Tienes ${resultado.diasGraciaRestantes ?? 0} día(s) de gracia — acércate a recepción a renovar tu plan.`
-                    : cara === "abono_vencido"
-                      ? "Completa tu pago para reactivar el acceso — acércate a recepción."
-                      : resultado.tieneGraciaConfigurada
-                        ? "Tu período de gracia terminó — acércate a recepción a renovar tu plan."
-                        : "Acercate a recepción a renovar tu plan."}
+                  Acércate a recepción a renovar tu plan.
                 </p>
               )}
               <div className="grid grid-cols-3 gap-6 border-t pt-6" style={{ borderColor: "var(--gx-edge)" }}>

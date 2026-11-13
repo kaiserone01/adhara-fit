@@ -112,10 +112,18 @@ describe("administrador desactivado", () => {
 
   test("su sesión vigente deja de valer", async () => {
     const { repo } = crearRepo([admin("a", false)]);
+    const eliminadas: string[] = [];
     const deps = {
       usuarios: repo,
-      sesiones: { buscarPorToken: async () => ({ usuarioId: "a", sucursalActivaId: "s1", expiraEn: new Date(Date.now() + 60_000) }) },
+      sesiones: {
+        buscarPorToken: async () => ({ usuarioId: "a", sucursalActivaId: "s1", expiraEn: new Date(Date.now() + 60_000) }),
+        eliminarPorToken: async (token: string) => {
+          eliminadas.push(token);
+        },
+      },
     } as unknown as Parameters<typeof validarSesion>[0];
     expect(await validarSesion(deps, "token")).toBeNull();
+    // La sesión de una cuenta desactivada se elimina (S-01).
+    expect(eliminadas).toEqual(["token"]);
   });
 });

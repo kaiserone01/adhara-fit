@@ -8,6 +8,24 @@ Bitácora de sesiones: la más reciente arriba, solo se añaden entradas. El his
 - **Desplegado:** provisional en Easypanel (`docs/ops/easypanel.md`): imagen del `Dockerfile`, esquema con `prisma db push` al arrancar, alta del primer administrador con `tools/crear-administrador.mjs`.
 - **Preferencia del propietario:** cada código (ADR-nnn, S-nn, REQ…) que se mencione lleva al lado una descripción simple.
 
+## Sesión 2026-11-13 (noche, 18) — Tramo 6 (parte 1): seguridad mínima antes de datos reales (S-01)
+**Qué se hizo**
+- Límite de intentos de login: 5 contraseñas fallidas en 15 minutos por clave (correo normalizado + IP) → 429 con `Retry-After`, sin verificar la contraseña. Conteo, verificación y registro bajo candado asesor por clave (`pg_advisory_xact_lock`). Tabla nueva `IntentoLogin` (aditiva; se purga lo de más de 24 h). La IP es la última de `X-Forwarded-For` (las anteriores las escribe el cliente). Regla pura en `domain/utils/bloqueoLogin.ts` (+4 pruebas); `bloqueoCheckin.ts` pasó a una función genérica `evaluarBloqueoPorFallos`.
+- Cuentas desactivadas: el login ya las rechazaba con el mismo mensaje; ahora `desactivarConservandoUnoActivo` borra todas sus sesiones en la misma transacción y `validarSesion` elimina la sesión de un usuario inactivo (prueba ampliada).
+- Cabeceras de seguridad en todas las respuestas de web-admin (`nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy`, `Permissions-Policy`, `X-Robots-Tag: noindex, nofollow`) y `/robots.txt` con `Disallow: /`.
+
+**Qué funcionó**
+- Dominio 306 pruebas (4 nuevas), `tsc` limpio, lint sin errores, build correcto (`/robots.txt` generado).
+
+**Qué no funcionó / a tener en cuenta**
+- No hecho de S-01: CORS restringido del kiosco (`KIOSCO_ORIGENES_PERMITIDOS`; si se restringe sin configurar la variable el APK dejaría de funcionar, por eso sigue `*` y la autenticación es la clave en cabecera), clave del kiosco como hash (hoy es `CHECKIN_CLAVE` del entorno), validación con zod, permisos por caso de uso (rol único, S-23), CSP y HSTS (HSTS conviene ponerlo en el proxy), `verificarCredenciales` único, registro de bloqueados.
+- Sin prueba contra base real del 429 de login ni de la concurrencia: verificar en el despliegue (5 contraseñas malas seguidas y la sexta da 429, aunque la contraseña sea la correcta).
+- Rotar las claves de base de datos y R2 compartidas por chat antes de cargar socios reales (acción del propietario).
+
+**Siguiente**
+1. Probar el bloqueo de login y la desactivación de una cuenta con sesión abierta en el despliegue.
+2. Tramo 6 restante: operación (S-17: `/api/salud`, respaldos) y línea base y limpieza legacy (S-15); APK al final.
+
 ## Sesión 2026-11-13 (noche, 17) — Tramo 5: check-in en smart-TV (S-21) y ajuste de la vitrina (S-20)
 **Qué se hizo**
 - Servidor `api/checkin`: límite de intentos fallidos por sede. Cuentan como fallo el identificador inválido, el socio inexistente o eliminado y el vencido; con 5 fallos vigentes en 5 minutos responde 429 con `Retry-After` (los envíos bloqueados no cuentan). Conteo y registro en una transacción con candado asesor (`pg_advisory_xact_lock`). Tabla nueva `IntentoCheckin` (aditiva; se purga lo de más de 24 h en cada envío). Regla pura en `domain/utils/bloqueoCheckin.ts` (+4 pruebas, bordes 299/300 s). CORS expone `Retry-After`.

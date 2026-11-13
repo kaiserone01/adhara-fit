@@ -253,6 +253,21 @@ model IntentoCheckin {
   @@index([sucursalId, creadoEn])
 }
 
+// S-01: intentos de login por clave (correo normalizado + IP), para limitar las contraseñas fallidas.
+enum ResultadoIntentoLogin {
+  EXITO
+  FALLO
+}
+
+model IntentoLogin {
+  id        String                @id @default(cuid())
+  clave     String
+  resultado ResultadoIntentoLogin
+  creadoEn  DateTime              @default(now())
+
+  @@index([clave, creadoEn])
+}
+
 enum EstadoMiembro {
   ACTIVO
   BAJA

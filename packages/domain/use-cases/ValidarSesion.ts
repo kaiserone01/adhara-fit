@@ -26,6 +26,8 @@ export async function validarSesion(deps: ValidarSesionDeps, token: string): Pro
 
   const usuario = await deps.usuarios.buscarPorIdSinOrganizacion(sesion.usuarioId);
   if (!usuario || !usuario.activo) {
+    // Cuenta desactivada o inexistente: la sesión se elimina y la petición queda sin autenticar (S-01).
+    await deps.sesiones.eliminarPorToken(token);
     return null;
   }
 

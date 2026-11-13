@@ -88,7 +88,10 @@ export class PrismaUsuarioAdminRepository implements IUsuarioAdminRepository {
       if (!existente) return null;
       if (!existente.activo) return mapear(existente);
       if (!activos.some((fila) => fila.id !== id)) return "ULTIMO_ADMINISTRADOR";
-      return mapear(await tx.usuarioAdmin.update({ where: { id }, data: { activo: false } }));
+      const desactivado = mapear(await tx.usuarioAdmin.update({ where: { id }, data: { activo: false } }));
+      // Una cuenta desactivada pierde sus sesiones abiertas en la misma transacción (S-01).
+      await tx.sesion.deleteMany({ where: { usuarioId: id } });
+      return desactivado;
     });
   }
 

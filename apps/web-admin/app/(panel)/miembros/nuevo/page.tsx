@@ -37,7 +37,7 @@ export default async function PaginaNuevoMiembro() {
           mensaje={
             turnoAbierto
               ? `No puedes inscribir miembros: la caja está abierta por ${turnoAbierto.turno.usuarioNombre ?? "otro usuario"}.`
-              : "Para inscribir un miembro primero tenés que abrir la caja."
+              : "Para inscribir un miembro primero tienes que abrir la caja."
           }
         />
       </div>

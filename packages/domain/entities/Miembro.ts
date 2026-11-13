@@ -16,8 +16,6 @@ export interface Miembro {
   fechaUltimoPago: Date | null;
   fechaVencimiento: Date | null;
   activo: boolean;
-  porRegularizar: boolean; // fechas y pago vienen de una fuente externa (padrón/Excel o migración anterior) y no están verificados: el socio debe ajustar la fecha o registrar un pago con la fecha real
-  vieneDelExcel: boolean; // viene del padrón/migración del Excel: su fecha de pago y de vencimiento se editan siempre en la ficha (no se conoce su fecha de inscripción)
   createdAt: Date;
 }
 
@@ -33,11 +31,8 @@ export interface DatosNuevoMiembro {
   entrenadorId: string | null;
   planId: string | null;
   precioPlan: number;
-  // Solo los usa la activación desde el padrón; un alta normal los deja en su valor por defecto.
   fechaUltimoPago?: Date | null;
   fechaVencimiento?: Date | null;
-  porRegularizar?: boolean;
-  vieneDelExcel?: boolean;
 }
 
 export interface CambiosMiembro {
@@ -55,5 +50,4 @@ export interface CambiosMiembro {
   fechaUltimoPago?: Date | null;
   fechaVencimiento?: Date | null;
   activo?: boolean;
-  porRegularizar?: boolean;
 }

@@ -1,8 +1,8 @@
-# Vitrina AX para Android TV
+# Adhara Vitrina para Android TV
 
 ## 1. Qué es
 
-APK Capacitor 8 (`appId` `com.adrenalina.vitrina`, nombre "Vitrina AX") con la app web de la vitrina empaquetada dentro. No usa `server.url` (salvo `VITRINA_DEV_URL` en desarrollo). El proyecto Capacitor está en `apps/vitrina-tv/capacitor/` (no es workspace npm); `apps/vitrina-tv/prueba/` es una página descartable para probar el TV real.
+APK Capacitor 8 (`appId` `pe.adharafit.vitrina`, nombre "Adhara Vitrina") con la app web de la vitrina empaquetada dentro. No usa `server.url` (salvo `VITRINA_DEV_URL` en desarrollo). El proyecto Capacitor está en `apps/vitrina-tv/capacitor/` (no es workspace npm); `apps/vitrina-tv/prueba/` es una página descartable para probar el TV real.
 
 ## 2. Requisitos del TV
 
@@ -36,15 +36,15 @@ Por USB, o por red: `adb connect <ip>` y luego `adb install -r vitrina-<sede>.ap
 
 ## 5. Arranque automático (la instalación es por enlace, sin adb)
 
-Android 10+ solo deja abrir una app al encender el TV si tiene el permiso "Mostrar sobre otras aplicaciones". Con instalación por enlace no hay adb, así que la app lo pide sola al abrirse: muestra un aviso y abre la pantalla de ese permiso del sistema (activar "Vitrina AX"). Si ese TV no trae la pantalla, queda el ajuste de "autoinicio" del fabricante, o fijar la app como launcher; anótalo aquí al probar cada modelo.
+Android 10+ solo deja abrir una app al encender el TV si tiene el permiso "Mostrar sobre otras aplicaciones". Con instalación por enlace no hay adb, así que la app lo pide sola al abrirse: muestra un aviso y abre la pantalla de ese permiso del sistema (activar "Adhara Vitrina"). Si ese TV no trae la pantalla, queda el ajuste de "autoinicio" del fabricante, o fijar la app como launcher; anótalo aquí al probar cada modelo.
 
 Con adb (solo para depurar, opcional):
 
 ```text
-adb shell appops set com.adrenalina.vitrina SYSTEM_ALERT_WINDOW allow
-adb shell appops set com.adrenalina.vitrina RUN_IN_BACKGROUND allow
-adb shell dumpsys deviceidle whitelist +com.adrenalina.vitrina
-adb shell appops get com.adrenalina.vitrina SYSTEM_ALERT_WINDOW
+adb shell appops set pe.adharafit.vitrina SYSTEM_ALERT_WINDOW allow
+adb shell appops set pe.adharafit.vitrina RUN_IN_BACKGROUND allow
+adb shell dumpsys deviceidle whitelist +pe.adharafit.vitrina
+adb shell appops get pe.adharafit.vitrina SYSTEM_ALERT_WINDOW
 ```
 
 ## 6. Al terminar
@@ -64,7 +64,7 @@ Para ver cambios sin recompilar el APK, preparar el proyecto con `VITRINA_DEV_UR
 Con el panel y la vitrina apuntando al mismo web-admin (producción):
 
 1. Cifrado: el artefacto es un `.7z` cifrado; no hay `.apk` suelto.
-2. Ícono y nombre: el launcher muestra "Vitrina AX" con el escudo; también el banner de Android TV.
+2. Ícono y nombre: el launcher muestra "Adhara Vitrina" con el escudo; también el banner de Android TV.
 3. Contenido: promo, franja de 3 entrenadores y producto con oferta + Bs se ven bien a 1080p; el video de la franja reproduce de a uno.
 4. Cambios en vivo: activar, ordenar o eliminar en el panel se refleja en segundos; sustituir una pieza descarga solo la nueva y borra el archivo viejo.
 5. Sin red: sin internet, apagar y encender el TV: abre solo, muestra el último contenido y respeta `inicio`/`fin`.

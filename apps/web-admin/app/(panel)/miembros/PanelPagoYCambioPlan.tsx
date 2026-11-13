@@ -12,7 +12,7 @@ import type { EstadoFormularioPago, EstadoCambioPlan } from "../pagos/actions";
 type Tab = "pago" | "cambiarPlan";
 
 // Antes eran dos <Card> separadas, cada una con su propia grilla de método
-// de pago — se veían las dos a la vez apenas elegías un plan con
+// de pago — se veían las dos a la vez apenas eligeas un plan con
 // entrenador, como si hicieran falta dos pagos. Con pestañas solo se ve
 // una grilla por vez (ver diseño acordado, Opción A del mockup).
 export function PanelPagoYCambioPlan({

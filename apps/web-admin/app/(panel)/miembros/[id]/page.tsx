@@ -115,8 +115,6 @@ export default async function PaginaEditarMiembro({ params }: { params: Promise<
         saldoPendiente={saldoPendiente}
         accesoHastaAbono={accesoHastaAbono}
         totalPagos={pagos.length}
-        porRegularizar={miembro.porRegularizar}
-        vieneDelExcel={miembro.vieneDelExcel}
         valoresIniciales={{
           nombre: miembro.nombre,
           cedula: miembro.cedula,

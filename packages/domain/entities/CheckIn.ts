@@ -24,6 +24,5 @@ export interface CheckInEnSala {
     fechaVencimiento: Date | null;
     planNombre: string | null;
     planFrecuencia: FrecuenciaPago | null;
-    porRegularizar: boolean;
   };
 }

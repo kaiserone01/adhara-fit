@@ -43,34 +43,10 @@ describe("registrarCheckIn — cumpleaños", () => {
   });
 });
 
-describe("registrarCheckIn — activación desde el padrón", () => {
-  function depsSinMiembro(activar?: (i: { organizacionId: string; sucursalId: string; cedula: string }) => Promise<Partial<Miembro> | null>) {
-    return {
-      miembros: { buscarPorOrganizacionYCedula: async () => null },
-      checkIns: { buscarRecientePorMiembroYSucursal: async () => ({ estadoAlMomento: "vencido" }) },
-      suscripciones: {},
-      sucursales: { buscarPorId: async () => ({ diasGracia: 0, nombre: "Sede Principal", direccion: null }) },
-      activarDesdePadron: activar,
-    } as unknown as Parameters<typeof registrarCheckIn>[0];
-  }
-
-  test("si no es miembro pero el padrón lo activa, sigue el flujo normal con ese miembro", async () => {
-    const llamadas: unknown[] = [];
-    const deps = depsSinMiembro(async (i) => {
-      llamadas.push(i);
-      return { id: "nuevo", nombre: "Ana Pérez", fotoUrl: null, entrenadorNombre: null, fechaVencimiento: null, sucursalId: null, fechaNacimiento: null };
-    });
-    const resultado = await registrarCheckIn(deps, input);
-    expect(resultado.nombre).toBe("Ana Pérez");
-    expect(llamadas).toEqual([input]);
-  });
-
-  test("si tampoco está en el padrón lanza MiembroNoEncontradoError", async () => {
-    await expect(registrarCheckIn(depsSinMiembro(async () => null), input)).rejects.toBeInstanceOf(MiembroNoEncontradoError);
-  });
-
-  test("sin dependencia de activación (otro contexto) sigue lanzando MiembroNoEncontradoError", async () => {
-    await expect(registrarCheckIn(depsSinMiembro(undefined), input)).rejects.toBeInstanceOf(MiembroNoEncontradoError);
+describe("registrarCheckIn — cédula desconocida", () => {
+  test("si la cédula no es de ningún miembro lanza MiembroNoEncontradoError", async () => {
+    const deps = { miembros: { buscarPorOrganizacionYCedula: async () => null } } as unknown as Parameters<typeof registrarCheckIn>[0];
+    await expect(registrarCheckIn(deps, input)).rejects.toBeInstanceOf(MiembroNoEncontradoError);
   });
 });
 

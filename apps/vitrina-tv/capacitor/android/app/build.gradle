@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "com.adrenalina.vitrina"
+    namespace = "pe.adharafit.vitrina"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.adrenalina.vitrina"
+        applicationId "pe.adharafit.vitrina"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode = Integer.parseInt((project.findProperty("versionCode") ?: "1").toString())

@@ -26,7 +26,7 @@ function crearDeps(opciones: { pagadoPrevio?: number } = {}) {
       actualizarFechaLimiteAbono: async () => undefined,
     },
     miembros: {
-      buscarPorId: async () => ({ id: "m1", nombre: "Andrea", sucursalId: "s1", planId: "plan1", precioPlan: 22, saldoAFavorUSD: 0, porRegularizar: false }),
+      buscarPorId: async () => ({ id: "m1", nombre: "Andrea", sucursalId: "s1", planId: "plan1", precioPlan: 22, saldoAFavorUSD: 0 }),
       actualizar: async () => null,
       actualizarFechasPago: async () => undefined,
     },

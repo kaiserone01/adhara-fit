@@ -1,4 +1,4 @@
-package com.adrenalina.vitrina;
+package pe.adharafit.vitrina;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

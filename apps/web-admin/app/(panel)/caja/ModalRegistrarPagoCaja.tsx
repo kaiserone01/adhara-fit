@@ -6,7 +6,6 @@ import type { Miembro } from "@gym-app/domain/entities/Miembro";
 import type { MetodoPago } from "@gym-app/domain/entities/MetodoPago";
 import type { FrecuenciaPago } from "@gym-app/domain/entities/Plan";
 import {
-  MAX_DIAS_ATRAS_PAGO_RETROACTIVO,
   MAX_DIAS_ATRAS_PAGO_FECHADO,
   MAX_MESES_POR_PAGO,
   toleranciaDiferenciaPagoUSD,
@@ -37,7 +36,7 @@ import { FormularioCambiarPlan, type EntrenadorParaCambio, type ProyeccionCambio
 type Paso = 1 | 2 | 3 | 4;
 
 const TITULOS_PASO: Record<Paso, string> = {
-  1: "Elegí un miembro",
+  1: "Elige un miembro",
   2: "Estado de la membresía",
   3: "Método de pago",
   4: "Pago registrado",
@@ -284,14 +283,14 @@ function ContenidoPaso2({
         </div>
       ) : (
         <label className="flex flex-col gap-2" style={{ color: "var(--gx-muted)" }}>
-          {miembro.plan ? "Elegí el nuevo plan para este pago" : "Este miembro no tiene un plan asignado — elegí uno para continuar"}
+          {miembro.plan ? "Elige el nuevo plan para este pago" : "Este miembro no tiene un plan asignado — elige uno para continuar"}
           <div className="flex gap-2">
             <select
               value={planElegidoId ?? ""}
               onChange={(e) => onElegirPlan(e.target.value)}
               className="min-h-12 flex-1 rounded-lg border px-3 text-base gx-campo"
             >
-              <option value="">Seleccioná un plan</option>
+              <option value="">Selecciona un plan</option>
               {planes.map((plan) => (
                 <option key={plan.id} value={plan.id}>
                   {plan.nombre} — {formatearSoles(plan.precioUSD)}
@@ -477,7 +476,6 @@ function ContenidoPaso3({
   modalidad,
   metodosPago,
   deudaMiembro,
-  porRegularizar,
   abonoPrevio,
   onVolver,
   onPagoRegistrado,
@@ -510,8 +508,6 @@ function ContenidoPaso3({
   metodosPago: MetodoPago[];
   // Productos fiados pendientes de este miembro en la sucursal (null = no debe nada).
   deudaMiembro: GrupoDeudasMiembro | null;
-  // Con el aviso "Por regularizar" el pago se puede fechar hasta 365 días atrás; el resto, hasta 90.
-  porRegularizar: boolean;
   // Abono ya hecho en el ciclo abierto de este mismo plan (null = no hay): el monto a cobrar es su saldo.
   abonoPrevio: AbonoPendiente | null;
   // Crédito del miembro (pago de más o cambio de plan a la baja): se descuenta de lo que se cobra.
@@ -524,7 +520,7 @@ function ContenidoPaso3({
   // usa la tasa BCV de ese día.
   const [fechaPago, setFechaPago] = useState(() => fechaALocalISO(new Date()));
   const hoyISO = fechaALocalISO(new Date());
-  const maxDiasAtras = porRegularizar ? MAX_DIAS_ATRAS_PAGO_RETROACTIVO : MAX_DIAS_ATRAS_PAGO_FECHADO;
+  const maxDiasAtras = MAX_DIAS_ATRAS_PAGO_FECHADO;
   // eslint-disable-next-line react-hooks/purity -- el limite minimo debe calcularse con la hora actual en cada render; congelarlo cambiaria el comportamiento
   const minFechaISO = fechaALocalISO(new Date(Date.now() - maxDiasAtras * 24 * 60 * 60 * 1000));
   const esFechaPasada = fechaPago !== "" && fechaPago < hoyISO;
@@ -684,19 +680,19 @@ function ContenidoPaso3({
       <div className="flex min-w-0 flex-col gap-4 lg:flex-1 lg:overflow-y-auto lg:pr-2">
       <div
         className="etiquetas-blancas mx-auto flex w-full max-w-xs flex-col gap-2 rounded-xl border p-3"
-        style={{ borderColor: porRegularizar ? "var(--gx-warn)" : "var(--gx-accent)" }}
+        style={{ borderColor: "var(--gx-accent)" }}
       >
         <InputFecha
-          label={porRegularizar ? 'Fecha del pago (aviso "Por regularizar")' : "Fecha del pago"}
+          label="Fecha del pago"
           value={fechaPago}
           min={minFechaISO}
           max={hoyISO}
           onChange={setFechaPago}
-          className={porRegularizar ? "titilar-fecha" : "tarjeta-luminosa"}
+          className="tarjeta-luminosa"
         />
         <p className="text-sm font-medium" style={{ color: "#ffffff" }}>
           {esFechaPasada
-            ? `El pago se registra el ${fechaPago.split("-").reverse().join("/")}; no entra en ningún turno de caja${porRegularizar ? "" : " ni en el arqueo de hoy"}.`
+            ? `El pago se registra el ${fechaPago.split("-").reverse().join("/")}; no entra en ningún turno de caja ni en el arqueo de hoy.`
             : `Cámbiala solo si pagó antes (máx. ${maxDiasAtras} días).`}
         </p>
       </div>
@@ -707,7 +703,7 @@ function ContenidoPaso3({
 
       {montoObjetivo > 0 && !usaFracciones && (
         <MetodoYCampos
-          vacio={lineaUnica.seleccion.metodoPagoId ? "Este método no requiere número de operación." : "Elegí un método de pago."}
+          vacio={lineaUnica.seleccion.metodoPagoId ? "Este método no requiere número de operación." : "Elige un método de pago."}
           selector={
             <SelectorMetodoPago
               compacto
@@ -784,7 +780,7 @@ function ContenidoPaso3({
                     )}
 
                     <MetodoYCampos
-                      vacio="Elegí un método de pago para ingresar el monto de esta fracción."
+                      vacio="Elige un método de pago para ingresar el monto de esta fracción."
                       selector={
                         <SelectorMetodoPago
                           compacto
@@ -1207,7 +1203,6 @@ export function ModalRegistrarPagoCaja({
             modalidad={modalidadElegida}
             metodosPago={metodosPago}
             deudaMiembro={deudas.find((g) => g.miembroId === miembroElegido.id) ?? null}
-            porRegularizar={miembroElegido.porRegularizar}
             abonoPrevio={abonoPrevio}
             onVolver={() => setPaso(2)}
             onPagoRegistrado={(fechaFinCicloISO) => {

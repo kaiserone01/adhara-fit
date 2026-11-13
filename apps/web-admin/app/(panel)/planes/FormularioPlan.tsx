@@ -385,7 +385,7 @@ function CambiarFrecuenciaSection({
               </label>
 
               <label className="flex flex-col gap-1.5 text-sm" style={{ color: "var(--gx-muted)" }}>
-                Escribí <strong>{nombrePlan}</strong> para confirmar
+                Escribe <strong>{nombrePlan}</strong> para confirmar
                 <input
                   name="confirmacion"
                   required

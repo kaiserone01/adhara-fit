@@ -8,6 +8,24 @@ Bitácora de sesiones: la más reciente arriba, solo se añaden entradas. El his
 - **Desplegado:** provisional en Easypanel (`docs/ops/easypanel.md`): imagen del `Dockerfile`, esquema con `prisma db push` al arrancar, alta del primer administrador con `tools/crear-administrador.mjs`.
 - **Preferencia del propietario:** cada código (ADR-nnn, S-nn, REQ…) que se mencione lleva al lado una descripción simple.
 
+## Sesión 2026-11-13 (noche, 5) — Tramo 1: fuera el padrón de Excel y la marca vieja
+**Qué se hizo**
+- Retirado el padrón de Excel: menú Configuraciones › Excel, «Activar desde Excel» en Miembros, `ActivarMiembroDesdePadron`, `EditarMiembroReferencia`, `MiembroReferencia` (entidad, puerto y repositorio) y las utilidades `padronExcel`, `filtrarFilasPadron`, `formatoCeldaPadron` y `saltoFila`. El check-in con una cédula desconocida ya no intenta activarla: responde «no se encontró ningún miembro». Dependencia `xlsx` quitada de `packages/db` y del `package-lock.json` (no hay otra dependencia nueva).
+- Retiradas las banderas «Por regularizar» y «viene del Excel» (`porRegularizar`, `vieneDelExcel`) de entidades, casos de uso, repositorios y pantallas (ficha, lista de miembros, En sala, modal de pago de Caja). El pago con fecha pasada ahora regulariza solo en el primer pago de inscripción; para el resto el tope es de 90 días.
+- Marca vieja: la vitrina-tv pasa a `pe.adharafit.vitrina` («Adhara Vitrina»; carpeta Java renombrada) como el check-in; el script `verificar-autorizacion.ts` usa el slug `adhara-fit`.
+- Mensajes con voseo pasados a tuteo (panel, check-in y dominio).
+- Verificado: dominio 312, check-in 50 y vitrina 65 pruebas en verde (bajan 63 del dominio por las pruebas del padrón eliminadas); config de los dos APK 9 y 6 en verde; `tsc` solo con el error previo de `LayoutProps`; lint sin errores; `next build` compila.
+
+**Qué no funcionó / a tener en cuenta**
+- Las columnas `Miembro.porRegularizar`/`vieneDelExcel` y las tablas `MiembroReferencia`/`PadronHoja` siguen en la base (el esquema no se toca hasta S-15).
+- **El APK de la vitrina cambia de paquete:** el que esté instalado en el TV no se actualiza, hay que desinstalar el viejo (`com.adrenalina.vitrina`) antes de instalar el nuevo.
+- Sin ejecutar: la app en el navegador y el workflow `apk`.
+
+**Siguiente**
+1. Tramo 2 de la ruta ágil (`docs/superpowers/plans/2026-11-13-ruta-agil.md`).
+2. Lanzar el workflow `apk` y probar los APK en el TV.
+3. El propietario ajusta a mano el diseño del login y del panel (en su propia rama): integrar cuando avise.
+
 ## Sesión 2026-11-13 (noche, 4) — Tramo 1: solo soles y hora de Lima
 **Qué se hizo**
 - Dinero solo en PEN con dos decimales: `packages/domain/utils/formatearSoles.ts` («S/ 1,234.50», con prueba) reemplaza todos los `# Handoff — Adhara Fit

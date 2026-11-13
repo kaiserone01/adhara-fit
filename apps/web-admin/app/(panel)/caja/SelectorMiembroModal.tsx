@@ -70,8 +70,6 @@ export interface MiembroConPlan {
   // CambiarPlanConPago) — se muestra como aviso informativo antes de
   // pagar, ya que se descuenta automáticamente del monto a cobrar.
   saldoAFavorUSD: number;
-  // Aviso "Por regularizar": habilita registrar el pago con una fecha pasada.
-  porRegularizar: boolean;
 }
 
 export function aMiembroConPlan(m: Miembro, planesPorId: Map<string, PlanParaModal>): MiembroConPlan {
@@ -85,7 +83,6 @@ export function aMiembroConPlan(m: Miembro, planesPorId: Map<string, PlanParaMod
     sucursalId: m.sucursalId,
     entrenadorId: m.entrenadorId,
     saldoAFavorUSD: m.saldoAFavorUSD,
-    porRegularizar: m.porRegularizar,
   };
 }
 
@@ -142,7 +139,7 @@ export function BuscadorMiembro({
       <div className={`mt-4 flex-1 overflow-y-auto ${textoBase}`}>
         {busquedaAplicada === "" && (
           <p className="py-8 text-center" style={{ color: "var(--gx-muted)" }}>
-            Escribí al menos 3 caracteres para buscar.
+            Escribe al menos 3 caracteres para buscar.
           </p>
         )}
 

@@ -10,8 +10,8 @@ import type { DatosNuevoPago, Pago } from "../entities/Pago";
 
 const DIA = 24 * 60 * 60 * 1000;
 
-function crearDeps(opciones: { porRegularizar?: boolean; hayActiva?: boolean; vigenteHasta?: Date; permitePagoParcial?: boolean; saldoAFavor?: number; reglaActiva?: boolean } = {}) {
-  const { porRegularizar = true, hayActiva = true, vigenteHasta, permitePagoParcial = true, saldoAFavor = 0, reglaActiva = false } = opciones;
+function crearDeps(opciones: { hayActiva?: boolean; vigenteHasta?: Date; permitePagoParcial?: boolean; saldoAFavor?: number; reglaActiva?: boolean } = {}) {
+  const { hayActiva = true, vigenteHasta, permitePagoParcial = true, saldoAFavor = 0, reglaActiva = false } = opciones;
   const limites: (Date | null | undefined)[] = [];
   const extensiones: Date[] = [];
   const cambiosMiembro: Record<string, unknown>[] = [];
@@ -46,7 +46,7 @@ function crearDeps(opciones: { porRegularizar?: boolean; hayActiva?: boolean; vi
       },
     },
     miembros: {
-      buscarPorId: async () => ({ id: "m1", sucursalId: "s1", planId: "plan1", precioPlan: 25, saldoAFavorUSD: saldoAFavor, porRegularizar }),
+      buscarPorId: async () => ({ id: "m1", sucursalId: "s1", planId: "plan1", precioPlan: 25, saldoAFavorUSD: saldoAFavor }),
       actualizar: async (_org: string, _id: string, cambios: Record<string, unknown>) => {
         cambiosMiembro.push(cambios);
         return null;
@@ -82,11 +82,11 @@ function input(extra: Partial<DatosRegistrarPago> = {}): DatosRegistrarPago {
   };
 }
 
-describe("registrarPago con fecha pasada (aviso 'Por regularizar')", () => {
+describe("registrarPago con fecha pasada", () => {
   test("usa la fecha elegida, sin turno, con ciclo = fecha + días del plan", async () => {
     const { deps, pagos, ciclos, fechasMiembro } = crearDeps();
     const fecha = hace(10);
-    await registrarPago(deps, input({ fechaPago: fecha }));
+    await registrarPago(deps, input({ fechaPago: fecha, primerPagoDeInscripcion: true }));
 
     expect(pagos).toHaveLength(1);
     expect(pagos[0]).toMatchObject({
@@ -101,7 +101,7 @@ describe("registrarPago con fecha pasada (aviso 'Por regularizar')", () => {
   });
 
   test("primer pago dividido en dos transferencias: un mismo grupo de pago", async () => {
-    const { deps, pagos } = crearDeps({ porRegularizar: false, hayActiva: false });
+    const { deps, pagos } = crearDeps({ hayActiva: false });
     const fecha = hace(1);
     await registrarPago(
       deps,
@@ -120,7 +120,7 @@ describe("registrarPago con fecha pasada (aviso 'Por regularizar')", () => {
   });
 
   test("sobrante marcado como saldo a favor: se suma al crédito del miembro; sin marcarlo, solo queda registrado", async () => {
-    const conSaldo = crearDeps({ porRegularizar: false, hayActiva: false });
+    const conSaldo = crearDeps({ hayActiva: false });
     await registrarPago(
       conSaldo.deps,
       input({
@@ -132,7 +132,7 @@ describe("registrarPago con fecha pasada (aviso 'Por regularizar')", () => {
     expect(conSaldo.pagos[0]).toMatchObject({ monto: 27 });
     expect(conSaldo.cambiosMiembro).toContainEqual({ saldoAFavorUSD: 2 });
 
-    const sinSaldo = crearDeps({ porRegularizar: false, hayActiva: false });
+    const sinSaldo = crearDeps({ hayActiva: false });
     await registrarPago(
       sinSaldo.deps,
       input({
@@ -144,7 +144,7 @@ describe("registrarPago con fecha pasada (aviso 'Por regularizar')", () => {
   });
 
   test("saldo a favor: se consume solo lo que hace falta para completar el ciclo", async () => {
-    const { deps, pagos, cambiosMiembro } = crearDeps({ porRegularizar: false, hayActiva: false, saldoAFavor: 2 });
+    const { deps, pagos, cambiosMiembro } = crearDeps({ hayActiva: false, saldoAFavor: 2 });
     await registrarPago(
       deps,
       input({
@@ -157,7 +157,7 @@ describe("registrarPago con fecha pasada (aviso 'Por regularizar')", () => {
   });
 
   test("saldo a favor: si el efectivo ya cubre el ciclo, el crédito no se toca", async () => {
-    const { deps, cambiosMiembro } = crearDeps({ porRegularizar: false, hayActiva: false, saldoAFavor: 2 });
+    const { deps, cambiosMiembro } = crearDeps({ hayActiva: false, saldoAFavor: 2 });
     await registrarPago(
       deps,
       input({
@@ -176,7 +176,7 @@ describe("registrarPago con fecha pasada (aviso 'Por regularizar')", () => {
 
   test("miembro sin el aviso con ciclo vigente ese día: el ciclo se suma al final del vigente, sin turno", async () => {
     const vigenteHasta = new Date(Date.now() + 5 * DIA);
-    const { deps, pagos, extensiones, ciclos, fechasMiembro } = crearDeps({ porRegularizar: false, vigenteHasta });
+    const { deps, pagos, extensiones, ciclos, fechasMiembro } = crearDeps({ vigenteHasta });
     const fecha = hace(2);
     await registrarPago(deps, input({ fechaPago: fecha }));
     const fin = new Date(vigenteHasta);
@@ -188,7 +188,7 @@ describe("registrarPago con fecha pasada (aviso 'Por regularizar')", () => {
   });
 
   test("miembro sin el aviso y vencido ese día: crea un ciclo nuevo que arranca en la fecha del pago", async () => {
-    const { deps, pagos, creadas, extensiones } = crearDeps({ porRegularizar: false });
+    const { deps, pagos, creadas, extensiones } = crearDeps({});
     const fecha = hace(3);
     await registrarPago(deps, input({ fechaPago: fecha }));
     expect(extensiones).toEqual([]);
@@ -198,7 +198,7 @@ describe("registrarPago con fecha pasada (aviso 'Por regularizar')", () => {
   });
 
   test("primer pago de un miembro nuevo como abono: se registra y el ciclo queda abierto desde esa fecha", async () => {
-    const { deps, pagos, creadas } = crearDeps({ porRegularizar: false, hayActiva: false });
+    const { deps, pagos, creadas } = crearDeps({ hayActiva: false });
     const fecha = hace(7);
     await registrarPago(
       deps,
@@ -213,7 +213,7 @@ describe("registrarPago con fecha pasada (aviso 'Por regularizar')", () => {
   });
 
   test("primer pago como abono en un plan que no admite abonos → AbonoNoPermitidoError", async () => {
-    const { deps, pagos } = crearDeps({ porRegularizar: false, hayActiva: false, permitePagoParcial: false });
+    const { deps, pagos } = crearDeps({ hayActiva: false, permitePagoParcial: false });
     await expect(
       registrarPago(
         deps,
@@ -230,7 +230,7 @@ describe("registrarPago con fecha pasada (aviso 'Por regularizar')", () => {
     const { deps, pagos, ciclos } = crearDeps();
     await registrarPago(
       deps,
-      input({ lineas: [{ monto: 24.5, metodo: "Efectivo", metodoPagoId: "mp2", numeroOperacion: null }] })
+      input({ primerPagoDeInscripcion: true, lineas: [{ monto: 24.5, metodo: "Efectivo", metodoPagoId: "mp2", numeroOperacion: null }] })
     );
     expect(pagos[0]).toMatchObject({ monto: 24.5 });
     expect(ciclos).toHaveLength(1);
@@ -248,13 +248,13 @@ describe("registrarPago con fecha pasada (aviso 'Por regularizar')", () => {
   });
 
   test("miembro sin el aviso: más de 90 días atrás → FechaPagoInvalidaError", async () => {
-    const { deps, pagos } = crearDeps({ porRegularizar: false });
+    const { deps, pagos } = crearDeps({});
     await expect(registrarPago(deps, input({ fechaPago: hace(100) }))).rejects.toBeInstanceOf(FechaPagoInvalidaError);
     expect(pagos).toEqual([]);
   });
 
   test("primer pago de un miembro nuevo: se permite con fecha pasada aunque no tenga el aviso", async () => {
-    const { deps, pagos } = crearDeps({ porRegularizar: false });
+    const { deps, pagos } = crearDeps({});
     await registrarPago(deps, input({ primerPagoDeInscripcion: true }));
     expect(pagos).toHaveLength(1);
     expect(pagos[0].turnoId).toBeNull();
@@ -266,7 +266,7 @@ describe("registrarPago con fecha pasada (aviso 'Por regularizar')", () => {
   });
 
   test("miembro normal: un abono con fecha pasada se acepta, fuera de turno, y el acceso cuenta desde esa fecha", async () => {
-    const { deps, pagos, creadas } = crearDeps({ porRegularizar: false, hayActiva: false, reglaActiva: true });
+    const { deps, pagos, creadas } = crearDeps({ hayActiva: false, reglaActiva: true });
     const fecha = hace(2);
     await registrarPago(
       deps,
@@ -280,7 +280,7 @@ describe("registrarPago con fecha pasada (aviso 'Por regularizar')", () => {
 
   test("miembro normal con ciclo vigente en esa fecha: el abono se suma al final y fija el plazo desde ahí", async () => {
     const vigenteHasta = new Date(Date.now() + 5 * DIA);
-    const { deps, limites, extensiones } = crearDeps({ porRegularizar: false, vigenteHasta, reglaActiva: true });
+    const { deps, limites, extensiones } = crearDeps({ vigenteHasta, reglaActiva: true });
     await registrarPago(
       deps,
       input({ fechaPago: hace(3), lineas: [{ monto: 12.5, metodo: "Efectivo", metodoPagoId: "mp2", numeroOperacion: null }] })
@@ -294,7 +294,7 @@ describe("registrarPago con fecha pasada (aviso 'Por regularizar')", () => {
     const fecha = hace(5);
     await registrarPago(
       deps,
-      input({ fechaPago: fecha, lineas: [{ monto: 10, metodo: "Transferencia", metodoPagoId: "mp1", numeroOperacion: "1" }] })
+      input({ fechaPago: fecha, primerPagoDeInscripcion: true, lineas: [{ monto: 10, metodo: "Transferencia", metodoPagoId: "mp1", numeroOperacion: "1" }] })
     );
     expect(pagos).toHaveLength(1);
     expect(limites[0]!.getTime() - fecha.getTime()).toBe(12 * DIA);
@@ -302,12 +302,12 @@ describe("registrarPago con fecha pasada (aviso 'Por regularizar')", () => {
 
   test("un pago completo regularizando limpia el plazo de abono", async () => {
     const { deps, limites } = crearDeps({ reglaActiva: true });
-    await registrarPago(deps, input());
+    await registrarPago(deps, input({ primerPagoDeInscripcion: true }));
     expect(limites[0]).toBeNull();
   });
 
   test("una fecha de hoy se trata como pago normal (con turno)", async () => {
-    const { deps, pagos } = crearDeps({ porRegularizar: false });
+    const { deps, pagos } = crearDeps({});
     await registrarPago(deps, input({ fechaPago: new Date() }));
     expect(pagos[0].turnoId).toBe("turno-hoy");
   });

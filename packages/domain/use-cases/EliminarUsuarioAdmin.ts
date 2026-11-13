@@ -15,7 +15,7 @@ export class UsuarioNoEncontradoError extends Error {
 
 export class AutoEliminacionError extends Error {
   constructor() {
-    super("No podés eliminar tu propio usuario.");
+    super("No puedes eliminar tu propio usuario.");
   }
 }
 

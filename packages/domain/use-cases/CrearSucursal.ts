@@ -4,7 +4,7 @@ import { Sucursal } from "../entities/Sucursal";
 
 export class RolNoAutorizadoError extends Error {
   constructor() {
-    super("No tenés permiso para crear sucursales.");
+    super("No tienes permiso para crear sucursales.");
   }
 }
 

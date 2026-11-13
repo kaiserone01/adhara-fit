@@ -1,4 +1,4 @@
-package com.adrenalina.vitrina;
+package pe.adharafit.vitrina;
 
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
@@ -38,7 +38,7 @@ public class MainActivity extends BridgeActivity {
         if (Settings.canDrawOverlays(this)) {
             return;
         }
-        Toast.makeText(this, "Vitrina AX: falta el permiso \"Mostrar sobre otras aplicaciones\" para abrirse sola al encender", Toast.LENGTH_LONG).show();
+        Toast.makeText(this, "Adhara Vitrina: falta el permiso \"Mostrar sobre otras aplicaciones\" para abrirse sola al encender", Toast.LENGTH_LONG).show();
         try {
             startActivity(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName())));
         } catch (ActivityNotFoundException e) {

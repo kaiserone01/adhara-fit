@@ -4,7 +4,7 @@ import { Sucursal, CambiosSucursal } from "../entities/Sucursal";
 
 export class RolNoAutorizadoError extends Error {
   constructor() {
-    super("No tenés permiso para editar sucursales.");
+    super("No tienes permiso para editar sucursales.");
   }
 }
 

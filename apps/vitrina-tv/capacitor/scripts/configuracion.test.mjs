@@ -33,7 +33,7 @@ test("sin clave la deja vacía", () => {
 
 test("por defecto no hay server.url (la app va empaquetada) y no se depura", () => {
   const { capacitor } = construirConfiguracion({ VITRINA_API_URL: "https://admin.test" });
-  assert.equal(capacitor.appId, "com.adrenalina.vitrina");
+  assert.equal(capacitor.appId, "pe.adharafit.vitrina");
   assert.equal(capacitor.webDir, "www");
   assert.equal(capacitor.server, undefined);
   assert.equal(capacitor.loggingBehavior, "none");

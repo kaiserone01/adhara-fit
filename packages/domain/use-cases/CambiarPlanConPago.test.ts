@@ -521,7 +521,7 @@ describe("cambiarPlanConPago — caso Luis Castro (E1: vista previa vs guardado)
           rolUsuario: "SOCIO",
           entrenadorId: null,
         })
-      ).rejects.toThrow("Elegí un método de pago para cobrar la diferencia.");
+      ).rejects.toThrow("Elige un método de pago para cobrar la diferencia.");
     } finally {
       restaurarReloj();
     }

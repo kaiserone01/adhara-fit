@@ -9,13 +9,13 @@ import type { Suscripcion } from "../entities/Suscripcion";
 const AHORA = new Date("2026-09-29T15:00:00Z");
 const DIA = 86_400_000;
 
-function checkIn(id: string, miembroId: string, minutosAtras: number, fechaVencimiento: Date | null, porRegularizar = false, salidaAt: Date | null = null, planFrecuencia: CheckInEnSala["miembro"]["planFrecuencia"] = "MENSUAL"): CheckInEnSala {
+function checkIn(id: string, miembroId: string, minutosAtras: number, fechaVencimiento: Date | null, salidaAt: Date | null = null, planFrecuencia: CheckInEnSala["miembro"]["planFrecuencia"] = "MENSUAL"): CheckInEnSala {
   return {
     id,
     miembroId,
     fechaHora: new Date(AHORA.getTime() - minutosAtras * 60_000),
     salidaAt,
-    miembro: { nombre: `Miembro ${miembroId}`, fotoUrl: null, sucursalId: null, fechaVencimiento, planNombre: null, planFrecuencia, porRegularizar },
+    miembro: { nombre: `Miembro ${miembroId}`, fotoUrl: null, sucursalId: null, fechaVencimiento, planNombre: null, planFrecuencia },
   };
 }
 
@@ -60,13 +60,6 @@ describe("listarEnSala", () => {
     expect(persona.requiereCobro).toBe(false);
   });
 
-  test("propaga porRegularizar para que el cobro se haga desde la ficha", async () => {
-    const vencido = new Date(AHORA.getTime() - 30 * DIA);
-    const [persona] = await listarEnSala(deps([checkIn("c1", "m1", 5, vencido, true)], []), input);
-    expect(persona.porRegularizar).toBe(true);
-    expect(persona.requiereCobro).toBe(true);
-  });
-
   test("marca en_gracia dentro de los días de gracia de la sucursal", async () => {
     const vencidoHace1Dia = new Date(AHORA.getTime() - DIA);
     const [persona] = await listarEnSala(deps([checkIn("c1", "m1", 5, vencidoHace1Dia)], [], 3), input);
@@ -77,7 +70,7 @@ describe("listarEnSala", () => {
   test("la gracia de la sede solo cuenta para planes mensuales: uno semanal vencido ayer ya está vencido", async () => {
     const vencidoHace1Dia = new Date(AHORA.getTime() - DIA);
     const personas = await listarEnSala(
-      deps([checkIn("c1", "mensual", 5, vencidoHace1Dia), checkIn("c2", "semanal", 6, vencidoHace1Dia, false, null, "SEMANAL")], [], 3),
+      deps([checkIn("c1", "mensual", 5, vencidoHace1Dia), checkIn("c2", "semanal", 6, vencidoHace1Dia, null, "SEMANAL")], [], 3),
       input
     );
     expect(Object.fromEntries(personas.map((p) => [p.miembroId, p.estado]))).toEqual({ mensual: "en_gracia", semanal: "vencido" });
@@ -102,7 +95,7 @@ describe("listarHistorialSala", () => {
   test("incluye a quien ya salió, con su hora de salida, y mantiene el orden por entrada", async () => {
     const salida = new Date(AHORA.getTime() - 10 * 60_000);
     const personas = await listarHistorialSala(
-      deps([checkIn("c1", "m1", 5, null), checkIn("c2", "m2", 120, null, false, salida)], ["m1", "m2"]),
+      deps([checkIn("c1", "m1", 5, null), checkIn("c2", "m2", 120, null, salida)], ["m1", "m2"]),
       { ...base, rango: "24h" }
     );
     expect(personas.map((p) => [p.miembroId, p.salidaAt])).toEqual([

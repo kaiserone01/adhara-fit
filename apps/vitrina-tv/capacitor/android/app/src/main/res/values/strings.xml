@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Vitrina AX</string>
-    <string name="title_activity_main">Vitrina AX</string>
-    <string name="package_name">com.adrenalina.vitrina</string>
-    <string name="custom_url_scheme">com.adrenalina.vitrina</string>
+    <string name="app_name">Adhara Vitrina</string>
+    <string name="title_activity_main">Adhara Vitrina</string>
+    <string name="package_name">pe.adharafit.vitrina</string>
+    <string name="custom_url_scheme">pe.adharafit.vitrina</string>
 </resources>

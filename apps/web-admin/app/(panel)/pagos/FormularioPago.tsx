@@ -181,7 +181,7 @@ export function FormularioPago({
             required
             className="min-h-11 rounded-lg border px-3 gx-campo"
           >
-            <option value="">Seleccioná un miembro</option>
+            <option value="">Selecciona un miembro</option>
             {miembros.map((miembro) => (
               <option key={miembro.id} value={miembro.id}>
                 {miembro.nombre}
@@ -235,7 +235,7 @@ export function FormularioPago({
           />
           {montoNumero > 0 && montoNumero < planFijoEfectivo.precioUSD && (
             <p className="text-xs" style={{ color: "var(--gx-muted)" }}>
-              Es menos que el precio del plan — queda como abono y podés registrar otro después para completarlo.
+              Es menos que el precio del plan — queda como abono y puedes registrar otro después para completarlo.
             </p>
           )}
           <input type="hidden" name="planId" value={planFijoEfectivo.id} />
@@ -243,7 +243,7 @@ export function FormularioPago({
       ) : miembrosConPlan ? (
         !miembroElegido && (
           <p className="text-xs" style={{ color: "var(--gx-muted)" }}>
-            Elegí un miembro para ver su plan y monto a cobrar.
+            Elige un miembro para ver su plan y monto a cobrar.
           </p>
         )
       ) : (
@@ -257,7 +257,7 @@ export function FormularioPago({
               onChange={(e) => manejarCambioPlan(e.target.value)}
               className="min-h-11 rounded-lg border px-3 gx-campo"
             >
-              <option value="">Seleccioná un plan</option>
+              <option value="">Selecciona un plan</option>
               {planes.map((plan) => (
                 <option key={plan.id} value={plan.id}>
                   {plan.nombre}

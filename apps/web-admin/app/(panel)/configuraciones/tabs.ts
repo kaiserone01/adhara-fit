@@ -7,7 +7,6 @@ export const TABS_CONFIGURACIONES = [
   { href: "/planes", label: "Planes" },
   { href: "/sucursales", label: "Sucursales" },
   { href: "/usuarios", label: "Usuarios" },
-  { href: "/configuraciones/excel", label: "Excel" },
   { href: "/checkin", label: "Checkin" },
   { href: "/vitrina", label: "Vitrina" },
 ];

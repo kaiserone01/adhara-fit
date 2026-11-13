@@ -48,13 +48,13 @@ export class RolNoAutorizadoError extends Error {
 // registrando un pago normal por el precio completo del plan nuevo.
 export class SinCicloVigenteError extends Error {
   constructor() {
-    super("Este miembro no tiene un ciclo vigente — registrá un pago normal por el precio completo del plan nuevo.");
+    super("Este miembro no tiene un ciclo vigente — registra un pago normal por el precio completo del plan nuevo.");
   }
 }
 
 export class MetodoPagoRequeridoError extends Error {
   constructor() {
-    super("Elegí un método de pago para cobrar la diferencia.");
+    super("Elige un método de pago para cobrar la diferencia.");
   }
 }
 
@@ -62,7 +62,7 @@ export { LineasDePagoInvalidasError, MontoLineasNoCubreObjetivoError };
 
 export class EntrenadorRequeridoError extends Error {
   constructor() {
-    super("El plan nuevo incluye entrenador — elegí cuál antes de cambiar de plan.");
+    super("El plan nuevo incluye entrenador — elige cuál antes de cambiar de plan.");
   }
 }
 

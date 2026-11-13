@@ -80,8 +80,8 @@ export async function registrarPagoAction(
   const origen = formData.get("origen")?.toString();
   // Casilla "Cobrar también los productos pendientes" del wizard de Caja.
   const incluirDeudas = formData.get("incluirDeudas")?.toString() === "1";
-  // Fecha del pago (yyyy-mm-dd), solo con el aviso "Por regularizar": un pago con fecha pasada regulariza
-  // el ciclo. Vacía = hoy. Se toma al mediodía para no caer en el día anterior por zona horaria.
+  // Fecha del pago (yyyy-mm-dd), un pago con fecha pasada se registra fuera del turno.
+  // Vacía = hoy. Se toma al mediodía para no caer en el día anterior por zona horaria.
   const fechaPagoTexto = formData.get("fechaPago")?.toString();
   // Sede elegida en el selector "Sede del pago" (ver SelectorMetodoPago);
   // si no vino (formularios viejos o sin selector visible), se cae a la
@@ -107,7 +107,7 @@ export async function registrarPagoAction(
     return { error: "No se pudo interpretar la información del pago." };
   }
   if (!Array.isArray(lineas) || lineas.length === 0) {
-    return { error: "Agregá al menos una línea de pago." };
+    return { error: "Agrega al menos una línea de pago." };
   }
   // Un plan de cortesía (S/ 0) no tiene nada que cobrar — el método de pago
   // solo es obligatorio cuando hay un monto real de por medio (ver diseño

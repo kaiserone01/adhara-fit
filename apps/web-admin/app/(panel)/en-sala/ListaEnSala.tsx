@@ -64,7 +64,7 @@ export function ListaEnSala() {
         {personas?.map((persona) => (
           <Card
             key={persona.checkInId}
-            className={`${persona.requiereCobro && !persona.porRegularizar ? "tarjeta-luminosa-roja" : "tarjeta-luminosa"} flex flex-wrap items-center gap-4`}
+            className={`${persona.requiereCobro ? "tarjeta-luminosa-roja" : "tarjeta-luminosa"} flex flex-wrap items-center gap-4`}
           >
             <Avatar fotoUrl={persona.fotoUrl} nombre={persona.nombre} tamano={56} />
             <div className="min-w-0 flex-1">
@@ -75,14 +75,11 @@ export function ListaEnSala() {
                 Entró a las {hora(persona.fechaHora)}
                 {persona.planNombre ? ` · ${persona.planNombre}` : ""}
               </p>
-              {persona.requiereCobro && !persona.porRegularizar ? (
-                <p
-                  className="mt-1 text-sm font-semibold"
-                  style={{ color: persona.porRegularizar ? "var(--gx-warn)" : "var(--gx-bad)" }}
-                >
+              {persona.requiereCobro ? (
+                <p className="mt-1 text-sm font-semibold" style={{ color: "var(--gx-bad)" }}>
                   {ETIQUETA_ESTADO[persona.estado]}
                   {persona.fechaVencimiento ? ` desde el ${fecha(persona.fechaVencimiento)}` : ""}
-                  {persona.porRegularizar ? " según el Excel — regularizar antes de entrenar" : " — cobrar antes de entrenar"}
+                  {" — cobrar antes de entrenar"}
                 </p>
               ) : (
                 <div className="mt-1">
@@ -91,17 +88,7 @@ export function ListaEnSala() {
               )}
             </div>
             <div className="flex w-full gap-2 sm:w-auto">
-              {/* Por regularizar (aunque figure al día): su fecha no está verificada → se arregla en la ficha. */}
-              {persona.porRegularizar ? (
-                <Link
-                  href={`/miembros/${persona.miembroId}`}
-                  className="flex min-h-11 flex-1 items-center justify-center rounded-lg px-4 text-sm font-semibold sm:flex-none"
-                  style={{ background: "var(--gx-accent)", color: "var(--gx-accent-ink)" }}
-                >
-                  Regularizar
-                </Link>
-              ) : (
-                persona.requiereCobro && (
+              {persona.requiereCobro && (
                   <Link
                     href={`/caja?cobrar=${persona.miembroId}`}
                     className="flex min-h-11 flex-1 items-center justify-center rounded-lg px-4 text-sm font-semibold sm:flex-none"
@@ -109,7 +96,6 @@ export function ListaEnSala() {
                   >
                     Cobrar ahora
                   </Link>
-                )
               )}
             </div>
           </Card>

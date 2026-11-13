@@ -16,7 +16,7 @@ export class UsuarioNoEncontradoError extends Error {
 
 export class AutoDesactivacionError extends Error {
   constructor() {
-    super("No podés darte de baja a vos mismo.");
+    super("No puedes darte de baja a ti mismo.");
   }
 }
 

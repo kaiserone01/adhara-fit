@@ -130,11 +130,11 @@ export function AccessCard({
               {(cara === "en_gracia" || cara === "vencido" || cara === "abono_vencido") && (
                 <p className="border-t pt-6 text-3xl font-medium" style={{ borderColor: "var(--gx-edge)", color: "var(--gx-warn)" }}>
                   {cara === "en_gracia"
-                    ? `Tenés ${resultado.diasGraciaRestantes ?? 0} día(s) de gracia — acercate a recepción a renovar tu plan.`
+                    ? `Tienes ${resultado.diasGraciaRestantes ?? 0} día(s) de gracia — acércate a recepción a renovar tu plan.`
                     : cara === "abono_vencido"
                       ? "Completa tu pago para reactivar el acceso — acércate a recepción."
                       : resultado.tieneGraciaConfigurada
-                        ? "Tu período de gracia terminó — acercate a recepción a renovar tu plan."
+                        ? "Tu período de gracia terminó — acércate a recepción a renovar tu plan."
                         : "Acercate a recepción a renovar tu plan."}
                 </p>
               )}

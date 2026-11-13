@@ -6,7 +6,6 @@ import { Input } from "@gym-app/ui/components/Input";
 import { InputFecha } from "@gym-app/ui/components/InputFecha";
 import { Button } from "@gym-app/ui/components/Button";
 import { Card } from "@gym-app/ui/components/Card";
-import { Badge } from "@gym-app/ui/components/Badge";
 import { normalizarTexto } from "@/lib/normalizarTexto";
 import { EstadoToggle } from "./EstadoToggle";
 import { DiasDisponibles, diasHastaVencimiento } from "./vencimiento";
@@ -277,9 +276,9 @@ function VistaImpresion({ miembros }: { miembros: FilaMiembro[] }) {
   );
 }
 
-// Vencido: la tarjeta se resalta en rojo. Quien está por regularizar queda en verde: su fecha no es confiable.
+// Vencido: la tarjeta se resalta en rojo.
 function estaVencido(miembro: FilaMiembro): boolean {
-  return !miembro.porRegularizar && miembro.fechaVencimiento !== null && diasHastaVencimiento(miembro.fechaVencimiento) < 0;
+  return miembro.fechaVencimiento !== null && diasHastaVencimiento(miembro.fechaVencimiento) < 0;
 }
 
 function VistaCards({ miembros }: { miembros: FilaMiembro[] }) {
@@ -319,7 +318,6 @@ function VistaCards({ miembros }: { miembros: FilaMiembro[] }) {
             >
               <span className="flex flex-wrap items-center gap-2">
                 <DiasDisponibles fechaVencimiento={miembro.fechaVencimiento} />
-                {miembro.porRegularizar && <Badge tono="ambar">Por regularizar</Badge>}
               </span>
               <span className="font-medium hover:underline" style={{ color: "var(--gx-accent)" }}>
                 Editar
@@ -374,7 +372,6 @@ function VistaLista({ miembros }: { miembros: FilaMiembro[] }) {
                 <td className="py-2">
                   <span className="flex flex-wrap items-center gap-2">
                     <DiasDisponibles fechaVencimiento={miembro.fechaVencimiento} />
-                    {miembro.porRegularizar && <Badge tono="ambar">Por regularizar</Badge>}
                   </span>
                 </td>
                 <td className="py-2">

@@ -380,14 +380,14 @@ export async function registrarPago(deps: RegistrarPagoDeps, input: DatosRegistr
 
 // Pago con fecha pasada. Mismo flujo de siempre (líneas, métodos, monto) con una sola variación: la fecha. No se
 // enlaza a ningún turno (no entra en arqueos). Admite abonos.
-// Regularizando (aviso "Por regularizar" o primer pago de un miembro nuevo) el ciclo nuevo reemplaza al anterior:
-// vencimiento = fecha del pago + días del plan, y se apaga el aviso. Para un miembro normal el ciclo se suma al
+// Regularizando (primer pago de un miembro nuevo) el ciclo nuevo reemplaza al anterior:
+// vencimiento = fecha del pago + días del plan. Para un miembro normal el ciclo se suma al
 // vigente en esa fecha, o arranca ese día si ya estaba vencido.
 async function registrarPagoRetroactivo(
   deps: RegistrarPagoDeps,
   input: DatosRegistrarPago,
   ctx: {
-    miembro: { id: string; porRegularizar: boolean };
+    miembro: { id: string };
     plan: Plan;
     huboCambioDePlan: boolean;
     precioObjetivo: number;
@@ -399,9 +399,9 @@ async function registrarPagoRetroactivo(
     ahora: Date;
   }
 ): Promise<Pago[]> {
-  // Regularizar (miembro migrado o primer pago de un miembro nuevo): el ciclo se reemplaza y el tope es amplio. Un
+  // Regularizar (primer pago de un miembro nuevo): el ciclo se reemplaza y el tope es amplio. Un
   // miembro normal que paga un día anterior: el ciclo se suma al vigente (o arranca ese día) y el tope es corto.
-  const regulariza = ctx.miembro.porRegularizar || !!input.primerPagoDeInscripcion;
+  const regulariza = !!input.primerPagoDeInscripcion;
   const maxDias = regulariza ? MAX_DIAS_ATRAS_PAGO_RETROACTIVO : MAX_DIAS_ATRAS_PAGO_FECHADO;
   const limite = new Date(ctx.ahora);
   limite.setDate(limite.getDate() - maxDias);

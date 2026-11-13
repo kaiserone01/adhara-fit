@@ -70,16 +70,13 @@ export async function actualizarMiembro(
   if (cambiaFechas && pagoFinal && vencimientoFinal && pagoFinal.getTime() > vencimientoFinal.getTime()) {
     throw new FechasIncoherentesError();
   }
-  const cambios = cambiaFechas ? { ...input.cambios, porRegularizar: false } : input.cambios;
 
-  const actualizado = await deps.miembros.actualizar(input.organizacionId, input.id, cambios);
+  const actualizado = await deps.miembros.actualizar(input.organizacionId, input.id, input.cambios);
   if (!actualizado) {
     throw new MiembroNoEncontradoError();
   }
 
-  // También al darle plan a un miembro del Excel que ya tiene vencimiento pero ninguna Suscripcion (el checkin lo
-  // mostraría "vencido"): se sincroniza o crea con sus fechas actuales.
-  if ((cambiaFechas || (cambiaDePlan && antes.vieneDelExcel)) && vencimientoFinal) {
+  if (cambiaFechas && vencimientoFinal) {
     // Ciclo [fecha de pago, vencimiento]; sin una fecha de pago válida, el inicio es el vencimiento - días del plan.
     let inicio = pagoFinal && pagoFinal.getTime() < vencimientoFinal.getTime() ? pagoFinal : null;
     if (!inicio) {
@@ -94,7 +91,7 @@ export async function actualizarMiembro(
       await deps.pagos.moverFinCiclo(input.id, antes.fechaVencimiento, vencimientoFinal);
     }
     const sincronizada = await deps.suscripciones.ajustarCicloMasReciente(input.id, inicio, vencimientoFinal, planNuevoId);
-    // Sin ninguna Suscripcion (el padrón no traía vencimiento o plan) el checkin seguiría mostrando "vencido": se crea.
+    // Sin ninguna Suscripcion el checkin seguiría mostrando "vencido": se crea.
     const planId = planNuevoId ?? antes.planId;
     if (!sincronizada && planId) {
       await deps.suscripciones.crear({ miembroId: input.id, planId, inicio, fin: vencimientoFinal, fechaLimiteAbono: null });
@@ -119,8 +116,7 @@ export async function actualizarMiembro(
         throw new PlanNoEncontradoError();
       }
 
-      // Un miembro del Excel no tiene fecha de inscripción confiable: el cambio de plan no prorratea.
-      if (planViejo && !antes.vieneDelExcel) {
+      if (planViejo) {
         const nuevoFin = prorratearVencimiento(activa.inicio, ahora, planViejo.diasCiclo, planNuevo.diasCiclo);
         await deps.suscripciones.extenderFin(activa.id, nuevoFin);
       }

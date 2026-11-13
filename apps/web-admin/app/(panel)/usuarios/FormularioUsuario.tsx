@@ -108,7 +108,7 @@ export function FormularioUsuario({
               onChange={(e) => setRol(e.target.value)}
               className="min-h-11 rounded-lg border px-3 gx-campo"
             >
-              <option value="">Seleccioná un rol</option>
+              <option value="">Selecciona un rol</option>
               <option value="SOCIO">Socio</option>
               <option value="GERENTE">Gerente</option>
               <option value="RECEPCION">Recepción</option>

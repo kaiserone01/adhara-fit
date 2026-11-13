@@ -38,7 +38,7 @@ function crearDeps(opciones: { vigenteHasta?: Date; pagosDelMiembro?: Partial<Pa
       },
     },
     miembros: {
-      buscarPorId: async () => ({ id: "m1", sucursalId: "s1", planId: "plan1", precioPlan: 25, saldoAFavorUSD: 0, porRegularizar: false }),
+      buscarPorId: async () => ({ id: "m1", sucursalId: "s1", planId: "plan1", precioPlan: 25, saldoAFavorUSD: 0 }),
       actualizar: async () => null,
       actualizarFechasPago: async (_id: string, pago: Date, fin: Date) => {
         fechasMiembro.push({ pago, fin });

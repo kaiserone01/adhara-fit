@@ -11,8 +11,8 @@ export function construirConfiguracion(env) {
   }
 
   const capacitor = {
-    appId: "com.adrenalina.vitrina",
-    appName: "Vitrina AX",
+    appId: "pe.adharafit.vitrina",
+    appName: "Adhara Vitrina",
     webDir: "www",
     // El APK es de debug y lleva la clave de la sede en el bundle: sin logs y sin WebView inspeccionable.
     loggingBehavior: "none",

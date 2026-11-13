@@ -102,8 +102,6 @@ export function FormularioMiembro({
   totalPagos,
   valoresIniciales,
   tieneCicloVigente,
-  porRegularizar = false,
-  vieneDelExcel = false,
 }: {
   accion: (estado: EstadoFormularioMiembro, formData: FormData) => Promise<EstadoFormularioMiembro>;
   // Entrenadores disponibles por cada sucursal visible — el elegible
@@ -145,11 +143,6 @@ export function FormularioMiembro({
   // botones "Cambiar plan" haciendo cosas distintas al mismo tiempo (ver
   // diseño acordado). Solo relevante en edición; en alta siempre es true.
   tieneCicloVigente?: boolean;
-  // Fecha de vencimiento no confiable (migrada): aviso "Por regularizar" y campo de vencimiento que titila.
-  porRegularizar?: boolean;
-  // Miembro activado desde el padrón del Excel: sus fechas de pago y de vencimiento se editan siempre
-  // (no tiene fecha de inscripción confiable) y cambiar de plan no las mueve.
-  vieneDelExcel?: boolean;
 }) {
   const [estado, enviar, enviando] = useActionState(accion, {});
   const esEdicion = !!valoresIniciales;
@@ -218,9 +211,8 @@ export function FormularioMiembro({
   const [mostrarTicket, setMostrarTicket] = useState(false);
   // Mientras el ciclo actual esté vigente, el cambio de plan gratis queda
   // deshabilitado acá — usa "Cambiar de plan" del panel derecho, que cobra
-  // la diferencia correspondiente (ver diseño acordado). Quien viene del
-  // Excel lo tiene siempre: la regularización lo necesita y no mueve fechas.
-  const puedeCambiarPlanGratis = !esEdicion || !tieneCicloVigente || vieneDelExcel;
+  // la diferencia correspondiente (ver diseño acordado).
+  const puedeCambiarPlanGratis = !esEdicion || !tieneCicloVigente;
   // En edición, el plan asignado se ve de solo lectura hasta que se
   // confirma explícitamente que se quiere cambiar (ver diseño acordado:
   // evita cambios de plan por error, ya que dispara el prorrateo).
@@ -339,7 +331,7 @@ export function FormularioMiembro({
     if (!form.reportValidity()) return;
 
     if (!planEsCortesia && (!precio || Number(precio) <= 0)) {
-      setErrorPrecio("Ingresá un precio válido.");
+      setErrorPrecio("Ingresa un precio válido.");
       return;
     }
 
@@ -400,37 +392,6 @@ export function FormularioMiembro({
       >
         {estado.error}
       </p>
-    )}
-
-    {esEdicion && porRegularizar && miembroId && (
-      <div
-        className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border px-4 py-3 text-sm"
-        style={{ borderColor: "var(--gx-warn)", color: "var(--gx-ink)" }}
-      >
-        <span className="flex flex-wrap items-center gap-2">
-          <Badge tono="ambar">Por regularizar</Badge>
-          Las fechas de pago y de vencimiento vienen de una fuente externa (Excel/migración) y no están verificadas. Ajústalas o registra el último pago con su fecha real.
-          {!fotoPreview && (
-            <span style={{ color: "var(--gx-muted)" }}>Pendiente además: foto (no impide quitar el aviso).</span>
-          )}
-        </span>
-        <span className="flex flex-wrap gap-2">
-          <Button
-            type="button"
-            variant="secundario"
-            onClick={() => {
-              const campo = document.getElementById("campo-fecha-vencimiento");
-              campo?.scrollIntoView({ behavior: "smooth", block: "center" });
-              campo?.focus({ preventScroll: true });
-            }}
-          >
-            Ajustar fechas
-          </Button>
-          <Link href={`/caja?cobrar=${miembroId}`}>
-            <Button type="button">Registrar pago con fecha</Button>
-          </Link>
-        </span>
-      </div>
     )}
 
     <div className={`grid grid-cols-1 gap-6 ${esEdicion ? "lg:grid-cols-2" : "lg:grid-cols-3"}`}>
@@ -520,9 +481,7 @@ export function FormularioMiembro({
               />
             </div>
 
-            {/* Quien viene del Excel no tiene inscripción conocida: su fecha de pago y de vencimiento van
-                juntas en la tarjeta de Plan de membresía. */}
-            {!(esEdicion && vieneDelExcel) && (
+            {(
               esEdicion ? (
                 // Fija e informativa: sin name (no viaja) y sin calendario (un InputFecha deshabilitado
                 // igual dejaría abrir el calendario).
@@ -583,7 +542,7 @@ export function FormularioMiembro({
             </div>
           )}
 
-          {/* Editables para todos; titila solo mientras dure el aviso "Por regularizar". Se envía solo si cambia. */}
+          {/* Editables para todos; Se envía solo si cambia. */}
           {editaFechas && (
             <div className="mb-4 grid gap-4 sm:grid-cols-2">
               <input type="hidden" name="fechaUltimoPagoOriginal" value={valoresIniciales?.fechaUltimoPago ?? ""} />
@@ -595,7 +554,6 @@ export function FormularioMiembro({
                 label="Fecha de vencimiento"
                 value={fechaVencimiento}
                 onChange={setFechaVencimiento}
-                className={porRegularizar ? "titilar-fecha" : ""}
               />
             </div>
           )}
@@ -622,7 +580,7 @@ export function FormularioMiembro({
               )}
               {!puedeCambiarPlanGratis && (
                 <p className="mt-2 text-xs" style={{ color: "var(--gx-muted)" }}>
-                  Este ciclo ya está pagado — para subir o bajar de plan usá &quot;Cambiar de plan&quot; en el panel
+                  Este ciclo ya está pagado — para subir o bajar de plan usa &quot;Cambiar de plan&quot; en el panel
                   de al lado.
                 </p>
               )}
@@ -642,9 +600,7 @@ export function FormularioMiembro({
                   ¿Cambiar el plan?
                 </h3>
                 <p className="mt-2 text-sm" style={{ color: "var(--gx-muted)" }}>
-                  {vieneDelExcel
-                    ? "Se va a cambiar el plan de membresía. Sus fechas de pago y de vencimiento no cambian (se ajustan aparte). ¿Estás seguro?"
-                    : "Se va a cambiar el plan de membresía. Si el miembro tiene una suscripción activa, su fecha de vencimiento se recalcula (prorrateo) a la nueva frecuencia. ¿Estás seguro?"}
+                  Se va a cambiar el plan de membresía. Si el miembro tiene una suscripción activa, su fecha de vencimiento se recalcula (prorrateo) a la nueva frecuencia. ¿Estás seguro?
                 </p>
                 <div className="mt-4 flex gap-3">
                   <Button
@@ -758,7 +714,7 @@ export function FormularioMiembro({
                     disabled={bloqueado}
                     className="min-h-11 rounded-lg border px-3 gx-campo"
                   >
-                    <option value="">Seleccioná un entrenador</option>
+                    <option value="">Selecciona un entrenador</option>
                     {entrenadores.map((entrenador) => (
                       <option key={entrenador.id} value={entrenador.id}>
                         {entrenador.nombre}
@@ -770,7 +726,7 @@ export function FormularioMiembro({
             })()}
             {!requiereEntrenador && (
               <span className="text-xs" style={{ color: "var(--gx-muted)" }}>
-                Elegí un plan con entrenador para poder asignar uno.
+                Elige un plan con entrenador para poder asignar uno.
               </span>
             )}
             {esEdicion && editandoEntrenador && !editandoPlan && (

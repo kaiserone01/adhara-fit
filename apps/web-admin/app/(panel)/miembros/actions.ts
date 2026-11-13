@@ -41,7 +41,6 @@ import {
   FechaPagoInvalidaError,
 } from "@gym-app/domain/use-cases/RegistrarPago";
 import { eliminarMiembro } from "@gym-app/domain/use-cases/EliminarMiembro";
-import { activarMiembroEnTransaccion } from "@/lib/activacion";
 import { conMensajeOk } from "../redirectConMensaje";
 
 export interface EstadoFormularioMiembro {
@@ -131,12 +130,12 @@ export async function crearMiembroAction(
   // solo es obligatorio cuando hay un monto real de por medio (ver diseño
   // acordado, membresías con beneficio que no pagan en el gym).
   if (precioPlan > 0 && lineasDivididas === null && (!metodo || !metodoPagoId)) {
-    return { error: "Elegí un método de pago." };
+    return { error: "Elige un método de pago." };
   }
 
   const planId = resolverPlanId(formData);
   if (!planId) {
-    return { error: "Elegí un plan para el miembro." };
+    return { error: "Elige un plan para el miembro." };
   }
 
   const fotoUrl = await guardarFoto(formData.get("foto"));
@@ -414,27 +413,3 @@ export async function eliminarMiembroAction(id: string): Promise<void> {
   redirect(conMensajeOk("/miembros", "Miembro quitado del sistema."));
 }
 
-// Activa (o abre, si ya existe) al miembro de esa cédula desde el padrón de la sede y lleva a su ficha.
-// Los errores esperados (en español) se devuelven como { error }: Next.js oculta el mensaje de los errores lanzados en producción.
-export async function activarDesdeExcelAction(cedula: string): Promise<{ error: string }> {
-  const sesion = await obtenerUsuarioDeSesionActual();
-  if (!sesion) redirect("/login");
-  const { usuario, sucursalActivaId } = sesion;
-
-  const autorizado = await new AuthorizationService(new PrismaPermisoRepository(prisma)).tienePermiso(usuario.id, "MIEMBROS", "CREAR");
-  if (!autorizado) return { error: "Tu rol no tiene permiso para activar miembros." };
-
-  const cedulaLimpia = cedula.trim();
-  if (!cedulaLimpia) return { error: "Escribe la cédula." };
-
-  const yaExistia = await new PrismaMemberRepository(prisma).buscarPorOrganizacionYCedula(usuario.organizacionId, cedulaLimpia);
-  const miembro = await activarMiembroEnTransaccion({ organizacionId: usuario.organizacionId, sucursalId: sucursalActivaId, cedula: cedulaLimpia });
-  if (!miembro) return { error: "No hay ninguna persona con esa cédula en el Excel de esta sede." };
-
-  revalidatePath("/miembros");
-  redirect(
-    yaExistia
-      ? `/miembros/${miembro.id}`
-      : conMensajeOk(`/miembros/${miembro.id}`, "Miembro activado desde el Excel. Revisa sus datos y regularízalo.")
-  );
-}

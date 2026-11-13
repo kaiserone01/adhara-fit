@@ -7,7 +7,7 @@ import { Button } from "@gym-app/ui/components/Button";
 // para el cuadre (ver ObtenerResumenTurno/CerrarTurno), así que no se
 // permiten sin uno abierto (ver diseño acordado).
 export function AvisoCajaCerrada({
-  mensaje = "Para inscribir un miembro o registrar un pago primero tenés que abrir la caja.",
+  mensaje = "Para inscribir un miembro o registrar un pago primero tienes que abrir la caja.",
 }: {
   mensaje?: string;
 }) {

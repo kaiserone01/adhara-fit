@@ -3,13 +3,12 @@ import { actualizarMiembro, CedulaDuplicadaError, FechasIncoherentesError } from
 import type { CambiosMiembro } from "../entities/Miembro";
 
 type OpcionesMiembro = {
-  vieneDelExcel?: boolean;
   planId?: string | null;
   fechaUltimoPago?: Date | null;
   fechaVencimiento?: Date | null;
 };
 
-function crearDeps(porRegularizar = true, cedulaOcupadaPor: string | null = null, miembro: OpcionesMiembro = {}, tieneSuscripcion = true) {
+function crearDeps(cedulaOcupadaPor: string | null = null, miembro: OpcionesMiembro = {}, tieneSuscripcion = true) {
   const cambiosGuardados: CambiosMiembro[] = [];
   const ciclos: { inicio: Date; fin: Date }[] = [];
   const extensiones: Date[] = [];
@@ -20,8 +19,8 @@ function crearDeps(porRegularizar = true, cedulaOcupadaPor: string | null = null
   const deps = {
     miembros: {
       buscarPorId: async () => ({
-        id: "m1", sucursalId: null, planId: "p1", cedula: "111", porRegularizar,
-        vieneDelExcel: false, fechaUltimoPago: null, fechaVencimiento: null, ...miembro,
+        id: "m1", sucursalId: null, planId: "p1", cedula: "111",
+        fechaUltimoPago: null, fechaVencimiento: null, ...miembro,
       }),
       buscarPorOrganizacionYCedula: async () => (cedulaOcupadaPor ? { id: cedulaOcupadaPor } : null),
       actualizar: async (_org: string, _id: string, cambios: CambiosMiembro) => {
@@ -65,43 +64,37 @@ describe("actualizarMiembro — ajuste manual de fechas", () => {
   const pago = new Date("2026-10-01T00:00:00.000Z");
   const venc = new Date("2026-11-15T00:00:00.000Z");
 
-  test("con el aviso activo: guarda la fecha, apaga el aviso y sincroniza la suscripción (fin y inicio = fin - días del plan)", async () => {
+  test("guarda la fecha y sincroniza la suscripción (fin y inicio = fin - días del plan)", async () => {
     const { deps, cambiosGuardados, ciclos } = crearDeps();
     await actualizarMiembro(deps, { ...base, cambios: { fechaVencimiento: venc } });
-    expect(cambiosGuardados[0]).toEqual({ fechaVencimiento: venc, porRegularizar: false });
+    expect(cambiosGuardados[0]).toEqual({ fechaVencimiento: venc });
     expect(ciclos).toEqual([{ inicio: new Date(venc.getTime() - 30 * DIA), fin: venc }]);
   });
 
-  test("un miembro que viene del Excel puede ajustar fechas aunque no tenga el aviso", async () => {
-    const { deps, cambiosGuardados } = crearDeps(false, null, { vieneDelExcel: true });
-    await actualizarMiembro(deps, { ...base, cambios: { fechaVencimiento: venc } });
-    expect(cambiosGuardados[0]).toEqual({ fechaVencimiento: venc, porRegularizar: false });
-  });
-
-  test("un miembro creado en el sistema (sin Excel ni aviso) también puede ajustar sus fechas", async () => {
-    const { deps, cambiosGuardados, ciclos } = crearDeps(false);
+  test("ajusta el pago y el vencimiento y sincroniza el ciclo", async () => {
+    const { deps, cambiosGuardados, ciclos } = crearDeps();
     await actualizarMiembro(deps, { ...base, cambios: { fechaUltimoPago: pago, fechaVencimiento: venc } });
-    expect(cambiosGuardados[0]).toEqual({ fechaUltimoPago: pago, fechaVencimiento: venc, porRegularizar: false });
+    expect(cambiosGuardados[0]).toEqual({ fechaUltimoPago: pago, fechaVencimiento: venc });
     expect(ciclos).toEqual([{ inicio: pago, fin: venc }]);
   });
 
   test("al cambiar el vencimiento, el fin del ciclo de sus pagos se mueve con él (si no, el saldo y los abonos se desfasan)", async () => {
     const anterior = new Date("2026-10-28T04:00:00.000Z");
-    const { deps, ciclosDePagosMovidos } = crearDeps(false, null, { fechaVencimiento: anterior });
+    const { deps, ciclosDePagosMovidos } = crearDeps(null, { fechaVencimiento: anterior });
     await actualizarMiembro(deps, { ...base, cambios: { fechaVencimiento: venc } });
     expect(ciclosDePagosMovidos).toEqual([{ anterior, nuevo: venc }]);
   });
 
   test("si el vencimiento no cambia, o no tenía uno, no se tocan los pagos", async () => {
-    const igual = crearDeps(false, null, { fechaVencimiento: venc });
+    const igual = crearDeps(null, { fechaVencimiento: venc });
     await actualizarMiembro(igual.deps, { ...base, cambios: { fechaVencimiento: venc } });
     expect(igual.ciclosDePagosMovidos).toEqual([]);
 
-    const sinVencimiento = crearDeps(false);
+    const sinVencimiento = crearDeps();
     await actualizarMiembro(sinVencimiento.deps, { ...base, cambios: { fechaVencimiento: venc } });
     expect(sinVencimiento.ciclosDePagosMovidos).toEqual([]);
 
-    const soloPago = crearDeps(false, null, { fechaVencimiento: venc });
+    const soloPago = crearDeps(null, { fechaVencimiento: venc });
     await actualizarMiembro(soloPago.deps, { ...base, cambios: { fechaUltimoPago: pago } });
     expect(soloPago.ciclosDePagosMovidos).toEqual([]);
   });
@@ -115,14 +108,14 @@ describe("actualizarMiembro — ajuste manual de fechas", () => {
   });
 
   test("valida contra la fecha actual del miembro cuando solo cambia una", async () => {
-    const { deps } = crearDeps(true, null, { fechaVencimiento: pago });
+    const { deps } = crearDeps(null, { fechaVencimiento: pago });
     await expect(actualizarMiembro(deps, { ...base, cambios: { fechaUltimoPago: venc } })).rejects.toBeInstanceOf(FechasIncoherentesError);
   });
 
-  test("guardar la fecha de pago apaga el aviso", async () => {
-    const { deps, cambiosGuardados } = crearDeps(true, null, { fechaVencimiento: venc });
+  test("guardar solo la fecha de pago", async () => {
+    const { deps, cambiosGuardados } = crearDeps(null, { fechaVencimiento: venc });
     await actualizarMiembro(deps, { ...base, cambios: { fechaUltimoPago: pago } });
-    expect(cambiosGuardados[0]).toEqual({ fechaUltimoPago: pago, porRegularizar: false });
+    expect(cambiosGuardados[0]).toEqual({ fechaUltimoPago: pago });
   });
 
   test("ciclo [pago, vencimiento] cuando cambian ambas fechas", async () => {
@@ -132,13 +125,13 @@ describe("actualizarMiembro — ajuste manual de fechas", () => {
   });
 
   test("solo cambia el pago: el fin es el vencimiento actual del miembro", async () => {
-    const { deps, ciclos } = crearDeps(true, null, { fechaVencimiento: venc });
+    const { deps, ciclos } = crearDeps(null, { fechaVencimiento: venc });
     await actualizarMiembro(deps, { ...base, cambios: { fechaUltimoPago: pago } });
     expect(ciclos).toEqual([{ inicio: pago, fin: venc }]);
   });
 
   test("solo cambia el vencimiento: el inicio es la fecha de pago actual si existe", async () => {
-    const { deps, ciclos } = crearDeps(true, null, { fechaUltimoPago: pago });
+    const { deps, ciclos } = crearDeps(null, { fechaUltimoPago: pago });
     await actualizarMiembro(deps, { ...base, cambios: { fechaVencimiento: venc } });
     expect(ciclos).toEqual([{ inicio: pago, fin: venc }]);
   });
@@ -152,18 +145,18 @@ describe("actualizarMiembro — ajuste manual de fechas", () => {
   test("solo cambia el pago y no hay vencimiento: guarda pero no sincroniza la suscripción", async () => {
     const { deps, cambiosGuardados, ciclos } = crearDeps();
     await actualizarMiembro(deps, { ...base, cambios: { fechaUltimoPago: pago } });
-    expect(cambiosGuardados[0]).toEqual({ fechaUltimoPago: pago, porRegularizar: false });
+    expect(cambiosGuardados[0]).toEqual({ fechaUltimoPago: pago });
     expect(ciclos).toEqual([]);
   });
 
-  test("fechaUltimoPago null se guarda (vaciar la fecha de pago) y apaga el aviso", async () => {
-    const { deps, cambiosGuardados, ciclos } = crearDeps(true, null, { fechaUltimoPago: pago, fechaVencimiento: venc });
+  test("fechaUltimoPago null se guarda (vaciar la fecha de pago)", async () => {
+    const { deps, cambiosGuardados, ciclos } = crearDeps(null, { fechaUltimoPago: pago, fechaVencimiento: venc });
     await actualizarMiembro(deps, { ...base, cambios: { fechaUltimoPago: null } });
-    expect(cambiosGuardados[0]).toEqual({ fechaUltimoPago: null, porRegularizar: false });
+    expect(cambiosGuardados[0]).toEqual({ fechaUltimoPago: null });
     expect(ciclos).toEqual([{ inicio: new Date(venc.getTime() - 30 * DIA), fin: venc }]);
   });
 
-  test("sin cambio de fecha no toca la suscripción ni el aviso", async () => {
+  test("sin cambio de fecha no toca la suscripción", async () => {
     const { deps, cambiosGuardados, ciclos } = crearDeps();
     await actualizarMiembro(deps, { ...base, cambios: { nombre: "Otro" } });
     expect(cambiosGuardados[0]).toEqual({ nombre: "Otro" });
@@ -176,25 +169,19 @@ describe("actualizarMiembro — suscripción al ajustar fechas", () => {
   const venc = new Date("2026-11-15T00:00:00.000Z");
 
   test("sin suscripción y con plan: la crea con el ciclo [pago, vencimiento]", async () => {
-    const { deps, creadas } = crearDeps(true, null, {}, false);
+    const { deps, creadas } = crearDeps(null, {}, false);
     await actualizarMiembro(deps, { ...base, cambios: { fechaUltimoPago: pago, fechaVencimiento: venc } });
     expect(creadas).toEqual([{ miembroId: "m1", planId: "p1", inicio: pago, fin: venc, fechaLimiteAbono: null }]);
   });
 
   test("sin suscripción y con plan nuevo en el mismo guardado: la crea con el plan nuevo", async () => {
-    const { deps, creadas } = crearDeps(true, null, { planId: null }, false);
+    const { deps, creadas } = crearDeps(null, { planId: null }, false);
     await actualizarMiembro(deps, { ...base, cambios: { planId: "p2", fechaVencimiento: venc } });
     expect(creadas.map((c) => c.planId)).toEqual(["p2"]);
   });
 
-  test("miembro del Excel con vencimiento y sin plan ni suscripción: al elegirle plan se crea la suscripción con sus fechas", async () => {
-    const { deps, creadas } = crearDeps(false, null, { vieneDelExcel: true, planId: null, fechaUltimoPago: pago, fechaVencimiento: venc }, false);
-    await actualizarMiembro(deps, { ...base, cambios: { planId: "p2" } });
-    expect(creadas).toEqual([{ miembroId: "m1", planId: "p2", inicio: pago, fin: venc, fechaLimiteAbono: null }]);
-  });
-
   test("sin suscripción y sin plan: no crea nada", async () => {
-    const { deps, creadas } = crearDeps(true, null, { planId: null }, false);
+    const { deps, creadas } = crearDeps(null, { planId: null }, false);
     await actualizarMiembro(deps, { ...base, cambios: { fechaVencimiento: venc } });
     expect(creadas).toEqual([]);
   });
@@ -217,18 +204,12 @@ describe("actualizarMiembro — suscripción al ajustar fechas", () => {
 
 describe("actualizarMiembro — cambio de plan", () => {
   test("miembro normal: prorratea el vencimiento y cambia el plan de la suscripción", async () => {
-    const { deps, extensiones, cambiosDePlan } = crearDeps(false);
+    const { deps, extensiones, cambiosDePlan } = crearDeps();
     await actualizarMiembro(deps, { ...base, cambios: { planId: "p2" } });
     expect(extensiones).toHaveLength(1);
     expect(cambiosDePlan).toEqual(["p2"]);
   });
 
-  test("miembro que viene del Excel: no prorratea pero sí cambia el plan de la suscripción", async () => {
-    const { deps, extensiones, cambiosDePlan } = crearDeps(false, null, { vieneDelExcel: true });
-    await actualizarMiembro(deps, { ...base, cambios: { planId: "p2" } });
-    expect(extensiones).toEqual([]);
-    expect(cambiosDePlan).toEqual(["p2"]);
-  });
 });
 
 describe("actualizarMiembro — cédula", () => {
@@ -239,13 +220,13 @@ describe("actualizarMiembro — cédula", () => {
   });
 
   test("rechaza una cédula que ya tiene otro miembro", async () => {
-    const { deps, cambiosGuardados } = crearDeps(true, "otro");
+    const { deps, cambiosGuardados } = crearDeps("otro");
     await expect(actualizarMiembro(deps, { ...base, cambios: { cedula: "222" } })).rejects.toBeInstanceOf(CedulaDuplicadaError);
     expect(cambiosGuardados).toEqual([]);
   });
 
   test("guardar con la misma cédula no consulta duplicados", async () => {
-    const { deps, cambiosGuardados } = crearDeps(true, "otro");
+    const { deps, cambiosGuardados } = crearDeps("otro");
     await actualizarMiembro(deps, { ...base, cambios: { cedula: "111" } });
     expect(cambiosGuardados).toHaveLength(1);
   });
@@ -253,13 +234,13 @@ describe("actualizarMiembro — cédula", () => {
 
 describe("actualizarMiembro — fecha de nacimiento", () => {
   test("pasa fechaNacimiento null al repositorio (vaciar un valor no se ignora)", async () => {
-    const { deps, cambiosGuardados } = crearDeps(false);
+    const { deps, cambiosGuardados } = crearDeps();
     await actualizarMiembro(deps, { ...base, cambios: { fechaNacimiento: null } });
     expect(cambiosGuardados[0]).toEqual({ fechaNacimiento: null });
   });
 
   test("pasa una fecha de nacimiento definida", async () => {
-    const { deps, cambiosGuardados } = crearDeps(false);
+    const { deps, cambiosGuardados } = crearDeps();
     const nacimiento = new Date(1990, 9, 8);
     await actualizarMiembro(deps, { ...base, cambios: { fechaNacimiento: nacimiento } });
     expect(cambiosGuardados[0]).toEqual({ fechaNacimiento: nacimiento });

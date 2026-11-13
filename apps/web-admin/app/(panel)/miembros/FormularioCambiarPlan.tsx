@@ -191,7 +191,7 @@ export function FormularioCambiarPlan({
         if (
           hayCambiosSinGuardar &&
           !window.confirm(
-            "Tenés cambios sin guardar en Datos personales — se van a perder si cambiás de plan ahora. ¿Continuar de todas formas?"
+            "Tienes cambios sin guardar en Datos personales — se van a perder si cambias de plan ahora. ¿Continuar de todas formas?"
           )
         ) {
           e.preventDefault();
@@ -238,7 +238,7 @@ export function FormularioCambiarPlan({
           }}
           className="min-h-11 rounded-lg border px-3 gx-campo"
         >
-          <option value="">Seleccioná un plan</option>
+          <option value="">Selecciona un plan</option>
           {planes.map((plan) => (
             <option key={plan.id} value={plan.id} disabled={plan.id === planActualId}>
               {plan.nombre} — {formatearSoles(plan.precioUSD)} ({ETIQUETA_FRECUENCIA[plan.frecuencia]})
@@ -256,7 +256,7 @@ export function FormularioCambiarPlan({
             onChange={(e) => setEntrenadorId(e.target.value)}
             className="min-h-11 rounded-lg border px-3 gx-campo"
           >
-            <option value="">Seleccioná un entrenador</option>
+            <option value="">Selecciona un entrenador</option>
             {entrenadores.map((entrenador) => (
               <option key={entrenador.id} value={entrenador.id}>
                 {entrenador.nombre}

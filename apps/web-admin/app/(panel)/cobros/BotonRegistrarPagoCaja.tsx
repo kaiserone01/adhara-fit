@@ -6,7 +6,6 @@ import type { Miembro } from "@gym-app/domain/entities/Miembro";
 import type { MetodoPago } from "@gym-app/domain/entities/MetodoPago";
 import type { ReglaAbonoPorFrecuencia } from "@gym-app/domain/entities/ReglaAbono";
 import type { EntrenadorResumen } from "@gym-app/domain/entities/EntrenadorResumen";
-import type { GrupoDeudasMiembro } from "@gym-app/domain/use-cases/ListarDeudasPendientes";
 import type { AbonoPendiente } from "@gym-app/domain/use-cases/ListarAbonosPendientes";
 import { Button } from "@gym-app/ui/components/Button";
 import { ModalRegistrarPagoCaja } from "./ModalRegistrarPagoCaja";
@@ -21,7 +20,6 @@ export function BotonRegistrarPagoCaja({
   entrenadores,
   accionCambiarPlan,
   miembroInicialId,
-  deudas,
   abonos,
 }: {
   miembros: Miembro[];
@@ -33,10 +31,8 @@ export function BotonRegistrarPagoCaja({
   // elegido incluye entrenador.
   entrenadores: EntrenadorResumen[];
   accionCambiarPlan: (estado: EstadoCambioPlan, formData: FormData) => Promise<EstadoCambioPlan>;
-  // Viene de /caja?cobrar=<id> ("Cobrar ahora" en En sala): abre el wizard con ese miembro ya elegido.
+  // Viene de /cobros?cobrar=<id> ("Cobrar ahora" en En sala): abre el wizard con ese miembro ya elegido.
   miembroInicialId?: string;
-  // Productos fiados pendientes por miembro: se ofrecen cobrar junto con la membresía.
-  deudas: GrupoDeudasMiembro[];
   // Saldos de abonos de membresía pendientes: el cobro de un miembro con abono previo completa su ciclo.
   abonos: AbonoPendiente[];
 }) {
@@ -55,12 +51,11 @@ export function BotonRegistrarPagoCaja({
           entrenadores={entrenadores}
           accionCambiarPlan={accionCambiarPlan}
           miembroInicialId={miembroInicialId}
-          deudas={deudas}
           abonos={abonos}
           onCerrar={() => {
             setModalAbierta(false);
             // Quita ?cobrar para que recargar la página no reabra el wizard.
-            if (miembroInicialId) router.replace("/caja");
+            if (miembroInicialId) router.replace("/cobros");
           }}
         />
       )}

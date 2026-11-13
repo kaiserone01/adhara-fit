@@ -11,7 +11,7 @@ export function fechaALocalISO(fecha: Date): string {
 }
 
 // Fecha de un cobro: arranca en hoy; una fecha pasada (hasta MAX_DIAS_ATRAS_PAGO_FECHADO) registra algo que ya se cobró y
-// no se anotó: fuera de turno y con la tasa BCV de ese día. `esPasada` dice si hay que mandar la fecha al servidor.
+// no se anotó. `esPasada` dice si hay que mandar la fecha al servidor.
 export function useFechaCobro() {
   const hoyISO = fechaALocalISO(new Date());
   const [fecha, setFecha] = useState(hoyISO);

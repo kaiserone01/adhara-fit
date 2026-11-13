@@ -8,7 +8,6 @@ import { PrismaPagoRepository } from "@gym-app/infrastructure/persistence/prisma
 import { PrismaSuscripcionRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSuscripcionRepository";
 import { PrismaMemberRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaMemberRepository";
 import { PrismaPlanRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPlanRepository";
-import { PrismaTurnoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaTurnoRepository";
 import { PrismaPermisoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPermisoRepository";
 import { PrismaSucursalRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSucursalRepository";
 import { PrismaReglaAbonoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaReglaAbonoRepository";
@@ -93,7 +92,6 @@ export async function POST(req: NextRequest) {
         suscripciones: new PrismaSuscripcionRepository(prisma),
         miembros: new PrismaMemberRepository(prisma),
         planes: new PrismaPlanRepository(prisma),
-        turnos: new PrismaTurnoRepository(prisma),
         sucursales: new PrismaSucursalRepository(prisma),
         autorizacion: new AuthorizationService(new PrismaPermisoRepository(prisma)),
         reglasAbono: new PrismaReglaAbonoRepository(prisma),

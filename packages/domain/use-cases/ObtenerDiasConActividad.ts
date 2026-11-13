@@ -1,8 +1,6 @@
-import { ITurnoRepository } from "../ports/ITurnoRepository";
+import { IPagoRepository } from "../ports/IPagoRepository";
 
-export async function obtenerDiasConActividad(
-  deps: { turnos: ITurnoRepository },
-  organizacionId: string
-): Promise<Date[]> {
-  return deps.turnos.listarFechasConTurno(organizacionId);
+// Días con al menos un cobro, para marcar el calendario del historial de pagos.
+export async function obtenerDiasConActividad(deps: { pagos: IPagoRepository }, organizacionId: string): Promise<Date[]> {
+  return deps.pagos.listarFechasConPagos(organizacionId);
 }

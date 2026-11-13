@@ -2,7 +2,6 @@ import { IPagoRepository } from "../ports/IPagoRepository";
 import { ISuscripcionRepository } from "../ports/ISuscripcionRepository";
 import { IMemberRepository } from "../ports/IMemberRepository";
 import { IPlanRepository } from "../ports/IPlanRepository";
-import { ITurnoRepository } from "../ports/ITurnoRepository";
 import { ISucursalRepository } from "../ports/ISucursalRepository";
 import { IAuthorizationService } from "../ports/IAuthorizationService";
 import { Pago } from "../entities/Pago";
@@ -71,7 +70,6 @@ export interface CambiarPlanConPagoDeps {
   suscripciones: ISuscripcionRepository;
   miembros: IMemberRepository;
   planes: IPlanRepository;
-  turnos: ITurnoRepository;
   sucursales: ISucursalRepository;
   autorizacion: IAuthorizationService;
   auditoria: ICambioPlanAuditoriaRepository;
@@ -189,14 +187,12 @@ export async function cambiarPlanConPago(
     // diseño acordado, Fase 3).
     validarLineasDePago(input.lineas, "exacto", montoCobrado);
 
-    const turnoAbierto = await deps.turnos.buscarAbiertoPorSucursal(input.sucursalId);
     const grupoPagoId = input.lineas.length > 1 ? randomUUID() : null;
 
     for (const linea of input.lineas) {
       const pago = await deps.pagos.crear({
         miembroId: input.miembroId,
         sucursalId: input.sucursalId,
-        turnoId: turnoAbierto?.id ?? null,
         registradoPorId: input.registradoPorId,
         monto: linea.monto,
         metodo: linea.metodo,

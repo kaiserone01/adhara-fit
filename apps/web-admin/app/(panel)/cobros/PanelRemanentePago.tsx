@@ -14,7 +14,6 @@ export function PanelRemanentePago({
   montoObjetivo,
   proyeccion,
   modalidad,
-  deudaProductos = 0,
   abonadoPrevio = 0,
   creditoAplicado = 0,
   tolerancia = 0,
@@ -23,9 +22,6 @@ export function PanelRemanentePago({
 }: {
   lineas: LineaMostrada[];
   montoObjetivo: number;
-  // Tasa Bs/USD a usar para la conversión del remanente — se toma de la
-  // primera línea que ya tenga una tasa elegida, o null si ninguna la
-  // tiene todavía (en ese caso solo se muestra el remanente en USD).
   // Proyección + detalle de períodos que cubre el pago, calculada sobre la
   // suma de fracciones ya cargadas — siempre visible mientras exista (ver
   // diseño acordado: "que el cliente vea que cubre su pago"), arriba del
@@ -34,9 +30,6 @@ export function PanelRemanentePago({
   // Determina el copy del mensaje y el título de la lista (ver diseño
   // acordado: en Total/Abono no se "distribuye" nada, es un solo canal).
   modalidad: "total" | "abono" | "combinado";
-  // Productos fiados que se cobran junto con esta membresía (0 = ninguno): las líneas ya los incluyen,
-  // así que suman al objetivo y se descuentan de lo que cubre la membresía.
-  deudaProductos?: number;
   // Lo ya abonado en este ciclo antes de este pago (0 = nada): montoObjetivo es entonces solo el saldo que falta.
   abonadoPrevio?: number;
   // Saldo a favor del miembro que este pago usa (0 = ninguno): ya está descontado del monto a cobrar.
@@ -47,18 +40,15 @@ export function PanelRemanentePago({
   // true = va dentro de la columna lateral del asistente en vez de flotar abajo a la derecha.
   acoplado?: boolean;
 }) {
-  const sumaLineas = lineas.reduce((suma, l) => suma + l.monto, 0);
-  const objetivoTotal = montoObjetivo + deudaProductos;
-  const cubierto = sumaLineas;
-  const membresiaCubierta = Math.max(0, sumaLineas - deudaProductos);
+  const cubierto = lineas.reduce((suma, l) => suma + l.monto, 0);
   // Comparación simple y directa contra el precio del plan — nunca contra
   // proyeccion.saldoRemanente, que en Abono puede referirse al PRÓXIMO
   // período (un abono que adelanta ciclo siguiente es válido ahí). En
   // Total/Fraccionado la intención siempre es pagar el período actual
   // completo ahora mismo, así que lo único relevante es cuánto falta o
   // sobra respecto al monto de ESTE pago.
-  const remanente = Math.max(0, objetivoTotal - cubierto);
-  const excedente = Math.max(0, cubierto - objetivoTotal);
+  const remanente = Math.max(0, montoObjetivo - cubierto);
+  const excedente = Math.max(0, cubierto - montoObjetivo);
   // En Abono, un excedente puede ser un adelanto intencional del próximo
   // período (ver mensaje "Adelanta el próximo período..."), así que no se
   // marca como "excedente a favor" salvo que sobre más de lo que ese
@@ -76,7 +66,7 @@ export function PanelRemanentePago({
           <MensajeProyeccionAbono
             proyeccionAbono={proyeccion}
             montoSugerido={montoObjetivo}
-            montoObjetivo={membresiaCubierta}
+            montoObjetivo={cubierto}
             modalidad={modalidad}
           />
           {proyeccion.cumpleMinimo && <DetalleCiclosPago ciclos={proyeccion.ciclos} />}
@@ -105,11 +95,6 @@ export function PanelRemanentePago({
               <span style={{ color: "var(--gx-ink)" }}>{formatearSoles(linea.monto)}</span>
             </div>
           ))}
-        {deudaProductos > 0 && (
-          <p className="text-xs" style={{ color: "var(--gx-muted)" }}>
-            Incluye {formatearSoles(deudaProductos)} de productos pendientes
-          </p>
-        )}
       </div>
       <div className="mt-3 border-t pt-3" style={{ borderColor: "var(--gx-edge)" }}>
         {remanente > 0 ? (
@@ -128,11 +113,9 @@ export function PanelRemanentePago({
             Sobra {formatearSoles(excedente)} — diferencia aceptada
           </p>
         ) : excedente > 0 && !excedenteEsAdelantoValido ? (
-          <>
-            <p className="text-sm font-semibold" style={{ color: "var(--gx-accent)" }}>
-              Sobra {formatearSoles(excedente)} — se excedió el monto
-            </p>
-          </>
+          <p className="text-sm font-semibold" style={{ color: "var(--gx-accent)" }}>
+            Sobra {formatearSoles(excedente)} — se excedió el monto
+          </p>
         ) : (
           <p className="text-sm font-semibold" style={{ color: "var(--gx-accent)" }}>
             Monto completo

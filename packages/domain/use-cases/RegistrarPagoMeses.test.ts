@@ -45,7 +45,6 @@ function crearDeps(opciones: { vigenteHasta?: Date; pagosDelMiembro?: Partial<Pa
       },
     },
     planes: { buscarPorId: async () => ({ id: "plan1", activo: true, precioUSD: 25, diasCiclo: 30, frecuencia: "MENSUAL", permitePagoParcial: true }) },
-    turnos: { buscarAbiertoPorSucursal: async () => ({ id: "turno-hoy" }) },
     sucursales: {},
     autorizacion: { tienePermiso: async () => true },
     reglasAbono: { buscarPorOrganizacionYFrecuencia: async () => null },

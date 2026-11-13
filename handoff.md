@@ -8,6 +8,25 @@ Bitácora de sesiones: la más reciente arriba, solo se añaden entradas. El his
 - **Desplegado:** provisional en Easypanel (`docs/ops/easypanel.md`): imagen del `Dockerfile`, esquema con `prisma db push` al arrancar, alta del primer administrador con `tools/crear-administrador.mjs`.
 - **Preferencia del propietario:** cada código (ADR-nnn, S-nn, REQ…) que se mencione lleva al lado una descripción simple.
 
+## Sesión 2026-11-13 (noche, 6) — Tramo 2 (parte 1): sin caja, sin turnos, sin fiado
+**Qué se hizo**
+- S-08 (sin caja): fuera turnos, arqueo, egresos y deudas de producto del dominio, la infraestructura y el panel. La ruta `/caja` pasa a `/cobros` («Cobros» en el menú y en el móvil): muestra «Cobrado hoy» (total y por método) y la tabla «Cobros de hoy» con botón «Anular» (pide el motivo). Nuevo caso de uso `obtenerReporteCobros` (total, por día de Lima, por método y por quien cobró) con pruebas; el histórico `/pagos` lo usa en lugar del reporte de caja. `listarFechasConPagos` reemplaza a `listarPorTurno` en el puerto de pagos.
+- S-11 (productos sin fiado): la venta es siempre con cobro inmediato (sin fiar, sin fecha pasada, sin miembro). `RegistrarPago`, `CambiarPlanConPago` y `AnularPago` ya no usan turno; `Pago` ya no lleva `turnoId` en la entidad ni en el repositorio.
+- Login: el paso de elegir sede ya no muestra «Caja abierta por…». Miembros y «Nuevo miembro» ya no exigen caja abierta. Borrados `api/caja/ultimo-cierre` y los componentes de caja (apertura, arqueo, egreso, cobrar deudas).
+- Verificado: dominio 259, check-in 50 y vitrina 65 pruebas en verde; `tsc` solo con el error previo de `LayoutProps`; lint sin errores; `next build` compila.
+
+**Qué funcionó**
+- Reconstruir `PanelRemanentePago.tsx` desde la versión de git cuando una edición lo dejó truncado.
+
+**Qué no funcionó / a tener en cuenta**
+- Las tablas `Turno`, `Egreso`, `ArqueoLinea`, `DeudaProducto` y la columna `Pago.turnoId` siguen en la base (el esquema no se toca hasta S-15). El permiso de módulo `CAJA` sigue en la pantalla de usuarios hasta S-23.
+- Asumido, por validar: se conservó el carrito y el pago con varias líneas en la venta de producto (S-11 pide un producto y un pago) para no ampliar el cambio. `CobrarAbonoPendiente` queda sin uso en la interfaz (el asistente de cobro sigue completando el ciclo con abono previo).
+- Sin ejecutar: la app en el navegador.
+
+**Siguiente**
+1. S-23 (un solo rol administrador, sin permisos por módulo) y S-05 (negocio y sede únicos). Para S-05 falta saber si la base desplegada tiene datos que conservar o solo el administrador inicial.
+2. Lanzar el workflow `apk` al final; integrar el diseño manual del propietario cuando avise.
+
 ## Sesión 2026-11-13 (noche, 5) — Tramo 1: fuera el padrón de Excel y la marca vieja
 **Qué se hizo**
 - Retirado el padrón de Excel: menú Configuraciones › Excel, «Activar desde Excel» en Miembros, `ActivarMiembroDesdePadron`, `EditarMiembroReferencia`, `MiembroReferencia` (entidad, puerto y repositorio) y las utilidades `padronExcel`, `filtrarFilasPadron`, `formatoCeldaPadron` y `saltoFila`. El check-in con una cédula desconocida ya no intenta activarla: responde «no se encontró ningún miembro». Dependencia `xlsx` quitada de `packages/db` y del `package-lock.json` (no hay otra dependencia nueva).

@@ -10,57 +10,27 @@ import { listarPlanes } from "@gym-app/domain/use-cases/ListarPlanes";
 import { listarSucursales } from "@gym-app/domain/use-cases/ListarSucursales";
 import { Button } from "@gym-app/ui/components/Button";
 import { ListaMiembros } from "./ListaMiembros";
-import { obtenerTurnoAbiertoParaUsuario } from "../caja/obtenerTurnoAbiertoParaUsuario";
-import { AvisoCajaCerrada } from "../caja/AvisoCajaCerrada";
 
 export default async function PaginaMiembros() {
   const sesion = await obtenerUsuarioDeSesionActual();
   if (!sesion) redirect("/login");
   const { usuario, sucursalActivaId } = sesion;
 
-  const [miembros, planes, sucursales, turnoAbierto] = await Promise.all([
+  const [miembros, planes, sucursales] = await Promise.all([
     listarMiembros({ miembros: new PrismaMemberRepository(prisma) }, usuario.organizacionId, sucursalActivaId),
     listarPlanes({ planes: new PrismaPlanRepository(prisma) }, usuario.organizacionId),
     listarSucursales({ sucursales: new PrismaSucursalRepository(prisma) }, usuario.organizacionId),
-    obtenerTurnoAbiertoParaUsuario(sucursalActivaId, usuario.id),
   ]);
 
-  // Inscribir un miembro es una operación de caja — el alta queda atada a
-  // un turno para el cuadre (ver diseño acordado: hay que abrir caja antes
-  // de inscribir o cobrar). Se renderiza dentro de ListaMiembros, junto al
-  // título y el toggle Cards/Lista (ver diseño acordado).
-  const botonNuevoMiembro = turnoAbierto?.esPropio ? (
+  // Se renderiza dentro de ListaMiembros, junto al título y el toggle Cards/Lista.
+  const botonNuevoMiembro = (
     <Link href="/miembros/nuevo">
       <Button>Nuevo miembro</Button>
     </Link>
-  ) : (
-    <Button
-      disabled
-      title={
-        turnoAbierto
-          ? `La caja la tiene abierta ${turnoAbierto.turno.usuarioNombre ?? "otro usuario"}`
-          : "Abrí la caja para poder inscribir un miembro"
-      }
-    >
-      Nuevo miembro
-    </Button>
   );
 
   return (
     <div className="p-6 lg:p-8">
-      {!turnoAbierto?.esPropio && (
-        <div className="mb-6 print:hidden">
-          <AvisoCajaCerrada
-            mensaje={
-              turnoAbierto
-                ? `No puedes inscribir miembros ni registrar pagos: la caja está abierta por ${turnoAbierto.turno.usuarioNombre ?? "otro usuario"}.`
-                : undefined
-            }
-          />
-        </div>
-      )}
-
-
       <ListaMiembros miembros={miembros} planes={planes} sucursales={sucursales} accionesHeader={botonNuevoMiembro} />
     </div>
   );

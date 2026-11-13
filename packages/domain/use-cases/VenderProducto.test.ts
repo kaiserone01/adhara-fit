@@ -1,6 +1,5 @@
 import { describe, expect, test } from "vitest";
 import { venderProducto, type VenderProductoDeps } from "./VenderProducto";
-import { FechaPagoInvalidaError } from "./RegistrarPago";
 import type { Producto } from "../entities/Producto";
 import type { DatosNuevoPago, Pago } from "../entities/Pago";
 
@@ -15,8 +14,8 @@ const producto = (id: string, nombre: string, costoUSD: number, extra: Partial<P
   ...extra,
 });
 
-function crearDeps(opciones: { permitido?: boolean; turnoAbierto?: boolean; productos?: Producto[] } = {}) {
-  const { permitido = true, turnoAbierto = true } = opciones;
+function crearDeps(opciones: { permitido?: boolean; productos?: Producto[] } = {}) {
+  const { permitido = true } = opciones;
   const productos = opciones.productos ?? [producto("p1", "Agua", 1.5), producto("p2", "Gatorade", 2.25)];
   const creados: DatosNuevoPago[] = [];
 
@@ -28,7 +27,6 @@ function crearDeps(opciones: { permitido?: boolean; turnoAbierto?: boolean; prod
       },
     },
     productos: { buscarPorId: async (_org: string, id: string) => productos.find((p) => p.id === id) ?? null },
-    turnos: { buscarAbiertoPorSucursal: async () => (turnoAbierto ? { id: "turno1" } : null) },
     autorizacion: { tienePermiso: async () => permitido },
   } as unknown as VenderProductoDeps;
 
@@ -51,7 +49,6 @@ describe("venderProducto", () => {
     expect(creados).toHaveLength(1);
     expect(creados[0]).toMatchObject({
       miembroId: null,
-      turnoId: "turno1",
       productoId: "p1",
       productoNombre: "Agua",
       cantidad: 2,
@@ -115,11 +112,6 @@ describe("venderProducto", () => {
     await expect(venderProducto(deps, { ...base, items: [], lineas: [linea(1)] })).rejects.toThrow(/al menos un producto/);
   });
 
-  test("rechaza sin turno abierto", async () => {
-    const { deps } = crearDeps({ turnoAbierto: false });
-    await expect(venderProducto(deps, { ...base, items: [{ productoId: "p1", cantidad: 1 }], lineas: [linea(1.5)] })).rejects.toThrow(/turno/);
-  });
-
   test("rechaza sin permiso de caja", async () => {
     const { deps } = crearDeps({ permitido: false });
     await expect(venderProducto(deps, { ...base, items: [{ productoId: "p1", cantidad: 1 }], lineas: [linea(1.5)] })).rejects.toThrow(/permiso/);
@@ -145,39 +137,5 @@ describe("venderProducto", () => {
 
     const { deps } = crearDeps();
     await expect(venderProducto(deps, { ...base, items: [{ productoId: "nope", cantidad: 1 }], lineas: [linea(1)] })).rejects.toThrow(/producto/);
-  });
-});
-
-describe("venderProducto con fecha pasada", () => {
-  const DIA = 24 * 60 * 60 * 1000;
-  const hace = (dias: number) => new Date(Date.now() - dias * DIA);
-  const venta = { ...base, items: [{ productoId: "p1", cantidad: 2 }] };
-
-  test("queda fuera de turno, con la fecha elegida", async () => {
-    const { deps, creados } = crearDeps();
-    const fecha = hace(1);
-    await venderProducto(deps, { ...venta, lineas: [linea(3)], fechaVenta: fecha });
-
-    expect(creados).toHaveLength(1);
-    expect(creados[0]).toMatchObject({ turnoId: null, fechaPago: fecha, productoId: "p1", cantidad: 2 });
-  });
-
-  test("no exige turno abierto", async () => {
-    const { deps, creados } = crearDeps({ turnoAbierto: false });
-    await venderProducto(deps, { ...venta, lineas: [linea(3)], fechaVenta: hace(2) });
-    expect(creados).toHaveLength(1);
-    expect(creados[0].turnoId).toBeNull();
-  });
-
-  test("más de 90 días atrás se rechaza", async () => {
-    const { deps, creados } = crearDeps();
-    await expect(venderProducto(deps, { ...venta, lineas: [linea(3)], fechaVenta: hace(100) })).rejects.toBeInstanceOf(FechaPagoInvalidaError);
-    expect(creados).toEqual([]);
-  });
-
-  test("una fecha de hoy se comporta como siempre (en el turno abierto)", async () => {
-    const { deps, creados } = crearDeps();
-    await venderProducto(deps, { ...venta, lineas: [linea(3)], fechaVenta: new Date() });
-    expect(creados[0].turnoId).toBe("turno1");
   });
 });

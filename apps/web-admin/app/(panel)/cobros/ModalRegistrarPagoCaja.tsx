@@ -25,9 +25,6 @@ import { TarjetaOpcion } from "./MarcoAsistente";
 import { registrarPagoAction, type EstadoCambioPlan } from "../pagos/actions";
 import { calcularProyeccionAbono } from "./proyeccionAbono";
 import { PanelRemanentePago } from "./PanelRemanentePago";
-import { ModalDetalleDeuda } from "./ModalDetalleDeuda";
-import { Badge } from "@gym-app/ui/components/Badge";
-import type { GrupoDeudasMiembro } from "@gym-app/domain/use-cases/ListarDeudasPendientes";
 import type { AbonoPendiente } from "@gym-app/domain/use-cases/ListarAbonosPendientes";
 import { formatearFechaCorta } from "./ProyeccionCiclosUI";
 import type { ReglaAbonoPorFrecuencia } from "@gym-app/domain/entities/ReglaAbono";
@@ -475,7 +472,6 @@ function ContenidoPaso3({
   reglasAbono,
   modalidad,
   metodosPago,
-  deudaMiembro,
   abonoPrevio,
   onVolver,
   onPagoRegistrado,
@@ -506,8 +502,6 @@ function ContenidoPaso3({
   // ejecuta lo elegido (ver diseño acordado, motor de reglas de abono).
   modalidad: Modalidad;
   metodosPago: MetodoPago[];
-  // Productos fiados pendientes de este miembro en la sucursal (null = no debe nada).
-  deudaMiembro: GrupoDeudasMiembro | null;
   // Abono ya hecho en el ciclo abierto de este mismo plan (null = no hay): el monto a cobrar es su saldo.
   abonoPrevio: AbonoPendiente | null;
   // Crédito del miembro (pago de más o cambio de plan a la baja): se descuenta de lo que se cobra.
@@ -525,9 +519,6 @@ function ContenidoPaso3({
   const minFechaISO = fechaALocalISO(new Date(Date.now() - maxDiasAtras * 24 * 60 * 60 * 1000));
   const esFechaPasada = fechaPago !== "" && fechaPago < hoyISO;
   const { mostrarExito, mostrarError } = useFeedback();
-  // Con deuda, la casilla "Cobrar también los productos pendientes" viene marcada.
-  const [incluirDeudas, setIncluirDeudas] = useState(true);
-  const [detalleDeudaAbierto, setDetalleDeudaAbierto] = useState(false);
 
   // El monto objetivo queda fijo al precio del plan siempre que la
   // modalidad NO admita variar el total: en "total" siempre, y en
@@ -535,16 +526,12 @@ function ContenidoPaso3({
   // se restringe como modalidad, pero si el plan exige el 100%, el total
   // a distribuir entre métodos tampoco puede bajar de ahí — ver
   // AbonoNoPermitidoError en RegistrarPago.ts, hallazgo de la revisión final).
-  // Deuda de productos a cobrar junto con la membresía (un plan de cortesía no la incluye). Lo que
-  // se carga en las líneas es el total pagado: la parte de la membresía es lo que excede a la deuda.
   // Lo que falta del ciclo (precio menos lo ya abonado) y, de ahí, lo que se cobra: se resta el saldo a favor.
   const pagadoPrevio = abonoPrevio?.pagadoUSD ?? 0;
   const precioCiclo = abonoPrevio?.precioUSD ?? precioPlan;
   const faltanteCiclo = Math.max(0, precioCiclo - pagadoPrevio);
   const creditoAplicable = Math.min(saldoAFavor, faltanteCiclo);
   const montoSugerido = Math.round((faltanteCiclo - creditoAplicable) * 100) / 100;
-  const deudaAPagar = montoSugerido > 0 && deudaMiembro && incluirDeudas && !esFechaPasada ? deudaMiembro.totalUSD : 0;
-  const menosDeuda = (total: number) => Math.max(0, Math.round((total - deudaAPagar) * 100) / 100);
 
   const montoObjetivoBloqueado = modalidad === "total" || (modalidad === "combinado" && !permitePagoParcial);
   const [montoObjetivoTexto, setMontoObjetivoTexto] = useState(String(montoSugerido));
@@ -573,7 +560,7 @@ function ContenidoPaso3({
   const montoObjetivo = montoObjetivoBloqueado
     ? montoSugerido
     : usaFracciones
-      ? menosDeuda(sumaLineasCombinadas)
+      ? Math.max(0, Math.round(sumaLineasCombinadas * 100) / 100)
       : Number(montoObjetivoTexto) || 0;
 
   // En modalidad total (no abono, no combinado), el monto real a enviar es
@@ -589,7 +576,7 @@ function ContenidoPaso3({
   const lineasActivas =
     usaFracciones
       ? lineasCombinadas
-      : [{ ...lineaUnica, monto: String(Math.round((montoObjetivo + deudaAPagar) * 100) / 100) }];
+      : [{ ...lineaUnica, monto: String(Math.round(montoObjetivo * 100) / 100) }];
   const sumaLineas = lineasActivas.reduce((suma, l) => suma + (Number(l.monto) || 0), 0);
 
   // Réplica cliente del motor de reglas de abono (proyeccionAbono.ts) —
@@ -634,8 +621,6 @@ function ContenidoPaso3({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- solo debe reaccionar a un nuevo estado.ok, no a las funciones
   }, [estado.ok]);
 
-  // Las líneas traen lo que el cliente paga en total (membresía + deuda): el servidor descuenta
-  // la deuda primero y en orden, y lo que sobra es la membresía.
   const lineasParaEnviar = lineasActivas
     .filter((l) => Number(l.monto) > 0)
     .map((l) => {
@@ -665,7 +650,6 @@ function ContenidoPaso3({
       <input type="hidden" name="origen" value="caja" />
       {meses > 1 && <input type="hidden" name="meses" value={meses} />}
       {esFechaPasada && <input type="hidden" name="fechaPago" value={fechaPago} />}
-      {deudaAPagar > 0 && <input type="hidden" name="incluirDeudas" value="1" />}
       {hayExcedenteCaja && excedenteElegido === "saldo" && <input type="hidden" name="excedenteSaldo" value="1" />}
       <input
         type="hidden"
@@ -692,7 +676,7 @@ function ContenidoPaso3({
         />
         <p className="text-sm font-medium" style={{ color: "#ffffff" }}>
           {esFechaPasada
-            ? `El pago se registra el ${fechaPago.split("-").reverse().join("/")}; no entra en ningún turno de caja ni en el arqueo de hoy.`
+            ? `El pago se registra el ${fechaPago.split("-").reverse().join("/")}; no suma al cobrado de hoy.`
             : `Cámbiala solo si pagó antes (máx. ${maxDiasAtras} días).`}
         </p>
       </div>
@@ -708,7 +692,7 @@ function ContenidoPaso3({
             <SelectorMetodoPago
               compacto
               metodos={metodosPago}
-              onCambio={(seleccion) => setLineaUnica((prev) => ({ ...prev, monto: String(montoObjetivo + deudaAPagar), seleccion }))}
+              onCambio={(seleccion) => setLineaUnica((prev) => ({ ...prev, monto: String(montoObjetivo), seleccion }))}
               grande
               ocultarNumeroOperacion
               numeroOperacion={lineaUnica.seleccion.numeroOperacion}
@@ -859,50 +843,6 @@ function ContenidoPaso3({
 
       </div>
       <aside className="flex flex-col gap-4 lg:w-96 lg:shrink-0 lg:overflow-y-auto lg:border-l lg:pl-6" style={{ borderColor: "var(--gx-edge)" }}>
-      {montoSugerido > 0 && deudaMiembro && (
-        <div
-          className="flex flex-col gap-2 rounded-lg border-2 px-3 py-3"
-          style={{ borderColor: "var(--gx-warn)", background: "color-mix(in srgb, var(--gx-warn) 8%, transparent)" }}
-        >
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="flex flex-wrap items-center gap-2 text-sm font-semibold" style={{ color: "var(--gx-ink)" }}>
-              <Badge tono="ambar">Deuda pendiente</Badge>
-              Debe {formatearSoles(deudaMiembro.totalUSD)} en productos
-            </span>
-            <button
-              type="button"
-              onClick={() => setDetalleDeudaAbierto(true)}
-              className="text-sm font-medium hover:underline"
-              style={{ color: "var(--gx-accent)" }}
-            >
-              Ver detalles
-            </button>
-          </div>
-          <label className="flex min-h-11 items-center gap-2 text-sm" style={{ color: "var(--gx-ink)" }}>
-            <input
-              type="checkbox"
-              checked={incluirDeudas}
-              onChange={(e) => setIncluirDeudas(e.target.checked)}
-              className="gx-check"
-            />
-            Cobrar también los productos pendientes
-          </label>
-          {incluirDeudas && (
-            <div className="flex flex-wrap justify-between gap-2 text-sm">
-              <span style={{ color: "var(--gx-muted)" }}>
-                Membresía {formatearSoles(montoObjetivo)} + productos {formatearSoles(deudaMiembro.totalUSD)}
-              </span>
-              <span className="font-semibold" style={{ color: "var(--gx-ink)" }}>
-                Total {formatearSoles((montoObjetivo + deudaMiembro.totalUSD))}
-              </span>
-            </div>
-          )}
-        </div>
-      )}
-      {detalleDeudaAbierto && deudaMiembro && (
-        <ModalDetalleDeuda grupo={deudaMiembro} onCerrar={() => setDetalleDeudaAbierto(false)} />
-      )}
-
       {/* Panel flotante — desacoplado del modal para las 3 modalidades (ver
           diseño acordado: evita saturar/refrescar el modal). En Total y
           Abono, lineasActivas ya resuelve a una sola línea equivalente
@@ -952,7 +892,6 @@ function ContenidoPaso3({
           // sobre la SUMA de todas las líneas activas — se actualiza en vivo.
           proyeccion={sumaLineas > 0 && montoObjetivo > 0 && !saldaCicloPrevio && !faltanteAceptado ? proyeccionAbono : null}
           modalidad={modalidad}
-          deudaProductos={deudaAPagar}
           abonadoPrevio={pagadoPrevio}
           creditoAplicado={creditoUsado}
           tolerancia={tolerancia}
@@ -1035,7 +974,6 @@ export function ModalRegistrarPagoCaja({
   entrenadores,
   accionCambiarPlan,
   miembroInicialId,
-  deudas,
   abonos,
   onCerrar,
 }: {
@@ -1047,8 +985,6 @@ export function ModalRegistrarPagoCaja({
   accionCambiarPlan: (estado: EstadoCambioPlan, formData: FormData) => Promise<EstadoCambioPlan>;
   // Miembro ya identificado (ej. "Cobrar ahora" desde /en-sala): se salta el Paso 1.
   miembroInicialId?: string;
-  // Productos fiados pendientes por miembro (sucursal activa), para ofrecer cobrarlos junto con la membresía.
-  deudas: GrupoDeudasMiembro[];
   // Saldos de abonos de membresía (ciclos abiertos sin saldar) de los miembros de la sucursal.
   abonos: AbonoPendiente[];
   onCerrar: () => void;
@@ -1202,7 +1138,6 @@ export function ModalRegistrarPagoCaja({
             reglasAbono={reglasAbono}
             modalidad={modalidadElegida}
             metodosPago={metodosPago}
-            deudaMiembro={deudas.find((g) => g.miembroId === miembroElegido.id) ?? null}
             abonoPrevio={abonoPrevio}
             onVolver={() => setPaso(2)}
             onPagoRegistrado={(fechaFinCicloISO) => {

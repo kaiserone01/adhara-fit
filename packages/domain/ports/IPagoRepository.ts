@@ -9,7 +9,8 @@ export interface IPagoRepository {
   moverFinCiclo(miembroId: string, finAnterior: Date, finNuevo: Date): Promise<void>;
   listarPorOrganizacion(organizacionId: string): Promise<Pago[]>;
   listarPorOrganizacionYRango(organizacionId: string, desde: Date, hasta: Date): Promise<Pago[]>;
-  listarPorTurno(turnoId: string): Promise<Pago[]>;
+  // Días (medianoche UTC de la fecha de Lima) con al menos un cobro en la organización, para el calendario del historial.
+  listarFechasConPagos(organizacionId: string): Promise<Date[]>;
   buscarPorId(organizacionId: string, id: string): Promise<Pago | null>;
   // Filas de un mismo cobro (mismo grupoPagoId) que siguen sin anular.
   contarVigentesPorGrupo(organizacionId: string, grupoPagoId: string): Promise<number>;

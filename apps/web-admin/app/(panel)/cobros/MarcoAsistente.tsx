@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-// Marco compartido de los asistentes de Caja (vender producto, cobrar deudas): ocupa el 98% de la
+// Marco compartido de los asistentes de Caja (cobrar, vender producto): ocupa el 98% de la
 // pantalla, con la zona de trabajo a la izquierda y una columna lateral de resumen y acciones.
 export function MarcoAsistente({
   titulo,

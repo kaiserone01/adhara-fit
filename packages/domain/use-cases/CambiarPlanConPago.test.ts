@@ -4,7 +4,6 @@ import type { IMemberRepository } from "../ports/IMemberRepository";
 import type { ISuscripcionRepository } from "../ports/ISuscripcionRepository";
 import type { IPlanRepository } from "../ports/IPlanRepository";
 import type { IPagoRepository } from "../ports/IPagoRepository";
-import type { ITurnoRepository } from "../ports/ITurnoRepository";
 import type { ISucursalRepository } from "../ports/ISucursalRepository";
 import type { IAuthorizationService } from "../ports/IAuthorizationService";
 import type { Miembro, CambiosMiembro } from "../entities/Miembro";
@@ -103,7 +102,6 @@ function crearFakes(estadoInicial: { miembro: Miembro; suscripcion: Suscripcion;
         id: `pago-${pagosCreados.length}`,
         miembroId: datos.miembroId,
         sucursalId: datos.sucursalId,
-        turnoId: datos.turnoId,
         registradoPorId: datos.registradoPorId,
         monto: datos.monto,
         metodo: datos.metodo,
@@ -122,27 +120,12 @@ function crearFakes(estadoInicial: { miembro: Miembro; suscripcion: Suscripcion;
     listarPorMiembro: async () => [],
     listarPorOrganizacion: async () => [],
     listarPorOrganizacionYRango: async () => [],
-    listarPorTurno: async () => [],
+    listarFechasConPagos: async () => [],
     contarVigentesPorGrupo: async () => 0,
     buscarPorId: async () => null,
     anular: async () => {
       throw new Error("no usado en este test");
     },
-  };
-
-  const turnoRepo: ITurnoRepository = {
-    crear: async () => {
-      throw new Error("no usado en este test");
-    },
-    buscarPorId: async () => null,
-    buscarAbiertoPorSucursal: async () => null,
-    buscarAbiertoEntreSucursales: async () => null,
-    buscarUltimoCerradoPorSucursal: async () => null,
-    cerrar: async () => {
-      throw new Error("no usado en este test");
-    },
-    listarPorOrganizacionYRango: async () => [],
-    listarFechasConTurno: async () => [],
   };
 
   const sucursalRepo: ISucursalRepository = {
@@ -177,7 +160,6 @@ function crearFakes(estadoInicial: { miembro: Miembro; suscripcion: Suscripcion;
     suscripciones: suscripcionRepo,
     miembros: memberRepo,
     planes: planRepo,
-    turnos: turnoRepo,
     sucursales: sucursalRepo,
     autorizacion,
     auditoria: auditoriaRepo,

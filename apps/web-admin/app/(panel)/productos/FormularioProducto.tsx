@@ -87,7 +87,7 @@ export function FormularioProducto({
             defaultChecked={valoresIniciales.activo}
             className="gx-check"
           />
-          Activo (disponible para vender en Caja)
+          Activo (disponible para vender en Cobros)
         </label>
       )}
 

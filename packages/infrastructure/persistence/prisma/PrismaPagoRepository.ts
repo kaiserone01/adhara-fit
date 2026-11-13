@@ -6,7 +6,6 @@ type FilaPago = {
   id: string;
   miembroId: string | null;
   sucursalId: string;
-  turnoId: string | null;
   registradoPorId: string;
   monto: { toNumber(): number };
   metodo: string;
@@ -29,7 +28,6 @@ function mapear(pago: FilaPago): Pago {
     id: pago.id,
     miembroId: pago.miembroId,
     sucursalId: pago.sucursalId,
-    turnoId: pago.turnoId,
     registradoPorId: pago.registradoPorId,
     monto: pago.monto.toNumber(),
     metodo: pago.metodo,
@@ -56,7 +54,6 @@ export class PrismaPagoRepository implements IPagoRepository {
       data: {
         miembroId: datos.miembroId,
         sucursalId: datos.sucursalId,
-        turnoId: datos.turnoId,
         registradoPorId: datos.registradoPorId,
         monto: datos.monto,
         metodo: datos.metodo,
@@ -110,23 +107,32 @@ export class PrismaPagoRepository implements IPagoRepository {
   async listarPorOrganizacionYRango(organizacionId: string, desde: Date, hasta: Date): Promise<Pago[]> {
     const pagos = await this.prisma.pago.findMany({
       where: { sucursal: { organizacionId }, fechaPago: { gte: desde, lte: hasta } },
-      include: { miembro: { select: { nombre: true, precioPlan: true } } },
+      include: { miembro: { select: { nombre: true, precioPlan: true } }, registradoPor: { select: { nombre: true } } },
       orderBy: { fechaPago: "asc" },
     });
     return pagos.map((pago) => ({
       ...mapear(pago),
       miembroNombre: pago.miembro?.nombre,
       miembroPrecioPlan: pago.miembro?.precioPlan.toNumber(),
+      registradoPorNombre: pago.registradoPor.nombre,
     }));
   }
 
-  async listarPorTurno(turnoId: string): Promise<Pago[]> {
-    const pagos = await this.prisma.pago.findMany({
-      where: { turnoId },
-      include: { miembro: { select: { nombre: true } } },
-      orderBy: { fechaPago: "asc" },
-    });
-    return pagos.map((pago) => ({ ...mapear(pago), miembroNombre: pago.miembro?.nombre }));
+  async listarFechasConPagos(organizacionId: string): Promise<Date[]> {
+    // La columna se guarda en UTC: se pasa al reloj de Lima y se piden año, mes y día como enteros. El Date se arma
+    // con el constructor local (el proceso corre con TZ=America/Lima, igual que el navegador): devolver el timestamp
+    // sin zona correría el día al etiquetarlo como UTC.
+    const filas = await this.prisma.$queryRaw<{ anio: number; mes: number; dia: number }[]>`
+      SELECT DISTINCT
+        EXTRACT(YEAR FROM (p."fechaPago" AT TIME ZONE 'UTC' AT TIME ZONE 'America/Lima'))::int AS anio,
+        EXTRACT(MONTH FROM (p."fechaPago" AT TIME ZONE 'UTC' AT TIME ZONE 'America/Lima'))::int AS mes,
+        EXTRACT(DAY FROM (p."fechaPago" AT TIME ZONE 'UTC' AT TIME ZONE 'America/Lima'))::int AS dia
+      FROM "Pago" p
+      JOIN "Sucursal" s ON s."id" = p."sucursalId"
+      WHERE s."organizacionId" = ${organizacionId}
+      ORDER BY anio ASC, mes ASC, dia ASC
+    `;
+    return filas.map((fila) => new Date(fila.anio, fila.mes - 1, fila.dia));
   }
 
   async buscarPorId(organizacionId: string, id: string): Promise<Pago | null> {

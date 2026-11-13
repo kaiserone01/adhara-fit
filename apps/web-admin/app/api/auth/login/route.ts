@@ -5,7 +5,6 @@ import { PrismaUsuarioAdminRepository } from "@gym-app/infrastructure/persistenc
 import { PrismaSesionRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSesionRepository";
 import { PrismaSucursalRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSucursalRepository";
 import { PrismaUsuarioSucursalRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaUsuarioSucursalRepository";
-import { PrismaTurnoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaTurnoRepository";
 import { BcryptPasswordHasher } from "@gym-app/infrastructure/auth/BcryptPasswordHasher";
 import { iniciarSesion, CredencialesInvalidasError } from "@gym-app/domain/use-cases/IniciarSesion";
 import { obtenerSucursalesVisiblesParaUsuario } from "@gym-app/domain/use-cases/ObtenerSucursalesVisiblesParaUsuario";
@@ -46,19 +45,7 @@ export async function POST(req: NextRequest) {
       // archivo para por qué se reenvían en vez de usar un token
       // intermedio: evita agregar una entidad de "sesión temporal" solo
       // para cubrir un intervalo de segundos).
-      const turnoRepo = new PrismaTurnoRepository(prisma);
-      const sucursales = await Promise.all(
-        sucursalesVisibles.map(async (s) => {
-          const turnoAbierto = await turnoRepo.buscarAbiertoPorSucursal(s.id);
-          const cajaAbiertaPorMi = turnoAbierto?.usuarioId === credenciales.usuario.id;
-          return {
-            id: s.id,
-            nombre: s.nombre,
-            cajaAbiertaPor: turnoAbierto?.usuarioNombre ?? null,
-            cajaAbiertaPorMi,
-          };
-        })
-      );
+      const sucursales = sucursalesVisibles.map((s) => ({ id: s.id, nombre: s.nombre }));
       return NextResponse.json({ requiereSeleccion: true, sucursales });
     }
 

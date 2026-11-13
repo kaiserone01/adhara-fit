@@ -52,8 +52,8 @@ export function NavegacionMobile({
     },
     {
       tipo: "link",
-      href: "/caja",
-      label: "Caja",
+      href: "/cobros",
+      label: "Cobros",
       icon: <Wallet size={24} />,
       iconActivo: <Wallet size={24} weight="fill" />,
     },

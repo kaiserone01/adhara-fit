@@ -70,3 +70,19 @@ export async function resolverItemsVenta(
 
   return resueltos;
 }
+
+interface RenglonVenta {
+  productoNombre: string;
+  cantidad: number;
+  precioUnitarioUSD: number;
+}
+
+// Total de una venta, en centavos para no acumular error de punto flotante.
+export function totalRenglones(renglones: Pick<RenglonVenta, "precioUnitarioUSD" | "cantidad">[]): number {
+  return renglones.reduce((suma, d) => suma + Math.round(d.precioUnitarioUSD * d.cantidad * 100), 0) / 100;
+}
+
+// Texto que queda como concepto del Pago: "Agua × 2, Gatorade".
+export function conceptoRenglones(renglones: Pick<RenglonVenta, "productoNombre" | "cantidad">[]): string {
+  return renglones.map((d) => (d.cantidad > 1 ? `${d.productoNombre} × ${d.cantidad}` : d.productoNombre)).join(", ");
+}

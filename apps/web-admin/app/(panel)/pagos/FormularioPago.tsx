@@ -11,7 +11,7 @@ import type { Miembro } from "@gym-app/domain/entities/Miembro";
 import type { MetodoPago } from "@gym-app/domain/entities/MetodoPago";
 import type { FrecuenciaPago, TipoMinimoAbono } from "@gym-app/domain/entities/Plan";
 import { SelectorMetodoPago } from "./SelectorMetodoPago";
-import { SelectorMiembroModal, type MiembroConPlan } from "../caja/SelectorMiembroModal";
+import { SelectorMiembroModal, type MiembroConPlan } from "../cobros/SelectorMiembroModal";
 
 export interface MiembroParaSelector {
   id: string;

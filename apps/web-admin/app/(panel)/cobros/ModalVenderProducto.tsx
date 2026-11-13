@@ -6,16 +6,13 @@ import { Button } from "@gym-app/ui/components/Button";
 import { useFeedback } from "@gym-app/ui/components/FeedbackOverlay";
 import type { Producto } from "@gym-app/domain/entities/Producto";
 import type { MetodoPago } from "@gym-app/domain/entities/MetodoPago";
-import type { Miembro } from "@gym-app/domain/entities/Miembro";
-import { totalDeudas } from "@gym-app/domain/entities/DeudaProducto";
+import { totalRenglones } from "@gym-app/domain/use-cases/resolverItemsVenta";
 import { SelectorMetodoPago } from "../pagos/SelectorMetodoPago";
 import { CampoNumeroOperacion } from "../pagos/CampoNumeroOperacion";
 import { MetodoYCampos } from "../pagos/MetodoYCampos";
-import { CampoFechaCobro, useFechaCobro } from "./CampoFechaCobro";
-import { ColumnaLateral, ColumnaPrincipal, MarcoAsistente, TarjetaOpcion, TituloSeccion } from "./MarcoAsistente";
-import { BuscadorMiembro, type MiembroConPlan, type PlanParaModal } from "./SelectorMiembroModal";
+import { ColumnaLateral, ColumnaPrincipal, MarcoAsistente, TituloSeccion } from "./MarcoAsistente";
 import { normalizarTexto } from "@/lib/normalizarTexto";
-import type { EstadoVenderProducto, EstadoFiarProducto } from "./actions";
+import type { EstadoVenderProducto } from "./actions";
 
 const ID_FORMULARIO = "formulario-vender-producto";
 
@@ -41,45 +38,30 @@ interface ItemCarrito {
 
 export function ModalVenderProducto({
   accion,
-  accionFiar,
   productos,
   metodosPago,
-  miembros,
-  planes,
   onCerrar,
 }: {
   accion: (estado: EstadoVenderProducto, formData: FormData) => Promise<EstadoVenderProducto>;
-  accionFiar: (estado: EstadoFiarProducto, formData: FormData) => Promise<EstadoFiarProducto>;
   productos: Producto[];
   metodosPago: MetodoPago[];
-  miembros: Miembro[];
-  planes: PlanParaModal[];
   onCerrar: () => void;
 }) {
   const [estado, enviar, enviando] = useActionState(accion, {});
-  const [estadoFiar, enviarFiar, fiando] = useActionState(accionFiar, {});
   const { mostrarExito, mostrarError } = useFeedback();
 
   const [paso, setPaso] = useState<1 | 2>(1);
   const [busqueda, setBusqueda] = useState("");
   const [carrito, setCarrito] = useState<ItemCarrito[]>([]);
-  const [fiar, setFiar] = useState(false);
-  const [miembroFiado, setMiembroFiado] = useState<MiembroConPlan | null>(null);
   const [seleccion, setSeleccion] = useState<Seleccion>(SELECCION_VACIA);
-  // Fecha de la venta (arranca en hoy). Una fecha pasada registra una venta que ya se cobró y no se anotó: fuera de turno
-  // y con la tasa BCV de ese día.
-  const { fecha: fechaVenta, setFecha: setFechaVenta, esPasada } = useFechaCobro();
-  const esVentaPasada = !fiar && esPasada;
 
-  // Cada acción tiene su propio estado: se muestra el error de la que se acaba
-  // de enviar, no el de un intento anterior de la otra.
-  const error = fiar ? estadoFiar.error : estado.error;
-  const ok = estado.ok ?? estadoFiar.ok;
+  const error = estado.error;
+  const ok = estado.ok;
 
   useEffect(() => {
     if (error) mostrarError(error);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- solo debe reaccionar a un nuevo resultado, no a mostrarError
-  }, [estado, estadoFiar]);
+  }, [estado]);
 
   useEffect(() => {
     if (ok) {
@@ -93,7 +75,7 @@ export function ModalVenderProducto({
     const producto = productos.find((p) => p.id === item.productoId);
     return producto ? [{ producto, cantidad: item.cantidad, productoNombre: producto.nombre, precioUnitarioUSD: producto.costoUSD }] : [];
   });
-  const total = totalDeudas(renglones);
+  const total = totalRenglones(renglones);
   const unidades = renglones.reduce((suma, r) => suma + r.cantidad, 0);
   const enCarrito = (id: string) => carrito.find((i) => i.productoId === id)?.cantidad ?? 0;
 
@@ -114,7 +96,7 @@ export function ModalVenderProducto({
   }
 
   const numeroOperacionValido = !seleccion.requiereNumeroOperacion || /^\d{4}$/.test(seleccion.numeroOperacion);
-  const puedeEnviar = fiar ? miembroFiado !== null : seleccion.metodoPagoId !== null && numeroOperacionValido;
+  const puedeEnviar = seleccion.metodoPagoId !== null && numeroOperacionValido;
 
   const items = carrito.map(({ productoId, cantidad }) => ({ productoId, cantidad }));
   const lineas = [
@@ -136,7 +118,7 @@ export function ModalVenderProducto({
   );
 
   return (
-    <MarcoAsistente titulo="Vender producto" etiqueta={`Paso ${paso} de 2 · ${paso === 1 ? "Elige los productos" : "Cobrar o fiar"}`} onCerrar={onCerrar}>
+    <MarcoAsistente titulo="Vender producto" etiqueta={`Paso ${paso} de 2 · ${paso === 1 ? "Elige los productos" : "Cobrar"}`} onCerrar={onCerrar}>
       {productos.length === 0 ? (
         <p className="text-sm" style={{ color: "var(--gx-muted)" }}>
           No hay productos activos. Créalos en la sección Productos.
@@ -230,7 +212,7 @@ export function ModalVenderProducto({
                         </Button>
                       </span>
                       <span className="font-semibold" style={{ color: "var(--gx-ink)" }}>
-                        {formatearSoles(totalDeudas([r]))}
+                        {formatearSoles(totalRenglones([r]))}
                       </span>
                     </span>
                   </div>
@@ -250,68 +232,12 @@ export function ModalVenderProducto({
         </>
       ) : (
         <>
-          <form id={ID_FORMULARIO} action={fiar ? enviarFiar : enviar} className="contents">
+          <form id={ID_FORMULARIO} action={enviar} className="contents">
             <input type="hidden" name="items" value={JSON.stringify(items)} />
-            {fiar ? (
-              <input type="hidden" name="miembroId" value={miembroFiado?.id ?? ""} />
-            ) : (
-              <input type="hidden" name="lineas" value={JSON.stringify(lineas)} />
-            )}
-            {esVentaPasada && <input type="hidden" name="fechaVenta" value={fechaVenta} />}
+            <input type="hidden" name="lineas" value={JSON.stringify(lineas)} />
 
             <ColumnaPrincipal>
-              <TituloSeccion>Forma de pago</TituloSeccion>
-              <div className="grid gap-3 sm:grid-cols-2" role="group" aria-label="Forma de pago">
-                <TarjetaOpcion
-                  titulo="Cobrar ahora"
-                  descripcion="Registra la venta con un método de pago y suma al arqueo del turno."
-                  elegida={!fiar}
-                  onClick={() => {
-                    setFiar(false);
-                    setMiembroFiado(null);
-                  }}
-                />
-                <TarjetaOpcion
-                  titulo="Fiar a un miembro"
-                  descripcion="Queda como deuda del miembro y se cobra después desde Caja o junto con su membresía."
-                  elegida={fiar}
-                  onClick={() => {
-                    setFiar(true);
-                    setMiembroFiado(null);
-                  }}
-                />
-              </div>
-
-              {fiar ? (
-                <>
-                  <TituloSeccion>Miembro</TituloSeccion>
-                  {miembroFiado ? (
-                    <div className="flex items-center justify-between gap-3 rounded-xl border p-4" style={{ borderColor: "var(--gx-edge)", background: "var(--gx-surface-2)" }}>
-                      <span className="text-lg font-semibold" style={{ color: "var(--gx-ink)" }}>
-                        {miembroFiado.nombre}
-                        <span className="block text-sm font-normal" style={{ color: "var(--gx-muted)" }}>
-                          {miembroFiado.cedula}
-                        </span>
-                      </span>
-                      <button type="button" className="font-medium hover:underline" style={{ color: "var(--gx-accent)" }} onClick={() => setMiembroFiado(null)}>
-                        Cambiar
-                      </button>
-                    </div>
-                  ) : (
-                    <BuscadorMiembro miembros={miembros.filter((m) => m.activo)} planes={planes} onSeleccionar={setMiembroFiado} />
-                  )}
-                </>
-              ) : (
-                <>
-                  <CampoFechaCobro
-                    etiqueta="Fecha de la venta"
-                    fecha={fechaVenta}
-                    onChange={setFechaVenta}
-                    esPasada={esVentaPasada}
-                    mensajePasada="Se registra con esa fecha, fuera del turno: no suma al arqueo de hoy."
-                    mensajeHoy="Cámbiala solo si ya se vendió antes (máx. 90 días)."
-                  />
-                  <TituloSeccion>Método de pago</TituloSeccion>
+              <TituloSeccion>Método de pago</TituloSeccion>
                   <MetodoYCampos
                     vacio={seleccion.metodoPagoId ? "Este método no requiere número de operación." : "Elige un método de pago."}
                     selector={
@@ -335,8 +261,6 @@ export function ModalVenderProducto({
                       )
                     }
                   />
-                </>
-              )}
             </ColumnaPrincipal>
           </form>
 
@@ -350,7 +274,7 @@ export function ModalVenderProducto({
                     {r.cantidad > 1 ? ` × ${r.cantidad}` : ""}
                   </span>
                   <span className="shrink-0" style={{ color: "var(--gx-muted)" }}>
-                    {formatearSoles(totalDeudas([r]))}
+                    {formatearSoles(totalRenglones([r]))}
                   </span>
                 </div>
               ))}
@@ -360,8 +284,8 @@ export function ModalVenderProducto({
               <Button type="button" variant="secundario" className="min-h-12 flex-1 text-base" onClick={() => setPaso(1)}>
                 Volver
               </Button>
-              <Button type="submit" form={ID_FORMULARIO} className="min-h-12 flex-1 text-base" disabled={!puedeEnviar || enviando || fiando}>
-                {enviando || fiando ? "Registrando..." : fiar ? "Fiar" : "Registrar venta"}
+              <Button type="submit" form={ID_FORMULARIO} className="min-h-12 flex-1 text-base" disabled={!puedeEnviar || enviando}>
+                {enviando ? "Registrando..." : "Registrar venta"}
               </Button>
             </div>
           </ColumnaLateral>

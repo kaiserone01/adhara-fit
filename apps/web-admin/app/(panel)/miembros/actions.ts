@@ -19,7 +19,6 @@ import {
 } from "@gym-app/domain/use-cases/ActualizarMiembro";
 import { calcularCambiosFechas } from "@gym-app/domain/utils/cambiosFechasFicha";
 import { inicioDelDiaLima } from "@gym-app/domain/utils/fechaLima";
-import { PrismaTurnoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaTurnoRepository";
 import { PrismaPermisoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPermisoRepository";
 import { PrismaSucursalRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSucursalRepository";
 import { PrismaReglaAbonoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaReglaAbonoRepository";
@@ -184,7 +183,6 @@ export async function crearMiembroAction(
         suscripciones: new PrismaSuscripcionRepository(prisma),
         miembros: new PrismaMemberRepository(prisma),
         planes: new PrismaPlanRepository(prisma),
-        turnos: new PrismaTurnoRepository(prisma),
         sucursales: new PrismaSucursalRepository(prisma),
         autorizacion: new AuthorizationService(new PrismaPermisoRepository(prisma)),
         reglasAbono: new PrismaReglaAbonoRepository(prisma),

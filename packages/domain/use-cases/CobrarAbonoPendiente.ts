@@ -1,11 +1,9 @@
 import { IMemberRepository } from "../ports/IMemberRepository";
 import { IPlanRepository } from "../ports/IPlanRepository";
 import { Pago } from "../entities/Pago";
-import { totalDeudas } from "../entities/DeudaProducto";
 import { RolUsuario } from "../entities/UsuarioAdmin";
 import { calcularAbonosPendientes } from "./ListarAbonosPendientes";
-import { registrarPagoConDeudas, RegistrarPagoConDeudasDeps } from "./RegistrarPagoConDeudas";
-import { seleccionarDeudas } from "./CobrarDeudasMiembro";
+import { registrarPago, RegistrarPagoDeps } from "./RegistrarPago";
 import { MiembroNoEncontradoError } from "./ActualizarMiembro";
 import { DatosLineaPago } from "./RegistrarPago";
 
@@ -17,15 +15,15 @@ export class SinAbonoPendienteError extends Error {
 
 export class MontoNoCoincideConLoPendienteError extends Error {
   constructor(esperadoUSD: number) {
-    super(`El pago debe ser exactamente $${esperadoUSD.toFixed(2)} (saldo de la membresía más los productos pendientes).`);
+    super(`El pago debe ser exactamente $${esperadoUSD.toFixed(2)} (el saldo pendiente de la membresía).`);
   }
 }
 
-// Cobra el saldo pendiente de la membresía del miembro (y los productos fiados marcados, o todos) en UN solo pago.
+// Cobra el saldo pendiente de la membresía del miembro en UN solo pago.
 // El saldo lo calcula el servidor; el cliente solo manda las líneas, que deben sumar exactamente lo pendiente.
-// Debe correr dentro de una transacción (ver cobrarDeudasAction).
+// Debe correr dentro de una transacción (ver cobrarAbonoAction).
 export async function cobrarAbonoPendiente(
-  deps: RegistrarPagoConDeudasDeps & { miembros: IMemberRepository; planes: IPlanRepository },
+  deps: RegistrarPagoDeps & { miembros: IMemberRepository; planes: IPlanRepository },
   input: {
     organizacionId: string;
     miembroId: string;
@@ -33,9 +31,7 @@ export async function cobrarAbonoPendiente(
     sucursalId: string;
     registradoPorId: string;
     rolUsuario: RolUsuario;
-    // Productos marcados para cobrar junto con la membresía (vacío = solo la membresía); sin esto, todos.
-    deudaIds?: string[];
-    // Cobro que ya se hizo en un día pasado y no se anotó (hasta 90 días): fuera de turno.
+    // Cobro que ya se hizo en un día pasado y no se anotó (hasta 90 días).
     fechaCobro?: Date;
   }
 ): Promise<Pago[]> {
@@ -51,16 +47,12 @@ export async function cobrarAbonoPendiente(
   const [abono] = calcularAbonosPendientes([miembro], [plan], pagosDelMiembro, ahora);
   if (!abono) throw new SinAbonoPendienteError();
 
-  const deudas = seleccionarDeudas(
-    await deps.deudas.listarPendientesPorMiembro(input.organizacionId, input.miembroId, input.sucursalId),
-    input.deudaIds
-  );
-  const esperado = Math.round((abono.saldoUSD + totalDeudas(deudas)) * 100) / 100;
+  const esperado = Math.round(abono.saldoUSD * 100) / 100;
   if (Math.abs(input.lineas.reduce((suma, linea) => suma + linea.monto, 0) - esperado) >= 0.01) {
     throw new MontoNoCoincideConLoPendienteError(esperado);
   }
 
-  return registrarPagoConDeudas(deps, {
+  return registrarPago(deps, {
     organizacionId: input.organizacionId,
     miembroId: input.miembroId,
     planId: miembro.planId,
@@ -68,8 +60,6 @@ export async function cobrarAbonoPendiente(
     sucursalId: input.sucursalId,
     registradoPorId: input.registradoPorId,
     rolUsuario: input.rolUsuario,
-    incluirDeudas: deudas.length > 0,
-    deudaIds: deudas.map((d) => d.id),
     ...(input.fechaCobro ? { fechaPago: input.fechaCobro, completarCicloAbierto: true } : {}),
   });
 }

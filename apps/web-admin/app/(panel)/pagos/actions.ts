@@ -9,12 +9,10 @@ import { PrismaPagoRepository } from "@gym-app/infrastructure/persistence/prisma
 import { PrismaSuscripcionRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSuscripcionRepository";
 import { PrismaMemberRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaMemberRepository";
 import { PrismaPlanRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPlanRepository";
-import { PrismaTurnoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaTurnoRepository";
 import { PrismaPermisoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPermisoRepository";
 import { PrismaSucursalRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSucursalRepository";
 import { PrismaReglaAbonoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaReglaAbonoRepository";
 import type { PrismaClientOrTx } from "@gym-app/infrastructure/persistence/prisma/PrismaClientOrTx";
-import { PrismaDeudaProductoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaDeudaProductoRepository";
 import { PrismaCambioPlanAuditoriaRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaCambioPlanAuditoriaRepository";
 import { AuthorizationService } from "@gym-app/domain/services/AuthorizationService";
 import { conMensajeOk } from "../redirectConMensaje";
@@ -34,12 +32,6 @@ import {
   MesesRequierenPagoCompletoError,
   MesesNoDisponiblesError,
 } from "@gym-app/domain/use-cases/RegistrarPago";
-import { registrarPagoConDeudas, MontoNoCubreDeudaError } from "@gym-app/domain/use-cases/RegistrarPagoConDeudas";
-import {
-  RolNoAutorizadoError as RolNoAutorizadoCobrarDeudas,
-  DeudasYaCobradasError,
-  SinTurnoAbiertoError,
-} from "@gym-app/domain/use-cases/CobrarDeudasMiembro";
 import {
   cambiarPlanConPago,
   MiembroNoEncontradoError as MiembroNoEncontradoErrorCambio,
@@ -78,9 +70,7 @@ export async function registrarPagoAction(
   const planId = formData.get("planId")?.toString();
   const lineasRaw = formData.get("lineas")?.toString();
   const origen = formData.get("origen")?.toString();
-  // Casilla "Cobrar también los productos pendientes" del wizard de Caja.
-  const incluirDeudas = formData.get("incluirDeudas")?.toString() === "1";
-  // Fecha del pago (yyyy-mm-dd), un pago con fecha pasada se registra fuera del turno.
+  // Fecha del pago (yyyy-mm-dd), para registrar un pago con fecha pasada.
   // Vacía = hoy. Se toma al mediodía para no caer en el día anterior por zona horaria.
   const fechaPagoTexto = formData.get("fechaPago")?.toString();
   // Sede elegida en el selector "Sede del pago" (ver SelectorMetodoPago);
@@ -135,9 +125,6 @@ export async function registrarPagoAction(
     }
   }
 
-  const esPagoConFechaPasada =
-    !!fechaPagoTexto && new Date(`${fechaPagoTexto}T12:00:00`) < new Date(new Date().setHours(0, 0, 0, 0));
-
   let pagos;
   try {
     const dependencias = (cliente: PrismaClientOrTx) => ({
@@ -145,12 +132,10 @@ export async function registrarPagoAction(
       suscripciones: new PrismaSuscripcionRepository(cliente),
       miembros: new PrismaMemberRepository(cliente),
       planes: new PrismaPlanRepository(cliente),
-      turnos: new PrismaTurnoRepository(cliente),
       sucursales: new PrismaSucursalRepository(cliente),
       // Los permisos se leen con el cliente global: no necesitan estar dentro de la transacción.
       autorizacion: new AuthorizationService(new PrismaPermisoRepository(prisma)),
       reglasAbono: new PrismaReglaAbonoRepository(prisma),
-      deudas: new PrismaDeudaProductoRepository(cliente),
     });
     const datosPago = {
       organizacionId: usuario.organizacionId,
@@ -167,13 +152,7 @@ export async function registrarPagoAction(
       meses: Number(formData.get("meses")?.toString() || 1),
     };
 
-    // Con productos pendientes incluidos, cobrar las deudas y registrar la
-    // membresía van en una sola transacción: si una falla, la otra no queda hecha.
-    pagos = incluirDeudas && !esPagoConFechaPasada
-      ? await prisma.$transaction((tx) => registrarPagoConDeudas(dependencias(tx), { ...datosPago, incluirDeudas: true }), {
-          timeout: 20000,
-        })
-      : await registrarPago(dependencias(prisma), datosPago);
+    pagos = await registrarPago(dependencias(prisma), datosPago);
   } catch (error) {
     if (
       error instanceof MiembroNoEncontradoError ||
@@ -188,11 +167,7 @@ export async function registrarPagoAction(
       error instanceof FechaPagoInvalidaError ||
       error instanceof MesesInvalidosError ||
       error instanceof MesesRequierenPagoCompletoError ||
-      error instanceof MesesNoDisponiblesError ||
-      error instanceof MontoNoCubreDeudaError ||
-      error instanceof DeudasYaCobradasError ||
-      error instanceof SinTurnoAbiertoError ||
-      error instanceof RolNoAutorizadoCobrarDeudas
+      error instanceof MesesNoDisponiblesError
     ) {
       return { error: error.message };
     }
@@ -202,7 +177,7 @@ export async function registrarPagoAction(
   revalidatePath("/pagos");
   revalidatePath(`/miembros/${miembroId}`);
   revalidatePath(`/miembros/${miembroId}/pagos`);
-  revalidatePath("/caja");
+  revalidatePath("/cobros");
 
   if (origen !== "miembro" && origen !== "caja") {
     redirect(conMensajeOk(`/miembros/${miembroId}`, "Pago registrado."));
@@ -279,7 +254,6 @@ export async function cambiarPlanAction(
           suscripciones: new PrismaSuscripcionRepository(tx),
           miembros: new PrismaMemberRepository(tx),
           planes: new PrismaPlanRepository(tx),
-          turnos: new PrismaTurnoRepository(tx),
           sucursales: new PrismaSucursalRepository(tx),
           autorizacion: new AuthorizationService(new PrismaPermisoRepository(tx)),
           auditoria: new PrismaCambioPlanAuditoriaRepository(tx),
@@ -320,7 +294,7 @@ export async function cambiarPlanAction(
   revalidatePath("/miembros");
   revalidatePath(`/miembros/${miembroId}`);
   revalidatePath(`/miembros/${miembroId}/pagos`);
-  revalidatePath("/caja");
+  revalidatePath("/cobros");
 
   // CambiarPlanConPago ya no genera saldo a favor (ver regla 5 del diseño
   // acordado: el valor no consumido se convierte en días, nunca en

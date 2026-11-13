@@ -31,11 +31,9 @@ function crearDeps(opciones: { pagadoPrevio?: number } = {}) {
       actualizarFechasPago: async () => undefined,
     },
     planes: { buscarPorId: async () => ({ id: "plan1", nombre: "Corporativo", activo: true, precioUSD: 22, diasCiclo: 30, frecuencia: "MENSUAL", permitePagoParcial: true }) },
-    turnos: { buscarAbiertoPorSucursal: async () => ({ id: "turno1" }) },
     sucursales: {},
     autorizacion: { tienePermiso: async () => true },
     reglasAbono: { buscarPorOrganizacionYFrecuencia: async () => null },
-    deudas: { listarPendientesPorMiembro: async () => [] },
   } as unknown as Parameters<typeof cobrarAbonoPendiente>[0];
   return { deps, creados };
 }
@@ -51,11 +49,11 @@ const input = (monto: number) => ({
 });
 
 describe("cobrarAbonoPendiente", () => {
-  test("cobra el saldo exacto ($12 de un plan de $22 con $10 abonados) y registra el pago en el turno", async () => {
+  test("cobra el saldo exacto ($12 de un plan de $22 con $10 abonados) y registra el pago", async () => {
     const { deps, creados } = crearDeps();
     await cobrarAbonoPendiente(deps, input(12));
     expect(creados).toHaveLength(1);
-    expect(creados[0]).toMatchObject({ monto: 12, turnoId: "turno1", miembroId: "m1" });
+    expect(creados[0]).toMatchObject({ monto: 12, miembroId: "m1" });
   });
 
   test("un monto distinto al saldo se rechaza", async () => {
@@ -71,13 +69,13 @@ describe("cobrarAbonoPendiente", () => {
 });
 
 describe("cobrarAbonoPendiente con fecha pasada", () => {
-  test("cobra el saldo con la fecha elegida, fuera de turno, completando el mismo ciclo (sin abrir otro)", async () => {
+  test("cobra el saldo con la fecha elegida, completando el mismo ciclo (sin abrir otro)", async () => {
     const { deps, creados } = crearDeps();
     const fecha = new Date(Date.now() - 1 * DIA);
     await cobrarAbonoPendiente(deps, { ...input(12), fechaCobro: fecha });
 
     expect(creados).toHaveLength(1);
-    expect(creados[0]).toMatchObject({ monto: 12, turnoId: null, fechaPago: fecha, fechaFinCiclo: fin });
+    expect(creados[0]).toMatchObject({ monto: 12, fechaPago: fecha, fechaFinCiclo: fin });
   });
 
 });

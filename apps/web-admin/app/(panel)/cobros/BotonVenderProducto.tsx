@@ -4,25 +4,17 @@ import { useState } from "react";
 import { Button } from "@gym-app/ui/components/Button";
 import type { Producto } from "@gym-app/domain/entities/Producto";
 import type { MetodoPago } from "@gym-app/domain/entities/MetodoPago";
-import type { Miembro } from "@gym-app/domain/entities/Miembro";
 import { ModalVenderProducto } from "./ModalVenderProducto";
-import type { PlanParaModal } from "./SelectorMiembroModal";
-import type { EstadoVenderProducto, EstadoFiarProducto } from "./actions";
+import type { EstadoVenderProducto } from "./actions";
 
 export function BotonVenderProducto({
   accion,
-  accionFiar,
   productos,
   metodosPago,
-  miembros,
-  planes,
 }: {
   accion: (estado: EstadoVenderProducto, formData: FormData) => Promise<EstadoVenderProducto>;
-  accionFiar: (estado: EstadoFiarProducto, formData: FormData) => Promise<EstadoFiarProducto>;
   productos: Producto[];
   metodosPago: MetodoPago[];
-  miembros: Miembro[];
-  planes: PlanParaModal[];
 }) {
   const [modalAbierta, setModalAbierta] = useState(false);
 
@@ -34,11 +26,8 @@ export function BotonVenderProducto({
       {modalAbierta && (
         <ModalVenderProducto
           accion={accion}
-          accionFiar={accionFiar}
           productos={productos}
           metodosPago={metodosPago}
-          miembros={miembros}
-          planes={planes}
           onCerrar={() => setModalAbierta(false)}
         />
       )}

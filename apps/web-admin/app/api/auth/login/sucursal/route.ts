@@ -33,8 +33,7 @@ export async function POST(req: NextRequest) {
     }
 
     // No confiar en el sucursalId que manda el cliente sin validar que
-    // esté entre las que este usuario puede ver (mismo criterio que
-    // /api/caja/ultimo-cierre) — evita que alguien fuerce una sucursal
+    // esté entre las que este usuario puede ver — evita que alguien fuerce una sucursal
     // ajena editando el body del POST.
     const sucursalesVisibles = await obtenerSucursalesVisiblesParaUsuario(
       { sucursales: new PrismaSucursalRepository(prisma), usuarioSucursales: new PrismaUsuarioSucursalRepository(prisma) },

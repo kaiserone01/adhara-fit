@@ -46,7 +46,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
             items={[
               ...(puedeVerEnSala ? [{ href: "/en-sala", label: "En sala", extra: <ContadorEnSala /> }] : []),
               { href: "/miembros", label: "Miembros" },
-              { href: "/caja", label: "Caja" },
+              { href: "/cobros", label: "Cobros" },
               { href: "/productos", label: "Productos" },
               // Planes, Sucursales y Usuarios se administran desde las tabs
               // de Configuraciones (ver diseño acordado) — SOCIO y GERENTE llegan

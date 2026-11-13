@@ -4,7 +4,6 @@ import { IPagoRepository } from "../ports/IPagoRepository";
 import { ISuscripcionRepository } from "../ports/ISuscripcionRepository";
 import { IMemberRepository } from "../ports/IMemberRepository";
 import { IPlanRepository } from "../ports/IPlanRepository";
-import { ITurnoRepository } from "../ports/ITurnoRepository";
 import { ISucursalRepository } from "../ports/ISucursalRepository";
 import { IReglaAbonoRepository } from "../ports/IReglaAbonoRepository";
 import {
@@ -111,7 +110,6 @@ export interface RegistrarPagoDeps {
   suscripciones: ISuscripcionRepository;
   miembros: IMemberRepository;
   planes: IPlanRepository;
-  turnos: ITurnoRepository;
   sucursales: ISucursalRepository;
   autorizacion: IAuthorizationService;
   reglasAbono: IReglaAbonoRepository;
@@ -158,7 +156,7 @@ export interface DatosRegistrarPago {
   // mes el pago debe ser completo (sin abonos), pero puede repartirse en varios métodos.
   meses?: number;
   // Solo con fechaPago pasada: el pago completa el abono pendiente del ciclo abierto (no abre un ciclo nuevo). El cobro
-  // queda fuera de turno. Lo usa "Cobrar deudas".
+  // Lo usa "Cobrar abono".
   completarCicloAbierto?: boolean;
 }
 
@@ -350,8 +348,6 @@ export async function registrarPago(deps: RegistrarPagoDeps, input: DatosRegistr
     await deps.miembros.actualizar(input.organizacionId, input.miembroId, { saldoAFavorUSD: saldoFinal });
   }
 
-  const turnoAbierto = await deps.turnos.buscarAbiertoPorSucursal(input.sucursalId);
-
   // grupoPagoId solo se genera para pagos combinados (2+ líneas) — un pago
   // de una sola línea no necesita correlacionarse con nada.
   const grupoPagoId = input.lineas.length > 1 ? randomUUID() : null;
@@ -361,7 +357,6 @@ export async function registrarPago(deps: RegistrarPagoDeps, input: DatosRegistr
     const pago = await deps.pagos.crear({
       miembroId: input.miembroId,
       sucursalId: input.sucursalId,
-      turnoId: cobroPasado ? null : (turnoAbierto?.id ?? null),
       registradoPorId: input.registradoPorId,
       monto: linea.monto,
       metodo: linea.metodo,
@@ -379,7 +374,7 @@ export async function registrarPago(deps: RegistrarPagoDeps, input: DatosRegistr
 }
 
 // Pago con fecha pasada. Mismo flujo de siempre (líneas, métodos, monto) con una sola variación: la fecha. No se
-// enlaza a ningún turno (no entra en arqueos). Admite abonos.
+// marca como cobro con fecha pasada. Admite abonos.
 // Regularizando (primer pago de un miembro nuevo) el ciclo nuevo reemplaza al anterior:
 // vencimiento = fecha del pago + días del plan. Para un miembro normal el ciclo se suma al
 // vigente en esa fecha, o arranca ese día si ya estaba vencido.
@@ -461,7 +456,6 @@ async function registrarPagoRetroactivo(
       await deps.pagos.crear({
         miembroId: input.miembroId,
         sucursalId: input.sucursalId,
-        turnoId: null,
         registradoPorId: input.registradoPorId,
         monto: linea.monto,
         metodo: linea.metodo,

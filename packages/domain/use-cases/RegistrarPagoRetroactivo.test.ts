@@ -56,7 +56,6 @@ function crearDeps(opciones: { hayActiva?: boolean; vigenteHasta?: Date; permite
       },
     },
     planes: { buscarPorId: async () => ({ id: "plan1", activo: true, precioUSD: 25, diasCiclo: 30, frecuencia: "MENSUAL", permitePagoParcial }) },
-    turnos: { buscarAbiertoPorSucursal: async () => ({ id: "turno-hoy" }) },
     sucursales: {},
     autorizacion: { tienePermiso: async () => true },
     reglasAbono: {
@@ -83,7 +82,7 @@ function input(extra: Partial<DatosRegistrarPago> = {}): DatosRegistrarPago {
 }
 
 describe("registrarPago con fecha pasada", () => {
-  test("usa la fecha elegida, sin turno, con ciclo = fecha + días del plan", async () => {
+  test("usa la fecha elegida, con ciclo = fecha + días del plan", async () => {
     const { deps, pagos, ciclos, fechasMiembro } = crearDeps();
     const fecha = hace(10);
     await registrarPago(deps, input({ fechaPago: fecha, primerPagoDeInscripcion: true }));
@@ -91,7 +90,6 @@ describe("registrarPago con fecha pasada", () => {
     expect(pagos).toHaveLength(1);
     expect(pagos[0]).toMatchObject({
       monto: 25,
-      turnoId: null,
       fechaPago: fecha,
       registradoPorId: "u1",
     });
@@ -174,7 +172,7 @@ describe("registrarPago con fecha pasada", () => {
     expect(creadas).toHaveLength(1);
   });
 
-  test("miembro sin el aviso con ciclo vigente ese día: el ciclo se suma al final del vigente, sin turno", async () => {
+  test("miembro sin el aviso con ciclo vigente ese día: el ciclo se suma al final del vigente", async () => {
     const vigenteHasta = new Date(Date.now() + 5 * DIA);
     const { deps, pagos, extensiones, ciclos, fechasMiembro } = crearDeps({ vigenteHasta });
     const fecha = hace(2);
@@ -183,7 +181,7 @@ describe("registrarPago con fecha pasada", () => {
     fin.setDate(fin.getDate() + 30);
     expect(extensiones).toEqual([fin]);
     expect(ciclos).toEqual([]);
-    expect(pagos[0]).toMatchObject({ turnoId: null, fechaPago: fecha, fechaInicioCiclo: vigenteHasta, fechaFinCiclo: fin });
+    expect(pagos[0]).toMatchObject({ fechaPago: fecha, fechaInicioCiclo: vigenteHasta, fechaFinCiclo: fin });
     expect(fechasMiembro).toEqual([{ pago: fecha, fin }]);
   });
 
@@ -208,7 +206,7 @@ describe("registrarPago con fecha pasada", () => {
         lineas: [{ monto: 12.5, metodo: "Efectivo", metodoPagoId: "mp2", numeroOperacion: null }],
       })
     );
-    expect(pagos[0]).toMatchObject({ monto: 12.5, turnoId: null, fechaPago: fecha, fechaInicioCiclo: fecha });
+    expect(pagos[0]).toMatchObject({ monto: 12.5, fechaPago: fecha, fechaInicioCiclo: fecha });
     expect(creadas).toHaveLength(1);
   });
 
@@ -257,7 +255,6 @@ describe("registrarPago con fecha pasada", () => {
     const { deps, pagos } = crearDeps({});
     await registrarPago(deps, input({ primerPagoDeInscripcion: true }));
     expect(pagos).toHaveLength(1);
-    expect(pagos[0].turnoId).toBeNull();
   });
 
   test("más de 365 días atrás → FechaPagoInvalidaError", async () => {
@@ -265,7 +262,7 @@ describe("registrarPago con fecha pasada", () => {
     await expect(registrarPago(deps, input({ fechaPago: hace(400) }))).rejects.toBeInstanceOf(FechaPagoInvalidaError);
   });
 
-  test("miembro normal: un abono con fecha pasada se acepta, fuera de turno, y el acceso cuenta desde esa fecha", async () => {
+  test("miembro normal: un abono con fecha pasada se acepta, y el acceso cuenta desde esa fecha", async () => {
     const { deps, pagos, creadas } = crearDeps({ hayActiva: false, reglaActiva: true });
     const fecha = hace(2);
     await registrarPago(
@@ -273,7 +270,7 @@ describe("registrarPago con fecha pasada", () => {
       input({ fechaPago: fecha, lineas: [{ monto: 12.5, metodo: "Transferencia", metodoPagoId: "mp1", numeroOperacion: "1" }] })
     );
     expect(pagos).toHaveLength(1);
-    expect(pagos[0]).toMatchObject({ monto: 12.5, turnoId: null, fechaPago: fecha, fechaInicioCiclo: fecha });
+    expect(pagos[0]).toMatchObject({ monto: 12.5, fechaPago: fecha, fechaInicioCiclo: fecha });
     const limite = (creadas[0] as { fechaLimiteAbono: Date }).fechaLimiteAbono;
     expect(limite.getTime() - fecha.getTime()).toBe(15 * DIA);
   });
@@ -304,11 +301,5 @@ describe("registrarPago con fecha pasada", () => {
     const { deps, limites } = crearDeps({ reglaActiva: true });
     await registrarPago(deps, input({ primerPagoDeInscripcion: true }));
     expect(limites[0]).toBeNull();
-  });
-
-  test("una fecha de hoy se trata como pago normal (con turno)", async () => {
-    const { deps, pagos } = crearDeps({});
-    await registrarPago(deps, input({ fechaPago: new Date() }));
-    expect(pagos[0].turnoId).toBe("turno-hoy");
   });
 });

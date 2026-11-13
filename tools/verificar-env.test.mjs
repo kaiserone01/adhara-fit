@@ -25,6 +25,14 @@ test("variable ausente en notación de punto (BEH-S00-005)", () =>
     assert.match(e[0], /NUEVA/);
   }));
 
+test("lee las variables de tools/crear-administrador.mjs (alta provisional del administrador)", () =>
+  con("const a = process.env.DATABASE_URL;", "DATABASE_URL=\nADMIN_CORREO=\n", (r) => {
+    mkdirSync(join(r, "tools"), { recursive: true });
+    writeFileSync(join(r, "tools/crear-administrador.mjs"), "const c = process.env.ADMIN_CORREO;");
+    writeFileSync(join(r, "tools/otra-herramienta.mjs"), "const x = process.env.SOLO_DE_TOOLS;");
+    assert.deepEqual(verificarEnv(r), []);
+  }));
+
 test("variable ausente en notación de corchetes", () =>
   con('const a = process.env["OTRA"]; const b = process.env[\'DATABASE_URL\'];', "DATABASE_URL=\n", (r) => {
     assert.match(verificarEnv(r).join("\n"), /OTRA/);

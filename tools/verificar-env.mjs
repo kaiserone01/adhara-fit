@@ -26,6 +26,9 @@ function recorrer(dir, salida) {
 export function variablesLeidas(raiz) {
   const archivos = [];
   for (const base of ["apps", "packages"]) recorrer(join(raiz, base), archivos);
+  // Alta provisional del administrador (adelanto de S-15): lee ADMIN_* fuera de apps y packages.
+  const alta = join(raiz, "tools/crear-administrador.mjs");
+  if (existsSync(alta)) archivos.push(alta);
   const vistas = new Map();
   for (const a of archivos) {
     const t = readFileSync(a, "utf8");

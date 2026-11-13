@@ -8,6 +8,23 @@ Bitácora de sesiones: la más reciente arriba, solo se añaden entradas. El his
 - **Desplegado:** provisional en Easypanel (`docs/ops/easypanel.md`): imagen del `Dockerfile`, esquema con `prisma db push` al arrancar, alta del primer administrador con `tools/crear-administrador.mjs`.
 - **Preferencia del propietario:** cada código (ADR-nnn, S-nn, REQ…) que se mencione lleva al lado una descripción simple.
 
+## Sesión 2026-11-13 (noche, 21) — Se retira el consentimiento y lo legal del sistema (S-13), por decisión del propietario
+**Qué se hizo**
+- El propietario indicó que el consentimiento de datos personales se firma en contrato físico y que lo legal, las facturas y lo comercial y tributario se manejan por otros canales: el sistema es de apoyo logístico y organizativo. Se retiró todo S-13: pestaña «Textos legales», `/privacidad`, `/libro-de-reclamaciones`, casilla y medio de aceptación del alta, panel de consentimiento de la ficha, filtro «Sin consentimiento» de la lista, casos de uso, entidades, puertos, repositorios Prisma y sus pruebas (6).
+- Esquema: `TextoLegal`, `ConsentimientoMiembro`, los enums `TipoTextoLegal` y `MedioConsentimiento` y las columnas `razonSocial`, `ruc` y `direccion` de `Organizacion` se **conservan marcados «en desuso»**: ya pudieron crearse en la base desplegada y quitarlos con `db push` sin `--accept-data-loss` haría que el contenedor se negara a arrancar si tienen filas. Se eliminan en el paso de limpieza del esquema (con respaldo y aprobación del propietario).
+- Hoja de ruta y `CLAUDE.md`: S-13 queda fuera de alcance. S-12 (tickets y comprobantes) queda sin hacer: comprobantes fiscales fuera de alcance; si el propietario quiere un ticket interno de cobro (sin valor tributario), se pide aparte.
+
+**Qué funcionó**
+- Dominio 309 pruebas (las 6 de consentimiento se retiraron con su código), `tsc` limpio, lint sin errores, build correcto; ya no queda ninguna referencia a consentimiento ni a textos legales en `apps` ni `packages` (salvo el esquema en desuso).
+
+**Qué no funcionó / a tener en cuenta**
+- Los reportes imprimibles (S-14) siguen con su encabezado de negocio (nombre) y la fecha; no tenían nada legal.
+- La entrada anterior «noche, 16» del handoff describe lo que ya se retiró: queda como historial.
+
+**Siguiente**
+1. Probar el despliegue (cambio de plan, eliminar y restaurar, reportes, límites de check-in y login, `/api/salud`) y hacer un respaldo.
+2. Marca y diseño (S-19) cuando el propietario lo indique; APK al final; limpieza del esquema (incluye las tablas en desuso) con respaldo y aprobación.
+
 ## Sesión 2026-11-13 (noche, 20) — Tramo 6 (parte 3): datos iniciales (S-15, versión Prisma)
 **Qué se hizo**
 - `tools/sembrar-datos-iniciales.mjs` (+4 pruebas): crea planes «1 mes», «2 meses» y «3 meses» (30, 60 y 90 días; S/ 120, 200 y 280), métodos de pago (Yape, BCP por transferencia y efectivo) y los entrenadores María Aguilera, José Montesino, Joa Bonillo y Jesús Bonillo. Cada bloque solo se crea si su tabla está vacía; nunca modifica ni borra filas; todo en una transacción; si no hay organización no hace nada. Se copia en el `Dockerfile` y se ejecuta en `docker-entrypoint.sh` justo después del alta del administrador (si falla, avisa y el servidor arranca igual).

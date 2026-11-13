@@ -18,7 +18,7 @@ model Organizacion {
   slug      String   @unique
   plan      String   @default("basico")
   createdAt DateTime @default(now())
-  // S-13: datos del negocio para el aviso del Libro de Reclamaciones (se editan en «Textos legales»).
+  // En desuso (S-13 retirado): sin pantalla que los edite.
   razonSocial String?
   ruc         String?
   direccion   String?
@@ -193,7 +193,9 @@ model Miembro {
   @@index([estado, fechaVencimiento]) // S-14: morosos y por vencer
 }
 
-// S-13: textos legales versionados e inmutables (el gimnasio publica el texto que revisó su abogado).
+// EN DESUSO (S-13 retirado por el propietario el 2026-11-13: el consentimiento va por contrato físico y lo legal
+// y tributario se maneja fuera del sistema). Se conservan TextoLegal, ConsentimientoMiembro y las columnas
+// razonSocial, ruc y direccion de Organizacion para no perder datos con `db push`; se eliminan en un paso aparte.
 enum TipoTextoLegal {
   CONSENTIMIENTO
   POLITICA_PRIVACIDAD

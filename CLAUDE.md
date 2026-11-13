@@ -31,7 +31,7 @@ El repositorio base (Repo A) ya está importado y funcionaba; solo falta quitarl
 ## 3. Prohibiciones
 - Borrar pruebas para que pasen, desactivar reglas de lint, `any` como atajo, imprimir secretos.
 - `drizzle-kit migrate|push|drop` o `prisma migrate|db push|migrate reset` contra una base real. Excepción vigente: el `prisma db push` provisional del arranque del contenedor (`docker-entrypoint.sh`), que no usa `--accept-data-loss`.
-- Fuera de alcance: SUNAT, WhatsApp, `kiosk-host` (`.exe`), sitio público, multi-sede visible. Dentro de alcance (ADR-021): vitrina de TV y check-in en smart-TV con teclado numérico USB.
+- Fuera de alcance: consentimiento de datos, textos legales, Libro de Reclamaciones y comprobantes (decisión del propietario, 2026-11-13: el sistema es de apoyo logístico y organizativo; lo legal, tributario y comercial va por otros canales), SUNAT, WhatsApp, `kiosk-host` (`.exe`), sitio público, multi-sede visible. Dentro de alcance (ADR-021): vitrina de TV y check-in en smart-TV con teclado numérico USB.
 - Dependencias nuevas: justifícalas en el handoff (una línea).
 
 ## 4. Handoff (bitácora de sesiones)

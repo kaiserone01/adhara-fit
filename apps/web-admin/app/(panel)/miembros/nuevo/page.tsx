@@ -10,7 +10,6 @@ import { obtenerEntrenadoresActivos } from "../obtenerEntrenadoresActivos";
 import { FormularioMiembro } from "../FormularioMiembro";
 import { crearMiembroAction } from "../actions";
 import { PageHeader } from "@gym-app/ui/components/PageHeader";
-import { PrismaTextoLegalRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaConsentimientoRepository";
 
 export default async function PaginaNuevoMiembro() {
   const sesion = await obtenerUsuarioDeSesionActual();
@@ -23,7 +22,6 @@ export default async function PaginaNuevoMiembro() {
     listarMetodosPagoActivos({ metodosPago: new PrismaMetodoPagoRepository(prisma) }, usuario.organizacionId),
   ]);
   const entrenadores = await obtenerEntrenadoresActivos();
-  const textoConsentimiento = await new PrismaTextoLegalRepository(prisma).vigente(usuario.organizacionId, "CONSENTIMIENTO");
   const sucursalActiva = sucursales.find((s) => s.id === sucursalActivaId);
 
   return (
@@ -41,7 +39,6 @@ export default async function PaginaNuevoMiembro() {
         metodosPago={metodosPago}
         miembroId={null}
         ultimosCiclos={[]}
-        consentimiento={textoConsentimiento ? { version: textoConsentimiento.version, contenido: textoConsentimiento.contenido } : null}
       />
     </div>
   );

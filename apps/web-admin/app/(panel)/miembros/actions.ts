@@ -28,11 +28,6 @@ import { calcularCambiosFechas } from "@gym-app/domain/utils/cambiosFechasFicha"
 import { inicioDelDiaLima } from "@gym-app/domain/utils/fechaLima";
 import { PrismaSucursalRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSucursalRepository";
 import { PrismaUnidadDeTrabajo } from "@gym-app/infrastructure/persistence/prisma/PrismaUnidadDeTrabajo";
-import {
-  PrismaConsentimientoRepository,
-  PrismaTextoLegalRepository,
-} from "@gym-app/infrastructure/persistence/prisma/PrismaConsentimientoRepository";
-import { registrarConsentimiento } from "@gym-app/domain/use-cases/Consentimiento";
 import { storageR2 } from "@/lib/storageR2";
 import {
   registrarPago,
@@ -152,12 +147,6 @@ export async function crearMiembroAction(
   const errorEntrenador = await validarEntrenadorDeMiembro(formData.get("entrenadorId")?.toString() || null);
   if (errorEntrenador) return { error: errorEntrenador };
 
-  // S-13: si hay un texto de consentimiento publicado, el alta exige que el socio lo haya aceptado.
-  const textoConsentimiento = await new PrismaTextoLegalRepository(prisma).vigente(usuario.organizacionId, "CONSENTIMIENTO");
-  if (textoConsentimiento && formData.get("consentimientoAceptado") !== "on") {
-    return { error: "Marca que el socio aceptó el consentimiento de datos personales." };
-  }
-
   const fotoUrl = await guardarFoto(formData.get("foto"));
 
   let miembro;
@@ -186,22 +175,6 @@ export async function crearMiembroAction(
       return { error: error.message };
     }
     throw error;
-  }
-
-  if (textoConsentimiento) {
-    await registrarConsentimiento(
-      {
-        textos: new PrismaTextoLegalRepository(prisma),
-        consentimientos: new PrismaConsentimientoRepository(prisma),
-        miembros: new PrismaMemberRepository(prisma),
-      },
-      {
-        organizacionId: usuario.organizacionId,
-        miembroId: miembro.id,
-        medio: formData.get("consentimientoMedio")?.toString() ?? "",
-        registradoPorId: usuario.id,
-      }
-    );
   }
 
   // El miembro ya quedó creado en este punto — un error acá abajo no lo

@@ -1,8 +1,10 @@
+import { RelojLima } from "@gym-app/ui/components/RelojLima";
+
 // Mismo esquema visual del nombre del gym que la pantalla de login
 // (ver apps/web-admin/app/login/page.tsx) — acá en tamaño reducido, arriba
-// del menú del sidebar, con la sucursal activa de la sesión debajo.
+// del menú del sidebar, con la fecha y hora de Lima en vivo debajo.
 // Logo horizontal del kit de marca para fondo oscuro (S-19).
-export function EncabezadoSidebar({ sucursalNombre }: { sucursalNombre: string }) {
+export function EncabezadoSidebar() {
   return (
     <div className="flex flex-col items-center gap-2 text-center">
       <div>
@@ -20,12 +22,7 @@ export function EncabezadoSidebar({ sucursalNombre }: { sucursalNombre: string }
           Gym · Panel de administración
         </div>
       </div>
-      <div
-        className="mt-1 rounded px-2 py-1 text-xs font-medium"
-        style={{ background: "var(--gx-surface-2)", color: "var(--gx-ink)" }}
-      >
-        {sucursalNombre}
-      </div>
+      <RelojLima integrado />
     </div>
   );
 }

@@ -23,6 +23,18 @@ Bitácora de sesiones: la más reciente arriba, solo se añaden entradas. El his
 1. Tramo 3: DNI/CE/pasaporte (S-06), entrenadores como registro propio (S-18), planes de 1, 2 y 3 meses (S-04) y pago único/cambio de plan (S-07).
 2. Purga de `organizacionId` y reinicio limpio de la base junto con S-15.
 
+## Sesión 2026-11-13 (diseño, 2) — Fecha y hora en el sidebar
+**Qué se hizo**
+- La fecha y hora de Lima pasaron del centro de la barra superior al encabezado del sidebar, en el lugar donde estaba el nombre de la sucursal («Local»), que se quitó de ahí. `RelojLima` (`packages/ui`) gana la prop `integrado`; `EncabezadoSidebar` ya no recibe `sucursalNombre` y el layout del panel dejó de consultar la sucursal activa. En mobile (sin sidebar) sigue el reloj flotante.
+
+**Qué funcionó**
+- `tsc --noEmit` de web-admin sin errores sobre el `main` actualizado; empujado directo a `main` como avance rápido.
+
+**Qué no funcionó / pendiente**
+- No se revisó a ojo en el navegador. El nombre de la sucursal ya no se ve en el panel (decisión del propietario: un solo local).
+- Con el checkout principal con cambios sin commitear de otra sesión, el cambio se hizo en una copia limpia temporal de `origin/main` para no subir trabajo ajeno.
+
+
 ## Sesión 2026-11-13 (noche, 7) — Tramo 2 (parte 2): un solo rol de administrador (S-23)
 **Qué se hizo**
 - Fuera roles y permisos del código: `AuthorizationService`, `IAuthorizationService`, `IPermisoRepository` y `PrismaPermisoRepository`, `ActualizarPermisosUsuario`, `EliminarUsuarioAdmin`, `AsignarSucursalesAUsuario`, la entidad `Permiso`, `FormularioPermisos`, `lib/permisoEnSala` y `lib/permisoCheckin`, y `scripts/verificar-autorizacion.ts`. `UsuarioAdmin` ya no tiene `rol`. Se quitaron todas las comprobaciones de permiso o de «solo el socio» en casos de uso, acciones, rutas y páginas: toda sesión válida de un administrador activo accede a todo (En sala, Configuraciones, Checkin, Vitrina, historial de sala, etc.). El menú ya no oculta entradas.

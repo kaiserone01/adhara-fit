@@ -1,8 +1,6 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
 import { obtenerUsuarioDeSesionActual } from "@/lib/sesion";
-import { PrismaSucursalRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSucursalRepository";
 import { Sidebar } from "@gym-app/ui/components/Sidebar";
 import { FeedbackProvider } from "@gym-app/ui/components/FeedbackOverlay";
 import { FeedbackDesdeUrl } from "@gym-app/ui/components/FeedbackDesdeUrl";
@@ -18,26 +16,23 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   if (!sesion) {
     redirect("/login");
   }
-  const { usuario, sucursalActivaId } = sesion;
-
-  const sucursalActiva = await new PrismaSucursalRepository(prisma).buscarPorId(
-    usuario.organizacionId,
-    sucursalActivaId
-  );
-
+  const { usuario } = sesion;
 
   return (
     <FeedbackProvider>
       <Suspense fallback={null}>
         <FeedbackDesdeUrl />
       </Suspense>
-      <RelojLima />
+      {/* En escritorio el reloj vive en el encabezado del sidebar; el flotante solo se usa en mobile. */}
+      <div className="lg:hidden">
+        <RelojLima />
+      </div>
       <ProveedorEnSala>
       <div className="marca-agua-pagina flex min-h-dvh flex-col lg:flex-row" style={{ background: "var(--gx-ground)" }}>
         <AvisoCobros />
         <div className="hidden lg:block print:hidden">
           <Sidebar
-            encabezado={<EncabezadoSidebar sucursalNombre={sucursalActiva?.nombre ?? "—"} />}
+            encabezado={<EncabezadoSidebar />}
             items={[
               { href: "/en-sala", label: "En sala", extra: <ContadorEnSala /> },
               { href: "/miembros", label: "Miembros" },

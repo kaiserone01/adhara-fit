@@ -15,7 +15,6 @@ export function SelectorMetodoPago({
   grande = false,
   ocultarNumeroOperacion = false,
   compacto = false,
-  enFila = false,
   numeroOperacion: numeroOperacionProp,
   onCambioNumeroOperacion: onCambioNumeroOperacionProp,
 }: {
@@ -43,8 +42,6 @@ export function SelectorMetodoPago({
   ocultarNumeroOperacion?: boolean;
   // Íconos y espaciados más chicos (mismo tamaño de texto) para que el asistente de Caja no haga scroll.
   compacto?: boolean;
-  // Cobro de Caja: los métodos y, en la última casilla de la misma fila, el número de operación (solo si el método lo pide).
-  enFila?: boolean;
   numeroOperacion?: string;
   onCambioNumeroOperacion?: (valor: string) => void;
 }) {
@@ -79,7 +76,7 @@ export function SelectorMetodoPago({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className={enFila ? "grid grid-cols-2 gap-2 sm:grid-cols-4" : "grid grid-cols-2 gap-2 sm:grid-cols-3"}>
+      <div className={"grid grid-cols-2 gap-2 sm:grid-cols-3"}>
         {metodos.map((m) => {
           const seleccionado = metodoId === m.id;
           // El ojo abre los datos para el pago (celular, cuenta, QR); el efectivo no tiene datos que mostrar.
@@ -90,14 +87,14 @@ export function SelectorMetodoPago({
                 type="button"
                 onClick={() => setMetodoId(m.id)}
                 aria-pressed={seleccionado}
-                className={`flex w-full items-center gap-2.5 rounded-lg border-2 text-left transition-colors duration-150 active:scale-95 ${compacto || enFila ? "min-h-12 px-2.5 py-1.5" : "min-h-14 px-3 py-2"} ${conOjo ? "pr-10" : ""}`}
+                className={`flex w-full items-center gap-2.5 rounded-lg border-2 text-left transition-colors duration-150 active:scale-95 ${compacto ? "min-h-12 px-2.5 py-1.5" : "min-h-14 px-3 py-2"} ${conOjo ? "pr-10" : ""}`}
                 style={
                   seleccionado
                     ? { borderColor: "var(--gx-accent)", background: "color-mix(in srgb, var(--gx-accent) 12%, transparent)" }
                     : { borderColor: "var(--gx-field-edge)" }
                 }
               >
-                <LogoMetodo metodo={m} className={compacto || enFila ? "h-8 w-8" : "h-10 w-10"} />
+                <LogoMetodo metodo={m} className={compacto ? "h-8 w-8" : "h-10 w-10"} />
                 <span className="flex min-w-0 flex-col">
                   <span className={`${textoNombre} truncate font-semibold`} style={{ color: "var(--gx-ink)" }}>
                     {nombreVisibleMetodo(m)}
@@ -123,12 +120,9 @@ export function SelectorMetodoPago({
           );
         })}
 
-        {enFila && campoOperacion && (
-          <CampoNumeroOperacion form={idFormulario} value={numeroOperacion} onChange={setNumeroOperacion} compacto />
-        )}
       </div>
 
-      {!enFila && campoOperacion && (
+      {campoOperacion && (
         <CampoNumeroOperacion form={idFormulario} value={numeroOperacion} onChange={setNumeroOperacion} />
       )}
 

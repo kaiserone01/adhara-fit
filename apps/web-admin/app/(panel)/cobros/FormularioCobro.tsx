@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { formatearSoles } from "@gym-app/domain/utils/formatearSoles";
 import { diaLima, estaVigente, sumarDiasCalendario } from "@gym-app/domain/utils/vencimiento";
@@ -39,6 +39,7 @@ export function FormularioCobro({
   onRegistrado,
   hoy,
   onPlanCambiado,
+  cabecera,
 }: {
   miembro: MiembroConPlan;
   planes: PlanParaModal[];
@@ -50,6 +51,8 @@ export function FormularioCobro({
   hoy?: Date;
   // El cambio de plan ya cobró la diferencia: quien usa el formulario cierra o recarga.
   onPlanCambiado?: () => void;
+  // Se muestra arriba de la columna izquierda (la tarjeta del socio).
+  cabecera?: ReactNode;
 }) {
   const { mostrarError, mostrarExito } = useFeedback();
   const [estado, enviar, enviando] = useActionState(accion, {});
@@ -91,7 +94,7 @@ export function FormularioCobro({
 
   return (
     <>
-      <form action={enviar} className="flex flex-col gap-4 text-base">
+      <form action={enviar} className="grid gap-4 text-base lg:grid-cols-2 lg:items-start lg:gap-6">
         <input type="hidden" name="miembroId" value={miembro.id} />
         <input type="hidden" name="planId" value={plan?.id ?? ""} />
         <input type="hidden" name="origen" value={origen} />
@@ -106,6 +109,9 @@ export function FormularioCobro({
           ])}
         />
 
+        {/* Izquierda: a quién se le cobra y qué. */}
+        <div className="flex min-w-0 flex-col gap-4">
+        {cabecera}
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl p-4" style={{ background: "var(--gx-surface-2)" }}>
           <div className="min-w-0">
             <p className="text-sm" style={{ color: "var(--gx-muted)" }}>
@@ -175,15 +181,25 @@ export function FormularioCobro({
           </div>
         )}
 
-        <div className="max-w-xs">
-          <InputFecha label="Fecha del pago" value={fecha} max={hoyISO} onChange={(f) => setFecha(f || hoyISO)} />
         </div>
 
-        <SelectorMetodoPago metodos={metodosPago} onCambio={setSeleccion} enFila />
+        {/* Derecha: cómo y cuándo se paga. */}
+        <div className="flex min-w-0 flex-col gap-4">
+          <div className="max-w-xs">
+            <InputFecha label="Fecha del pago" value={fecha} max={hoyISO} onChange={(f) => setFecha(f || hoyISO)} />
+          </div>
 
-        <Button type="submit" disabled={!puedeEnviar || enviando}>
-          {enviando ? "Registrando..." : `Registrar pago de ${formatearSoles(total)}`}
-        </Button>
+          <section className="flex flex-col gap-2 rounded-xl border p-3" style={{ borderColor: "var(--gx-edge)" }}>
+            <h4 className="text-sm font-medium" style={{ color: "var(--gx-muted)" }}>
+              Método de pago
+            </h4>
+            <SelectorMetodoPago metodos={metodosPago} onCambio={setSeleccion} compacto />
+          </section>
+
+          <Button type="submit" className="min-h-12 text-base" disabled={!puedeEnviar || enviando}>
+            {enviando ? "Registrando..." : `Registrar pago de ${formatearSoles(total)}`}
+          </Button>
+        </div>
       </form>
 
       {cambiandoPlanVigente && puedeCambiarPlanAqui && hoy && miembro.plan && miembro.fechaVencimiento && (

@@ -53,30 +53,6 @@ export function ModalRegistrarPagoCaja({
         {!elegido && <BuscadorMiembro miembros={miembros} planes={planes} onSeleccionar={setElegido} grande />}
 
         {elegido && (
-          <>
-            <div className="flex items-center gap-3 rounded-xl px-3 py-2" style={{ background: "var(--gx-surface-2)" }}>
-              <Avatar fotoUrl={elegido.fotoUrl} nombre={elegido.nombre} tamano={40} />
-              <p className="min-w-0 flex-1 truncate">
-                <span className="font-semibold" style={{ color: "var(--gx-ink)" }}>
-                  {elegido.nombre}
-                </span>
-                <span className="text-sm" style={{ color: "var(--gx-muted)" }}>
-                  {" · "}
-                  {elegido.documento}
-                </span>
-              </p>
-              {!miembroInicialId && (
-                <button
-                  type="button"
-                  onClick={() => setElegido(null)}
-                  className="shrink-0 rounded-md px-2 py-1 text-sm font-medium transition-colors hover:bg-[var(--gx-surface)]"
-                  style={{ color: "var(--gx-accent)" }}
-                >
-                  Cambiar socio
-                </button>
-              )}
-            </div>
-
             <FormularioCobro
               key={elegido.id}
               miembro={elegido}
@@ -87,8 +63,31 @@ export function ModalRegistrarPagoCaja({
               onRegistrado={alRegistrar}
               hoy={hoy}
               onPlanCambiado={alRegistrar}
+              cabecera={
+              <div className="flex items-center gap-3 rounded-xl px-3 py-2" style={{ background: "var(--gx-surface-2)" }}>
+                <Avatar fotoUrl={elegido.fotoUrl} nombre={elegido.nombre} tamano={40} />
+                <p className="min-w-0 flex-1 truncate">
+                  <span className="font-semibold" style={{ color: "var(--gx-ink)" }}>
+                    {elegido.nombre}
+                  </span>
+                  <span className="text-sm" style={{ color: "var(--gx-muted)" }}>
+                    {" · "}
+                    {elegido.documento}
+                  </span>
+                </p>
+                {!miembroInicialId && (
+                  <button
+                    type="button"
+                    onClick={() => setElegido(null)}
+                    className="shrink-0 rounded-md px-2 py-1 text-sm font-medium transition-colors hover:bg-[var(--gx-surface)]"
+                    style={{ color: "var(--gx-accent)" }}
+                  >
+                    Cambiar socio
+                  </button>
+                )}
+              </div>
+              }
             />
-          </>
         )}
       </ColumnaPrincipal>
     </MarcoAsistente>

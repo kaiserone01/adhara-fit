@@ -3,37 +3,11 @@ export function CampoNumeroOperacion({
   value,
   onChange,
   form,
-  compacto = false,
 }: {
   value: string;
   onChange: (valor: string) => void;
   form?: string;
-  /** Casilla de una celda de la fila de métodos: ocupa el ancho de la celda. */
-  compacto?: boolean;
 }) {
-  if (compacto) {
-    return (
-      <label className="flex flex-col justify-center gap-0.5">
-        <span className="text-xs font-medium" style={{ color: "var(--gx-muted)" }}>
-          N.º de operación (4 últimos dígitos)
-        </span>
-        <input
-          form={form}
-          required
-          maxLength={4}
-          pattern="[0-9]{4}"
-          inputMode="numeric"
-          autoComplete="off"
-          placeholder="0000"
-          value={value}
-          onChange={(e) => onChange(e.target.value.replace(/D/g, ""))}
-          className="h-10 w-full rounded-lg border-2 pl-[0.3em] text-center text-lg font-bold tabular-nums tracking-[0.3em] placeholder:opacity-30 gx-campo"
-          style={value.length === 4 ? { borderColor: "var(--gx-accent)" } : undefined}
-        />
-      </label>
-    );
-  }
-
   return (
     <label className="flex flex-col gap-1.5">
       <span className="flex items-baseline justify-between gap-2">

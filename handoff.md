@@ -8,6 +8,22 @@ Bitácora de sesiones: la más reciente arriba, solo se añaden entradas. El his
 - **Desplegado:** provisional en Easypanel (`docs/ops/easypanel.md`): imagen del `Dockerfile`, esquema con `prisma db push` al arrancar, alta del primer administrador con `tools/crear-administrador.mjs`.
 - **Preferencia del propietario:** cada código (ADR-nnn, S-nn, REQ…) que se mencione lleva al lado una descripción simple.
 
+## Sesión 2026-11-13 (noche, 25) — Cobro en dos columnas y diagnóstico del APK
+**Qué se hizo**
+- **Cobro (`FormularioCobro`) en dos columnas:** a la izquierda el socio (tarjeta compacta que pasa por la nueva prop `cabecera`) y el resumen «Total a cobrar» con «Cambiar plan»; a la derecha la fecha, el bloque «Método de pago» con su título y, al final, el botón «Registrar pago de S/ X». El número de operación sale **debajo** de los métodos y solo con Yape o BCP (con efectivo desaparece); se retiró la variante en la cuarta casilla de la fila (`enFila`) y `CampoNumeroOperacion` volvió a su versión anterior. El ojo del método seleccionado se mantiene.
+- **APK:** el registro que falló mostraba el mensaje antiguo del workflow («Falta la variable CHECKIN_API_URL del repositorio»), es decir, se volvió a ejecutar una corrida anterior (Re-run) y no una nueva. El workflow vigente en `main` ya acepta `CHECKIN_API_URL` como variable o secret **del repositorio**; hay que lanzar una corrida nueva (Actions → apk → Run workflow).
+
+**Qué funcionó**
+- `tsc`, lint y build sin errores.
+
+**Qué no funcionó / a tener en cuenta**
+- `CHECKIN_API_URL` en las variables de entorno de Easypanel no influye en la compilación del APK (es otro lugar); para el APK solo cuentan los Secrets/Variables del repositorio en GitHub. No sirven los de un Environment.
+- No se probó el cobro en navegador.
+
+**Siguiente**
+1. Lanzar el workflow del APK de nuevo y revisar el mensaje si vuelve a fallar.
+2. Probar el cobro en el despliegue.
+
 ## Sesión 2026-11-13 (noche, 24) — Calendario centrado, eliminación definitiva en un paso, ficha con «Guardar y cobrar», cobro rehecho
 **Qué se hizo**
 - **Calendario centrado:** `InputFecha` abre el selector como diálogo centrado sobre la pantalla (portal en `document.body` con fondo oscuro; tocar fuera o Esc lo cierra), en vez de desplegarse hacia abajo. Afecta a todos los campos de fecha.

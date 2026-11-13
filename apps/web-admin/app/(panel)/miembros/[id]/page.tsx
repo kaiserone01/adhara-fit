@@ -60,9 +60,20 @@ export default async function PaginaEditarMiembro({ params }: { params: Promise<
   ]);
   const entrenadores = await obtenerEntrenadoresActivos();
 
-  // Con la membresía vigente, el plan no se cambia gratis desde la ficha (el cambio de plan es S-07).
-  const tieneCicloVigente = estaVigente(miembro.fechaVencimiento, new Date());
-
+  // Cambio de plan a mitad de ciclo (S-07): solo con la membresía vigente y un plan asignado; «hoy» lo fija el servidor.
+  const ahora = new Date();
+  const planActual = planes.find((p) => p.id === miembro.planId);
+  const cambioPlan =
+    miembro.fechaVencimiento && planActual && estaVigente(miembro.fechaVencimiento, ahora)
+      ? {
+          hoy: ahora,
+          vencimiento: miembro.fechaVencimiento,
+          diasCicloActual: planActual.diasCiclo,
+          planes: planes
+            .filter((p) => p.activo)
+            .map((p) => ({ id: p.id, nombre: p.nombre, precioUSD: p.precioUSD, diasCiclo: p.diasCiclo })),
+        }
+      : null;
 
   // Últimos 5 ciclos con datos de rango — listarPagos ya devuelve los
   // pagos ordenados por fechaPago desc (ver PrismaPagoRepository), así
@@ -89,7 +100,7 @@ export default async function PaginaEditarMiembro({ params }: { params: Promise<
         metodosPago={metodosPago}
         miembroId={id}
         ultimosCiclos={ultimosCiclos}
-        tieneCicloVigente={tieneCicloVigente}
+        cambioPlan={cambioPlan}
         totalPagos={pagos.length}
         valoresIniciales={{
           nombre: miembro.nombre,

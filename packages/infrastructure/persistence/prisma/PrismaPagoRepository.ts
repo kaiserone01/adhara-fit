@@ -11,6 +11,7 @@ type FilaPago = {
   metodo: string;
   metodoPagoId: string | null;
   numeroOperacion: string | null;
+  creadoEn: Date;
   fechaPago: Date;
   fechaInicioCiclo: Date | null;
   fechaFinCiclo: Date | null;
@@ -35,6 +36,7 @@ function mapear(pago: FilaPago): Pago {
     metodo: pago.metodo,
     metodoPagoId: pago.metodoPagoId,
     numeroOperacion: pago.numeroOperacion,
+    creadoEn: pago.creadoEn,
     fechaPago: pago.fechaPago,
     fechaInicioCiclo: pago.fechaInicioCiclo,
     fechaFinCiclo: pago.fechaFinCiclo,

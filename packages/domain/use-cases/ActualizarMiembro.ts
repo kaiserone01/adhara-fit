@@ -1,5 +1,4 @@
 import { IMemberRepository } from "../ports/IMemberRepository";
-import { IPlanRepository } from "../ports/IPlanRepository";
 import { ISuscripcionRepository } from "../ports/ISuscripcionRepository";
 import { ISucursalRepository } from "../ports/ISucursalRepository";
 import { Miembro, CambiosMiembro } from "../entities/Miembro";
@@ -11,6 +10,9 @@ import { normalizarDocumento, requiereCodigoSocio, validarDocumento } from "../u
 import { conCodigoSocio } from "./AsignarCodigoSocio";
 
 export { MiembroFueraDeSucursalError, DocumentoDuplicadoError, DocumentoInvalidoError };
+
+// El plan no se cambia desde la ficha (S-07): lo hace `cambiarPlan`, que valora lo no consumido y cobra la diferencia.
+export type CambiosMiembroFicha = Omit<CambiosMiembro, "planId">;
 
 export class MiembroNoEncontradoError extends Error {
   constructor() {
@@ -33,11 +35,10 @@ export class FechasIncoherentesError extends Error {
 export async function actualizarMiembro(
   deps: {
     miembros: IMemberRepository;
-    planes: IPlanRepository;
     suscripciones: ISuscripcionRepository;
     sucursales: ISucursalRepository;
   },
-  input: { organizacionId: string; id: string; sucursalActivaId: string; cambios: CambiosMiembro }
+  input: { organizacionId: string; id: string; sucursalActivaId: string; cambios: CambiosMiembroFicha }
 ): Promise<Miembro> {
   const antes = await deps.miembros.buscarPorId(input.organizacionId, input.id);
   if (!antes) {
@@ -69,9 +70,6 @@ export async function actualizarMiembro(
   delete cambios.codigoSocio;
   const necesitaCodigo = cambiaDocumento && requiereCodigoSocio(tipoFinal) && antes.codigoSocio === null;
 
-  const cambiaDePlan =
-    input.cambios.planId !== undefined && input.cambios.planId !== null && input.cambios.planId !== antes.planId;
-
   // Ajuste manual de las fechas de pago y vencimiento (cualquier miembro, p. ej. para corregir un error): se mantiene en
   // sync con la Suscripcion y con el fin del ciclo de sus pagos (nunca por separado) y apaga el aviso "Por regularizar".
   // fechaUltimoPago null = vaciarla; fechaVencimiento ausente/null = sin cambio (un vencimiento no se vacía).
@@ -95,13 +93,12 @@ export async function actualizarMiembro(
 
   // Ajuste manual de las fechas desde la ficha: pasa por fijarVencimiento, igual que el cobro y la anulación, para que
   // Miembro.fechaVencimiento y Suscripcion.fin sigan siendo siempre la misma fecha.
-  // Cambiar de plan con un vencimiento ya registrado también pasa por ahí, para que la suscripción siga al plan.
-  if ((cambiaFechas || cambiaDePlan) && vencimientoFinal) {
+  if (cambiaFechas && vencimientoFinal) {
     const dia = (f: Date) => diaLima(f);
     const inicio = pagoFinal && pagoFinal.getTime() < vencimientoFinal.getTime() ? dia(pagoFinal) : null;
     await fijarVencimiento(deps, {
       miembroId: input.id,
-      planId: cambiaDePlan ? (input.cambios.planId as string) : antes.planId,
+      planId: antes.planId,
       inicio,
       fin: dia(vencimientoFinal),
       fechaUltimoPago: pagoFinal ? dia(pagoFinal) : null,

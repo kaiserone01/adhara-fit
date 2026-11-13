@@ -5,13 +5,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { obtenerUsuarioDeSesionActual } from "@/lib/sesion";
-import { PrismaPagoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPagoRepository";
-import { PrismaSuscripcionRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSuscripcionRepository";
-import { PrismaMemberRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaMemberRepository";
-import { PrismaPlanRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPlanRepository";
-import { PrismaSucursalRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSucursalRepository";
 import { PrismaUnidadDeTrabajo } from "@gym-app/infrastructure/persistence/prisma/PrismaUnidadDeTrabajo";
-import { PrismaCambioPlanAuditoriaRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaCambioPlanAuditoriaRepository";
 import { conMensajeOk } from "../redirectConMensaje";
 import {
   registrarPago,
@@ -26,17 +20,19 @@ import {
   MesesInvalidosError,
 } from "@gym-app/domain/use-cases/RegistrarPago";
 import {
-  cambiarPlanConPago,
+  cambiarPlan,
   MiembroNoEncontradoError as MiembroNoEncontradoErrorCambio,
   PlanNoEncontradoError as PlanNoEncontradoErrorCambio,
   PlanInactivoError as PlanInactivoErrorCambio,
+  PlanIgualError,
   SinCicloVigenteError,
+  MiembroSinPlanError,
+  CambioDesactualizadoError,
   MetodoPagoRequeridoError,
-  EntrenadorRequeridoError,
-  PlanCortesiaConTiempoRestanteError,
-  LineasDePagoInvalidasError as LineasDePagoInvalidasErrorCambio,
-  MontoLineasNoCubreObjetivoError,
-} from "@gym-app/domain/use-cases/CambiarPlanConPago";
+  CobroEnConflictoError,
+  CobroAnuladoError,
+  CobroDuplicadoError,
+} from "@gym-app/domain/use-cases/CambiarPlan";
 
 export interface EstadoFormularioPago {
   error?: string;
@@ -139,12 +135,29 @@ export async function registrarPagoAction(
 
 export interface EstadoCambioPlan {
   error?: string;
-  // Presente solo cuando origen === "caja" (ver más abajo) — el wizard de
-  // Caja usa esto para cerrar el modal sin navegar, en vez del redirect a
-  // /miembros que usa el origen por defecto (ficha del miembro).
+  // Éxito: el formulario sigue montado y quien lo usa decide cómo seguir (cambiarPlanAction nunca redirige).
   ok?: string;
-  diferencia?: number;
-  saldoAFavorGenerado?: number;
+  // Nuevo vencimiento (ISO); solo junto con `ok`.
+  vencimiento?: string;
+}
+
+// Los únicos campos que acepta el cambio de plan (S-07); cualquier otro se rechaza.
+const CAMPOS_CAMBIO_PLAN = new Set([
+  "miembroId",
+  "planNuevoId",
+  "montoEsperado",
+  "vencimientoEsperado",
+  "metodo",
+  "metodoPagoId",
+  "numeroOperacion",
+  "cobroId",
+]);
+
+// Importe «123.45» → número; cualquier otra cosa → null.
+function leerImporte(valor: FormDataEntryValue | null): number | null {
+  const texto = valor?.toString().trim() ?? "";
+  if (!/^[0-9]+(\.[0-9]{1,2})?$/.test(texto)) return null;
+  return Number(texto);
 }
 
 export async function cambiarPlanAction(
@@ -155,68 +168,48 @@ export async function cambiarPlanAction(
   if (!sesion) redirect("/login");
   const { usuario, sucursalActivaId } = sesion;
 
+  // Next agrega campos internos `$ACTION_*` al formulario; el resto debe ser exactamente el contrato.
+  for (const campo of formData.keys()) {
+    if (!campo.startsWith("$ACTION") && !CAMPOS_CAMBIO_PLAN.has(campo)) {
+      return { error: "El formulario de cambio de plan no es válido." };
+    }
+  }
+
   const miembroId = formData.get("miembroId")?.toString();
   const planNuevoId = formData.get("planNuevoId")?.toString();
-  const lineasRaw = formData.get("lineas")?.toString();
-  const sucursalIdPago = formData.get("sucursalIdPago")?.toString() || sucursalActivaId;
-  const entrenadorId = formData.get("entrenadorId")?.toString() || null;
-  // "caja": viene del wizard de Caja (Paso 2), dentro de un modal — se
-  // queda en /caja en vez de navegar a /miembros (ver diseño acordado, igual
-  // criterio que origen en registrarPagoAction).
-  const origen = formData.get("origen")?.toString();
+  const montoEsperado = leerImporte(formData.get("montoEsperado"));
+  const textoVencimiento = formData.get("vencimientoEsperado")?.toString() ?? "";
+  const vencimientoEsperado = /^\d{4}-\d{2}-\d{2}$/.test(textoVencimiento) ? new Date(`${textoVencimiento}T05:00:00.000Z`) : null;
+  const metodo = formData.get("metodo")?.toString() ?? "";
+  const cobroId = formData.get("cobroId")?.toString() || null;
 
-  if (!miembroId || !planNuevoId) {
-    return { error: "Miembro y plan nuevo son requeridos." };
+  if (!miembroId || !planNuevoId) return { error: "Miembro y plan nuevo son requeridos." };
+  if (montoEsperado === null || !vencimientoEsperado || Number.isNaN(vencimientoEsperado.getTime())) {
+    return { error: "El monto y el vencimiento esperados no son válidos." };
   }
-  if (!sucursalIdPago) {
-    return { error: "No se pudo determinar en qué sucursal se registra el cambio." };
-  }
-
-  let lineas: Array<{
-    monto: number;
-    metodo: string;
-    metodoPagoId: string | null;
-    numeroOperacion: string | null;
-  }> = [];
-  if (lineasRaw) {
-    try {
-      lineas = JSON.parse(lineasRaw);
-    } catch {
-      return { error: "No se pudo interpretar la información del pago." };
-    }
-    if (!Array.isArray(lineas)) {
-      return { error: "No se pudo interpretar la información del pago." };
-    }
-  }
+  if (!sucursalActivaId) return { error: "No se pudo determinar en qué sucursal se registra el cambio." };
 
   let resultado;
   try {
-    // Guardado atómico (regla 11 del diseño acordado): plan, vencimiento,
-    // pago y el registro de auditoría se escriben en una sola transacción
-    // Prisma — todos los repos reciben `tx` (compatible con la misma
-    // interfaz que PrismaClient) en vez del cliente global, así que si
-    // cualquier paso falla, ninguno de los otros queda a medio escribir.
-    resultado = await prisma.$transaction((tx) =>
-      cambiarPlanConPago(
-        {
-          pagos: new PrismaPagoRepository(tx),
-          suscripciones: new PrismaSuscripcionRepository(tx),
-          miembros: new PrismaMemberRepository(tx),
-          planes: new PrismaPlanRepository(tx),
-          sucursales: new PrismaSucursalRepository(tx),
-          auditoria: new PrismaCambioPlanAuditoriaRepository(tx),
-        },
-        {
-          organizacionId: usuario.organizacionId,
-          miembroId,
-          planNuevoId,
-          origen: origen === "caja" ? "CAJA" : "FICHA_MIEMBRO",
-          lineas: lineas,
-          sucursalId: sucursalIdPago,
-          registradoPorId: usuario.id,
-          entrenadorId,
-        }
-      )
+    resultado = await cambiarPlan(
+      { unidad: new PrismaUnidadDeTrabajo(prisma) },
+      {
+        organizacionId: usuario.organizacionId,
+        miembroId,
+        planNuevoId,
+        montoEsperado,
+        vencimientoEsperado,
+        linea: metodo
+          ? {
+              metodo,
+              metodoPagoId: formData.get("metodoPagoId")?.toString() || null,
+              numeroOperacion: formData.get("numeroOperacion")?.toString().trim() || null,
+            }
+          : null,
+        sucursalId: sucursalActivaId,
+        registradoPorId: usuario.id,
+        cobroId,
+      }
     );
   } catch (error) {
     if (
@@ -224,12 +217,14 @@ export async function cambiarPlanAction(
       error instanceof MiembroFueraDeSucursalError ||
       error instanceof PlanNoEncontradoErrorCambio ||
       error instanceof PlanInactivoErrorCambio ||
+      error instanceof PlanIgualError ||
       error instanceof SinCicloVigenteError ||
+      error instanceof MiembroSinPlanError ||
+      error instanceof CambioDesactualizadoError ||
       error instanceof MetodoPagoRequeridoError ||
-      error instanceof EntrenadorRequeridoError ||
-      error instanceof PlanCortesiaConTiempoRestanteError ||
-      error instanceof LineasDePagoInvalidasErrorCambio ||
-      error instanceof MontoLineasNoCubreObjetivoError
+      error instanceof CobroEnConflictoError ||
+      error instanceof CobroAnuladoError ||
+      error instanceof CobroDuplicadoError
     ) {
       return { error: error.message };
     }
@@ -242,23 +237,9 @@ export async function cambiarPlanAction(
   revalidatePath(`/miembros/${miembroId}/pagos`);
   revalidatePath("/cobros");
 
-  // CambiarPlanConPago ya no genera saldo a favor (ver regla 5 del diseño
-  // acordado: el valor no consumido se convierte en días, nunca en
-  // crédito) — resultado.diferencia siempre es >= 0.
-  const mensaje =
-    resultado.diferencia > 0
-      ? `Plan cambiado — se cobró ${formatearSoles(resultado.diferencia)}.`
-      : "Plan cambiado, sin costo adicional.";
-
-  // Desde el wizard de Caja: se queda en /caja y cierra el modal (ver
-  // diseño acordado), igual criterio que registrarPagoAction con
-  // origen "caja" — no tiene sentido navegar afuera del modal que sigue
-  // abierto. Desde la ficha del miembro (sin origen), se redirige a la
-  // lista — evita el "¿para qué es Guardar?" de volver a tocar otro botón
-  // en la misma pantalla.
-  if (origen === "caja") {
-    return { ok: mensaje, diferencia: resultado.diferencia, saldoAFavorGenerado: resultado.saldoAFavorGenerado };
-  }
-
-  redirect(conMensajeOk("/miembros", mensaje));
+  const cobrado = resultado.calculo.montoCobrarCentavos / 100;
+  return {
+    ok: cobrado > 0 ? `Plan cambiado — se cobró ${formatearSoles(cobrado)}.` : "Plan cambiado, sin costo adicional.",
+    vencimiento: resultado.calculo.nuevoVencimiento.toISOString(),
+  };
 }

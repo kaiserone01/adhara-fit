@@ -10,17 +10,6 @@ import { Badge } from "@gym-app/ui/components/Badge";
 import { Card } from "@gym-app/ui/components/Card";
 import { PageHeader } from "@gym-app/ui/components/PageHeader";
 import { BotonEliminarPlan } from "./BotonEliminarPlan";
-import type { FrecuenciaPago } from "@gym-app/domain/entities/Plan";
-
-const ETIQUETA_FRECUENCIA: Record<FrecuenciaPago, string> = {
-  DIARIO: "Diario",
-  SEMANAL: "Semanal",
-  QUINCENAL: "Quincenal",
-  MENSUAL: "Mensual",
-  SEMESTRAL: "Semestral",
-  ANUAL: "Anual",
-  PERSONALIZADO: "Personalizado",
-};
 
 export default async function PaginaPlanes() {
   const sesion = await obtenerUsuarioDeSesionActual();
@@ -44,9 +33,8 @@ export default async function PaginaPlanes() {
             <thead>
               <tr className="border-b text-sm" style={{ borderColor: "var(--gx-edge)", color: "var(--gx-muted)" }}>
                 <th className="py-2">Nombre</th>
-                <th className="py-2">Frecuencia</th>
-                <th className="py-2">Entrenador</th>
-                <th className="py-2">Precio (USD)</th>
+                <th className="py-2">Duración</th>
+                <th className="py-2">Precio</th>
                 <th className="py-2">Estado</th>
                 <th className="py-2"></th>
                 <th className="py-2"></th>
@@ -59,10 +47,7 @@ export default async function PaginaPlanes() {
                     {plan.nombre}
                   </td>
                   <td className="py-2" style={{ color: "var(--gx-ink)" }}>
-                    {ETIQUETA_FRECUENCIA[plan.frecuencia]}
-                  </td>
-                  <td className="py-2" style={{ color: "var(--gx-ink)" }}>
-                    {plan.incluyeEntrenador ? "Incluido" : "No incluido"}
+                    {plan.diasCiclo} días
                   </td>
                   <td className="py-2" style={{ color: "var(--gx-ink)" }}>
                     {formatearSoles(plan.precioUSD)}
@@ -112,8 +97,7 @@ export default async function PaginaPlanes() {
               </div>
               <div className="mt-2 flex justify-between text-sm" style={{ color: "var(--gx-muted)" }}>
                 <span>
-                  {ETIQUETA_FRECUENCIA[plan.frecuencia]}
-                  {plan.incluyeEntrenador ? " · con entrenador" : ""}
+                  {plan.diasCiclo} días
                 </span>
                 <span>{formatearSoles(plan.precioUSD)}</span>
               </div>

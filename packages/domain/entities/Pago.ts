@@ -11,6 +11,8 @@ export interface Pago {
   metodo: string;
   metodoPagoId: string | null;
   numeroOperacion: string | null;
+  // Orden de registro (S-07): el último cobro de un socio es el no anulado de mayor creadoEn.
+  creadoEn?: Date;
   fechaPago: Date;
   fechaInicioCiclo: Date | null;
   fechaFinCiclo: Date | null;
@@ -70,7 +72,7 @@ export class LineasDePagoInvalidasError extends Error {
   }
 }
 
-// Modo "exacto" (CambiarPlanConPago): la diferencia de un cambio de plan
+// Modo "exacto" (cambio de plan): la diferencia de un cambio de plan
 // se paga completa, aunque combinando varios métodos — no existe abono
 // parcial sobre esa diferencia (ver diseño acordado). Si la suma de las
 // líneas no coincide exactamente con el monto a cobrar, se rechaza.
@@ -83,7 +85,7 @@ export class MontoLineasNoCubreObjetivoError extends Error {
 // Única fuente de verdad para validar líneas de un pago (una o varias,
 // según la modalidad). Dos modos:
 // - "conAbono": acepta cualquier suma positiva (ventas de producto).
-// - "exacto" (CambiarPlanConPago.ts): exige que la suma coincida
+// - "exacto" (cambio de plan): exige que la suma coincida
 //   exactamente con `montoObjetivo` — no hay abono parcial sobre la
 //   diferencia de un cambio de plan.
 export function validarLineasDePago(

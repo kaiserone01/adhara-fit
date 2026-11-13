@@ -1,250 +1,85 @@
 import { describe, expect, test } from "vitest";
-import { calcularCambioPlan, PlanCortesiaConTiempoRestanteError } from "./cambioPlanCalculo";
+import { calcularCambioPlan, DatosCambioPlanInvalidosError } from "./cambioPlanCalculo";
 
-// hoy fijo = 2026-09-27 en America/Lima (UTC-5). Se usa mediodía UTC
-// para que la fecha caiga en el día correcto en Lima sin acercarse a la
-// medianoche de ningún lado.
-const HOY = new Date("2026-09-27T16:00:00Z");
+// Todas las fechas son el inicio del día de Lima (05:00Z). Hoy = 12/11/2026.
+const dia = (iso: string) => new Date(`${iso}T05:00:00.000Z`);
+const HOY = new Date("2026-11-12T15:00:00Z");
+const masDias = (n: number) => new Date(dia("2026-11-12").getTime() + n * 86_400_000);
 
-describe("calcularCambioPlan — V > precioNuevo (excedente absorbido en días, sin cobro)", () => {
-  test("plan $30/30d con 20 días restantes -> plan $25/30d: sin cobro, excedente en días", () => {
-    // V = 20 * (30/30) = $20.00. precioNuevo = $25. V < precioNuevo acá, no
-    // sirve para este describe — se ajusta el vencimiento para que V supere
-    // el precio nuevo: 30 días restantes -> V = $30.00 > $25.
-    const vence = new Date("2026-10-27T16:00:00Z"); // 30 días desde hoy
-    const resultado = calcularCambioPlan({
-      hoy: HOY,
-      precioViejo: 30,
-      diasCicloViejo: 30,
-      fechaVencimientoActual: vence,
-      precioNuevo: 25,
-      diasCicloNuevo: 30,
+const plan1Mes = { precio: 120, dias: 30 };
+const plan3Meses = { precio: 280, dias: 90 };
+
+describe("calcularCambioPlan", () => {
+  test("sube de plan: cobra la diferencia y el vencimiento es hoy más los días del plan nuevo (BEH-S07-001)", () => {
+    const r = calcularCambioPlan({
+      hoy: HOY, vencimientoActual: masDias(15), precioActual: plan1Mes.precio, diasCicloActual: plan1Mes.dias,
+      precioNuevo: plan3Meses.precio, diasCicloNuevo: plan3Meses.dias,
     });
-
-    // V = $30.00, precioNuevo = $25.00, excedente = $5.00 -> tarifa nueva
-    // $25/30 = $0.8333/día -> 5 / 0.8333 = 6 días extra.
-    expect(resultado.diasRestantes).toBe(30);
-    expect(resultado.valorNoConsumidoCentavos).toBe(3000);
-    expect(resultado.montoCobradoCentavos).toBe(0);
-    expect(resultado.diasNuevos).toBe(6);
-    // Vence hoy + diasCicloNuevo (30) + diasNuevos (6) = 36 días desde hoy.
-    expect(resultado.nuevoVencimiento).toEqual(new Date("2026-11-02T00:00:00Z"));
+    expect(r.diasRestantes).toBe(15);
+    expect(r.valorNoConsumidoCentavos).toBe(6000);
+    expect(r.montoCobrarCentavos).toBe(22000);
+    expect(r.diasNuevos).toBe(0);
+    expect(r.nuevoVencimiento).toEqual(masDias(90));
   });
-});
 
-describe("calcularCambioPlan — V < precioNuevo (cobra la diferencia, ciclo normal)", () => {
-  test("plan $25/30d con 9 días restantes -> plan $30/30d: cobra la diferencia", () => {
-    const vence = new Date("2026-10-06T16:00:00Z"); // 9 días desde hoy
-    const resultado = calcularCambioPlan({
-      hoy: HOY,
-      precioViejo: 25,
-      diasCicloViejo: 30,
-      fechaVencimientoActual: vence,
-      precioNuevo: 30,
-      diasCicloNuevo: 30,
+  test("baja de plan: no cobra nada y el excedente se convierte en días (BEH-S07-002)", () => {
+    const r = calcularCambioPlan({
+      hoy: HOY, vencimientoActual: masDias(80), precioActual: plan3Meses.precio, diasCicloActual: plan3Meses.dias,
+      precioNuevo: plan1Mes.precio, diasCicloNuevo: plan1Mes.dias,
     });
-
-    // V = 9 * (25/30) = $7.50. precioNuevo = $30.00. Diferencia = $22.50.
-    expect(resultado.diasRestantes).toBe(9);
-    expect(resultado.valorNoConsumidoCentavos).toBe(750);
-    expect(resultado.montoCobradoCentavos).toBe(2250);
-    expect(resultado.diasNuevos).toBe(0);
-    // Vence hoy + diasCicloNuevo (30), sin días extra.
-    expect(resultado.nuevoVencimiento).toEqual(new Date("2026-10-27T00:00:00Z"));
+    expect(r.valorNoConsumidoCentavos).toBe(24889);
+    expect(r.montoCobrarCentavos).toBe(0);
+    expect(r.diasNuevos).toBe(32);
+    expect(r.nuevoVencimiento).toEqual(masDias(62));
   });
 
-  test("caso Luis Mendoza — Corporativo 9 días restantes -> Con entrenador $30: cobra la diferencia y avanza un ciclo completo desde hoy", () => {
-    const vence = new Date("2026-10-06T16:00:00Z"); // 9 días desde hoy
-    const resultado = calcularCambioPlan({
-      hoy: HOY,
-      precioViejo: 22,
-      diasCicloViejo: 30,
-      fechaVencimientoActual: vence,
-      precioNuevo: 30,
-      diasCicloNuevo: 30,
+  test("el valor no consumido igual al precio nuevo: monto 0 y sin días extra (BEH-S07-003)", () => {
+    const r = calcularCambioPlan({
+      hoy: HOY, vencimientoActual: masDias(20), precioActual: 90, diasCicloActual: 30, precioNuevo: 60, diasCicloNuevo: 60,
     });
-
-    // V = 9 * (22/30) = $6.60. precioNuevo = $30.00. Diferencia = $23.40.
-    expect(resultado.valorNoConsumidoCentavos).toBe(660);
-    expect(resultado.montoCobradoCentavos).toBe(2340);
-    expect(resultado.nuevoVencimiento).toEqual(new Date("2026-10-27T00:00:00Z"));
+    expect(r.valorNoConsumidoCentavos).toBe(6000);
+    expect(r.montoCobrarCentavos).toBe(0);
+    expect(r.diasNuevos).toBe(0);
+    expect(r.nuevoVencimiento).toEqual(masDias(60));
   });
-});
 
-describe("calcularCambioPlan — V == precioNuevo, mismo ciclo/frecuencia (sin cobro, avanza un ciclo)", () => {
-  test("plan $30/30d con 25 días restantes -> plan $25/30d: V=$25.00 == precioNuevo, sin cobro", () => {
-    const vence = new Date("2026-10-22T16:00:00Z"); // 25 días desde hoy
-    const resultado = calcularCambioPlan({
-      hoy: HOY,
-      precioViejo: 30,
-      diasCicloViejo: 30,
-      fechaVencimientoActual: vence,
-      precioNuevo: 25,
-      diasCicloNuevo: 30,
+  test("el día del vencimiento quedan 0 días y se cobra el plan nuevo completo (BEH-S07-004)", () => {
+    const r = calcularCambioPlan({
+      hoy: HOY, vencimientoActual: dia("2026-11-12"), precioActual: 120, diasCicloActual: 30, precioNuevo: 200, diasCicloNuevo: 60,
     });
-
-    // V = 25 * (30/30) = $25.00 == precioNuevo ($25.00).
-    expect(resultado.valorNoConsumidoCentavos).toBe(2500);
-    expect(resultado.montoCobradoCentavos).toBe(0);
-    expect(resultado.diasNuevos).toBe(0);
-    expect(resultado.nuevoVencimiento).toEqual(new Date("2026-10-27T00:00:00Z"));
+    expect(r.diasRestantes).toBe(0);
+    expect(r.valorNoConsumidoCentavos).toBe(0);
+    expect(r.montoCobrarCentavos).toBe(20000);
   });
-});
 
-describe("calcularCambioPlan — V == precioNuevo, CON cambio de frecuencia", () => {
-  test("plan mensual $30/30d con 7 días restantes -> plan semanal $7/7d: V=$7.00 == precioNuevo, avanza diasCicloNuevo (7) desde HOY, no desde el vencimiento viejo", () => {
-    const vence = new Date("2026-10-04T16:00:00Z"); // 7 días desde hoy
-    const resultado = calcularCambioPlan({
-      hoy: HOY,
-      precioViejo: 30,
-      diasCicloViejo: 30,
-      fechaVencimientoActual: vence,
-      precioNuevo: 7,
-      diasCicloNuevo: 7,
+  test("un vencimiento pasado nunca da días negativos", () => {
+    const r = calcularCambioPlan({
+      hoy: HOY, vencimientoActual: masDias(-3), precioActual: 120, diasCicloActual: 30, precioNuevo: 200, diasCicloNuevo: 60,
     });
-
-    // V = 7 * (30/30) = $7.00 == precioNuevo ($7.00) — sin cobro.
-    expect(resultado.valorNoConsumidoCentavos).toBe(700);
-    expect(resultado.montoCobradoCentavos).toBe(0);
-    expect(resultado.diasNuevos).toBe(0);
-    // "Avanza un ciclo" usa diasCicloNuevo (7 días) contados desde HOY
-    // (2026-09-27), no desde el vencimiento viejo (que también caía a los 7
-    // días — coincidencia deliberada del fixture para aislar la diferencia:
-    // si el código usara la duración del ciclo VIEJO por error, o sumara
-    // desde el vencimiento viejo, el resultado sería distinto de lo que se
-    // espera acá).
-    expect(resultado.nuevoVencimiento).toEqual(new Date("2026-10-04T00:00:00Z"));
-  });
-});
-
-describe("calcularCambioPlan — Plan de $0 (Cortesía)", () => {
-  test("bloquea el cambio cuando diasRestantes > 0", () => {
-    const vence = new Date("2026-10-06T16:00:00Z");
-    expect(() =>
-      calcularCambioPlan({
-        hoy: HOY,
-        precioViejo: 22,
-        diasCicloViejo: 30,
-        fechaVencimientoActual: vence,
-        precioNuevo: 0,
-        diasCicloNuevo: 30,
-      })
-    ).toThrow(PlanCortesiaConTiempoRestanteError);
+    expect(r.diasRestantes).toBe(0);
   });
 
-  test("no bloquea si el plan nuevo de $0 se elige con diasRestantes = 0 (vencido)", () => {
-    const vencidoAyer = new Date("2026-09-26T16:00:00Z");
-    expect(() =>
-      calcularCambioPlan({
-        hoy: HOY,
-        precioViejo: 22,
-        diasCicloViejo: 30,
-        fechaVencimientoActual: vencidoAyer,
-        precioNuevo: 0,
-        diasCicloNuevo: 30,
-      })
-    ).not.toThrow();
+  test("redondea half-up una sola vez al céntimo (BEH-S07-005)", () => {
+    const base = { hoy: HOY, diasCicloActual: 30, precioNuevo: 500, diasCicloNuevo: 30 };
+    expect(calcularCambioPlan({ ...base, vencimientoActual: masDias(15), precioActual: 10.05 }).valorNoConsumidoCentavos).toBe(503);
+    expect(calcularCambioPlan({ ...base, vencimientoActual: masDias(1), precioActual: 100 }).valorNoConsumidoCentavos).toBe(333);
+    expect(calcularCambioPlan({ ...base, vencimientoActual: masDias(2), precioActual: 100 }).valorNoConsumidoCentavos).toBe(667);
   });
-});
 
-describe("calcularCambioPlan — vencido (diasRestantes = 0)", () => {
-  const vencidoAyer = new Date("2026-09-26T16:00:00Z");
-
-  test("V = 0 < precioNuevo: cobra el precio completo y avanza un ciclo normal desde hoy", () => {
-    const resultado = calcularCambioPlan({
-      hoy: HOY,
-      precioViejo: 22,
-      diasCicloViejo: 30,
-      fechaVencimientoActual: vencidoAyer,
-      precioNuevo: 8,
-      diasCicloNuevo: 7,
+  test("el día de Lima no depende de la hora: a las 23:30 de Lima sigue siendo el mismo día", () => {
+    const tarde = new Date("2026-11-13T04:30:00Z"); // 23:30 del 12/11 en Lima
+    const r = calcularCambioPlan({
+      hoy: tarde, vencimientoActual: masDias(15), precioActual: 120, diasCicloActual: 30, precioNuevo: 280, diasCicloNuevo: 90,
     });
-
-    expect(resultado.diasRestantes).toBe(0);
-    expect(resultado.valorNoConsumidoCentavos).toBe(0);
-    expect(resultado.montoCobradoCentavos).toBe(800);
-    expect(resultado.diasNuevos).toBe(0);
-    expect(resultado.nuevoVencimiento).toEqual(new Date("2026-10-04T00:00:00Z"));
-  });
-});
-
-describe("calcularCambioPlan — casos borde de fecha", () => {
-  test("vence hoy mismo (diasRestantes = 0)", () => {
-    const venceHoy = new Date("2026-09-27T20:00:00Z");
-    const resultado = calcularCambioPlan({
-      hoy: HOY,
-      precioViejo: 22,
-      diasCicloViejo: 30,
-      fechaVencimientoActual: venceHoy,
-      precioNuevo: 8,
-      diasCicloNuevo: 7,
-    });
-
-    expect(resultado.diasRestantes).toBe(0);
-    expect(resultado.valorNoConsumidoCentavos).toBe(0);
+    expect(r.diasRestantes).toBe(15);
+    expect(r.nuevoVencimiento).toEqual(masDias(90));
   });
 
-  test("vence mañana (diasRestantes = 1)", () => {
-    const veneceManana = new Date("2026-09-28T16:00:00Z");
-    const resultado = calcularCambioPlan({
-      hoy: HOY,
-      precioViejo: 22,
-      diasCicloViejo: 30,
-      fechaVencimientoActual: veneceManana,
-      precioNuevo: 8,
-      diasCicloNuevo: 7,
-    });
-
-    expect(resultado.diasRestantes).toBe(1);
-  });
-
-  test("cambio de mes y de año: vence en enero del año siguiente", () => {
-    const finDeAnio = new Date("2027-01-06T16:00:00Z");
-    const resultado = calcularCambioPlan({
-      hoy: HOY,
-      precioViejo: 22,
-      diasCicloViejo: 30,
-      fechaVencimientoActual: finDeAnio,
-      precioNuevo: 8,
-      diasCicloNuevo: 7,
-    });
-
-    // 27/09/2026 -> 06/01/2027 = 101 días de calendario.
-    expect(resultado.diasRestantes).toBe(101);
-  });
-
-  test("independencia de la hora: distintas horas del mismo día dan el mismo resultado", () => {
-    const vence = new Date("2026-10-06T16:00:00Z");
-    const horas = ["2026-09-27T05:01:00Z", "2026-09-27T16:00:00Z", "2026-09-28T04:59:00Z"];
-    for (const hoyIso of horas) {
-      const resultado = calcularCambioPlan({
-        hoy: new Date(hoyIso),
-        precioViejo: 22,
-        diasCicloViejo: 30,
-        fechaVencimientoActual: vence,
-        precioNuevo: 30,
-        diasCicloNuevo: 30,
-      });
-      expect(resultado.diasRestantes).toBe(9);
-      expect(resultado.montoCobradoCentavos).toBe(2340);
-    }
-  });
-});
-
-describe("calcularCambioPlan — precio con centavos", () => {
-  test("22.99 no rompe el redondeo a centavos enteros", () => {
-    const vence = new Date("2026-10-06T16:00:00Z");
-    const resultado = calcularCambioPlan({
-      hoy: HOY,
-      precioViejo: 22.99,
-      diasCicloViejo: 30,
-      fechaVencimientoActual: vence,
-      precioNuevo: 8,
-      diasCicloNuevo: 7,
-    });
-
-    expect(Number.isInteger(resultado.valorNoConsumidoCentavos)).toBe(true);
-    expect(Number.isInteger(resultado.diasNuevos)).toBe(true);
-    expect(Number.isInteger(resultado.montoCobradoCentavos)).toBe(true);
+  test("rechaza precios o duraciones que no sean positivos", () => {
+    const ok = { hoy: HOY, vencimientoActual: masDias(5), precioActual: 120, diasCicloActual: 30, precioNuevo: 200, diasCicloNuevo: 60 };
+    expect(() => calcularCambioPlan({ ...ok, precioNuevo: 0 })).toThrow(DatosCambioPlanInvalidosError);
+    expect(() => calcularCambioPlan({ ...ok, precioActual: 0 })).toThrow(DatosCambioPlanInvalidosError);
+    expect(() => calcularCambioPlan({ ...ok, diasCicloActual: 0 })).toThrow(DatosCambioPlanInvalidosError);
+    expect(() => calcularCambioPlan({ ...ok, diasCicloNuevo: 1.5 })).toThrow(DatosCambioPlanInvalidosError);
   });
 });

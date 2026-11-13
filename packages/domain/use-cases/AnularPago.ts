@@ -35,10 +35,19 @@ export interface DatosAnularPago {
   motivo: string;
 }
 
+// «Más reciente» por orden de registro (creadoEn) y, a igualdad, por identificador (S-07): un cambio de plan puede
+// terminar antes que el cobro anterior, así que el fin de ciclo no sirve para ordenar.
+function esPosterior(a: Pago, b: Pago): boolean {
+  const ta = a.creadoEn?.getTime() ?? 0;
+  const tb = b.creadoEn?.getTime() ?? 0;
+  return ta !== tb ? ta > tb : a.id > b.id;
+}
+
 /**
- * Anula un cobro completo. Si era un cobro de membresía (guarda el vencimiento anterior), debe ser el último
- * vigente del socio y la anulación restaura el vencimiento y la fecha del último pago. Los pagos sin vencimiento
- * anterior (cambio de plan, ventas) se anulan sin tocar el vencimiento. Todo en una transacción.
+ * Anula un cobro completo. Si era un cobro de membresía o de cambio de plan (guarda el vencimiento anterior), debe ser
+ * el último vigente del socio y la anulación restaura el vencimiento y la fecha del último pago; si además fue un
+ * cambio de plan, restaura también el plan y el precio anteriores (desde su auditoría). Los pagos sin vencimiento
+ * anterior (ventas) se anulan sin tocar el socio. Todo en una transacción.
  */
 export async function anularPago(deps: { unidad: IUnidadDeTrabajo }, input: DatosAnularPago): Promise<Pago> {
   const motivo = input.motivo.trim();
@@ -60,21 +69,29 @@ export async function anularPago(deps: { unidad: IUnidadDeTrabajo }, input: Dato
     if (revierteVencimiento) {
       const delMiembro = await repos.pagos.listarPorMiembro(pago.miembroId as string);
       otrosVigentes = delMiembro.filter((p) => p.id !== pago.id && !p.anuladoEn);
-      const hayPosterior = otrosVigentes.some(
-        (p) => p.vencimientoAnterior !== null && (p.fechaFinCiclo?.getTime() ?? 0) > (pago.fechaFinCiclo?.getTime() ?? 0)
-      );
-      if (hayPosterior) throw new SoloUltimoCobroError();
+      if (otrosVigentes.some((p) => p.vencimientoAnterior !== null && esPosterior(p, pago))) throw new SoloUltimoCobroError();
     }
 
     const anulado = await repos.pagos.anular(input.organizacionId, input.pagoId, input.anuladoPorId, motivo, new Date());
 
     if (revierteVencimiento) {
-      // Fecha del último pago que queda: el más reciente de los cobros de membresía vigentes (null si no queda ninguno).
+      // Fecha del último pago que queda: el más reciente de los cobros vigentes del socio (null si no queda ninguno).
       const ultimoQueQueda = otrosVigentes
         .filter((p) => p.vencimientoAnterior !== null)
         .sort((a, b) => b.fechaPago.getTime() - a.fechaPago.getTime())[0];
+
+      // Si fue un cambio de plan, el plan y el precio anteriores vuelven junto con el vencimiento.
+      const cambioDePlan = await repos.auditoriaCambioPlan.buscarPorPagoId(pago.id);
+      if (cambioDePlan) {
+        await repos.miembros.actualizar(input.organizacionId, pago.miembroId as string, {
+          planId: cambioDePlan.planAnteriorId,
+          precioPlan: cambioDePlan.precioAnteriorCentavos / 100,
+        });
+      }
+
       await fijarVencimiento(repos, {
         miembroId: pago.miembroId as string,
+        planId: cambioDePlan ? cambioDePlan.planAnteriorId : undefined,
         inicio: null,
         fin: pago.vencimientoAnterior as Date,
         fechaUltimoPago: ultimoQueQueda ? diaLima(ultimoQueQueda.fechaPago) : null,

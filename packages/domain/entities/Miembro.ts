@@ -16,7 +16,6 @@ export interface Miembro {
   entrenadorNombre: string | null;
   planId: string | null;
   precioPlan: number;
-  saldoAFavorUSD: number;
   fechaUltimoPago: Date | null;
   fechaVencimiento: Date | null;
   activo: boolean;
@@ -54,7 +53,6 @@ export interface CambiosMiembro {
   entrenadorId?: string | null;
   planId?: string | null;
   precioPlan?: number;
-  saldoAFavorUSD?: number;
   fechaUltimoPago?: Date | null;
   fechaVencimiento?: Date | null;
   activo?: boolean;

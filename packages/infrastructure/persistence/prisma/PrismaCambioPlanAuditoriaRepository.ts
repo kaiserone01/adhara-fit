@@ -5,59 +5,42 @@ import type {
   DatosNuevoCambioPlanAuditoria,
 } from "@gym-app/domain/entities/CambioPlanAuditoria";
 
-type FilaCambioPlanAuditoria = {
-  id: string;
-  organizacionId: string;
-  miembroId: string;
-  planAnteriorId: string;
-  planNuevoId: string;
-  vencimientoAnterior: Date;
-  vencimientoNuevo: Date;
-  diasRestantes: number;
-  valorNoConsumidoCentavos: number;
-  precioAnteriorCentavos: number;
-  diasCicloAnterior: number;
-  precioNuevoCentavos: number;
-  diasCicloNuevo: number;
-  diasNuevos: number;
-  montoCobradoCentavos: number;
-  modo: CambioPlanAuditoria["modo"];
-  origen: CambioPlanAuditoria["origen"];
-  pagoId: string | null;
-  registradoPorId: string;
-  fecha: Date;
-};
+type FilaCambioPlanAuditoria = CambioPlanAuditoria & { modo?: unknown; origen?: unknown };
 
 function mapear(fila: FilaCambioPlanAuditoria): CambioPlanAuditoria {
-  return { ...fila };
+  return {
+    id: fila.id,
+    organizacionId: fila.organizacionId,
+    miembroId: fila.miembroId,
+    planAnteriorId: fila.planAnteriorId,
+    planNuevoId: fila.planNuevoId,
+    vencimientoAnterior: fila.vencimientoAnterior,
+    vencimientoNuevo: fila.vencimientoNuevo,
+    diasRestantes: fila.diasRestantes,
+    valorNoConsumidoCentavos: fila.valorNoConsumidoCentavos,
+    precioAnteriorCentavos: fila.precioAnteriorCentavos,
+    diasCicloAnterior: fila.diasCicloAnterior,
+    precioNuevoCentavos: fila.precioNuevoCentavos,
+    diasCicloNuevo: fila.diasCicloNuevo,
+    diasNuevos: fila.diasNuevos,
+    montoCobradoCentavos: fila.montoCobradoCentavos,
+    pagoId: fila.pagoId,
+    registradoPorId: fila.registradoPorId,
+    fecha: fila.fecha,
+  };
 }
 
 export class PrismaCambioPlanAuditoriaRepository implements ICambioPlanAuditoriaRepository {
   constructor(private readonly prisma: PrismaClientOrTx) {}
 
   async crear(datos: DatosNuevoCambioPlanAuditoria): Promise<CambioPlanAuditoria> {
-    const registro = await this.prisma.cambioPlanAuditoria.create({
-      data: {
-        organizacionId: datos.organizacionId,
-        miembroId: datos.miembroId,
-        planAnteriorId: datos.planAnteriorId,
-        planNuevoId: datos.planNuevoId,
-        vencimientoAnterior: datos.vencimientoAnterior,
-        vencimientoNuevo: datos.vencimientoNuevo,
-        diasRestantes: datos.diasRestantes,
-        valorNoConsumidoCentavos: datos.valorNoConsumidoCentavos,
-        precioAnteriorCentavos: datos.precioAnteriorCentavos,
-        diasCicloAnterior: datos.diasCicloAnterior,
-        precioNuevoCentavos: datos.precioNuevoCentavos,
-        diasCicloNuevo: datos.diasCicloNuevo,
-        diasNuevos: datos.diasNuevos,
-        montoCobradoCentavos: datos.montoCobradoCentavos,
-        modo: datos.modo,
-        origen: datos.origen,
-        pagoId: datos.pagoId,
-        registradoPorId: datos.registradoPorId,
-      },
-    });
+    // modo y origen quedan con su valor por defecto de la base (columnas heredadas, sin uso).
+    const registro = await this.prisma.cambioPlanAuditoria.create({ data: { ...datos } });
     return mapear(registro);
+  }
+
+  async buscarPorPagoId(pagoId: string): Promise<CambioPlanAuditoria | null> {
+    const registro = await this.prisma.cambioPlanAuditoria.findFirst({ where: { pagoId } });
+    return registro ? mapear(registro) : null;
   }
 }

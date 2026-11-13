@@ -3,21 +3,22 @@
 import { formatearSoles } from "@gym-app/domain/utils/formatearSoles";
 import { useActionState, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@gym-app/ui/components/Button";
 import { Input } from "@gym-app/ui/components/Input";
 import { InputFecha } from "@gym-app/ui/components/InputFecha";
-import { CurrencyInput } from "@gym-app/ui/components/CurrencyInput";
 import { MAX_MESES_POR_PAGO } from "@gym-app/domain/entities/Pago";
 import { Card } from "@gym-app/ui/components/Card";
 import { Badge } from "@gym-app/ui/components/Badge";
 import { useFeedback } from "@gym-app/ui/components/FeedbackOverlay";
 import { actualizarFotoMiembroAction, type EstadoFormularioMiembro } from "./actions";
 import { SelectorMetodoPago } from "../pagos/SelectorMetodoPago";
-import { ProveedorCambiosSinGuardar } from "./ContextoCambiosSinGuardar";
+import { FormularioCambiarPlan, type PlanParaCambio } from "./FormularioCambiarPlan";
+import { cambiarPlanAction } from "../pagos/actions";
 import { SelectorFotoPerfil } from "./SelectorFotoPerfil";
 import type { EntrenadorResumen } from "@gym-app/domain/entities/EntrenadorResumen";
 import type { SucursalResumen } from "@gym-app/domain/entities/SucursalResumen";
-import type { Plan, FrecuenciaPago } from "@gym-app/domain/entities/Plan";
+import type { Plan } from "@gym-app/domain/entities/Plan";
 import type { MetodoPago } from "@gym-app/domain/entities/MetodoPago";
 import {
   descripcionDocumento,
@@ -43,16 +44,6 @@ export interface ValoresFormularioMiembro {
 }
 
 const ID_AMBAS_SEDES = "__ambas__";
-
-const ETIQUETA_FRECUENCIA: Record<FrecuenciaPago, string> = {
-  DIARIO: "Diario",
-  SEMANAL: "Semanal",
-  QUINCENAL: "Quincenal",
-  MENSUAL: "Mensual",
-  SEMESTRAL: "Semestral",
-  ANUAL: "Anual",
-  PERSONALIZADO: "Personalizado",
-};
 
 // OJO: nunca usar fecha.toISOString() acá — convierte a UTC primero, y de
 // noche (pasadas las 8pm en Venezuela, UTC-5) eso salta al día siguiente.
@@ -106,7 +97,7 @@ export function FormularioMiembro({
   ultimosCiclos,
   totalPagos,
   valoresIniciales,
-  tieneCicloVigente,
+  cambioPlan,
 }: {
   accion: (estado: EstadoFormularioMiembro, formData: FormData) => Promise<EstadoFormularioMiembro>;
   // Entrenadores activos (S-18: un solo gimnasio, sin filtro por sede).
@@ -133,12 +124,14 @@ export function FormularioMiembro({
   // "Ver historial de pagos". Undefined en modo creación.
   totalPagos?: number;
   valoresIniciales?: ValoresFormularioMiembro;
-  // Mientras el ciclo actual esté vigente, cambiar de plan gratis desde acá
-  // quedaría pisado por "Cambiar de plan" del panel derecho (que sí cobra
-  // la diferencia) — se oculta el editor de plan acá para no tener dos
-  // botones "Cambiar plan" haciendo cosas distintas al mismo tiempo (ver
-  // diseño acordado). Solo relevante en edición; en alta siempre es true.
-  tieneCicloVigente?: boolean;
+  // Solo en edición: datos para el cambio de plan a mitad de ciclo (S-07). null si el socio no tiene una
+  // membresía vigente (entonces corresponde un cobro normal, no un cambio de plan).
+  cambioPlan?: {
+    hoy: Date;
+    vencimiento: Date;
+    diasCicloActual: number;
+    planes: PlanParaCambio[];
+  } | null;
 }) {
   const [estado, enviar, enviando] = useActionState(accion, {});
   const esEdicion = !!valoresIniciales;
@@ -191,38 +184,18 @@ export function FormularioMiembro({
     return valoresIniciales.planId ?? "";
   });
   const [precio, setPrecio] = useState<string>(String(valoresIniciales?.precioPlan ?? planesActivos[0]?.precioUSD ?? ""));
-  const [errorPrecio, setErrorPrecio] = useState<string | null>(null);
   const [seleccionMetodo, setSeleccionMetodo] = useState<{
     metodoPagoId: string | null;
     metodo: string;
     numeroOperacion: string;
   }>({ metodoPagoId: null, metodo: "", numeroOperacion: "" });
   const [mostrarTicket, setMostrarTicket] = useState(false);
-  // Mientras el ciclo actual esté vigente, el cambio de plan gratis queda
-  // deshabilitado acá — usa "Cambiar de plan" del panel derecho, que cobra
-  // la diferencia correspondiente (ver diseño acordado).
-  const puedeCambiarPlanGratis = !esEdicion || !tieneCicloVigente;
-  // En edición, el plan asignado se ve de solo lectura hasta que se
-  // confirma explícitamente que se quiere cambiar (ver diseño acordado:
-  // evita cambios de plan por error, ya que dispara el prorrateo).
-  const [editandoPlan, setEditandoPlan] = useState(!esEdicion);
-  const [confirmandoCambioPlan, setConfirmandoCambioPlan] = useState(false);
-  const planIdOriginal = valoresIniciales?.planId ?? null;
-  // El entrenador también se ve de solo lectura en edición — se asigna en
-  // la inscripción, cambiarlo es una acción explícita aparte (ver diseño
-  // acordado). La sede ya no se muestra ni tiene modo edición propio — la
-  // única alternativa a la sede activa es el toggle de "Ambas sedes" (solo
-  // con planes multisede, ver más abajo).
-  const [editandoEntrenador, setEditandoEntrenador] = useState(!esEdicion);
-  const entrenadorIdOriginal = valoresIniciales?.entrenadorId ?? "";
+  const router = useRouter();
+  // El cambio de plan (S-07) es un formulario aparte, en un modal fuera del formulario de la ficha.
+  const [cambiandoPlan, setCambiandoPlan] = useState(false);
 
   const planSeleccionado = planesActivos.find((p) => p.id === planId);
 
-  const requiereEntrenador = planSeleccionado?.incluyeEntrenador ?? false;
-  // Un plan de cortesía ($0 oficial en Configuración → Planes) fija el
-  // precio en $0 y no se deja editar — no tiene sentido "negociar" el
-  // precio de algo que ya se definió como gratuito.
-  const planEsCortesia = planSeleccionado?.precioUSD === 0;
   const precioActual = Number(precio) || 0;
   // Meses que cubre el primer pago (1 a MAX_MESES_POR_PAGO): el total y la duración del ciclo se multiplican.
   // El pago es único, completo y con un solo método (S-04).
@@ -254,11 +227,8 @@ export function FormularioMiembro({
     ? Math.ceil((new Date(cicloMasReciente.fechaFinCiclo).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
     : null;
 
-  // "Cambiar de plan" (panelLateral) redirige a /miembros al confirmar —
-  // si hay cambios de Datos personales sin guardar en este momento, se
-  // perderían sin aviso. FormularioCambiarPlan lee esto por contexto
-  // (vive en otro árbol de React, dentro de panelLateral) para preguntar
-  // antes de mandarte para afuera de esta pantalla.
+  // El cambio de plan recarga los datos del socio: si hay cambios de Datos personales sin guardar se perderían,
+  // así que se avisa antes de abrirlo.
   const hayCambiosSinGuardar =
     esEdicion &&
     !!valoresIniciales &&
@@ -268,8 +238,7 @@ export function FormularioMiembro({
       (editaFechas && fechaVencimiento !== (valoresIniciales.fechaVencimiento ?? "")) ||
       sucursalId !== (valoresIniciales.sucursalId ?? ID_AMBAS_SEDES) ||
       entrenadorId !== (valoresIniciales.entrenadorId ?? "") ||
-      fotoPreview !== (valoresIniciales.fotoUrl ?? null) ||
-      (editandoPlan && planId !== planIdOriginal));
+      fotoPreview !== (valoresIniciales.fotoUrl ?? null));
 
   function manejarCambioPlan(nuevoId: string) {
     setPlanId(nuevoId);
@@ -290,12 +259,6 @@ export function FormularioMiembro({
     if (!form) return;
     if (!form.reportValidity()) return;
 
-    if (!planEsCortesia && (!precio || Number(precio) <= 0)) {
-      setErrorPrecio("Ingresa un precio válido.");
-      return;
-    }
-
-    setErrorPrecio(null);
     if (!esEdicion && precioActual > 0 && !seleccionMetodo.metodoPagoId) {
       setErrorMontoHoy("Elige el método de pago.");
       return;
@@ -330,7 +293,7 @@ export function FormularioMiembro({
   const idFormulario = "formulario-miembro";
 
   return (
-    <ProveedorCambiosSinGuardar value={hayCambiosSinGuardar}>
+    <>
     {estado.error && (
       <p
         className="mb-6 rounded-lg px-3 py-2 text-sm"
@@ -469,13 +432,20 @@ export function FormularioMiembro({
               Plan de membresía
             </h2>
             <div className="flex gap-2">
-              {esEdicion && !editandoEntrenador && requiereEntrenador && (
-                <Button type="button" variant="secundario" onClick={() => setEditandoEntrenador(true)}>
-                  Asignar entrenador
-                </Button>
-              )}
-              {esEdicion && !editandoPlan && puedeCambiarPlanGratis && (
-                <Button type="button" variant="secundario" onClick={() => setConfirmandoCambioPlan(true)}>
+              {esEdicion && cambioPlan && (
+                <Button
+                  type="button"
+                  variant="secundario"
+                  onClick={() => {
+                    if (
+                      hayCambiosSinGuardar &&
+                      !window.confirm("Tienes cambios sin guardar en Datos personales: se perderán al cambiar de plan. ¿Continuar?")
+                    ) {
+                      return;
+                    }
+                    setCambiandoPlan(true);
+                  }}
+                >
                   Cambiar plan
                 </Button>
               )}
@@ -501,75 +471,30 @@ export function FormularioMiembro({
             </div>
           )}
 
-          {esEdicion && !editandoPlan && (
+          {esEdicion && (
             <div className="rounded-lg border p-4" style={{ borderColor: "var(--gx-edge)" }}>
               <div className="flex items-baseline justify-between">
                 <span className="text-sm font-medium" style={{ color: "var(--gx-muted)" }}>
                   {nombrePlanActual}
                 </span>
                 <span className="text-2xl font-semibold" style={{ color: "var(--gx-ink)" }}>
-                  ${precioActual}
+                  {formatearSoles(precioActual)}
                   {planSeleccionado && (
                     <span className="text-sm font-normal" style={{ color: "var(--gx-muted)" }}>
-                      /{ETIQUETA_FRECUENCIA[planSeleccionado.frecuencia].toLowerCase()}
+                      /{planSeleccionado.diasCiclo} días
                     </span>
                   )}
                 </span>
               </div>
-              {requiereEntrenador && (
-                <p className="mt-1 text-xs font-medium" style={{ color: "var(--gx-accent)" }}>
-                  Entrenador: {nombreEntrenadorActual ?? "Sin asignar"}
-                </p>
-              )}
-              {!puedeCambiarPlanGratis && (
+              {!cambioPlan && (
                 <p className="mt-2 text-xs" style={{ color: "var(--gx-muted)" }}>
-                  Este ciclo ya está pagado — para subir o bajar de plan usa &quot;Cambiar de plan&quot; en el panel
-                  de al lado.
+                  La membresía no está vigente: para renovar o elegir otro plan registra un cobro desde Caja.
                 </p>
               )}
             </div>
           )}
 
-          {confirmandoCambioPlan && !editandoPlan && (
-            <div
-              className="fixed inset-0 z-50 flex items-center justify-center p-4"
-              style={{ background: "color-mix(in srgb, black 60%, transparent)" }}
-            >
-              <div
-                className="marca-agua-modal w-full max-w-sm rounded-2xl border-2 p-6"
-                style={{ borderColor: "var(--gx-accent)", background: "var(--gx-surface)" }}
-              >
-                <h3 className="text-lg font-bold" style={{ color: "var(--gx-ink)" }}>
-                  ¿Cambiar el plan?
-                </h3>
-                <p className="mt-2 text-sm" style={{ color: "var(--gx-muted)" }}>
-                  Se va a cambiar el plan de membresía del socio. ¿Estás seguro?
-                </p>
-                <div className="mt-4 flex gap-3">
-                  <Button
-                    type="button"
-                    variant="secundario"
-                    className="flex-1"
-                    onClick={() => setConfirmandoCambioPlan(false)}
-                  >
-                    Abortar
-                  </Button>
-                  <Button
-                    type="button"
-                    className="flex-1"
-                    onClick={() => {
-                      setConfirmandoCambioPlan(false);
-                      setEditandoPlan(true);
-                    }}
-                  >
-                    Sí, cambiar plan
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {editandoPlan && (
+          {!esEdicion && (
           <div className="grid grid-cols-2 gap-3">
             {planesActivos.map((plan) => {
               const seleccionado = planId === plan.id;
@@ -592,116 +517,33 @@ export function FormularioMiembro({
                     {plan.nombre}
                   </span>
                   <span className="text-2xl font-semibold" style={{ color: "var(--gx-ink)" }}>
-                    ${plan.precioUSD}
+                    {formatearSoles(plan.precioUSD)}
                     <span className="text-sm font-normal" style={{ color: "var(--gx-muted)" }}>
-                      /{ETIQUETA_FRECUENCIA[plan.frecuencia].toLowerCase()}
+                      /{plan.diasCiclo} días
                     </span>
                   </span>
-                  {plan.incluyeEntrenador && (
-                    <span className="text-xs font-medium" style={{ color: "var(--gx-accent)" }}>
-                      Incluye entrenador
-                    </span>
-                  )}
                 </button>
               );
             })}
           </div>
           )}
 
-          {editandoPlan && esEdicion && (
-          <div className="mt-4 flex flex-col gap-3 rounded-lg border p-4" style={{ borderColor: "var(--gx-edge)" }}>
-            {planEsCortesia ? (
-              <label className="flex flex-col gap-1.5 text-sm" style={{ color: "var(--gx-muted)" }}>
-                Precio
-                <div
-                  className="flex min-h-11 items-center rounded-lg border px-3"
-                  style={{ background: "var(--gx-surface-2)", borderColor: "var(--gx-edge)", color: "var(--gx-ink)" }}
-                >
-                  $0 — plan de cortesía (no editable)
-                </div>
-              </label>
-            ) : (
-              <CurrencyInput
-                name="precioPlanEditado"
-                label="Precio"
-               
-                value={precio}
-                onChange={(valor) => {
-                  setPrecio(valor);
-                  setErrorPrecio(null);
-                }}
-              />
-            )}
-            {errorPrecio && (
-              <p className="text-sm" style={{ color: "var(--gx-bad)" }}>
-                {errorPrecio}
-              </p>
-            )}
-          </div>
-          )}
-
-          <label className={`mt-4 flex flex-col gap-1.5 text-sm ${requiereEntrenador ? "" : "hidden"}`} style={{ color: "var(--gx-muted)" }}>
-            Entrenador asignado
-            {(() => {
-              const bloqueado = !requiereEntrenador || (esEdicion && !editandoPlan && !editandoEntrenador);
-              return (
-                <>
-                  {/* Un <select disabled> no se envía en el submit — cuando está
-                      bloqueado se manda su valor actual por un hidden aparte,
-                      así no se pisa el entrenadorId existente con null. */}
-                  {bloqueado && <input type="hidden" name="entrenadorId" value={entrenadorId} />}
-                  <select
-                    name={bloqueado ? undefined : "entrenadorId"}
-                    value={entrenadorId}
-                    onChange={(e) => setEntrenadorId(e.target.value)}
-                    disabled={bloqueado}
-                    className="min-h-11 rounded-lg border px-3 gx-campo"
-                  >
-                    <option value="">Selecciona un entrenador</option>
-                    {entrenadores.map((entrenador) => (
-                      <option key={entrenador.id} value={entrenador.id}>
-                        {entrenador.nombre}
-                      </option>
-                    ))}
-                  </select>
-                </>
-              );
-            })()}
-            {!requiereEntrenador && (
-              <span className="text-xs" style={{ color: "var(--gx-muted)" }}>
-                Elige un plan con entrenador para poder asignar uno.
-              </span>
-            )}
-            {esEdicion && editandoEntrenador && !editandoPlan && (
-              <Button
-                type="button"
-                variant="secundario"
-                className="mt-1 self-start"
-                onClick={() => {
-                  setEntrenadorId(entrenadorIdOriginal);
-                  setEditandoEntrenador(false);
-                }}
-              >
-                Cancelar cambio de entrenador
-              </Button>
-            )}
-          </label>
-
-          {esEdicion && editandoPlan && (
-            <Button
-              type="button"
-              variant="secundario"
-              className="mt-4"
-              onClick={() => {
-                // Revierte al plan original del miembro sin tocar el resto
-                // del formulario (nombre, sede, etc. ya editados se conservan).
-                if (planIdOriginal) manejarCambioPlan(planIdOriginal);
-                setEditandoPlan(false);
-              }}
+          <label className="mt-4 flex flex-col gap-1.5 text-sm" style={{ color: "var(--gx-muted)" }}>
+            Entrenador (opcional)
+            <select
+              name="entrenadorId"
+              value={entrenadorId}
+              onChange={(e) => setEntrenadorId(e.target.value)}
+              className="min-h-11 rounded-lg border px-3 gx-campo"
             >
-              Cancelar cambio de plan
-            </Button>
-          )}
+              <option value="">Sin entrenador</option>
+              {entrenadores.map((entrenador) => (
+                <option key={entrenador.id} value={entrenador.id}>
+                  {entrenador.nombre}
+                </option>
+              ))}
+            </select>
+          </label>
 
           {esEdicion && (
             <div className="mt-4 flex flex-col gap-3">
@@ -817,7 +659,7 @@ export function FormularioMiembro({
               <Fila label="Celular" valor={celular || "—"} />
               <Fila label="Inscripción" valor={formatearFecha(fechaInscripcion)} />
               <Fila label="Plan" valor={meses > 1 ? `${nombrePlanActual} · ${meses} meses` : nombrePlanActual} />
-              <Fila label="Entrenador" valor={requiereEntrenador ? (nombreEntrenadorActual ?? "Sin asignar") : "No aplica"} />
+              <Fila label="Entrenador" valor={nombreEntrenadorActual ?? "Sin entrenador"} />
               <Fila label="Método de pago" valor={nombreMetodoPagoActual ?? "—"} />
             </dl>
 
@@ -903,6 +745,40 @@ export function FormularioMiembro({
         </Card>
       )}
     </div>
-    </ProveedorCambiosSinGuardar>
+
+    {esEdicion && cambiandoPlan && cambioPlan && miembroId && (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        style={{ background: "color-mix(in srgb, black 60%, transparent)" }}
+      >
+        <div
+          className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border-2 p-6"
+          style={{ borderColor: "var(--gx-accent)", background: "var(--gx-surface)" }}
+        >
+          <h3 className="mb-4 text-lg font-bold" style={{ color: "var(--gx-ink)" }}>
+            Cambiar de plan
+          </h3>
+          <FormularioCambiarPlan
+            accion={cambiarPlanAction}
+            miembroId={miembroId}
+            planes={cambioPlan.planes}
+            planActualId={valoresIniciales?.planId ?? null}
+            precioActual={valoresIniciales?.precioPlan ?? 0}
+            diasCicloActual={cambioPlan.diasCicloActual}
+            vencimientoActual={cambioPlan.vencimiento}
+            hoy={cambioPlan.hoy}
+            metodosPago={metodosPago}
+            onCambiado={() => {
+              setCambiandoPlan(false);
+              router.refresh();
+            }}
+          />
+          <Button type="button" variant="secundario" className="mt-3 w-full" onClick={() => setCambiandoPlan(false)}>
+            Cancelar
+          </Button>
+        </div>
+      </div>
+    )}
+    </>
   );
 }

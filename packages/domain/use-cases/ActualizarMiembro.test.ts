@@ -136,12 +136,6 @@ describe("actualizarMiembro — suscripción al ajustar fechas", () => {
     expect(creadas).toEqual([{ miembroId: "m1", planId: "p1", inicio: pago, fin: venc }]);
   });
 
-  test("sin suscripción y con plan nuevo en el mismo guardado: la crea con el plan nuevo", async () => {
-    const { deps, creadas } = crearDeps(null, { planId: null }, false);
-    await actualizarMiembro(deps, { ...base, cambios: { planId: "p2", fechaVencimiento: venc } });
-    expect(creadas.map((c) => c.planId)).toEqual(["p2"]);
-  });
-
   test("sin suscripción y sin plan: no crea nada", async () => {
     const { deps, creadas } = crearDeps(null, { planId: null }, false);
     await actualizarMiembro(deps, { ...base, cambios: { fechaVencimiento: venc } });
@@ -152,24 +146,6 @@ describe("actualizarMiembro — suscripción al ajustar fechas", () => {
     const { deps, creadas } = crearDeps();
     await actualizarMiembro(deps, { ...base, cambios: { fechaVencimiento: venc } });
     expect(creadas).toEqual([]);
-  });
-});
-
-describe("actualizarMiembro — cambio de plan desde la ficha", () => {
-  const venc = new Date("2026-11-15T05:00:00.000Z");
-
-  test("con vencimiento: no prorratea, conserva el vencimiento y la suscripción pasa al plan nuevo", async () => {
-    const { deps, planesDelCiclo, fechasEscritas } = crearDeps(null, { fechaVencimiento: venc });
-    await actualizarMiembro(deps, { ...base, cambios: { planId: "p2" } });
-    expect(planesDelCiclo).toEqual(["p2"]);
-    expect(fechasEscritas).toEqual([{ pago: null, vencimiento: venc }]);
-  });
-
-  test("sin vencimiento: solo cambia el plan del miembro", async () => {
-    const { deps, planesDelCiclo, fechasEscritas } = crearDeps();
-    await actualizarMiembro(deps, { ...base, cambios: { planId: "p2" } });
-    expect(planesDelCiclo).toEqual([]);
-    expect(fechasEscritas).toEqual([]);
   });
 });
 

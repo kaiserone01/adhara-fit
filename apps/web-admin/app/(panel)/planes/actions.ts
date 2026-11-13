@@ -5,27 +5,19 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { obtenerUsuarioDeSesionActual } from "@/lib/sesion";
 import { PrismaPlanRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPlanRepository";
-import { PrismaSuscripcionRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSuscripcionRepository";
-import { crearPlan } from "@gym-app/domain/use-cases/CrearPlan";
-import { actualizarPlan, PlanNoEncontradoError } from "@gym-app/domain/use-cases/ActualizarPlan";
-import {
-  actualizarFrecuenciaPlan,
-  PlanNoEncontradoError as ActualizarFrecuenciaPlanNoEncontradoError,
-  ConfirmacionInvalidaError,
-} from "@gym-app/domain/use-cases/ActualizarFrecuenciaPlan";
+import { crearPlan, PlanInvalidoError } from "@gym-app/domain/use-cases/CrearPlan";
+import { actualizarPlan, PlanNoEncontradoError, DiasCicloInmutablesError } from "@gym-app/domain/use-cases/ActualizarPlan";
 import { eliminarPlan } from "@gym-app/domain/use-cases/EliminarPlan";
-import type { FrecuenciaPago } from "@gym-app/domain/entities/Plan";
 import { conMensajeOk } from "../redirectConMensaje";
 
 export interface EstadoFormularioPlan {
   error?: string;
 }
 
-// Compartido entre crearPlanAction y actualizarPlanAction — el checkbox
-// "Permite pago parcial" siempre viaja; los campos de mínimo propio solo
-// se envían cuando el formulario tiene marcado "Mínimo de abono
-// personalizado" (ver FormularioPlan.tsx), así que su ausencia significa
-// "sin mínimo propio, hereda el de la frecuencia".
+function esErrorDePlan(error: unknown): error is Error {
+  return error instanceof PlanInvalidoError || error instanceof PlanNoEncontradoError || error instanceof DiasCicloInmutablesError;
+}
+
 export async function crearPlanAction(
   _estadoPrevio: EstadoFormularioPlan,
   formData: FormData
@@ -35,28 +27,22 @@ export async function crearPlanAction(
   const { usuario } = sesion;
 
   const nombre = formData.get("nombre")?.toString().trim();
-  const frecuencia = formData.get("frecuencia")?.toString() as FrecuenciaPago | undefined;
   const diasCiclo = Number(formData.get("diasCiclo"));
-  const incluyeEntrenador = formData.get("incluyeEntrenador")?.toString() === "on";
-  const multisede = formData.get("multisede")?.toString() === "on";
   const precioUSD = Number(formData.get("precioUSD"));
 
-  if (!nombre || !frecuencia || !diasCiclo || diasCiclo <= 0 || Number.isNaN(precioUSD)) {
-    return { error: "Nombre, frecuencia, duración del ciclo y precio son requeridos." };
+  if (!nombre || Number.isNaN(precioUSD)) {
+    return { error: "Nombre, duración y precio son requeridos." };
   }
 
-  await crearPlan(
-    { planes: new PrismaPlanRepository(prisma) },
-    {
-      organizacionId: usuario.organizacionId,
-      nombre,
-      frecuencia,
-      diasCiclo,
-      incluyeEntrenador,
-      precioUSD,
-      multisede,
-    }
-  );
+  try {
+    await crearPlan(
+      { planes: new PrismaPlanRepository(prisma) },
+      { organizacionId: usuario.organizacionId, nombre, diasCiclo, precioUSD, multisede: false }
+    );
+  } catch (error) {
+    if (esErrorDePlan(error)) return { error: error.message };
+    throw error;
+  }
 
   revalidatePath("/planes");
   redirect(conMensajeOk("/planes", "Plan creado."));
@@ -73,7 +59,6 @@ export async function actualizarPlanAction(
 
   const nombre = formData.get("nombre")?.toString().trim();
   const precioUSD = Number(formData.get("precioUSD"));
-  const multisede = formData.get("multisede")?.toString() === "on";
 
   if (!nombre || Number.isNaN(precioUSD)) {
     return { error: "Nombre y precio son requeridos." };
@@ -82,67 +67,15 @@ export async function actualizarPlanAction(
   try {
     await actualizarPlan(
       { planes: new PrismaPlanRepository(prisma) },
-      {
-        organizacionId: usuario.organizacionId,
-        id,
-        cambios: { nombre, precioUSD, multisede },
-      }
+      { organizacionId: usuario.organizacionId, id, cambios: { nombre, precioUSD } }
     );
   } catch (error) {
-    if (error instanceof PlanNoEncontradoError) {
-      return { error: error.message };
-    }
+    if (esErrorDePlan(error)) return { error: error.message };
     throw error;
   }
 
   revalidatePath("/planes");
   redirect(conMensajeOk("/planes", "Cambios guardados."));
-}
-
-export async function actualizarFrecuenciaPlanAction(
-  id: string,
-  _estadoPrevio: EstadoFormularioPlan,
-  formData: FormData
-): Promise<EstadoFormularioPlan> {
-  const sesion = await obtenerUsuarioDeSesionActual();
-  if (!sesion) redirect("/login");
-  const { usuario } = sesion;
-
-  const frecuencia = formData.get("frecuencia")?.toString() as FrecuenciaPago | undefined;
-  const diasCiclo = Number(formData.get("diasCiclo"));
-  const incluyeEntrenador = formData.get("incluyeEntrenador")?.toString() === "1";
-  const exonerar = formData.get("exonerar")?.toString() === "1";
-  const confirmacion = formData.get("confirmacion")?.toString() ?? "";
-
-  if (!frecuencia || !diasCiclo || diasCiclo <= 0) {
-    return { error: "Frecuencia y duración del ciclo son requeridas." };
-  }
-
-  try {
-    await actualizarFrecuenciaPlan(
-      { planes: new PrismaPlanRepository(prisma), suscripciones: new PrismaSuscripcionRepository(prisma) },
-      {
-        organizacionId: usuario.organizacionId,
-        planId: id,
-        frecuencia,
-        diasCiclo,
-        incluyeEntrenador,
-        confirmacion,
-        exonerar,
-      }
-    );
-  } catch (error) {
-    if (
-      error instanceof ActualizarFrecuenciaPlanNoEncontradoError ||
-      error instanceof ConfirmacionInvalidaError
-    ) {
-      return { error: error.message };
-    }
-    throw error;
-  }
-
-  revalidatePath("/planes");
-  redirect(conMensajeOk(`/planes/${id}`, "Frecuencia del plan actualizada."));
 }
 
 // Sin redirect adentro a propósito: se llama desde la papelera en la

@@ -15,7 +15,7 @@ function checkIn(id: string, miembroId: string, minutosAtras: number, fechaVenci
     miembroId,
     fechaHora: new Date(AHORA.getTime() - minutosAtras * 60_000),
     salidaAt,
-    miembro: { nombre: `Miembro ${miembroId}`, fotoUrl: null, sucursalId: null, fechaVencimiento, planNombre: null, planFrecuencia: "MENSUAL" },
+    miembro: { nombre: `Miembro ${miembroId}`, fotoUrl: null, sucursalId: null, fechaVencimiento, planNombre: null },
   };
 }
 

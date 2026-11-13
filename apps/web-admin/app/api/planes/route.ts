@@ -5,21 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { obtenerUsuarioDeSesion } from "@/lib/sesion";
 import { PrismaPlanRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPlanRepository";
 import { listarPlanes } from "@gym-app/domain/use-cases/ListarPlanes";
-import { crearPlan } from "@gym-app/domain/use-cases/CrearPlan";
-import type { FrecuenciaPago } from "@gym-app/domain/entities/Plan";
-
-// Duración fija (en días) para las 6 frecuencias con ciclo estándar — solo
-// como fallback cuando el body no manda diasCiclo explícito (compatibilidad
-// con clientes de esta API que todavía no lo envían). PERSONALIZADO no
-// tiene entrada acá: si se manda esa frecuencia, diasCiclo es obligatorio.
-const DIAS_CICLO_POR_FRECUENCIA_FIJA: Record<Exclude<FrecuenciaPago, "PERSONALIZADO">, number> = {
-  DIARIO: 1,
-  SEMANAL: 7,
-  QUINCENAL: 15,
-  MENSUAL: 30,
-  SEMESTRAL: 180,
-  ANUAL: 365,
-};
+import { crearPlan, PlanInvalidoError } from "@gym-app/domain/use-cases/CrearPlan";
 
 export async function GET(req: NextRequest) {
   const sesion = await obtenerUsuarioDeSesion(req);
@@ -45,19 +31,8 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
 
-    if (!body.nombre || !body.frecuencia || body.precioUSD === undefined) {
-      return NextResponse.json(
-        { error: "nombre, frecuencia y precioUSD son requeridos." },
-        { status: 400 }
-      );
-    }
-
-    const diasCiclo = body.diasCiclo ?? DIAS_CICLO_POR_FRECUENCIA_FIJA[body.frecuencia as Exclude<FrecuenciaPago, "PERSONALIZADO">];
-    if (!diasCiclo) {
-      return NextResponse.json(
-        { error: "diasCiclo es requerido cuando frecuencia es PERSONALIZADO." },
-        { status: 400 }
-      );
+    if (typeof body.nombre !== "string" || body.precioUSD === undefined || body.diasCiclo === undefined) {
+      return NextResponse.json({ error: "nombre, precioUSD y diasCiclo son requeridos." }, { status: 400 });
     }
 
     const plan = await crearPlan(
@@ -65,16 +40,17 @@ export async function POST(req: NextRequest) {
       {
         organizacionId: usuario.organizacionId,
         nombre: body.nombre,
-        frecuencia: body.frecuencia,
-        diasCiclo,
-        incluyeEntrenador: body.incluyeEntrenador ?? false,
-        precioUSD: body.precioUSD,
-        multisede: body.multisede ?? false,
+        diasCiclo: Number(body.diasCiclo),
+        precioUSD: Number(body.precioUSD),
+        multisede: false,
       }
     );
 
     return NextResponse.json(plan, { status: 201 });
   } catch (error) {
+    if (error instanceof PlanInvalidoError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
     console.error("Error al crear plan:", error);
     return NextResponse.json({ error: "Error interno al crear el plan." }, { status: 500 });
   }

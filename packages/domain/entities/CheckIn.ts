@@ -1,5 +1,3 @@
-import type { FrecuenciaPago } from "./Plan";
-
 export type EstadoCheckIn = "activo" | "vencido" | "sucursal_incorrecta";
 
 export interface CheckIn {
@@ -23,6 +21,5 @@ export interface CheckInEnSala {
     sucursalId: string | null;
     fechaVencimiento: Date | null;
     planNombre: string | null;
-    planFrecuencia: FrecuenciaPago | null;
   };
 }

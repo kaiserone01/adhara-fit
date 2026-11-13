@@ -2,9 +2,8 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { obtenerUsuarioDeSesionActual } from "@/lib/sesion";
 import { PrismaPlanRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPlanRepository";
-import { contarImpactoCambioPlan } from "@gym-app/domain/use-cases/ContarImpactoCambioPlan";
 import { FormularioPlan } from "../FormularioPlan";
-import { actualizarPlanAction, actualizarFrecuenciaPlanAction } from "../actions";
+import { actualizarPlanAction } from "../actions";
 import { PageHeader } from "@gym-app/ui/components/PageHeader";
 
 export default async function PaginaEditarPlan({ params }: { params: Promise<{ id: string }> }) {
@@ -14,11 +13,8 @@ export default async function PaginaEditarPlan({ params }: { params: Promise<{ i
 
   const { id } = await params;
 
-  const planRepo = new PrismaPlanRepository(prisma);
-  const plan = await planRepo.buscarPorId(usuario.organizacionId, id);
+  const plan = await new PrismaPlanRepository(prisma).buscarPorId(usuario.organizacionId, id);
   if (!plan) notFound();
-
-  const cantidadSuscripcionesActivas = await contarImpactoCambioPlan({ planes: planRepo }, id);
 
   return (
     <div className="max-w-lg p-6 lg:p-8">
@@ -30,15 +26,8 @@ export default async function PaginaEditarPlan({ params }: { params: Promise<{ i
         accion={actualizarPlanAction.bind(null, id)}
         valoresIniciales={{
           nombre: plan.nombre,
-          frecuencia: plan.frecuencia,
           diasCiclo: plan.diasCiclo,
-          incluyeEntrenador: plan.incluyeEntrenador,
           precioUSD: plan.precioUSD,
-          multisede: plan.multisede,
-        }}
-        cambioFrecuencia={{
-          accion: actualizarFrecuenciaPlanAction.bind(null, id),
-          cantidadSuscripcionesActivas,
         }}
       />
     </div>

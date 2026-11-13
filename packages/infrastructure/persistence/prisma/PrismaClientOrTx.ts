@@ -1,7 +1,7 @@
 import type { PrismaClient, Prisma } from "@gym-app/db/generated/prisma/client";
 
 // Tipo aceptado por los repos que participan en transacciones (ver
-// CambiarPlanConPago: guardado atómico de Miembro/Suscripcion/Pago/
+// CambiarPlan: guardado atómico de Miembro/Suscripcion/Pago/
 // CambioPlanAuditoria en un solo prisma.$transaction). Prisma.TransactionClient
 // es el mismo PrismaClient sin los métodos de nivel de conexión
 // ($connect/$disconnect/$on/$use/$extends), que ningún repo usa — así un

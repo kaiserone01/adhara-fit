@@ -5,7 +5,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { obtenerUsuarioDeSesion } from "@/lib/sesion";
 import { PrismaMemberRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaMemberRepository";
-import { PrismaPlanRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPlanRepository";
 import { PrismaSuscripcionRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSuscripcionRepository";
 import { PrismaSucursalRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSucursalRepository";
 import {
@@ -76,7 +75,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (body.celular !== undefined) cambios.celular = body.celular;
   if (body.fotoUrl !== undefined) cambios.fotoUrl = body.fotoUrl;
   if (body.entrenadorId !== undefined) cambios.entrenadorId = body.entrenadorId;
-  if (body.planId !== undefined) cambios.planId = body.planId;
+  if (body.planId !== undefined) {
+    return NextResponse.json({ error: "El plan no se cambia aquí: usa el cambio de plan de la ficha del socio." }, { status: 400 });
+  }
   if (body.precioPlan !== undefined) cambios.precioPlan = body.precioPlan;
   if (body.activo !== undefined) cambios.activo = body.activo;
 
@@ -87,7 +88,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const miembro = await actualizarMiembro(
       {
         miembros: new PrismaMemberRepository(prisma),
-        planes: new PrismaPlanRepository(prisma),
         suscripciones: new PrismaSuscripcionRepository(prisma),
         sucursales: new PrismaSucursalRepository(prisma),
       },

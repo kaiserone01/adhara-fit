@@ -1,7 +1,8 @@
-// Unidad de trabajo en memoria SOLO para pruebas de cobro y anulación: mismo contrato que PrismaUnidadDeTrabajo
-// (si la operación lanza, el estado vuelve a como estaba), sin base de datos.
+// Unidad de trabajo en memoria SOLO para pruebas de cobro, cambio de plan y anulación: mismo contrato que
+// PrismaUnidadDeTrabajo (si la operación lanza, el estado vuelve a como estaba), sin base de datos.
 import type { IUnidadDeTrabajo } from "../ports/IUnidadDeTrabajo";
 import type { Pago, DatosNuevoPago } from "../entities/Pago";
+import type { CambioPlanAuditoria, DatosNuevoCambioPlanAuditoria } from "../entities/CambioPlanAuditoria";
 
 export interface MiembroMemoria {
   id: string;
@@ -29,6 +30,7 @@ export interface EstadoMemoria {
   planes: PlanMemoria[];
   pagos: Pago[];
   suscripcion: SuscripcionMemoria | null;
+  auditorias: CambioPlanAuditoria[];
 }
 
 export function crearEstadoMemoria(parcial: Partial<EstadoMemoria> = {}): EstadoMemoria {
@@ -37,6 +39,7 @@ export function crearEstadoMemoria(parcial: Partial<EstadoMemoria> = {}): Estado
     planes: [{ id: "mensual", activo: true, precioUSD: 100, diasCiclo: 30 }],
     pagos: [],
     suscripcion: null,
+    auditorias: [],
     ...parcial,
   };
 }
@@ -80,8 +83,11 @@ export function crearUnidadEnMemoria(estado: EstadoMemoria): IUnidadDeTrabajo {
           buscarPorId: async (_org: string, id: string) => estado.pagos.find((p) => p.id === id) ?? null,
           listarPorMiembro: async () => [...estado.pagos],
           crear: async (datos: DatosNuevoPago) => {
+            secuencia += 1;
             const pago = {
-              id: `pago-${++secuencia}`,
+              id: `pago-${String(secuencia).padStart(4, "0")}`,
+              // Un milisegundo más que el anterior: el orden de registro es estricto, como en la base.
+              creadoEn: new Date(Date.UTC(2026, 0, 1) + secuencia),
               anuladoEn: null,
               anuladoPorId: null,
               motivoAnulacion: null,
@@ -98,6 +104,14 @@ export function crearUnidadEnMemoria(estado: EstadoMemoria): IUnidadDeTrabajo {
             pago.motivoAnulacion = motivo;
             return pago;
           },
+        },
+        auditoriaCambioPlan: {
+          crear: async (datos: DatosNuevoCambioPlanAuditoria) => {
+            const registro: CambioPlanAuditoria = { id: `aud-${estado.auditorias.length + 1}`, fecha: new Date(), ...datos };
+            estado.auditorias.push(registro);
+            return registro;
+          },
+          buscarPorPagoId: async (pagoId: string) => estado.auditorias.find((a) => a.pagoId === pagoId) ?? null,
         },
       };
       try {

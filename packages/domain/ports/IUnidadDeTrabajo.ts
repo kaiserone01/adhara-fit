@@ -2,12 +2,14 @@ import type { IMemberRepository } from "./IMemberRepository";
 import type { ISuscripcionRepository } from "./ISuscripcionRepository";
 import type { IPagoRepository } from "./IPagoRepository";
 import type { IPlanRepository } from "./IPlanRepository";
+import type { ICambioPlanAuditoriaRepository } from "./ICambioPlanAuditoriaRepository";
 
 export interface RepositoriosTransaccionales {
   miembros: IMemberRepository;
   suscripciones: ISuscripcionRepository;
   pagos: IPagoRepository;
   planes: IPlanRepository;
+  auditoriaCambioPlan: ICambioPlanAuditoriaRepository;
 }
 
 /**

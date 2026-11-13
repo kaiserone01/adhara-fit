@@ -5,7 +5,6 @@ import { formatearSoles } from "@gym-app/domain/utils/formatearSoles";
 import { useEffect, useMemo, useState } from "react";
 import { normalizarTexto } from "@/lib/normalizarTexto";
 import type { Miembro } from "@gym-app/domain/entities/Miembro";
-import type { FrecuenciaPago } from "@gym-app/domain/entities/Plan";
 
 // Solo los campos que este modal necesita mostrar del plan — evita atar
 // este componente al tipo Plan completo del dominio (activo, etc. no se
@@ -17,12 +16,7 @@ export interface PlanParaModal {
   nombre: string;
   precioUSD: number;
   multisede: boolean;
-  frecuencia: FrecuenciaPago;
   diasCiclo: number;
-  // Necesario para "Cambiar plan" en el Paso 2 del wizard de Caja — el
-  // formulario de cambio de plan (FormularioCambiarPlan) exige elegir
-  // entrenador cuando el plan nuevo lo incluye.
-  incluyeEntrenador: boolean;
 }
 
 const MINIMO_CARACTERES_BUSQUEDA = 3;
@@ -60,9 +54,6 @@ export interface MiembroConPlan {
   fotoUrl: string | null;
   fechaVencimiento: Date | null;
   plan: PlanParaModal | undefined;
-  // Necesarios para "Cambiar plan" en el Paso 2 del wizard de Caja — el
-  // cobro de diferencia (FormularioCambiarPlan) solo aplica con ciclo
-  // vigente, y el selector de entrenador se filtra por sucursal.
   sucursalId: string | null;
   entrenadorId: string | null;
   // Plan asignado y precio acordado del socio: el cobro de su plan actual usa ese precio.

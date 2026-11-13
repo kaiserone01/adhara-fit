@@ -6,7 +6,6 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { obtenerUsuarioDeSesionActual } from "@/lib/sesion";
 import { PrismaMemberRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaMemberRepository";
-import { PrismaPlanRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPlanRepository";
 import { PrismaSuscripcionRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSuscripcionRepository";
 import { esTipoDocumento, type TipoDocumento } from "@gym-app/domain/utils/documento";
 import { validarEntrenadorDeMiembro } from "./validarEntrenadorDeMiembro";
@@ -257,7 +256,6 @@ export async function actualizarMiembroAction(
     pagoOriginal: leerTexto("fechaUltimoPagoOriginal"),
   });
 
-  const planId = resolverPlanId(formData);
   const errorEntrenador = await validarEntrenadorDeMiembro(formData.get("entrenadorId")?.toString() || null, id);
   if (errorEntrenador) return { error: errorEntrenador };
   const fotoUrl = await guardarFoto(formData.get("foto"));
@@ -266,7 +264,6 @@ export async function actualizarMiembroAction(
     await actualizarMiembro(
       {
         miembros: new PrismaMemberRepository(prisma),
-        planes: new PrismaPlanRepository(prisma),
         suscripciones: new PrismaSuscripcionRepository(prisma),
         sucursales: new PrismaSucursalRepository(prisma),
       },
@@ -281,7 +278,6 @@ export async function actualizarMiembroAction(
           sucursalId: resolverSucursalId(sucursalId),
           celular: formData.get("celular")?.toString() || null,
           entrenadorId: formData.get("entrenadorId")?.toString() || null,
-          ...(planId ? { planId } : {}),
           precioPlan,
           ...(fotoUrl ? { fotoUrl } : {}),
           ...cambiosFechas,
@@ -327,7 +323,6 @@ export async function actualizarFotoMiembroAction(
     await actualizarMiembro(
       {
         miembros: new PrismaMemberRepository(prisma),
-        planes: new PrismaPlanRepository(prisma),
         suscripciones: new PrismaSuscripcionRepository(prisma),
         sucursales: new PrismaSucursalRepository(prisma),
       },
@@ -353,7 +348,6 @@ export async function darDeBajaAction(id: string): Promise<void> {
   await actualizarMiembro(
     {
       miembros: new PrismaMemberRepository(prisma),
-      planes: new PrismaPlanRepository(prisma),
       suscripciones: new PrismaSuscripcionRepository(prisma),
       sucursales: new PrismaSucursalRepository(prisma),
     },
@@ -371,7 +365,6 @@ export async function reactivarAction(id: string): Promise<void> {
   await actualizarMiembro(
     {
       miembros: new PrismaMemberRepository(prisma),
-      planes: new PrismaPlanRepository(prisma),
       suscripciones: new PrismaSuscripcionRepository(prisma),
       sucursales: new PrismaSucursalRepository(prisma),
     },

@@ -1,84 +1,81 @@
-import { diaCalendarioLima, sumarDias } from "../utils/fechaLima";
+// S-07: cálculo del cambio de plan a mitad de ciclo. Función pura (sin reloj ni base de datos), compartida por el
+// servidor (`cambiarPlan`) y la vista previa del formulario. Los importes se calculan en céntimos enteros y se
+// redondean una sola vez, half-up; las fechas son días de calendario de Lima.
+import { aCentavos, diaLima, sumarDiasCalendario } from "../utils/vencimiento";
+
+const MS_DIA = 86_400_000;
 
 export interface DatosCambioPlan {
+  /** Hoy: el día de Lima tomado del servidor (nunca el reloj del navegador). */
   hoy: Date;
-  precioViejo: number;
-  diasCicloViejo: number;
-  fechaVencimientoActual: Date;
+  /** Vencimiento actual del socio (último día con acceso). */
+  vencimientoActual: Date;
+  /** Precio acordado vigente del socio (Miembro.precioPlan). */
+  precioActual: number;
+  diasCicloActual: number;
+  /** Precio de catálogo del plan nuevo. */
   precioNuevo: number;
   diasCicloNuevo: number;
 }
 
 export interface ResultadoCambioPlan {
+  /** Días de Lima desde hoy hasta el vencimiento: 0 el día del vencimiento, nunca negativo. */
   diasRestantes: number;
-  // Valor no consumido del plan viejo, en centavos (V = diasRestantes *
-  // tarifaDiariaVieja).
+  /** Lo que queda sin consumir del plan actual, en céntimos. */
   valorNoConsumidoCentavos: number;
-  // Días extra que el excedente (V - precioNuevo) agrega al ciclo base del
-  // plan nuevo, cuando V > precioNuevo. 0 en cualquier otro caso.
+  precioNuevoCentavos: number;
+  /** Días extra que el excedente agrega al ciclo del plan nuevo (0 si hay que cobrar). */
   diasNuevos: number;
+  /** Diferencia a cobrar, en céntimos (0 si el valor no consumido cubre el plan nuevo). */
+  montoCobrarCentavos: number;
   nuevoVencimiento: Date;
-  // precioNuevo - V cuando es positivo (V < precioNuevo); 0 en cualquier
-  // otro caso — nunca se acredita dinero en efectivo ni queda saldo
-  // separado (ver regla de negocio: único camino de cálculo).
-  montoCobradoCentavos: number;
 }
 
-// El plan nuevo es de cortesía ($0) y todavía queda tiempo pagado del plan
-// viejo — bloqueado por defecto (regla 6 del diseño acordado): nunca se
-// regala el tiempo restante ni se divide entre una tarifa de 0.
-export class PlanCortesiaConTiempoRestanteError extends Error {
+export class DatosCambioPlanInvalidosError extends Error {
   constructor() {
-    super("No se puede cambiar a un plan de cortesía mientras quede tiempo pagado del plan actual.");
+    super("Los precios y las duraciones de los planes deben ser positivos.");
   }
 }
 
-const MS_POR_DIA = 86_400_000;
+// Entero cercano a (numerador / denominador), con los .5 hacia arriba. Todo en enteros: sin punto flotante.
+function divisionHalfUp(numerador: number, denominador: number): number {
+  return Math.floor((2 * numerador + denominador) / (2 * denominador));
+}
 
-// Único camino de cálculo del cambio de plan a mitad de ciclo: siempre en
-// USD, siempre un cálculo diferencial en dinero contra el valor no
-// consumido del plan viejo (V). No existe una alternativa de "solo mover
-// la fecha sin dinero de por medio" — todo cambio de plan pasa por acá.
-//
-// - V > precioNuevo: el excedente se convierte en días adicionales del
-//   plan nuevo, sumados al ciclo base. Nunca se acredita dinero en
-//   efectivo ni queda saldo separado.
-// - V < precioNuevo: se cobra la diferencia (precioNuevo - V) y el
-//   vencimiento avanza un ciclo normal del plan nuevo desde hoy.
-// - V == precioNuevo: no se cobra nada, vencimiento avanza un ciclo
-//   normal del plan nuevo desde hoy.
 export function calcularCambioPlan(datos: DatosCambioPlan): ResultadoCambioPlan {
-  const hoyLima = diaCalendarioLima(datos.hoy);
-  const vencimientoLima = diaCalendarioLima(datos.fechaVencimientoActual);
-
-  const diasRestantes = Math.max(
-    0,
-    Math.round((vencimientoLima.getTime() - hoyLima.getTime()) / MS_POR_DIA)
-  );
-
-  if (datos.precioNuevo === 0 && diasRestantes > 0) {
-    throw new PlanCortesiaConTiempoRestanteError();
+  const precioActualCentavos = aCentavos(datos.precioActual);
+  const precioNuevoCentavos = aCentavos(datos.precioNuevo);
+  if (
+    precioActualCentavos <= 0 ||
+    precioNuevoCentavos <= 0 ||
+    !Number.isInteger(datos.diasCicloActual) ||
+    !Number.isInteger(datos.diasCicloNuevo) ||
+    datos.diasCicloActual < 1 ||
+    datos.diasCicloNuevo < 1
+  ) {
+    throw new DatosCambioPlanInvalidosError();
   }
 
-  const valorNoConsumidoCentavos = Math.round(
-    ((datos.precioViejo * 100) / datos.diasCicloViejo) * diasRestantes
-  );
-  const precioNuevoCentavos = Math.round(datos.precioNuevo * 100);
+  const hoy = diaLima(datos.hoy);
+  const diasRestantes = Math.max(0, Math.round((diaLima(datos.vencimientoActual).getTime() - hoy.getTime()) / MS_DIA));
 
-  if (valorNoConsumidoCentavos > precioNuevoCentavos) {
-    // Excedente absorbido en días extra del plan nuevo, sin cobro.
-    const excedenteCentavos = valorNoConsumidoCentavos - precioNuevoCentavos;
-    const tarifaNuevaCentavos = precioNuevoCentavos > 0 ? precioNuevoCentavos / datos.diasCicloNuevo : 0;
-    const diasNuevos = tarifaNuevaCentavos > 0 ? Math.round(excedenteCentavos / tarifaNuevaCentavos) : 0;
-    const nuevoVencimiento = sumarDias(hoyLima, datos.diasCicloNuevo + diasNuevos);
-    return { diasRestantes, valorNoConsumidoCentavos, diasNuevos, nuevoVencimiento, montoCobradoCentavos: 0 };
+  const valorNoConsumidoCentavos = divisionHalfUp(precioActualCentavos * diasRestantes, datos.diasCicloActual);
+
+  let montoCobrarCentavos = 0;
+  let diasNuevos = 0;
+  if (valorNoConsumidoCentavos < precioNuevoCentavos) {
+    montoCobrarCentavos = precioNuevoCentavos - valorNoConsumidoCentavos;
+  } else if (valorNoConsumidoCentavos > precioNuevoCentavos) {
+    const excedente = valorNoConsumidoCentavos - precioNuevoCentavos;
+    diasNuevos = divisionHalfUp(excedente * datos.diasCicloNuevo, precioNuevoCentavos);
   }
 
-  // V < precioNuevo: cobra la diferencia. V == precioNuevo: no cobra nada.
-  // En ambos casos el vencimiento avanza un ciclo normal del plan nuevo
-  // desde hoy, sin días extra.
-  const montoCobradoCentavos = precioNuevoCentavos - valorNoConsumidoCentavos;
-  const nuevoVencimiento = sumarDias(hoyLima, datos.diasCicloNuevo);
-
-  return { diasRestantes, valorNoConsumidoCentavos, diasNuevos: 0, nuevoVencimiento, montoCobradoCentavos };
+  return {
+    diasRestantes,
+    valorNoConsumidoCentavos,
+    precioNuevoCentavos,
+    diasNuevos,
+    montoCobrarCentavos,
+    nuevoVencimiento: sumarDiasCalendario(hoy, datos.diasCicloNuevo + diasNuevos),
+  };
 }

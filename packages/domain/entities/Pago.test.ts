@@ -42,7 +42,7 @@ describe("validarLineasDePago — modo conAbono (RegistrarPago)", () => {
   });
 });
 
-describe("validarLineasDePago — modo exacto (CambiarPlanConPago)", () => {
+describe("validarLineasDePago — modo exacto (cambio de plan)", () => {
   test("acepta una sola línea cuya suma cubre exactamente el objetivo", () => {
     expect(() => validarLineasDePago([linea({ monto: 21.67 })], "exacto", 21.67)).not.toThrow();
   });

@@ -8,6 +8,27 @@ Bitácora de sesiones: la más reciente arriba, solo se añaden entradas. El his
 - **Desplegado:** provisional en Easypanel (`docs/ops/easypanel.md`): imagen del `Dockerfile`, esquema con `prisma db push` al arrancar, alta del primer administrador con `tools/crear-administrador.mjs`.
 - **Preferencia del propietario:** cada código (ADR-nnn, S-nn, REQ…) que se mencione lleva al lado una descripción simple.
 
+## Sesión 2026-11-13 (noche, 13) — Tramo 3 (parte 4): cambio de plan único (S-07)
+**Qué se hizo**
+- Plan simplificado: nombre, duración en días (entero 1–365, **no editable** tras crearlo) y precio mayor que S/ 0.00. Sin frecuencia de pago, sin «incluye entrenador», sin cortesía. El entrenador del socio es opcional e independiente del plan. `ActualizarMiembro` ya no acepta cambio de plan.
+- Cambio de plan a mitad de ciclo: `entities/cambioPlanCalculo.ts` (función pura en céntimos, redondeo half-up) y caso de uso `CambiarPlan`. Valor no consumido = precio acordado × días restantes / días del ciclo actual. Si es menor que el precio del plan nuevo se cobra la diferencia (un pago, un método) y el vencimiento pasa a hoy + días del plan nuevo; si es igual, monto 0; si sobra, monto 0 y se agregan días (excedente × días nuevos / precio nuevo). El cliente manda el monto y el vencimiento que vio y el servidor rechaza si calcula otros (`CambioDesactualizadoError`). `cobroId` obligatorio si hay cobro (reenviarlo no duplica). Todo en una transacción con el socio bloqueado y el vencimiento pasa por `fijarVencimiento`.
+- Auditoría `CambioPlanAuditoria` (en céntimos, con `pagoId`). Anular el cobro de un cambio de plan restaura plan, precio y vencimiento (por la auditoría). «Último cobro» = no anulado con mayor `Pago.creadoEn` (después `id`).
+- Panel: `FormularioCambiarPlan` nuevo (hoy lo fija el servidor, vista previa con el mismo cálculo: días que le quedan, valor no consumido, a cobrar o días agregados, nuevo vencimiento, un solo método). Se abre desde «Cambiar plan» en la ficha del socio solo con membresía vigente; sin vigencia se indica que corresponde un cobro normal. Pantallas y API de planes sin frecuencia ni entrenador; `PATCH /api/planes/[id]` ya no cambia la duración.
+- Se eliminaron `ActualizarFrecuenciaPlan`, `ContarImpactoCambioPlan`, `CalcularVencimientoPlan`, `CambiarPlanConPago` y el contexto de cambios sin guardar. Nueva guardia `tools/verificar-plan.mjs` (+ prueba y paso en CI) que falla si reaparecen esos términos fuera de `packages/db`.
+- Esquema (solo aditivo): `Plan.frecuencia` con default, `Pago.creadoEn` (default `now()`), defaults en `modo` y `origen` de la auditoría.
+
+**Qué funcionó**
+- Dominio 269 pruebas, `tsc` limpio, lint sin errores (5 avisos previos), guardia `verificar-plan` en verde.
+
+**Qué no funcionó / a tener en cuenta**
+- **Asumido, por validar:** al cambiar de plan el precio acordado del socio pasa a ser el de lista del plan nuevo; no hay límite de cambios por día.
+- Desviaciones de la spec por la restricción del despliegue (`prisma db push` sin `--accept-data-loss`): las columnas y valores de enum antiguos (`frecuencia`, `incluyeEntrenador`, enums de modo/origen, `PASAPORTE`) siguen en el esquema sin uso y no hay restricciones CHECK en la base (la validación vive en el dominio). Se quitan con S-15.
+- No implementado: REQ-S07-037 (plan de la suscripción como alternativa si el socio no tiene plan; hoy `MiembroSinPlanError`) ni el permiso PAGOS CREAR (un solo rol administrador). El vencimiento nuevo de la auditoría, leído de una columna `@db.Date`, pierde las 05:00Z (solo se usa en la repetición idempotente).
+
+**Siguiente**
+1. Probar en el despliegue un cambio de plan con cobro, uno que agregue días y su anulación.
+2. Tramo 4 (datos, reportes y marca).
+
 ## Sesión 2026-11-13 (noche, 12) — Despliegue de S-04/S-06 y ajuste del tipo de documento
 **Qué se hizo**
 - El despliegue de S-06/S-04 no arrancaba: `prisma db push` se negaba por tres avisos de restricción única nueva (`Miembro.numeroDocumento`, `Miembro.codigoSocio`, `Pago.cobroId`) y el contenedor caía tras el deploy «verde». Se resolvió reiniciando la base (`DROP SCHEMA public CASCADE; CREATE SCHEMA public;`, a mano en el servicio de la base) porque solo existía el administrador inicial; con la base vacía el esquema se crea sin avisos y el administrador se recrea solo. No se tocó el entrypoint ni se usó `--accept-data-loss`.

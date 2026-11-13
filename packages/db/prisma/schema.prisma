@@ -200,7 +200,8 @@ model Plan {
   organizacionId    String
   organizacion      Organizacion   @relation(fields: [organizacionId], references: [id])
   nombre            String
-  frecuencia        FrecuenciaPago
+  // S-07: sin uso (la duración es diasCiclo). Valor por defecto para que el código no lo escriba; se elimina con S-15.
+  frecuencia        FrecuenciaPago @default(PERSONALIZADO)
   // Duración del ciclo en días — única fuente de verdad (reemplaza el mapa
   // hardcodeado que existía en el dominio). Para las 6 frecuencias fijas
   // se autocompleta (1/7/15/30/180/365); para PERSONALIZADO es el valor
@@ -290,6 +291,8 @@ model Pago {
   numeroOperacion  String?
   tasaCambio       Decimal?    @db.Decimal(10, 2)
   montoBs          Decimal?    @db.Decimal(12, 2)
+  // S-07: orden de registro; el «último cobro» de un socio es el no anulado de mayor creadoEn.
+  creadoEn         DateTime    @default(now())
   fechaPago        DateTime    @default(now())
   fechaInicioCiclo DateTime? // inicio real del ciclo que este pago activó/extendió — null en pagos previos a esta migración
   fechaFinCiclo    DateTime? // fin real de ese ciclo (mismo valor que pasa a ser Suscripcion.fin/Miembro.fechaVencimiento tras este pago)
@@ -442,8 +445,9 @@ model CambioPlanAuditoria {
   diasCicloNuevo           Int
   diasNuevos               Int
   montoCobradoCentavos     Int
-  modo                     ModoCambioPlanAuditoria
-  origen                   OrigenCambioPlanAuditoria
+  // S-07: sin uso (hay una sola operación de cambio de plan); valores por defecto hasta que S-15 los elimine.
+  modo                     ModoCambioPlanAuditoria   @default(CICLO_COMPLETO)
+  origen                   OrigenCambioPlanAuditoria @default(FICHA_MIEMBRO)
 
   pagoId String? // null en AJUSTAR_VENCIMIENTO, donde nunca se cobra nada
   pago   Pago?   @relation(fields: [pagoId], references: [id])

@@ -1,14 +1,12 @@
 import type { PrismaClientOrTx } from "./PrismaClientOrTx";
 import type { IPlanRepository } from "@gym-app/domain/ports/IPlanRepository";
-import type { Plan, DatosNuevoPlan, CambiosPlan, FrecuenciaPago } from "@gym-app/domain/entities/Plan";
+import type { Plan, DatosNuevoPlan, CambiosPlan } from "@gym-app/domain/entities/Plan";
 
 type FilaPlan = {
   id: string;
   organizacionId: string;
   nombre: string;
-  frecuencia: Plan["frecuencia"];
   diasCiclo: number;
-  incluyeEntrenador: boolean;
   precioUSD: { toNumber(): number };
   multisede: boolean;
   activo: boolean;
@@ -19,9 +17,7 @@ function mapear(plan: FilaPlan): Plan {
     id: plan.id,
     organizacionId: plan.organizacionId,
     nombre: plan.nombre,
-    frecuencia: plan.frecuencia,
     diasCiclo: plan.diasCiclo,
-    incluyeEntrenador: plan.incluyeEntrenador,
     precioUSD: plan.precioUSD.toNumber(),
     multisede: plan.multisede,
     activo: plan.activo,
@@ -53,9 +49,7 @@ export class PrismaPlanRepository implements IPlanRepository {
       data: {
         organizacionId: datos.organizacionId,
         nombre: datos.nombre,
-        frecuencia: datos.frecuencia,
         diasCiclo: datos.diasCiclo,
-        incluyeEntrenador: datos.incluyeEntrenador,
         precioUSD: datos.precioUSD,
         multisede: datos.multisede,
       },
@@ -72,26 +66,6 @@ export class PrismaPlanRepository implements IPlanRepository {
     }
 
     const plan = await this.prisma.plan.update({ where: { id }, data: cambios });
-
-    return mapear(plan);
-  }
-
-  async contarSuscripcionesActivasVigentes(planId: string, ahora: Date): Promise<number> {
-    return this.prisma.suscripcion.count({
-      where: { planId, estado: "ACTIVA", fin: { gte: ahora } },
-    });
-  }
-
-  async actualizarFrecuenciaYEntrenador(
-    id: string,
-    frecuencia: FrecuenciaPago,
-    diasCiclo: number,
-    incluyeEntrenador: boolean
-  ): Promise<Plan> {
-    const plan = await this.prisma.plan.update({
-      where: { id },
-      data: { frecuencia, diasCiclo, incluyeEntrenador },
-    });
 
     return mapear(plan);
   }

@@ -8,6 +8,24 @@ Bitácora de sesiones: la más reciente arriba, solo se añaden entradas. El his
 - **Desplegado:** provisional en Easypanel (`docs/ops/easypanel.md`): imagen del `Dockerfile`, esquema con `prisma db push` al arrancar, alta del primer administrador con `tools/crear-administrador.mjs`.
 - **Preferencia del propietario:** cada código (ADR-nnn, S-nn, REQ…) que se mencione lleva al lado una descripción simple.
 
+## Sesión 2026-11-13 (noche, 19) — Tramo 6 (parte 2): `/api/salud` y respaldos (S-17, versión Easypanel)
+**Qué se hizo**
+- `GET /api/salud` público (sin sesión) con solo cinco campos: `estado`, `db`, `ultimoRespaldoHoras`, `ultimaRestauracionDias`, `version`. 503 `caido` si la base no responde en 2 s; con archivo de estado de respaldo configurado, 503 si el último respaldo supera 1 560 minutos (o no hay ninguno tras 26 h en marcha) y 200 `degradado` si la última restauración de prueba supera 35 días o no existe. Archivo ausente o corrupto = «nunca», sin lanzar. Regla pura en `domain/utils/estadoSalud.ts` (+9 pruebas).
+- Variables opcionales `RESPALDO_ESTADO_ARCHIVO` y `APP_VERSION` (en `.env.example`). Sin `RESPALDO_ESTADO_ARCHIVO` los controles de respaldo no se aplican: así un respaldo sin configurar no tumba el servicio ni dispara reinicios del healthcheck.
+- `docs/ops/easypanel.md`: sección «Salud y respaldos» (respaldo automático del servicio de base hacia un bucket, estado opcional en `/api/salud`, prueba mensual de restauración) y limpieza de texto desactualizado.
+
+**Qué funcionó**
+- Dominio 315 pruebas (9 nuevas), `tools` 116 y `verificar-env` sin hallazgos, `tsc` limpio, lint sin errores, build correcto (`/api/salud` dinámico).
+
+**Qué no funcionó / a tener en cuenta**
+- No se implementó la versión de la spec con `docker-compose.prod.yml`, Caddy, `IPS_PERMITIDAS`, contenedor de respaldo con `age` y `restaurar.sh`: el despliegue es Easypanel (que ya pone TLS y proxy). Los respaldos dependen de la función de respaldos de Easypanel, que hay que configurar a mano; la prueba de restauración es manual.
+- No hecho: registros JSON propios (REQ de logging), restricción por IP.
+- `/api/salud` no se probó contra la base real; probar en el despliegue.
+
+**Siguiente**
+1. En Easypanel: poner `/api/salud` como comprobación de salud, configurar el respaldo diario de la base y hacer una primera restauración de prueba.
+2. S-15: línea base de migraciones y limpieza legacy (columnas `activo`, `frecuencia`, `precioUSD`…): tocarlo solo tras probar el despliegue actual y con respaldo hecho.
+
 ## Sesión 2026-11-13 (noche, 18) — Tramo 6 (parte 1): seguridad mínima antes de datos reales (S-01)
 **Qué se hizo**
 - Límite de intentos de login: 5 contraseñas fallidas en 15 minutos por clave (correo normalizado + IP) → 429 con `Retry-After`, sin verificar la contraseña. Conteo, verificación y registro bajo candado asesor por clave (`pg_advisory_xact_lock`). Tabla nueva `IntentoLogin` (aditiva; se purga lo de más de 24 h). La IP es la última de `X-Forwarded-For` (las anteriores las escribe el cliente). Regla pura en `domain/utils/bloqueoLogin.ts` (+4 pruebas); `bloqueoCheckin.ts` pasó a una función genérica `evaluarBloqueoPorFallos`.

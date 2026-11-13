@@ -8,6 +8,7 @@ import { EstadoCheckIn } from "../entities/CheckIn";
 import { validarAccesoSucursal } from "./ValidarAccesoSucursalPorPlan";
 import type { Miembro } from "../entities/Miembro";
 import { esCumpleanos } from "../utils/fechaLima";
+import { esCodigoSocio, normalizarDocumento } from "../utils/documento";
 
 const VENTANA_IDEMPOTENCIA_MINUTOS = 2;
 const MS_POR_DIA = 24 * 60 * 60 * 1000;
@@ -23,7 +24,8 @@ export interface RegistrarCheckInDeps {
 export interface RegistrarCheckInInput {
   organizacionId: string;
   sucursalId: string;
-  cedula: string;
+  // Lo que tecleó el socio, sin interpretar: un código de socio (4 dígitos) o un documento.
+  identificador: string;
 }
 
 export interface RegistrarCheckInResultado {
@@ -55,7 +57,7 @@ export interface RegistrarCheckInResultado {
 
 export class MiembroNoEncontradoError extends Error {
   constructor() {
-    super("No se encontró ningún miembro con esa cédula.");
+    super("No se encontró ningún socio con ese documento o código.");
   }
 }
 
@@ -63,7 +65,10 @@ export async function registrarCheckIn(
   deps: RegistrarCheckInDeps,
   input: RegistrarCheckInInput
 ): Promise<RegistrarCheckInResultado> {
-  const miembro = await deps.miembros.buscarPorOrganizacionYCedula(input.organizacionId, input.cedula);
+  const identificador = input.identificador.trim();
+  const miembro = esCodigoSocio(identificador)
+    ? await deps.miembros.buscarPorCodigoSocio(identificador)
+    : await deps.miembros.buscarPorDocumento(normalizarDocumento(identificador));
 
   if (!miembro) {
     throw new MiembroNoEncontradoError();

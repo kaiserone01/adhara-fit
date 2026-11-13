@@ -71,8 +71,8 @@ export function FormularioPago({
   /** Marca el origen del formulario para que la Server Action decida si redirige o no al terminar. */
   origen?: string;
   // Cuando se pasa (uso en Caja): reemplaza el <select miembroId> por un
-  // botón "Seleccionar miembro" que abre un modal de búsqueda (nombre o
-  // cédula, ≥3 caracteres) — igual criterio que /miembros. Al elegir un
+  // botón "Seleccionar miembro" que abre un modal de búsqueda (nombre,
+  // documento o código, ≥3 caracteres) — igual criterio que /miembros. Al elegir un
   // miembro, el plan y el monto se fijan automáticamente según su plan
   // vigente (no se elige plan ni se tipea monto acá; el cambio de plan es
   // exclusivo de /miembros, ver diseño acordado).
@@ -159,7 +159,7 @@ export function FormularioPago({
                   {miembroElegido.nombre}
                 </span>
                 <span className="block text-xs" style={{ color: "var(--gx-muted)" }}>
-                  {miembroElegido.cedula}
+                  {miembroElegido.documento}
                 </span>
               </span>
               <span className="text-xs font-medium" style={{ color: "var(--gx-accent)" }}>

@@ -5,7 +5,7 @@ import { cargarConfig } from "@/lib/config";
 import { registrarCheckIn, fijarUrlApi, ErrorCheckIn } from "@/lib/api";
 import { encolar, listarPendientes } from "@/lib/colaPendientes";
 import { reintentarPendientes } from "@/lib/reintentarPendientes";
-import { useEntradaCedula } from "@/lib/useEntradaCedula";
+import { useEntradaIdentificador } from "@/lib/useEntradaIdentificador";
 import { estadoInicial, reducirPantalla, type Ficha, type FichaActiva } from "@/lib/estadoPantalla";
 import { caraDeResultado, tonoDeCara, type Tono } from "@/lib/cara";
 import { precargarFoto } from "@/lib/precargarFoto";
@@ -26,9 +26,9 @@ const REINTENTO_PENDIENTES_MS = 30_000;
 // Tope de espera por la foto antes de voltear la ficha (si falla, sale con iniciales).
 const ESPERA_FOTO_MS = 1_500;
 
-// Recuadro del campo de cédula, igual con y sin host nativo.
-const CLASES_CAMPO_CEDULA = "w-full max-w-2xl text-center text-6xl tracking-widest rounded-xl border-2 px-6 py-4";
-const ESTILO_CAMPO_CEDULA = { borderColor: "var(--gx-accent)", color: "var(--gx-ink)" };
+// Recuadro del campo del identificador, igual con y sin host nativo.
+const CLASES_CAMPO_IDENTIFICADOR = "w-full max-w-2xl text-center text-6xl tracking-widest rounded-xl border-2 px-6 py-4";
+const ESTILO_CAMPO_IDENTIFICADOR = { borderColor: "var(--gx-accent)", color: "var(--gx-ink)" };
 
 function contenidoFicha(ficha: FichaActiva) {
   switch (ficha.tipo) {
@@ -64,7 +64,7 @@ export default function PaginaCheckIn() {
   const [pantalla, despachar] = useReducer(reducirPantalla, estadoInicial);
   const [reaccion, setReaccion] = useState<Reaccion | null>(null);
   const [pendientes, setPendientes] = useState(0);
-  const { cedula, limpiar, sinInput, propsInput } = useEntradaCedula({ alEnviar: enviar });
+  const { identificador, limpiar, sinInput, propsInput } = useEntradaIdentificador({ alEnviar: enviar });
   const info = useInfoCheckin(apiKey);
   const { frase, saliendo } = useFraseRotativa(useFrasesReposo(info?.reposo));
   const hora = useHoraActual();
@@ -125,16 +125,16 @@ export default function PaginaCheckIn() {
     setReaccion((previa) => ({ id: (previa?.id ?? 0) + 1, tono }));
   }
 
-  async function enviar(cedula: string) {
-    if (!apiKey || !cedula || pantalla.procesando) return;
+  async function enviar(identificador: string) {
+    if (!apiKey || !identificador || pantalla.procesando) return;
 
     despachar({ tipo: "enviar" });
 
     // Primero se resuelve qué mostrar y recién después se muestra: un fallo al mostrar no debe
-    // confundirse con una red caída (que encolaría la cédula por error).
+    // confundirse con una red caída (que encolaría el identificador por error).
     let salida: { ficha: Ficha; tono: Tono };
     try {
-      const resultado = await registrarCheckIn(apiKey, cedula);
+      const resultado = await registrarCheckIn(apiKey, identificador);
       const ahora = new Date();
       const { cara, diasParaVencer } = caraDeResultado(resultado, ahora);
       salida = {
@@ -154,7 +154,7 @@ export default function PaginaCheckIn() {
         salida = { ficha: { tipo: "error", mensaje: error.message }, tono: "rojo" };
       } else {
         try {
-          await encolar(cedula);
+          await encolar(identificador);
           actualizarPendientes();
           salida = { ficha: { tipo: "pendiente" }, tono: "ambar" };
         } catch {
@@ -197,16 +197,16 @@ export default function PaginaCheckIn() {
 
       <div className="flex w-full flex-col items-center gap-2">
         <h1 className="text-7xl" style={{ fontFamily: '"Bebas Neue", sans-serif', letterSpacing: "0.02em" }}>
-          Ingresa tu cédula
+          Ingresa tu documento o código de socio
         </h1>
 
         {sinInput ? (
-          // Dentro de apps/kiosk-host o de la APK la cédula llega por teclas del numpad: no hace falta foco.
-          <div className={`${CLASES_CAMPO_CEDULA} min-h-[5.5rem]`} style={ESTILO_CAMPO_CEDULA}>
-            {cedula}
+          // Dentro de apps/kiosk-host o de la APK el identificador llega por teclas del numpad: no hace falta foco.
+          <div className={`${CLASES_CAMPO_IDENTIFICADOR} min-h-[5.5rem]`} style={ESTILO_CAMPO_IDENTIFICADOR}>
+            {identificador}
           </div>
         ) : (
-          <input {...propsInput} className={`${CLASES_CAMPO_CEDULA} bg-transparent outline-none`} style={ESTILO_CAMPO_CEDULA} />
+          <input {...propsInput} className={`${CLASES_CAMPO_IDENTIFICADOR} bg-transparent outline-none`} style={ESTILO_CAMPO_IDENTIFICADOR} />
         )}
 
         <p className="min-h-[2.5rem] text-3xl" style={{ color: errorConfig ? "var(--gx-bad)" : "var(--gx-muted)" }}>

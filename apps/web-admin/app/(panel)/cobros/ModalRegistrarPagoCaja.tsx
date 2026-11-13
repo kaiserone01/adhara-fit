@@ -82,7 +82,7 @@ function CabeceraMiembro({ miembro }: { miembro: MiembroConPlan }) {
         <p className="truncate text-lg font-semibold" style={{ color: "var(--gx-ink)" }}>
           {miembro.nombre}
         </p>
-        <p style={{ color: "var(--gx-muted)" }}>{miembro.cedula}</p>
+        <p style={{ color: "var(--gx-muted)" }}>{miembro.documento}</p>
       </div>
     </div>
   );
@@ -937,7 +937,7 @@ function ContenidoPaso4({
           <p className="truncate text-lg font-semibold" style={{ color: "var(--gx-ink)" }}>
             {miembro.nombre}
           </p>
-          <p style={{ color: "var(--gx-muted)" }}>{miembro.cedula}</p>
+          <p style={{ color: "var(--gx-muted)" }}>{miembro.documento}</p>
         </div>
       </div>
 

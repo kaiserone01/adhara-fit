@@ -8,6 +8,27 @@ Bitácora de sesiones: la más reciente arriba, solo se añaden entradas. El his
 - **Desplegado:** provisional en Easypanel (`docs/ops/easypanel.md`): imagen del `Dockerfile`, esquema con `prisma db push` al arrancar, alta del primer administrador con `tools/crear-administrador.mjs`.
 - **Preferencia del propietario:** cada código (ADR-nnn, S-nn, REQ…) que se mencione lleva al lado una descripción simple.
 
+## Sesión 2026-11-13 (noche, 10) — Tramo 3 (parte 2): DNI, carné de extranjería y pasaporte (S-06)
+**Qué se hizo**
+- Esquema: enum `TipoDocumento` (DNI, CE, PASAPORTE); en `Miembro`, `cedula` se reemplaza por `tipoDocumento` (por defecto DNI), `numeroDocumento` (único en todo el sistema, sin importar el tipo) y `codigoSocio` (opcional, único). Se quitó la unicidad `(organizacionId, cedula)`. `MiembroReferencia.cedula` (padrón) queda hasta S-10/S-15.
+- Dominio: `utils/documento.ts` (`normalizarDocumento`, `validarDocumento`, `esCodigoSocio`, `descripcionDocumento`), errores `DocumentoInvalidoError`, `DocumentoDuplicadoError`, `CodigosSocioAgotadosError`, `CodigoSocioEnConflictoError` (sin el número en el mensaje), `AsignarCodigoSocio` (máximo + 1, 4 dígitos, hasta 3 reintentos ante choque). `crearMiembro` y `actualizarMiembro` validan formato y duplicado; quien es CE o pasaporte recibe código de socio (también al pasar de DNI a CE/pasaporte) y el código nunca se cambia. Puerto/repositorio: `buscarPorDocumento`, `buscarPorCodigoSocio`, `maximoCodigoSocio`; la violación de unicidad de Prisma (P2002) se traduce al error de dominio.
+- Check-in: `registrarCheckIn` y `api/checkin` reciben `{ identificador }` (hasta 20 caracteres; 4 dígitos = código de socio, otro texto = documento normalizado); la respuesta no incluye documento ni código. La app de check-in pasó de `cedula` a `identificador` (hook `useEntradaIdentificador`, cola de pendientes, texto «Ingresa tu documento o código de socio»).
+- Panel: alta/edición de socio con selector de tipo y número (con aviso del código de socio), ficha, lista y selector de socio muestran «DNI 12345678» y buscan por nombre, documento y código. `api/miembros` acepta `tipoDocumento`/`numeroDocumento`, rechaza `cedula` con 400 y responde 400/409 según el error. Los `console.error` de check-in y alta de socio ya solo registran el nombre del error.
+- `tools/verificar-documento.mjs` (con prueba) falla si reaparece «cedula»/«cédula» en `apps/` o `packages/` (exenciones: `packages/db/` y 2 líneas de `api/miembros`); añadido al CI.
+
+**Qué funcionó**
+- Dominio 278 pruebas en verde (nuevas: `documento`, `CrearMiembro`/código de socio, documento en `ActualizarMiembro` y `RegistrarCheckIn`); check-in 50; `tsc` solo con el error previo de `LayoutProps`; lint sin errores.
+
+**Qué no funcionó / a tener en cuenta**
+- **Asumido, por validar:** CE de 9–12 y pasaporte de 6–12 caracteres alfanuméricos; DNI de 8 dígitos; código de socio de 4 dígitos asignado automáticamente.
+- **No se añadieron los CHECK de PostgreSQL** del spec (formato por tipo, código de 4 dígitos): `prisma db push` no los soporta; la validación vive en el dominio. Se pueden añadir con una migración SQL cuando se adopte S-15.
+- El cambio de `cedula` a `numeroDocumento` quita y crea columnas en `Miembro`: `db push` solo lo acepta con la tabla vacía (hoy solo existe el administrador inicial). Si ya hubiera socios, hay que reiniciar la base antes de desplegar.
+- El hook del check-in sigue filtrando solo dígitos (el teclado numérico del TV); S-21 decide cómo teclear documentos alfanuméricos. `activarMiembroDesdePadron` ya no existía, así que no hubo que quitarlo del check-in.
+- Sin ejecutar: la app en el navegador.
+
+**Siguiente**
+1. S-04 (pago único de membresía) y S-07 (cambio de plan único).
+
 ## Sesión 2026-11-13 (noche, 9) — Tramo 3 (parte 1): entrenadores como registro propio (S-18)
 **Qué se hizo**
 - Tabla nueva `Entrenador` (nombre, teléfono, foto, activo; sin credenciales ni `organizacionId`) y `Miembro.entrenadorId` ahora apunta a ella en lugar de `UsuarioAdmin` (cambio aditivo; se quitó `miembrosEntrenados` de `UsuarioAdmin`). Las filas antiguas `UsuarioAdmin` con `rol=ENTRENADOR` se ignoran (no existen en la práctica).

@@ -75,7 +75,7 @@ body {
   }
 }
 
-/* Destello radial sobre el video al validar una cédula (verde, ámbar o rojo). */
+/* Destello radial sobre el video al validar un identificador (verde, ámbar o rojo). */
 .destello {
   position: fixed;
   inset: 0;

@@ -5,8 +5,15 @@ import { prisma } from "@/lib/prisma";
 import { obtenerUsuarioDeSesion } from "@/lib/sesion";
 import { PrismaMemberRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaMemberRepository";
 import { listarMiembros } from "@gym-app/domain/use-cases/ListarMiembros";
+import { esTipoDocumento } from "@gym-app/domain/utils/documento";
 import { validarEntrenadorDeMiembro } from "@/app/(panel)/miembros/validarEntrenadorDeMiembro";
-import { crearMiembro, CedulaDuplicadaError } from "@gym-app/domain/use-cases/CrearMiembro";
+import {
+  crearMiembro,
+  CodigoSocioEnConflictoError,
+  CodigosSocioAgotadosError,
+  DocumentoDuplicadoError,
+  DocumentoInvalidoError,
+} from "@gym-app/domain/use-cases/CrearMiembro";
 
 export async function GET(req: NextRequest) {
   const sesion = await obtenerUsuarioDeSesion(req);
@@ -36,9 +43,16 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
 
-    if (!body.nombre || !body.cedula || !body.sucursalId || body.precioPlan === undefined) {
+    if ("cedula" in body) {
+      return NextResponse.json({ error: "El campo cedula ya no existe: usa tipoDocumento y numeroDocumento." }, { status: 400 });
+    }
+    const tipoDocumento = body.tipoDocumento ?? "DNI";
+    if (!esTipoDocumento(tipoDocumento)) {
+      return NextResponse.json({ error: "tipoDocumento debe ser DNI, CE o PASAPORTE." }, { status: 400 });
+    }
+    if (!body.nombre || typeof body.numeroDocumento !== "string" || !body.sucursalId || body.precioPlan === undefined) {
       return NextResponse.json(
-        { error: "nombre, cedula, sucursalId y precioPlan son requeridos." },
+        { error: "nombre, numeroDocumento, sucursalId y precioPlan son requeridos." },
         { status: 400 }
       );
     }
@@ -52,7 +66,8 @@ export async function POST(req: NextRequest) {
         organizacionId: usuario.organizacionId,
         sucursalId: body.sucursalId,
         nombre: body.nombre,
-        cedula: body.cedula,
+        tipoDocumento,
+        numeroDocumento: body.numeroDocumento,
         fechaInscripcion: body.fechaInscripcion ? new Date(body.fechaInscripcion) : null,
         fechaNacimiento: body.fechaNacimiento ? new Date(body.fechaNacimiento) : null,
         celular: body.celular ?? null,
@@ -65,10 +80,18 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(miembro, { status: 201 });
   } catch (error) {
-    if (error instanceof CedulaDuplicadaError) {
+    if (error instanceof DocumentoInvalidoError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+    if (
+      error instanceof DocumentoDuplicadoError ||
+      error instanceof CodigosSocioAgotadosError ||
+      error instanceof CodigoSocioEnConflictoError
+    ) {
       return NextResponse.json({ error: error.message }, { status: 409 });
     }
-    console.error("Error al crear miembro:", error);
+    // Solo el tipo de error: el mensaje podría arrastrar el documento del socio.
+    console.error("Error al crear miembro:", error instanceof Error ? error.name : "desconocido");
     return NextResponse.json(
       { error: "Error interno al crear el miembro." },
       { status: 500 }

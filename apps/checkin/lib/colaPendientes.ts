@@ -4,7 +4,7 @@ const ALMACEN = "pendientes";
 
 export interface CheckInPendiente {
   id: number;
-  cedula: string;
+  identificador: string;
   // Solo para mostrarle al staff cuándo se encoló — NO es la fechaHora real
   // del check-in, esa la pone el servidor cuando finalmente se procesa.
   encoladoEn: string;
@@ -26,11 +26,11 @@ function abrirDB(): Promise<IDBDatabase> {
   });
 }
 
-export async function encolar(cedula: string): Promise<void> {
+export async function encolar(identificador: string): Promise<void> {
   const db = await abrirDB();
   await new Promise<void>((resolve, reject) => {
     const tx = db.transaction(ALMACEN, "readwrite");
-    tx.objectStore(ALMACEN).add({ cedula, encoladoEn: new Date().toISOString() });
+    tx.objectStore(ALMACEN).add({ identificador, encoladoEn: new Date().toISOString() });
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
   });

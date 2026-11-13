@@ -5,7 +5,7 @@ import type { Miembro } from "../entities/Miembro";
 function crearDeps(miembro: Partial<Miembro>) {
   return {
     miembros: {
-      buscarPorOrganizacionYCedula: async () => ({
+      buscarPorDocumento: async () => ({
         id: "m1",
         nombre: "Camila Ledezma Barrios",
         fotoUrl: null,
@@ -23,7 +23,7 @@ function crearDeps(miembro: Partial<Miembro>) {
   } as unknown as Parameters<typeof registrarCheckIn>[0];
 }
 
-const input = { organizacionId: "org", sucursalId: "s1", cedula: "123" };
+const input = { organizacionId: "org", sucursalId: "s1", identificador: "12345678" };
 
 afterEach(() => vi.useRealTimers());
 
@@ -43,9 +43,26 @@ describe("registrarCheckIn — cumpleaños", () => {
   });
 });
 
-describe("registrarCheckIn — cédula desconocida", () => {
-  test("si la cédula no es de ningún miembro lanza MiembroNoEncontradoError", async () => {
-    const deps = { miembros: { buscarPorOrganizacionYCedula: async () => null } } as unknown as Parameters<typeof registrarCheckIn>[0];
+describe("registrarCheckIn — identificador (S-06)", () => {
+  test("cuatro dígitos busca por código de socio; otro texto, por documento normalizado", async () => {
+    const consultas: string[] = [];
+    const miembro = { id: "m1", nombre: "Ana", fotoUrl: null, entrenadorNombre: null, fechaVencimiento: null, sucursalId: null, fechaNacimiento: null };
+    const deps = {
+      miembros: {
+        buscarPorCodigoSocio: async (c: string) => (consultas.push("codigo:" + c), miembro),
+        buscarPorDocumento: async (n: string) => (consultas.push("doc:" + n), miembro),
+      },
+      checkIns: { buscarRecientePorMiembroYSucursal: async () => ({ estadoAlMomento: "activo" }) },
+      suscripciones: {},
+      sucursales: { buscarPorId: async () => ({ diasGracia: 0, nombre: "Sede", direccion: null }) },
+    } as unknown as Parameters<typeof registrarCheckIn>[0];
+    await registrarCheckIn(deps, { ...input, identificador: " 0042 " });
+    await registrarCheckIn(deps, { ...input, identificador: "ab-123 456" });
+    expect(consultas).toEqual(["codigo:0042", "doc:AB123456"]);
+  });
+
+  test("si no es de ningún miembro lanza MiembroNoEncontradoError", async () => {
+    const deps = { miembros: { buscarPorDocumento: async () => null } } as unknown as Parameters<typeof registrarCheckIn>[0];
     await expect(registrarCheckIn(deps, input)).rejects.toBeInstanceOf(MiembroNoEncontradoError);
   });
 });
@@ -57,7 +74,7 @@ describe("registrarCheckIn — días de gracia solo para planes mensuales", () =
     const creados: unknown[] = [];
     const deps = {
       miembros: {
-        buscarPorOrganizacionYCedula: async () => ({
+        buscarPorDocumento: async () => ({
           id: "m1",
           nombre: "Ana Pérez",
           fotoUrl: null,

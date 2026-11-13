@@ -20,10 +20,18 @@ import type { EntrenadorResumen } from "@gym-app/domain/entities/EntrenadorResum
 import type { SucursalResumen } from "@gym-app/domain/entities/SucursalResumen";
 import type { Plan, FrecuenciaPago } from "@gym-app/domain/entities/Plan";
 import type { MetodoPago } from "@gym-app/domain/entities/MetodoPago";
+import {
+  descripcionDocumento,
+  ETIQUETA_TIPO_DOCUMENTO,
+  TIPOS_DOCUMENTO,
+  type TipoDocumento,
+} from "@gym-app/domain/utils/documento";
 
 export interface ValoresFormularioMiembro {
   nombre: string;
-  cedula: string;
+  tipoDocumento: TipoDocumento;
+  numeroDocumento: string;
+  codigoSocio: string | null;
   celular: string;
   fechaInscripcion: string; // yyyy-mm-dd, solo informativa (no se envía al guardar)
   fechaVencimiento?: string; // yyyy-mm-dd, "" si no tiene
@@ -153,7 +161,9 @@ export function FormularioMiembro({
   }, [estado.error]);
 
   const [nombre, setNombre] = useState(valoresIniciales?.nombre ?? "");
-  const [cedula, setCedula] = useState(valoresIniciales?.cedula ?? "");
+  const [tipoDocumento, setTipoDocumento] = useState<TipoDocumento>(valoresIniciales?.tipoDocumento ?? "DNI");
+  const [numeroDocumento, setNumeroDocumento] = useState(valoresIniciales?.numeroDocumento ?? "");
+  const codigoSocioActual = valoresIniciales?.codigoSocio ?? null;
   const [celular, setCelular] = useState(valoresIniciales?.celular ?? "");
   // Solo informativa: en Nuevo miembro se puede poner una fecha pasada (por defecto hoy) y en la ficha no se edita ni se envía.
   const [fechaInscripcion, setFechaInscripcion] = useState(valoresIniciales?.fechaInscripcion ?? hoyISO());
@@ -443,13 +453,44 @@ export function FormularioMiembro({
             />
 
             <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="flex flex-col gap-1.5 text-sm" style={{ color: "var(--gx-muted)" }}>
+                  Tipo de documento
+                  <select
+                    name="tipoDocumento"
+                    value={tipoDocumento}
+                    onChange={(e) => setTipoDocumento(e.target.value as TipoDocumento)}
+                    className="rounded-lg border px-3 py-2"
+                    style={{ borderColor: "var(--gx-edge)", background: "var(--gx-surface)", color: "var(--gx-ink)" }}
+                  >
+                    {TIPOS_DOCUMENTO.map((t) => (
+                      <option key={t} value={t}>
+                        {ETIQUETA_TIPO_DOCUMENTO[t]}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
               <Input
-                name="cedula"
-                label="Cédula"
+                name="numeroDocumento"
+                label="Número de documento"
                 required
-                value={cedula}
-                onChange={(e) => setCedula(e.target.value)}
+                value={numeroDocumento}
+                onChange={(e) => setNumeroDocumento(e.target.value)}
               />
+            </div>
+            {codigoSocioActual && (
+              <p className="text-sm" style={{ color: "var(--gx-muted)" }}>
+                Código de socio (para registrar su asistencia): <strong style={{ color: "var(--gx-ink)" }}>{codigoSocioActual}</strong>
+              </p>
+            )}
+            {!codigoSocioActual && tipoDocumento !== "DNI" && (
+              <p className="text-sm" style={{ color: "var(--gx-muted)" }}>
+                Se le asignará un código de socio de 4 dígitos al guardar.
+              </p>
+            )}
+
+            <div className="grid grid-cols-2 gap-4">
               <Input
                 name="celular"
                 label="Celular"
@@ -969,7 +1010,8 @@ export function FormularioMiembro({
 
             <dl className="flex flex-col gap-2 text-sm">
               <Fila label="Nombre" valor={nombre || "—"} />
-              <Fila label="Cédula" valor={cedula || "—"} />
+              <Fila label="Documento" valor={numeroDocumento ? descripcionDocumento(tipoDocumento, numeroDocumento) : "—"} />
+              {codigoSocioActual && <Fila label="Código de socio" valor={codigoSocioActual} />}
               <Fila label="Celular" valor={celular || "—"} />
               <Fila label="Inscripción" valor={formatearFecha(fechaInscripcion)} />
               <Fila label="Plan" valor={meses > 1 ? `${nombrePlanActual} · ${meses} meses` : nombrePlanActual} />

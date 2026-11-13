@@ -148,7 +148,9 @@ model Miembro {
   sucursalId       String? // sede asignada al miembro; null = "Ambas" (todas las sedes, solo si plan.multisede) — determina en qué sucursal puede hacer check-in (ver RegistrarCheckIn)
   sucursal         Sucursal?     @relation(fields: [sucursalId], references: [id])
   nombre           String
-  cedula           String // única POR organización (ver @@unique abajo)
+  tipoDocumento    TipoDocumento @default(DNI) // S-06
+  numeroDocumento  String        @unique // S-06: normalizado, único en todo el sistema sin importar el tipo
+  codigoSocio      String?       @unique // S-06: 4 dígitos, solo para CE y pasaporte (quien no puede teclear su documento)
   fechaInscripcion DateTime?
   fechaNacimiento  DateTime?
   celular          String?
@@ -172,8 +174,12 @@ model Miembro {
   suscripciones        Suscripcion[]
   cambiosPlanAuditoria CambioPlanAuditoria[]
   deudasProducto       DeudaProducto[]
+}
 
-  @@unique([organizacionId, cedula])
+enum TipoDocumento {
+  DNI
+  CE
+  PASAPORTE
 }
 
 enum FrecuenciaPago {

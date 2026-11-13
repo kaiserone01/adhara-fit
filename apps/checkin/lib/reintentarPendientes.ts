@@ -5,10 +5,10 @@ import { listarPendientes, quitarPendiente } from "./colaPendientes";
 // red, se corta ahí mismo — la red probablemente sigue caída, no tiene
 // sentido seguir intentando los siguientes en esta pasada (se reintentará
 // en el próximo evento "online"). Si el servidor SÍ responde (aunque sea
-// con un error, ej. cédula que ya no existe), se descarta igual: ya
+// con un error, ej. identificador que ya no existe), se descarta igual: ya
 // obtuvo una respuesta real, reintentar no la va a cambiar.
 export function reintentarPendientes(apiKey: string): Promise<void> {
-  // Una sola pasada a la vez: el temporizador y el evento "online" pueden coincidir y reenviarían la misma cédula dos veces.
+  // Una sola pasada a la vez: el temporizador y el evento "online" pueden coincidir y reenviarían la misma identificador dos veces.
   enCurso ??= pasada(apiKey).finally(() => {
     enCurso = null;
   });
@@ -22,7 +22,7 @@ async function pasada(apiKey: string): Promise<void> {
 
   for (const pendiente of pendientes) {
     try {
-      await registrarCheckIn(apiKey, pendiente.cedula);
+      await registrarCheckIn(apiKey, pendiente.identificador);
       await quitarPendiente(pendiente.id);
     } catch (error) {
       if (error instanceof ErrorCheckIn) {

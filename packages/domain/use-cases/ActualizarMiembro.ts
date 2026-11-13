@@ -6,9 +6,11 @@ import { ISucursalRepository } from "../ports/ISucursalRepository";
 import { Miembro, CambiosMiembro } from "../entities/Miembro";
 import { prorratearVencimiento } from "./CalcularVencimientoPlan";
 import { MiembroFueraDeSucursalError } from "./ObtenerMiembro";
-import { CedulaDuplicadaError } from "./CrearMiembro";
+import { DocumentoDuplicadoError, DocumentoInvalidoError } from "../entities/ErroresMiembro";
+import { normalizarDocumento, requiereCodigoSocio, validarDocumento } from "../utils/documento";
+import { conCodigoSocio } from "./AsignarCodigoSocio";
 
-export { MiembroFueraDeSucursalError, CedulaDuplicadaError };
+export { MiembroFueraDeSucursalError, DocumentoDuplicadoError, DocumentoInvalidoError };
 
 export class MiembroNoEncontradoError extends Error {
   constructor() {
@@ -48,13 +50,25 @@ export async function actualizarMiembro(
     throw new MiembroFueraDeSucursalError(sucursal?.nombre ?? "otra sucursal");
   }
 
-  // La cédula es única por organización: si cambia, no puede ser la de otro miembro.
-  if (input.cambios.cedula !== undefined && input.cambios.cedula !== antes.cedula) {
-    const existente = await deps.miembros.buscarPorOrganizacionYCedula(input.organizacionId, input.cambios.cedula);
-    if (existente && existente.id !== input.id) {
-      throw new CedulaDuplicadaError();
+  // Documento (S-06): si cambia el tipo o el número, debe cumplir el formato y no ser el de otro miembro.
+  const cambios: CambiosMiembro = { ...input.cambios };
+  const tipoFinal = cambios.tipoDocumento ?? antes.tipoDocumento;
+  const numeroFinal = normalizarDocumento(cambios.numeroDocumento ?? antes.numeroDocumento);
+  const cambiaDocumento = tipoFinal !== antes.tipoDocumento || numeroFinal !== antes.numeroDocumento;
+  if (cambiaDocumento) {
+    if (!validarDocumento(tipoFinal, numeroFinal)) {
+      throw new DocumentoInvalidoError();
     }
+    const existente = await deps.miembros.buscarPorDocumento(numeroFinal);
+    if (existente && existente.id !== input.id) {
+      throw new DocumentoDuplicadoError();
+    }
+    cambios.tipoDocumento = tipoFinal;
+    cambios.numeroDocumento = numeroFinal;
   }
+  // El código de socio ya asignado no cambia nunca; solo se asigna uno si el miembro pasa a CE o pasaporte sin tenerlo.
+  delete cambios.codigoSocio;
+  const necesitaCodigo = cambiaDocumento && requiereCodigoSocio(tipoFinal) && antes.codigoSocio === null;
 
   const cambiaDePlan =
     input.cambios.planId !== undefined && input.cambios.planId !== null && input.cambios.planId !== antes.planId;
@@ -71,7 +85,11 @@ export async function actualizarMiembro(
     throw new FechasIncoherentesError();
   }
 
-  const actualizado = await deps.miembros.actualizar(input.organizacionId, input.id, input.cambios);
+  const actualizado = necesitaCodigo
+    ? await conCodigoSocio(deps.miembros, (codigoSocio) =>
+        deps.miembros.actualizar(input.organizacionId, input.id, { ...cambios, codigoSocio })
+      )
+    : await deps.miembros.actualizar(input.organizacionId, input.id, cambios);
   if (!actualizado) {
     throw new MiembroNoEncontradoError();
   }

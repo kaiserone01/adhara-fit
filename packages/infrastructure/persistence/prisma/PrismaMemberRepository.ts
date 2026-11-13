@@ -1,13 +1,27 @@
 import type { PrismaClientOrTx } from "./PrismaClientOrTx";
 import type { IMemberRepository } from "@gym-app/domain/ports/IMemberRepository";
 import type { Miembro, DatosNuevoMiembro, CambiosMiembro } from "@gym-app/domain/entities/Miembro";
+import { CodigoSocioEnConflictoError, DocumentoDuplicadoError } from "@gym-app/domain/entities/ErroresMiembro";
+import type { TipoDocumento } from "@gym-app/domain/utils/documento";
+
+// Traduce la violación de unicidad de Prisma (P2002) al error de dominio según la columna.
+function traducirUnicidad(error: unknown): never {
+  if (typeof error === "object" && error !== null && (error as { code?: string }).code === "P2002") {
+    const detalle = JSON.stringify((error as { meta?: unknown }).meta ?? {}).toLowerCase();
+    if (detalle.includes("codigosocio")) throw new CodigoSocioEnConflictoError();
+    if (detalle.includes("numerodocumento")) throw new DocumentoDuplicadoError();
+  }
+  throw error;
+}
 
 type FilaMiembro = {
   id: string;
   organizacionId: string;
   sucursalId: string | null;
   nombre: string;
-  cedula: string;
+  tipoDocumento: TipoDocumento;
+  numeroDocumento: string;
+  codigoSocio: string | null;
   fechaInscripcion: Date | null;
   fechaNacimiento: Date | null;
   celular: string | null;
@@ -29,7 +43,9 @@ function mapear(miembro: FilaMiembro): Miembro {
     organizacionId: miembro.organizacionId,
     sucursalId: miembro.sucursalId,
     nombre: miembro.nombre,
-    cedula: miembro.cedula,
+    tipoDocumento: miembro.tipoDocumento,
+    numeroDocumento: miembro.numeroDocumento,
+    codigoSocio: miembro.codigoSocio,
     fechaInscripcion: miembro.fechaInscripcion,
     fechaNacimiento: miembro.fechaNacimiento,
     celular: miembro.celular,
@@ -49,15 +65,33 @@ function mapear(miembro: FilaMiembro): Miembro {
 export class PrismaMemberRepository implements IMemberRepository {
   constructor(private readonly prisma: PrismaClientOrTx) {}
 
-  async buscarPorOrganizacionYCedula(organizacionId: string, cedula: string): Promise<Miembro | null> {
+  async buscarPorDocumento(numeroDocumento: string): Promise<Miembro | null> {
     const miembro = await this.prisma.miembro.findUnique({
-      where: { organizacionId_cedula: { organizacionId, cedula } },
+      where: { numeroDocumento },
       include: { entrenador: true },
     });
 
-    if (!miembro) return null;
+    return miembro ? mapear(miembro) : null;
+  }
 
-    return mapear(miembro);
+  async buscarPorCodigoSocio(codigoSocio: string): Promise<Miembro | null> {
+    const miembro = await this.prisma.miembro.findUnique({
+      where: { codigoSocio },
+      include: { entrenador: true },
+    });
+
+    return miembro ? mapear(miembro) : null;
+  }
+
+  async maximoCodigoSocio(): Promise<number> {
+    // Los códigos tienen ancho fijo (4 dígitos), así que el orden de texto es el numérico.
+    const ultimo = await this.prisma.miembro.findFirst({
+      where: { codigoSocio: { not: null } },
+      orderBy: { codigoSocio: "desc" },
+      select: { codigoSocio: true },
+    });
+
+    return ultimo?.codigoSocio ? Number(ultimo.codigoSocio) : 0;
   }
 
   async buscarPorId(organizacionId: string, id: string): Promise<Miembro | null> {
@@ -82,10 +116,9 @@ export class PrismaMemberRepository implements IMemberRepository {
   }
 
   async crear(datos: DatosNuevoMiembro): Promise<Miembro> {
-    const miembro = await this.prisma.miembro.create({
-      data: datos,
-      include: { entrenador: true },
-    });
+    const miembro = await this.prisma.miembro
+      .create({ data: datos, include: { entrenador: true } })
+      .catch(traducirUnicidad);
 
     return mapear(miembro);
   }
@@ -97,11 +130,9 @@ export class PrismaMemberRepository implements IMemberRepository {
       return null;
     }
 
-    const miembro = await this.prisma.miembro.update({
-      where: { id },
-      data: cambios,
-      include: { entrenador: true },
-    });
+    const miembro = await this.prisma.miembro
+      .update({ where: { id }, data: cambios, include: { entrenador: true } })
+      .catch(traducirUnicidad);
 
     return mapear(miembro);
   }

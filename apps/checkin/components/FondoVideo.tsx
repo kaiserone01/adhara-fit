@@ -14,7 +14,7 @@ const DURACION_REACCION_MS = 1_500;
 
 // Video de fondo en bucle. `muted` + `playsInline` son obligatorios para que el autoplay funcione en
 // navegador, PWA, WebView2 y Android TV (el mp4 puede traer pista de audio). El póster evita el
-// negro al cargar. Al validar una cédula acelera a VELOCIDAD_PICO y vuelve a 1x, y lanza un
+// negro al cargar. Al validar un identificador acelera a VELOCIDAD_PICO y vuelve a 1x, y lanza un
 // destello radial del color del resultado.
 export function FondoVideo({ reaccion }: { reaccion: Reaccion | null }) {
   const videoRef = useRef<HTMLVideoElement>(null);

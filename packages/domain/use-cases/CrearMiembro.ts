@@ -1,21 +1,35 @@
 import { IMemberRepository } from "../ports/IMemberRepository";
 import { Miembro, DatosNuevoMiembro } from "../entities/Miembro";
+import {
+  CodigoSocioEnConflictoError,
+  CodigosSocioAgotadosError,
+  DocumentoDuplicadoError,
+  DocumentoInvalidoError,
+} from "../entities/ErroresMiembro";
+import { normalizarDocumento, requiereCodigoSocio, validarDocumento } from "../utils/documento";
+import { conCodigoSocio } from "./AsignarCodigoSocio";
 
-export class CedulaDuplicadaError extends Error {
-  constructor() {
-    super("Ya existe un miembro con esa cédula en esta organización.");
-  }
-}
+export { CodigoSocioEnConflictoError, CodigosSocioAgotadosError, DocumentoDuplicadoError, DocumentoInvalidoError };
 
 export async function crearMiembro(
   deps: { miembros: IMemberRepository },
-  input: DatosNuevoMiembro
+  input: Omit<DatosNuevoMiembro, "codigoSocio">
 ): Promise<Miembro> {
-  const existente = await deps.miembros.buscarPorOrganizacionYCedula(input.organizacionId, input.cedula);
-
-  if (existente) {
-    throw new CedulaDuplicadaError();
+  const numeroDocumento = normalizarDocumento(input.numeroDocumento);
+  if (!validarDocumento(input.tipoDocumento, numeroDocumento)) {
+    throw new DocumentoInvalidoError();
   }
 
-  return deps.miembros.crear(input);
+  if (await deps.miembros.buscarPorDocumento(numeroDocumento)) {
+    throw new DocumentoDuplicadoError();
+  }
+
+  const datos = { ...input, numeroDocumento };
+
+  // Quien no puede teclear su documento (CE, pasaporte) recibe un código de socio de 4 dígitos.
+  if (requiereCodigoSocio(input.tipoDocumento)) {
+    return conCodigoSocio(deps.miembros, (codigoSocio) => deps.miembros.crear({ ...datos, codigoSocio }));
+  }
+
+  return deps.miembros.crear({ ...datos, codigoSocio: null });
 }

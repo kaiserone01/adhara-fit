@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { actualizarMiembro, CedulaDuplicadaError, FechasIncoherentesError } from "./ActualizarMiembro";
+import { actualizarMiembro, DocumentoDuplicadoError, FechasIncoherentesError } from "./ActualizarMiembro";
+import { DocumentoInvalidoError } from "../entities/ErroresMiembro";
 import type { CambiosMiembro } from "../entities/Miembro";
 
 type OpcionesMiembro = {
@@ -8,7 +9,7 @@ type OpcionesMiembro = {
   fechaVencimiento?: Date | null;
 };
 
-function crearDeps(cedulaOcupadaPor: string | null = null, miembro: OpcionesMiembro = {}, tieneSuscripcion = true) {
+function crearDeps(documentoOcupadoPor: string | null = null, miembro: OpcionesMiembro = {}, tieneSuscripcion = true) {
   const cambiosGuardados: CambiosMiembro[] = [];
   const ciclos: { inicio: Date; fin: Date }[] = [];
   const extensiones: Date[] = [];
@@ -19,10 +20,11 @@ function crearDeps(cedulaOcupadaPor: string | null = null, miembro: OpcionesMiem
   const deps = {
     miembros: {
       buscarPorId: async () => ({
-        id: "m1", sucursalId: null, planId: "p1", cedula: "111",
+        id: "m1", sucursalId: null, planId: "p1", tipoDocumento: "DNI", numeroDocumento: "11111111", codigoSocio: null,
         fechaUltimoPago: null, fechaVencimiento: null, ...miembro,
       }),
-      buscarPorOrganizacionYCedula: async () => (cedulaOcupadaPor ? { id: cedulaOcupadaPor } : null),
+      buscarPorDocumento: async () => (documentoOcupadoPor ? { id: documentoOcupadoPor } : null),
+      maximoCodigoSocio: async () => 41,
       actualizar: async (_org: string, _id: string, cambios: CambiosMiembro) => {
         cambiosGuardados.push(cambios);
         return { id: "m1" };
@@ -212,23 +214,35 @@ describe("actualizarMiembro — cambio de plan", () => {
 
 });
 
-describe("actualizarMiembro — cédula", () => {
-  test("permite cambiar la cédula si nadie más la tiene", async () => {
+describe("actualizarMiembro — documento (S-06)", () => {
+  test("permite cambiar el documento si nadie más lo tiene (se guarda normalizado)", async () => {
     const { deps, cambiosGuardados } = crearDeps();
-    await actualizarMiembro(deps, { ...base, cambios: { cedula: "222" } });
-    expect(cambiosGuardados[0]).toEqual({ cedula: "222" });
+    await actualizarMiembro(deps, { ...base, cambios: { numeroDocumento: "2222-2222" } });
+    expect(cambiosGuardados[0]).toEqual({ numeroDocumento: "22222222", tipoDocumento: "DNI" });
   });
 
-  test("rechaza una cédula que ya tiene otro miembro", async () => {
+  test("rechaza un documento que ya tiene otro miembro", async () => {
     const { deps, cambiosGuardados } = crearDeps("otro");
-    await expect(actualizarMiembro(deps, { ...base, cambios: { cedula: "222" } })).rejects.toBeInstanceOf(CedulaDuplicadaError);
+    await expect(actualizarMiembro(deps, { ...base, cambios: { numeroDocumento: "22222222" } })).rejects.toBeInstanceOf(DocumentoDuplicadoError);
     expect(cambiosGuardados).toEqual([]);
   });
 
-  test("guardar con la misma cédula no consulta duplicados", async () => {
+  test("rechaza un documento con formato inválido para el tipo", async () => {
+    const { deps, cambiosGuardados } = crearDeps();
+    await expect(actualizarMiembro(deps, { ...base, cambios: { numeroDocumento: "123" } })).rejects.toBeInstanceOf(DocumentoInvalidoError);
+    expect(cambiosGuardados).toEqual([]);
+  });
+
+  test("guardar con el mismo documento no valida ni consulta duplicados", async () => {
     const { deps, cambiosGuardados } = crearDeps("otro");
-    await actualizarMiembro(deps, { ...base, cambios: { cedula: "111" } });
+    await actualizarMiembro(deps, { ...base, cambios: { numeroDocumento: "11111111" } });
     expect(cambiosGuardados).toHaveLength(1);
+  });
+
+  test("pasar de DNI a pasaporte asigna el siguiente código de socio", async () => {
+    const { deps, cambiosGuardados } = crearDeps();
+    await actualizarMiembro(deps, { ...base, cambios: { tipoDocumento: "PASAPORTE", numeroDocumento: "p123456" } });
+    expect(cambiosGuardados[0]).toMatchObject({ tipoDocumento: "PASAPORTE", numeroDocumento: "P123456", codigoSocio: "0042" });
   });
 });
 

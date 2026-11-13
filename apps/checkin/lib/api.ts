@@ -41,7 +41,7 @@ export class ErrorCheckIn extends Error {
 // haber respuesta) — eso es lo que distingue "sin conexión, reintentar
 // después" (no se lanza ErrorCheckIn) de "el servidor respondió que no"
 // (se lanza ErrorCheckIn, no es reintentable).
-export async function registrarCheckIn(apiKey: string, cedula: string): Promise<ResultadoCheckIn> {
+export async function registrarCheckIn(apiKey: string, identificador: string): Promise<ResultadoCheckIn> {
   if (!urlApi) {
     throw new ErrorCheckIn("La URL del servidor no está configurada en este APK.", 0);
   }
@@ -58,7 +58,7 @@ export async function registrarCheckIn(apiKey: string, cedula: string): Promise<
         "Content-Type": "application/json",
         "X-Checkin-Api-Key": apiKey,
       },
-      body: JSON.stringify({ cedula }),
+      body: JSON.stringify({ identificador }),
       signal: controlador.signal,
     });
     datos = await respuesta.json().catch(() => ({}));

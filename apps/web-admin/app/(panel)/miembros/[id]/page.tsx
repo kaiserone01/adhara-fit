@@ -117,7 +117,9 @@ export default async function PaginaEditarMiembro({ params }: { params: Promise<
         totalPagos={pagos.length}
         valoresIniciales={{
           nombre: miembro.nombre,
-          cedula: miembro.cedula,
+          tipoDocumento: miembro.tipoDocumento,
+          numeroDocumento: miembro.numeroDocumento,
+          codigoSocio: miembro.codigoSocio,
           celular: miembro.celular ?? "",
           fechaInscripcion: formatearFechaISO(miembro.fechaInscripcion ?? miembro.createdAt),
           fechaVencimiento: miembro.fechaVencimiento ? formatearFechaISO(miembro.fechaVencimiento) : "",

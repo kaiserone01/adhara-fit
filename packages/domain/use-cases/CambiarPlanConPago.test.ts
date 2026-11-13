@@ -25,7 +25,9 @@ function crearFakes(estadoInicial: { miembro: Miembro; suscripcion: Suscripcion;
   const auditoriasCreadas: DatosNuevoCambioPlanAuditoria[] = [];
 
   const memberRepo: IMemberRepository = {
-    buscarPorOrganizacionYCedula: async () => null,
+    buscarPorDocumento: async () => null,
+    buscarPorCodigoSocio: async () => null,
+    maximoCodigoSocio: async () => 0,
     buscarPorId: async (_org, id) => miembros.get(id) ?? null,
     listarPorOrganizacion: async () => [...miembros.values()],
     crear: async () => {
@@ -198,7 +200,7 @@ function crearPlan(datos: {
 function crearMiembroConSuscripcion(datos: {
   id: string;
   nombre: string;
-  cedula: string;
+  documento: string;
   plan: Plan;
   vencimiento: Date;
 }) {
@@ -207,7 +209,9 @@ function crearMiembroConSuscripcion(datos: {
     organizacionId: "org-1",
     sucursalId: "sucursal-1",
     nombre: datos.nombre,
-    cedula: datos.cedula,
+    tipoDocumento: "DNI",
+    numeroDocumento: datos.documento,
+    codigoSocio: null,
     fechaInscripcion: null,
     fechaNacimiento: null,
     celular: null,
@@ -271,7 +275,7 @@ describe("cambiarPlanConPago — caso Luis Castro (E1: vista previa vs guardado)
     const { miembro, suscripcion } = crearMiembroConSuscripcion({
       id: "miembro-castro",
       nombre: "Luis Castro",
-      cedula: "99374526",
+      documento: "99374526",
       plan: planViejo,
       vencimiento: vencimientoOriginal,
     });
@@ -342,7 +346,7 @@ describe("cambiarPlanConPago — caso Luis Castro (E1: vista previa vs guardado)
     const { miembro, suscripcion } = crearMiembroConSuscripcion({
       id: "miembro-castro-ciclo",
       nombre: "Luis Castro",
-      cedula: "99374526",
+      documento: "99374526",
       plan: planViejo,
       vencimiento: vencimientoCorto,
     });
@@ -393,7 +397,7 @@ describe("cambiarPlanConPago — caso Luis Castro (E1: vista previa vs guardado)
     const { miembro, suscripcion } = crearMiembroConSuscripcion({
       id: "miembro-castro-combinado",
       nombre: "Luis Castro",
-      cedula: "99374526",
+      documento: "99374526",
       plan: planViejo,
       vencimiento: vencimientoCorto,
     });
@@ -438,7 +442,7 @@ describe("cambiarPlanConPago — caso Luis Castro (E1: vista previa vs guardado)
     const { miembro, suscripcion } = crearMiembroConSuscripcion({
       id: "miembro-castro-lineas-incompletas",
       nombre: "Luis Castro",
-      cedula: "99374526",
+      documento: "99374526",
       plan: planViejo,
       vencimiento: vencimientoCorto,
     });
@@ -471,7 +475,7 @@ describe("cambiarPlanConPago — caso Luis Castro (E1: vista previa vs guardado)
     const { miembro, suscripcion } = crearMiembroConSuscripcion({
       id: "miembro-castro-sin-metodo",
       nombre: "Luis Castro",
-      cedula: "99374526",
+      documento: "99374526",
       plan: planViejo,
       vencimiento: vencimientoCorto,
     });
@@ -509,7 +513,7 @@ describe("cambiarPlanConPago — caso Luis Mendoza (Corporativo -> Plan Viejo, V
     const { miembro, suscripcion } = crearMiembroConSuscripcion({
       id: "miembro-mendoza",
       nombre: "Luis Mendoza",
-      cedula: "11111111",
+      documento: "11111111",
       plan: planViejo,
       vencimiento: vencimientoOriginal,
     });

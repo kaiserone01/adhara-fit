@@ -25,6 +25,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
       - run: node tools/verificar-env.mjs
       - run: node tools/verificar-rol.mjs
+      - run: node tools/verificar-documento.mjs
       - run: node --test "tools/*.test.mjs"
 
   lint:

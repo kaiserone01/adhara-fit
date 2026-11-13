@@ -1,5 +1,6 @@
 "use client";
 
+import { descripcionDocumento } from "@gym-app/domain/utils/documento";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Input } from "@gym-app/ui/components/Input";
@@ -104,7 +105,7 @@ export function ListaMiembros({
     const porNombre = [...filas].sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
 
     return porNombre.filter((miembro) => {
-      if (busquedaAplicada && !normalizarTexto(`${miembro.nombre} ${miembro.cedula}`).includes(busquedaAplicada)) {
+      if (busquedaAplicada && !normalizarTexto(`${miembro.nombre} ${miembro.numeroDocumento} ${miembro.codigoSocio ?? ""}`).includes(busquedaAplicada)) {
         return false;
       }
 
@@ -163,7 +164,7 @@ export function ListaMiembros({
 
       <div className="etiquetas-blancas mb-6 flex flex-wrap items-end gap-4 print:hidden">
         <Input
-          label="Nombre o cédula"
+          label="Nombre, documento o código"
           type="text"
           placeholder="Mínimo 3 caracteres..."
           className="tarjeta-luminosa"
@@ -241,7 +242,7 @@ function VistaImpresion({ miembros }: { miembros: FilaMiembro[] }) {
         <thead>
           <tr className="border-b-2 border-black text-xs uppercase tracking-wide">
             <th className="py-1 pr-2">Nombre</th>
-            <th className="py-1 pr-2">Cédula</th>
+            <th className="py-1 pr-2">Documento</th>
             <th className="py-1 pr-2">Plan</th>
             <th className="py-1 pr-2">Vencimiento</th>
             <th className="py-1">Estado</th>
@@ -251,7 +252,7 @@ function VistaImpresion({ miembros }: { miembros: FilaMiembro[] }) {
           {miembros.map((miembro) => (
             <tr key={miembro.id} className="border-b border-gray-400">
               <td className="py-1.5 pr-2 font-medium">{miembro.nombre}</td>
-              <td className="py-1.5 pr-2">{miembro.cedula}</td>
+              <td className="py-1.5 pr-2">{descripcionDocumento(miembro.tipoDocumento, miembro.numeroDocumento)}</td>
               <td className="py-1.5 pr-2">{miembro.plan?.nombre ?? "Sin plan"}</td>
               <td className="py-1.5 pr-2">{miembro.fechaVencimiento ? formatearFecha(miembro.fechaVencimiento) : "—"}</td>
               <td className="py-1.5 font-semibold">{miembro.activo ? "Activo" : "Inactivo"}</td>
@@ -334,7 +335,7 @@ function VistaLista({ miembros }: { miembros: FilaMiembro[] }) {
             <tr className="border-b text-sm" style={{ borderColor: "var(--gx-edge)", color: "var(--gx-muted)" }}>
               <th className="py-2"></th>
               <th className="py-2">Nombre</th>
-              <th className="py-2">Cédula</th>
+              <th className="py-2">Documento</th>
               <th className="py-2">Plan</th>
               <th className="py-2">Fecha de Vencimiento</th>
               <th className="py-2">Próximo cobro</th>
@@ -352,7 +353,8 @@ function VistaLista({ miembros }: { miembros: FilaMiembro[] }) {
                   {miembro.nombre}
                 </td>
                 <td className="py-2" style={{ color: "var(--gx-ink)" }}>
-                  {miembro.cedula}
+                  {descripcionDocumento(miembro.tipoDocumento, miembro.numeroDocumento)}
+                  {miembro.codigoSocio ? ` · código ${miembro.codigoSocio}` : ""}
                 </td>
                 <td className="py-2" style={{ color: "var(--gx-ink)" }}>
                   {miembro.plan?.nombre ?? "Sin plan"}

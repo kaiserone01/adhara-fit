@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { estadoInicial, reducirPantalla, type Ficha } from "./estadoPantalla";
 
-const errorFicha: Ficha = { tipo: "error", mensaje: "No se encontró ningún miembro con esa cédula." };
+const errorFicha: Ficha = { tipo: "error", mensaje: "No se encontró ningún socio con ese documento o código." };
 const pendiente: Ficha = { tipo: "pendiente" };
 
 describe("reducirPantalla", () => {

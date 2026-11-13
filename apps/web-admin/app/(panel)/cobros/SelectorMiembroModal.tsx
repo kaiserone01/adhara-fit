@@ -1,5 +1,6 @@
 "use client";
 
+import { descripcionDocumento } from "@gym-app/domain/utils/documento";
 import { formatearSoles } from "@gym-app/domain/utils/formatearSoles";
 import { useEffect, useMemo, useState } from "react";
 import { normalizarTexto } from "@/lib/normalizarTexto";
@@ -57,7 +58,8 @@ function Avatar({ fotoUrl, nombre }: { fotoUrl: string | null; nombre: string })
 export interface MiembroConPlan {
   id: string;
   nombre: string;
-  cedula: string;
+  documento: string; // «DNI 12345678»
+  codigoSocio: string | null;
   fotoUrl: string | null;
   fechaVencimiento: Date | null;
   plan: PlanParaModal | undefined;
@@ -76,7 +78,8 @@ export function aMiembroConPlan(m: Miembro, planesPorId: Map<string, PlanParaMod
   return {
     id: m.id,
     nombre: m.nombre,
-    cedula: m.cedula,
+    documento: descripcionDocumento(m.tipoDocumento, m.numeroDocumento),
+    codigoSocio: m.codigoSocio,
     fotoUrl: m.fotoUrl,
     fechaVencimiento: m.fechaVencimiento,
     plan: m.planId ? planesPorId.get(m.planId) : undefined,
@@ -87,7 +90,7 @@ export function aMiembroConPlan(m: Miembro, planesPorId: Map<string, PlanParaMod
 }
 
 /**
- * Contenido de búsqueda de miembro por nombre/cédula (mínimo 3
+ * Contenido de búsqueda de miembro por nombre/documento/código (mínimo 3
  * caracteres) con resultados en cards — usado tanto por
  * SelectorMiembroModal (modal standalone, /pagos/nuevo y
  * /miembros/[id]) como por el Paso 1 del wizard ModalRegistrarPagoCaja,
@@ -114,7 +117,7 @@ export function BuscadorMiembro({
   const resultados = useMemo(() => {
     if (!busquedaAplicada) return [];
     return miembros
-      .filter((m) => normalizarTexto(`${m.nombre} ${m.cedula}`).includes(busquedaAplicada))
+      .filter((m) => normalizarTexto(`${m.nombre} ${m.numeroDocumento} ${m.codigoSocio ?? ""}`).includes(busquedaAplicada))
       .slice(0, 20)
       .map((m) => aMiembroConPlan(m, planesPorId));
   }, [miembros, busquedaAplicada, planesPorId]);
@@ -125,7 +128,7 @@ export function BuscadorMiembro({
   return (
     <>
       <label className={`flex flex-col gap-1.5 ${textoBase}`} style={{ color: "var(--gx-muted)" }}>
-        Nombre o cédula
+        Nombre, documento o código
         <input
           type="text"
           autoFocus
@@ -163,7 +166,7 @@ export function BuscadorMiembro({
                 <p className="truncate font-medium" style={{ color: "var(--gx-ink)" }}>
                   {miembro.nombre}
                 </p>
-                <p style={{ color: "var(--gx-muted)" }}>{miembro.cedula}</p>
+                <p style={{ color: "var(--gx-muted)" }}>{miembro.documento}</p>
               </div>
               <div className="text-right">
                 {!miembro.plan ? (
@@ -187,7 +190,7 @@ export function BuscadorMiembro({
 
 /**
  * Modal de búsqueda de miembro para Registrar pago — reemplaza el
- * <select> plano por búsqueda por nombre/cédula (mínimo 3 caracteres, igual
+ * <select> plano por búsqueda por nombre/documento/código (mínimo 3 caracteres, igual
  * criterio que ListaMiembros en /miembros) con resultados en cards. No
  * navega a la ficha del miembro (eso es exclusivo de /miembros): acá solo
  * se elige a quién se le cobra, y el pago queda atado a su plan vigente —

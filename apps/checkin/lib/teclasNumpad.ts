@@ -7,7 +7,7 @@ export type MensajeTeclado =
   | { type: "clear" };
 
 // Solo teclas del numpad (event.code): la fila numérica normal se ignora a propósito para que un
-// teclado común conectado al TV no pueda escribir cédulas.
+// teclado común conectado al TV no pueda escribir documentos.
 export function mensajeDeTecla(evento: { code: string }): MensajeTeclado | null {
   const digito = /^Numpad(\d)$/.exec(evento.code);
   if (digito) return { type: "digit", value: digito[1] };

@@ -9,8 +9,15 @@ import { PrismaMemberRepository } from "@gym-app/infrastructure/persistence/pris
 import { PrismaPlanRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPlanRepository";
 import { PrismaPagoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPagoRepository";
 import { PrismaSuscripcionRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSuscripcionRepository";
+import { esTipoDocumento, type TipoDocumento } from "@gym-app/domain/utils/documento";
 import { validarEntrenadorDeMiembro } from "./validarEntrenadorDeMiembro";
-import { crearMiembro, CedulaDuplicadaError } from "@gym-app/domain/use-cases/CrearMiembro";
+import {
+  crearMiembro,
+  CodigoSocioEnConflictoError,
+  CodigosSocioAgotadosError,
+  DocumentoDuplicadoError,
+  DocumentoInvalidoError,
+} from "@gym-app/domain/use-cases/CrearMiembro";
 import {
   actualizarMiembro,
   MiembroNoEncontradoError,
@@ -94,6 +101,24 @@ async function guardarFoto(archivo: FormDataEntryValue | null): Promise<string |
   return storageR2().subir("miembros", nombreArchivo, contenido, archivo.type || "application/octet-stream");
 }
 
+// S-06: tipo y número de documento del formulario (el tipo por defecto es DNI; el dominio valida el formato).
+function leerDocumento(formData: FormData): { tipoDocumento: TipoDocumento; numeroDocumento: string } {
+  const tipo = formData.get("tipoDocumento")?.toString();
+  return {
+    tipoDocumento: esTipoDocumento(tipo) ? tipo : "DNI",
+    numeroDocumento: formData.get("numeroDocumento")?.toString().trim() ?? "",
+  };
+}
+
+function esErrorDeDocumento(error: unknown): error is Error {
+  return (
+    error instanceof DocumentoInvalidoError ||
+    error instanceof DocumentoDuplicadoError ||
+    error instanceof CodigosSocioAgotadosError ||
+    error instanceof CodigoSocioEnConflictoError
+  );
+}
+
 export async function crearMiembroAction(
   _estadoPrevio: EstadoFormularioMiembro,
   formData: FormData
@@ -103,7 +128,7 @@ export async function crearMiembroAction(
   const { usuario, sucursalActivaId } = sesion;
 
   const nombre = formData.get("nombre")?.toString().trim();
-  const cedula = formData.get("cedula")?.toString().trim();
+  const documento = leerDocumento(formData);
   const sucursalId = formData.get("sucursalId")?.toString();
   const precioPlan = Number(formData.get("precioPlan"));
   // Primer pago: por defecto el precio completo; menos que eso se registra como abono.
@@ -120,8 +145,8 @@ export async function crearMiembroAction(
   // si no vino, se cae a la sede activa de la sesión.
   const sucursalIdPago = formData.get("sucursalIdPago")?.toString() || sucursalActivaId;
 
-  if (!nombre || !cedula || !sucursalId || Number.isNaN(precioPlan)) {
-    return { error: "Nombre, cédula y sede son requeridos." };
+  if (!nombre || !documento.numeroDocumento || !sucursalId || Number.isNaN(precioPlan)) {
+    return { error: "Nombre, documento y sede son requeridos." };
   }
   // Un plan de cortesía ($0) no tiene nada que cobrar — el método de pago
   // solo es obligatorio cuando hay un monto real de por medio (ver diseño
@@ -148,7 +173,8 @@ export async function crearMiembroAction(
         organizacionId: usuario.organizacionId,
         sucursalId: resolverSucursalId(sucursalId),
         nombre,
-        cedula,
+        tipoDocumento: documento.tipoDocumento,
+        numeroDocumento: documento.numeroDocumento,
         // Viene del formulario (puede ser pasada: miembros anotados en cuaderno); si falta, hoy: el instante en
         // que empieza el día calendario de Lima, que es la medianoche local de Venezuela sin depender de la zona del servidor.
         fechaInscripcion: leerFecha(formData.get("fechaInscripcion")) ?? inicioDelDiaLima(new Date()),
@@ -161,7 +187,7 @@ export async function crearMiembroAction(
       }
     );
   } catch (error) {
-    if (error instanceof CedulaDuplicadaError) {
+    if (esErrorDeDocumento(error)) {
       return { error: error.message };
     }
     throw error;
@@ -245,12 +271,12 @@ export async function actualizarMiembroAction(
   const { usuario, sucursalActivaId } = sesion;
 
   const nombre = formData.get("nombre")?.toString().trim();
-  const cedula = formData.get("cedula")?.toString().trim();
+  const documento = leerDocumento(formData);
   const sucursalId = formData.get("sucursalId")?.toString();
   const precioPlan = Number(formData.get("precioPlan"));
 
-  if (!nombre || !cedula || !sucursalId || Number.isNaN(precioPlan)) {
-    return { error: "Nombre, cédula, sede y precio del plan son requeridos." };
+  if (!nombre || !documento.numeroDocumento || !sucursalId || Number.isNaN(precioPlan)) {
+    return { error: "Nombre, documento, sede y precio del plan son requeridos." };
   }
 
   // null = el campo no se envió (el miembro no puede ajustar esa fecha); "" = el campo se vació.
@@ -284,7 +310,8 @@ export async function actualizarMiembroAction(
         sucursalActivaId,
         cambios: {
           nombre,
-          cedula,
+          tipoDocumento: documento.tipoDocumento,
+          numeroDocumento: documento.numeroDocumento,
           sucursalId: resolverSucursalId(sucursalId),
           celular: formData.get("celular")?.toString() || null,
           entrenadorId: formData.get("entrenadorId")?.toString() || null,
@@ -297,7 +324,7 @@ export async function actualizarMiembroAction(
     );
   } catch (error) {
     if (
-      error instanceof CedulaDuplicadaError ||
+      esErrorDeDocumento(error) ||
       error instanceof FechasIncoherentesError ||
       error instanceof MiembroNoEncontradoError ||
       error instanceof MiembroFueraDeSucursalError ||

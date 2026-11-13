@@ -33,13 +33,22 @@
 
 /* Tarjeta de cristal */
 .login-tarjeta {
-  background: color-mix(in srgb, var(--gx-field-bg) 74%, transparent);
-  -webkit-backdrop-filter: blur(24px);
-  backdrop-filter: blur(24px);
+  background: color-mix(in srgb, var(--gx-field-bg) 42%, transparent);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
   border: 1px solid color-mix(in srgb, var(--gx-accent) 38%, transparent);
   box-shadow:
     0 0 64px -12px color-mix(in srgb, var(--gx-accent) 30%, transparent),
     0 40px 90px -30px rgba(0, 0, 0, 0.85);
+}
+
+/* Con la tarjeta más transparente, una sombra suave mantiene legible el texto */
+.login-tarjeta {
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.7);
+}
+.login-tarjeta .login-boton,
+.login-tarjeta .gx-campo {
+  text-shadow: none;
 }
 
 /* Separador luminoso entre identidad y formulario */

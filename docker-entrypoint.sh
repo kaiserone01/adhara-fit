@@ -1,13 +1,11 @@
 #!/bin/sh
-# Corre las migraciones de Prisma pendientes contra la base real ANTES de
-# arrancar el server — así ningún deploy futuro necesita que alguien entre
-# a la consola del contenedor a correr `prisma migrate deploy` a mano (ver
-# handoff.md, caso real: la migración de la frecuencia "Diario"). Usa el
-# Prisma CLI ya instalado en ./migrate-toolkit (ver Dockerfile) — nada se
-# descarga en tiempo de arranque. `migrate deploy` es idempotente: si no
-# hay migraciones pendientes, no hace nada y no toca datos existentes.
+# Crea o actualiza el esquema de la base ANTES de arrancar el servidor (S-00, SUP-S00-010).
+# Provisional: mientras no haya migraciones (el baseline llega con S-15), `prisma db push` crea las tablas
+# en una base vacía y se niega a aplicar cambios que pierdan datos (no usa --accept-data-loss).
+# S-15 lo reemplaza por el servicio `migrar` y S-22 por drizzle-kit.
+# Usa el CLI ya instalado en ./migrate-toolkit (ver Dockerfile): nada se descarga al arrancar.
 set -e
 
-(cd migrate-toolkit/packages/db && ../../node_modules/.bin/prisma migrate deploy)
+(cd migrate-toolkit/packages/db && ../../node_modules/.bin/prisma db push --config prisma7.config.ts)
 
 exec node apps/web-admin/server.js

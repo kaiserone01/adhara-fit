@@ -34,12 +34,6 @@ services:
       R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:-}
       R2_BUCKET_NAME: ${R2_BUCKET_NAME:-}
       R2_PUBLIC_URL: ${R2_PUBLIC_URL:-}
-    # Con cero migraciones heredadas `migrate deploy` no crea tablas (SUP-S00-010): se crea el esquema
-    # con `prisma db push` antes de arrancar. S-15 lo reemplaza por el servicio `migrar`.
-    entrypoint:
-      - /bin/sh
-      - -c
-      - cd migrate-toolkit/packages/db && ../../node_modules/.bin/prisma db push --config prisma7.config.ts && cd /app && exec node apps/web-admin/server.js
     ports:
       - "3000:3000"
     healthcheck:

@@ -33,7 +33,7 @@
 
 /* Tarjeta de cristal */
 .login-tarjeta {
-  background: color-mix(in srgb, var(--gx-field-bg) 42%, transparent);
+  background: color-mix(in srgb, var(--gx-field-bg) 30%, transparent);
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
   border: 1px solid color-mix(in srgb, var(--gx-accent) 38%, transparent);

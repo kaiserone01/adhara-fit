@@ -1,13 +1,5 @@
 import { IPagoRepository } from "../ports/IPagoRepository";
 import { Pago } from "../entities/Pago";
-import { RolUsuario } from "../entities/UsuarioAdmin";
-import { IAuthorizationService } from "../ports/IAuthorizationService";
-
-export class RolNoAutorizadoError extends Error {
-  constructor() {
-    super("Solo el socio o un gerente pueden anular un pago.");
-  }
-}
 
 export class PagoNoEncontradoError extends Error {
   constructor() {
@@ -31,18 +23,13 @@ export interface DatosAnularPago {
   organizacionId: string;
   pagoId: string;
   anuladoPorId: string;
-  rolAnulador: RolUsuario;
   motivo: string;
 }
 
 export async function anularPago(
-  deps: { pagos: IPagoRepository; autorizacion: IAuthorizationService },
+  deps: { pagos: IPagoRepository },
   input: DatosAnularPago
 ): Promise<Pago> {
-  if (!(await deps.autorizacion.tienePermiso(input.anuladoPorId, "PAGOS", "ELIMINAR"))) {
-    throw new RolNoAutorizadoError();
-  }
-
   if (!input.motivo.trim()) {
     throw new MotivoRequeridoError();
   }

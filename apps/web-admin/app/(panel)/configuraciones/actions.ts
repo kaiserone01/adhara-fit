@@ -16,7 +16,6 @@ export interface EstadoFormularioMetodoPago {
   error?: string;
 }
 
-const SOLO_SOCIO = "Solo el socio puede administrar los métodos de pago.";
 
 async function guardarLogo(archivo: FormDataEntryValue | null): Promise<string | null> {
   if (!(archivo instanceof File) || archivo.size === 0) return null;
@@ -53,7 +52,6 @@ export async function crearMetodoPagoAction(
   const sesion = await obtenerUsuarioDeSesionActual();
   if (!sesion) redirect("/login");
   const { usuario } = sesion;
-  if (usuario.rol !== "SOCIO") return { error: SOLO_SOCIO };
 
   const tipo = formData.get("tipo")?.toString() as TipoMetodoPago | undefined;
   const nombreBanco = formData.get("nombreBanco")?.toString().trim() || null;
@@ -91,7 +89,6 @@ export async function actualizarMetodoPagoAction(
   const sesion = await obtenerUsuarioDeSesionActual();
   if (!sesion) redirect("/login");
   const { usuario } = sesion;
-  if (usuario.rol !== "SOCIO") return { error: SOLO_SOCIO };
 
   const nombreBanco = formData.get("nombreBanco")?.toString().trim() || null;
 
@@ -129,7 +126,6 @@ export async function alternarActivoMetodoPagoAction(id: string, activo: boolean
   const sesion = await obtenerUsuarioDeSesionActual();
   if (!sesion) redirect("/login");
   const { usuario } = sesion;
-  if (usuario.rol !== "SOCIO") return;
 
   await actualizarMetodoPago(
     { metodosPago: new PrismaMetodoPagoRepository(prisma) },

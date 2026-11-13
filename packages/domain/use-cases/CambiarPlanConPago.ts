@@ -3,9 +3,7 @@ import { ISuscripcionRepository } from "../ports/ISuscripcionRepository";
 import { IMemberRepository } from "../ports/IMemberRepository";
 import { IPlanRepository } from "../ports/IPlanRepository";
 import { ISucursalRepository } from "../ports/ISucursalRepository";
-import { IAuthorizationService } from "../ports/IAuthorizationService";
 import { Pago } from "../entities/Pago";
-import { RolUsuario } from "../entities/UsuarioAdmin";
 import { MiembroFueraDeSucursalError } from "./ObtenerMiembro";
 import { calcularCambioPlan, PlanCortesiaConTiempoRestanteError } from "../entities/cambioPlanCalculo";
 import { ICambioPlanAuditoriaRepository } from "../ports/ICambioPlanAuditoriaRepository";
@@ -33,12 +31,6 @@ export class PlanNoEncontradoError extends Error {
 export class PlanInactivoError extends Error {
   constructor() {
     super("No se puede cambiar a un plan inactivo.");
-  }
-}
-
-export class RolNoAutorizadoError extends Error {
-  constructor() {
-    super("Tu rol no tiene permiso para registrar pagos.");
   }
 }
 
@@ -71,7 +63,6 @@ export interface CambiarPlanConPagoDeps {
   miembros: IMemberRepository;
   planes: IPlanRepository;
   sucursales: ISucursalRepository;
-  autorizacion: IAuthorizationService;
   auditoria: ICambioPlanAuditoriaRepository;
 }
 
@@ -90,7 +81,6 @@ export interface DatosCambiarPlanConPago {
   lineas: DatosLineaPago[];
   sucursalId: string;
   registradoPorId: string;
-  rolUsuario: RolUsuario;
   // Solo se aplica cuando el plan nuevo requiere entrenador (ver diseño
   // acordado) — si no lo requiere, se ignora y el entrenador que el
   // miembro ya tenía asignado (si tenía) queda sin tocar.
@@ -120,9 +110,6 @@ export async function cambiarPlanConPago(
   deps: CambiarPlanConPagoDeps,
   input: DatosCambiarPlanConPago
 ): Promise<ResultadoCambioPlan> {
-  if (!(await deps.autorizacion.tienePermiso(input.registradoPorId, "PAGOS", "CREAR"))) {
-    throw new RolNoAutorizadoError();
-  }
 
   const miembro = await deps.miembros.buscarPorId(input.organizacionId, input.miembroId);
   if (!miembro) {

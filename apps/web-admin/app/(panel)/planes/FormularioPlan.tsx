@@ -53,7 +53,6 @@ export function FormularioPlan({
   valoresIniciales?: ValoresFormularioPlan;
   cambioFrecuencia?: {
     accion: (estado: EstadoFormularioPlan, formData: FormData) => Promise<EstadoFormularioPlan>;
-    puedeEditar: boolean;
     cantidadSuscripcionesActivas: number;
   };
 }) {
@@ -228,7 +227,7 @@ export function FormularioPlan({
         </Button>
       </form>
 
-      {esEdicion && cambioFrecuencia?.puedeEditar && (
+      {esEdicion && cambioFrecuencia && (
         <CambiarFrecuenciaSection
           nombrePlan={valoresIniciales.nombre}
           frecuenciaActual={valoresIniciales.frecuencia}

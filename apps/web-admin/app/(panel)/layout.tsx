@@ -1,4 +1,4 @@
-import { Fragment, Suspense } from "react";
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { obtenerUsuarioDeSesionActual } from "@/lib/sesion";
@@ -10,8 +10,6 @@ import { RelojLima } from "@gym-app/ui/components/RelojLima";
 import { BarraUsuario } from "./BarraUsuario";
 import { EncabezadoSidebar } from "./EncabezadoSidebar";
 import { NavegacionMobile } from "./NavegacionMobile";
-import { tienePermisoEnSala } from "@/lib/permisoEnSala";
-import { puedeEditarCheckin } from "@/lib/permisoCheckin";
 import { ProveedorEnSala, ContadorEnSala, AvisoCobros } from "./en-sala/ContextoEnSala";
 
 export default async function PanelLayout({ children }: { children: React.ReactNode }) {
@@ -27,9 +25,6 @@ export default async function PanelLayout({ children }: { children: React.ReactN
     sucursalActivaId
   );
 
-  const puedeVerEnSala = await tienePermisoEnSala(usuario, "VER");
-  // Solo quien puede ver "En sala" monta el sondeo de check-ins (alertas de cobro en todo el panel).
-  const ConEnSala = puedeVerEnSala ? ProveedorEnSala : Fragment;
 
   return (
     <FeedbackProvider>
@@ -37,21 +32,19 @@ export default async function PanelLayout({ children }: { children: React.ReactN
         <FeedbackDesdeUrl />
       </Suspense>
       <RelojLima />
-      <ConEnSala>
+      <ProveedorEnSala>
       <div className="marca-agua-pagina flex min-h-dvh flex-col lg:flex-row" style={{ background: "var(--gx-ground)" }}>
         <AvisoCobros />
         <div className="hidden lg:block print:hidden">
           <Sidebar
             encabezado={<EncabezadoSidebar sucursalNombre={sucursalActiva?.nombre ?? "—"} />}
             items={[
-              ...(puedeVerEnSala ? [{ href: "/en-sala", label: "En sala", extra: <ContadorEnSala /> }] : []),
+              { href: "/en-sala", label: "En sala", extra: <ContadorEnSala /> },
               { href: "/miembros", label: "Miembros" },
               { href: "/cobros", label: "Cobros" },
               { href: "/productos", label: "Productos" },
-              // Planes, Sucursales y Usuarios se administran desde las tabs
-              // de Configuraciones (ver diseño acordado) — SOCIO y GERENTE llegan
-              // a ellas desde ahí.
-              ...(puedeEditarCheckin(usuario.rol) ? [{ href: "/configuraciones", label: "Configuraciones" }] : []),
+              // Planes, Sucursales y Administradores se administran desde las tabs de Configuraciones.
+              { href: "/configuraciones", label: "Configuraciones" },
             ]}
             pie={<BarraUsuario nombre={usuario.nombre} email={usuario.email} fotoUrl={usuario.fotoUrl} />}
           />
@@ -63,15 +56,10 @@ export default async function PanelLayout({ children }: { children: React.ReactN
             página tenga que acordarse de dejarle margen. */}
         <main className="flex-1 pt-16 pb-16 lg:pb-0">{children}</main>
         <div className="print:hidden">
-          <NavegacionMobile
-            nombre={usuario.nombre}
-            email={usuario.email}
-            rol={usuario.rol}
-            puedeVerEnSala={puedeVerEnSala}
-          />
+          <NavegacionMobile nombre={usuario.nombre} email={usuario.email} />
         </div>
       </div>
-      </ConEnSala>
+      </ProveedorEnSala>
     </FeedbackProvider>
   );
 }

@@ -5,12 +5,9 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { obtenerUsuarioDeSesionActual } from "@/lib/sesion";
 import { PrismaSucursalRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSucursalRepository";
-import { PrismaPermisoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPermisoRepository";
-import { AuthorizationService } from "@gym-app/domain/services/AuthorizationService";
-import { crearSucursal, RolNoAutorizadoError as RolNoAutorizadoCrear } from "@gym-app/domain/use-cases/CrearSucursal";
+import { crearSucursal } from "@gym-app/domain/use-cases/CrearSucursal";
 import {
   actualizarSucursal,
-  RolNoAutorizadoError as RolNoAutorizadoActualizar,
   SucursalNoEncontradaError,
 } from "@gym-app/domain/use-cases/ActualizarSucursal";
 import { conMensajeOk } from "../redirectConMensaje";
@@ -22,7 +19,6 @@ export interface EstadoFormularioSucursal {
 function deps() {
   return {
     sucursales: new PrismaSucursalRepository(prisma),
-    autorizacion: new AuthorizationService(new PrismaPermisoRepository(prisma)),
   };
 }
 
@@ -51,9 +47,6 @@ export async function crearSucursalAction(
       diasGracia,
     });
   } catch (error) {
-    if (error instanceof RolNoAutorizadoCrear) {
-      return { error: error.message };
-    }
     throw error;
   }
 
@@ -86,7 +79,7 @@ export async function actualizarSucursalAction(
       cambios: { nombre, direccion, diasGracia },
     });
   } catch (error) {
-    if (error instanceof RolNoAutorizadoActualizar || error instanceof SucursalNoEncontradaError) {
+    if (error instanceof SucursalNoEncontradaError) {
       return { error: error.message };
     }
     throw error;

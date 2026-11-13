@@ -81,7 +81,7 @@ model UsuarioAdmin {
   nombre         String       @default("")
   telefono       String?
   fotoUrl        String?
-  rol            RolUsuario
+  rol            RolUsuario   @default(SOCIO) // en desuso (S-23): todos son administradores
   email          String       @unique
   passwordHash   String
   activo         Boolean      @default(true)

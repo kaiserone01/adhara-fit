@@ -14,8 +14,7 @@ const producto = (id: string, nombre: string, costoUSD: number, extra: Partial<P
   ...extra,
 });
 
-function crearDeps(opciones: { permitido?: boolean; productos?: Producto[] } = {}) {
-  const { permitido = true } = opciones;
+function crearDeps(opciones: { productos?: Producto[] } = {}) {
   const productos = opciones.productos ?? [producto("p1", "Agua", 1.5), producto("p2", "Gatorade", 2.25)];
   const creados: DatosNuevoPago[] = [];
 
@@ -27,7 +26,6 @@ function crearDeps(opciones: { permitido?: boolean; productos?: Producto[] } = {
       },
     },
     productos: { buscarPorId: async (_org: string, id: string) => productos.find((p) => p.id === id) ?? null },
-    autorizacion: { tienePermiso: async () => permitido },
   } as unknown as VenderProductoDeps;
 
   return { deps, creados };
@@ -110,11 +108,6 @@ describe("venderProducto", () => {
   test("rechaza un carrito vacío", async () => {
     const { deps } = crearDeps();
     await expect(venderProducto(deps, { ...base, items: [], lineas: [linea(1)] })).rejects.toThrow(/al menos un producto/);
-  });
-
-  test("rechaza sin permiso de caja", async () => {
-    const { deps } = crearDeps({ permitido: false });
-    await expect(venderProducto(deps, { ...base, items: [{ productoId: "p1", cantidad: 1 }], lineas: [linea(1.5)] })).rejects.toThrow(/permiso/);
   });
 
   test.each([0, -1, 1.5, Number.NaN])("rechaza la cantidad inválida %s", async (cantidad) => {

@@ -19,7 +19,7 @@ export function FormularioSucursal({
 }: {
   accion: (estado: EstadoFormularioSucursal, formData: FormData) => Promise<EstadoFormularioSucursal>;
   valoresIniciales?: ValoresFormularioSucursal;
-  /** Sin permiso SUCURSALES/EDITAR el formulario se muestra en solo lectura. */
+  /** false = el formulario se muestra en solo lectura. */
   puedeGuardar?: boolean;
 }) {
   const [estado, enviar, enviando] = useActionState(accion, {});

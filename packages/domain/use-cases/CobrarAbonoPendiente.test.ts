@@ -32,7 +32,6 @@ function crearDeps(opciones: { pagadoPrevio?: number } = {}) {
     },
     planes: { buscarPorId: async () => ({ id: "plan1", nombre: "Corporativo", activo: true, precioUSD: 22, diasCiclo: 30, frecuencia: "MENSUAL", permitePagoParcial: true }) },
     sucursales: {},
-    autorizacion: { tienePermiso: async () => true },
     reglasAbono: { buscarPorOrganizacionYFrecuencia: async () => null },
   } as unknown as Parameters<typeof cobrarAbonoPendiente>[0];
   return { deps, creados };
@@ -45,7 +44,6 @@ const input = (monto: number) => ({
   lineas: [linea(monto)],
   sucursalId: "s1",
   registradoPorId: "u1",
-  rolUsuario: "SOCIO" as const,
 });
 
 describe("cobrarAbonoPendiente", () => {

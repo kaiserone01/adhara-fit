@@ -2,7 +2,6 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { obtenerUsuarioDeSesionActual } from "@/lib/sesion";
 import { PrismaSucursalRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSucursalRepository";
-import { PrismaPermisoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPermisoRepository";
 import { FormularioSucursal } from "../FormularioSucursal";
 import { actualizarSucursalAction, darDeBajaSucursalAction, reactivarSucursalAction } from "../actions";
 import { Button } from "@gym-app/ui/components/Button";
@@ -19,15 +18,6 @@ export default async function PaginaEditarSucursal({
   const sesion = await obtenerUsuarioDeSesionActual();
   if (!sesion) redirect("/login");
   const { usuario } = sesion;
-
-  const esSocio = usuario.rol === "SOCIO";
-  const permisos = new PrismaPermisoRepository(prisma);
-  // Un SOCIO siempre tiene acceso total.
-  const puedeEditar = esSocio || (await permisos.tiene(usuario.id, "SUCURSALES", "EDITAR"));
-  const puedeEliminar = esSocio || (await permisos.tiene(usuario.id, "SUCURSALES", "ELIMINAR"));
-  // La página hospeda la edición (EDITAR) y el alta/baja (ELIMINAR): cualquiera de
-  // los dos permisos da acceso, y cada bloque se muestra según el permiso concreto.
-  if (!puedeEditar && !puedeEliminar) redirect("/sucursales");
 
   const { id } = await params;
   const { error: errorMensaje } = await searchParams;
@@ -48,7 +38,6 @@ export default async function PaginaEditarSucursal({
 
       <FormularioSucursal
         accion={accion}
-        puedeGuardar={puedeEditar}
         valoresIniciales={{
           nombre: sucursal.nombre,
           direccion: sucursal.direccion,
@@ -56,11 +45,9 @@ export default async function PaginaEditarSucursal({
         }}
       />
 
-      {puedeEliminar && (
-        <form action={sucursal.activo ? darDeBajaSucursalAction.bind(null, id) : reactivarSucursalAction.bind(null, id)} className="mt-4">
-          <Button type="submit">{sucursal.activo ? "Dar de baja" : "Reactivar"}</Button>
-        </form>
-      )}
+      <form action={sucursal.activo ? darDeBajaSucursalAction.bind(null, id) : reactivarSucursalAction.bind(null, id)} className="mt-4">
+        <Button type="submit">{sucursal.activo ? "Dar de baja" : "Reactivar"}</Button>
+      </form>
     </div>
   );
 }

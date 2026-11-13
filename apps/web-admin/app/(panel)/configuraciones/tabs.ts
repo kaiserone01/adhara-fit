@@ -6,14 +6,7 @@ export const TABS_CONFIGURACIONES = [
   { href: "/configuraciones/reglas-abono", label: "Reglas de abono" },
   { href: "/planes", label: "Planes" },
   { href: "/sucursales", label: "Sucursales" },
-  { href: "/usuarios", label: "Usuarios" },
+  { href: "/usuarios", label: "Administradores" },
   { href: "/checkin", label: "Checkin" },
   { href: "/vitrina", label: "Vitrina" },
 ];
-
-// El GERENTE solo configura Checkin y Vitrina; el resto es solo de SOCIO.
-export function tabsConfiguracionesPara(rol: string) {
-  return rol === "SOCIO"
-    ? TABS_CONFIGURACIONES
-    : TABS_CONFIGURACIONES.filter((t) => t.href === "/checkin" || t.href === "/vitrina");
-}

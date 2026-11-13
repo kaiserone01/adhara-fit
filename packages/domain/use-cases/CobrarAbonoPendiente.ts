@@ -1,7 +1,6 @@
 import { IMemberRepository } from "../ports/IMemberRepository";
 import { IPlanRepository } from "../ports/IPlanRepository";
 import { Pago } from "../entities/Pago";
-import { RolUsuario } from "../entities/UsuarioAdmin";
 import { calcularAbonosPendientes } from "./ListarAbonosPendientes";
 import { registrarPago, RegistrarPagoDeps } from "./RegistrarPago";
 import { MiembroNoEncontradoError } from "./ActualizarMiembro";
@@ -30,7 +29,6 @@ export async function cobrarAbonoPendiente(
     lineas: DatosLineaPago[];
     sucursalId: string;
     registradoPorId: string;
-    rolUsuario: RolUsuario;
     // Cobro que ya se hizo en un día pasado y no se anotó (hasta 90 días).
     fechaCobro?: Date;
   }
@@ -59,7 +57,6 @@ export async function cobrarAbonoPendiente(
     lineas: input.lineas,
     sucursalId: input.sucursalId,
     registradoPorId: input.registradoPorId,
-    rolUsuario: input.rolUsuario,
     ...(input.fechaCobro ? { fechaPago: input.fechaCobro, completarCicloAbierto: true } : {}),
   });
 }

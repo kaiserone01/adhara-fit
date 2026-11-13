@@ -4,7 +4,6 @@ import { NOMBRE_COOKIE_SESION } from "@/lib/sesion";
 import { PrismaUsuarioAdminRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaUsuarioAdminRepository";
 import { PrismaSesionRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSesionRepository";
 import { PrismaSucursalRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSucursalRepository";
-import { PrismaUsuarioSucursalRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaUsuarioSucursalRepository";
 import { BcryptPasswordHasher } from "@gym-app/infrastructure/auth/BcryptPasswordHasher";
 import { iniciarSesion, CredencialesInvalidasError } from "@gym-app/domain/use-cases/IniciarSesion";
 import { obtenerSucursalesVisiblesParaUsuario } from "@gym-app/domain/use-cases/ObtenerSucursalesVisiblesParaUsuario";
@@ -29,12 +28,12 @@ export async function POST(req: NextRequest) {
     // si hace falta preguntar la sucursal — por eso se resuelven
     // credenciales acá, no dentro de iniciarSesion todavía.
     const credenciales = await usuarios.buscarCredencialesPorEmail(email);
-    if (!credenciales || !(await hasher.comparar(password, credenciales.passwordHash))) {
+    if (!credenciales || !credenciales.usuario.activo || !(await hasher.comparar(password, credenciales.passwordHash))) {
       return NextResponse.json({ error: "Email o contraseña incorrectos." }, { status: 401 });
     }
 
     const sucursalesVisibles = await obtenerSucursalesVisiblesParaUsuario(
-      { sucursales: new PrismaSucursalRepository(prisma), usuarioSucursales: new PrismaUsuarioSucursalRepository(prisma) },
+      { sucursales: new PrismaSucursalRepository(prisma) },
       credenciales.usuario
     );
 

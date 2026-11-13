@@ -17,8 +17,6 @@ import {
   MAX_MESES_POR_PAGO,
   toleranciaDiferenciaPagoUSD,
 } from "../entities/Pago";
-import { RolUsuario } from "../entities/UsuarioAdmin";
-import { IAuthorizationService } from "../ports/IAuthorizationService";
 import { resolverReglaAbono, calcularMontoMinimoAbono, calcularFechaLimiteAbono } from "../entities/ReglaAbono";
 import type { Plan } from "../entities/Plan";
 import { MiembroFueraDeSucursalError } from "./ObtenerMiembro";
@@ -40,12 +38,6 @@ export class PlanNoEncontradoError extends Error {
 export class PlanInactivoError extends Error {
   constructor() {
     super("No se puede registrar un pago contra un plan inactivo.");
-  }
-}
-
-export class RolNoAutorizadoError extends Error {
-  constructor() {
-    super("Tu rol no tiene permiso para registrar pagos.");
   }
 }
 
@@ -111,7 +103,6 @@ export interface RegistrarPagoDeps {
   miembros: IMemberRepository;
   planes: IPlanRepository;
   sucursales: ISucursalRepository;
-  autorizacion: IAuthorizationService;
   reglasAbono: IReglaAbonoRepository;
 }
 
@@ -143,7 +134,6 @@ export interface DatosRegistrarPago {
   lineas: DatosLineaPago[];
   sucursalId: string;
   registradoPorId: string;
-  rolUsuario: RolUsuario;
   // Pago con fecha pasada: hasta 365 días con el aviso "Por regularizar" o con primerPagoDeInscripcion, hasta 90 para el
   // resto de los miembros. Si es de hoy, se ignora.
   fechaPago?: Date;
@@ -190,9 +180,6 @@ async function evaluarAbonoParcial(
 }
 
 export async function registrarPago(deps: RegistrarPagoDeps, input: DatosRegistrarPago): Promise<Pago[]> {
-  if (!(await deps.autorizacion.tienePermiso(input.registradoPorId, "PAGOS", "CREAR"))) {
-    throw new RolNoAutorizadoError();
-  }
 
   validarLineasDePago(input.lineas, "conAbono");
 

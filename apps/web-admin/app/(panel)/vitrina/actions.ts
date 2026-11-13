@@ -5,7 +5,6 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { obtenerUsuarioDeSesionActual } from "@/lib/sesion";
-import { puedeEditarCheckin } from "@/lib/permisoCheckin";
 import { storageR2 } from "@/lib/storageR2";
 import { notificarCambioVitrina } from "@/lib/vitrinaEventos";
 import { CACHE_CONTROL_INMUTABLE, CARPETA_VITRINA, esUrlDeVitrina } from "@/lib/vitrinaMedios";
@@ -23,14 +22,13 @@ export interface EstadoFormularioVitrina {
   error?: string;
 }
 
-const SIN_PERMISO = "Solo el socio o el gerente pueden administrar la vitrina.";
 const ERROR_GUARDAR = "No se pudo guardar. Inténtalo de nuevo.";
 
-// Sesión válida con permiso (mismo criterio que Checkin); sin sesión redirige al login, sin permiso devuelve null.
-async function sesionConPermiso() {
+// Sesión válida; si falta, redirige al login.
+async function sesionActual() {
   const sesion = await obtenerUsuarioDeSesionActual();
   if (!sesion) redirect("/login");
-  return puedeEditarCheckin(sesion.usuario.rol) ? sesion : null;
+  return sesion;
 }
 
 const repositorio = () => new PrismaVitrinaRepository(prisma);
@@ -98,8 +96,7 @@ async function borrarArchivosSobrantes(anterior: VitrinaItem, nuevos?: DatosVitr
 
 // El navegador sube los videos directo a R2: aquí solo se firma la URL (el tamaño se revalida al guardar).
 export async function prepararSubidaVideoAction(bytes: number): Promise<{ error?: string; subida?: SubidaPrefirmada }> {
-  const sesion = await sesionConPermiso();
-  if (!sesion) return { error: SIN_PERMISO };
+  await sesionActual();
   if (!Number.isFinite(bytes) || bytes <= 0 || bytes > MAX_BYTES_VIDEO_VITRINA) return { error: "El video pesa más de 100 MB." };
 
   const subida = await storageR2().urlPrefirmada(CARPETA_VITRINA, `${randomUUID()}.mp4`, "video/mp4", CACHE_CONTROL_INMUTABLE);
@@ -108,8 +105,7 @@ export async function prepararSubidaVideoAction(bytes: number): Promise<{ error?
 
 // Fotos, carteles y pósters: el navegador ya los comprimió (≤1920 px, WebP); aquí se valida y se suben a R2.
 export async function subirImagenVitrinaAction(formData: FormData): Promise<{ url?: string; error?: string }> {
-  const sesion = await sesionConPermiso();
-  if (!sesion) return { error: SIN_PERMISO };
+  await sesionActual();
 
   const archivo = formData.get("archivo");
   if (!(archivo instanceof File) || archivo.size === 0) return { error: "No se recibió la imagen." };
@@ -127,8 +123,7 @@ export async function subirImagenVitrinaAction(formData: FormData): Promise<{ ur
 }
 
 export async function guardarItemAction(_estadoPrevio: EstadoFormularioVitrina, formData: FormData): Promise<EstadoFormularioVitrina> {
-  const sesion = await sesionConPermiso();
-  if (!sesion) return { error: SIN_PERMISO };
+  const sesion = await sesionActual();
   const sucursalId = sesion.sucursalActivaId;
 
   const leido = leerDatos(formData);
@@ -189,7 +184,7 @@ export async function guardarItemAction(_estadoPrevio: EstadoFormularioVitrina, 
 }
 
 export async function alternarActivoAction(formData: FormData): Promise<void> {
-  const sesion = await sesionConPermiso();
+  const sesion = await sesionActual();
   if (!sesion) return;
   const id = formData.get("id")?.toString();
   if (!id) return;
@@ -200,7 +195,7 @@ export async function alternarActivoAction(formData: FormData): Promise<void> {
 }
 
 export async function moverItemAction(formData: FormData): Promise<void> {
-  const sesion = await sesionConPermiso();
+  const sesion = await sesionActual();
   if (!sesion) return;
   const id = formData.get("id")?.toString();
   const direccion = formData.get("direccion")?.toString();
@@ -212,8 +207,7 @@ export async function moverItemAction(formData: FormData): Promise<void> {
 }
 
 export async function eliminarItemAction(formData: FormData): Promise<void> {
-  const sesion = await sesionConPermiso();
-  if (!sesion) redirect("/miembros");
+  const sesion = await sesionActual();
   const id = formData.get("id")?.toString();
   const volver = formData.get("volver")?.toString() ?? "";
   const destino = /^\/vitrina(\/[a-z]+)?$/.test(volver) ? volver : "/vitrina/secuencia";
@@ -231,8 +225,7 @@ export async function guardarAjustesVitrinaAction(
   _estadoPrevio: EstadoFormularioVitrina,
   formData: FormData
 ): Promise<EstadoFormularioVitrina> {
-  const sesion = await sesionConPermiso();
-  if (!sesion) return { error: SIN_PERMISO };
+  const sesion = await sesionActual();
 
   const duracionSeg = numeroOpcional(formData.get("duracionSeg"));
   if (duracionSeg === null || !Number.isInteger(duracionSeg) || duracionSeg < DURACION_MIN_SEG || duracionSeg > DURACION_MAX_SEG) {

@@ -5,7 +5,6 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { obtenerUsuarioDeSesionActual } from "@/lib/sesion";
-import { puedeEditarCheckin } from "@/lib/permisoCheckin";
 import { storageR2 } from "@/lib/storageR2";
 import { PrismaSucursalRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSucursalRepository";
 import { extensionDeImagen } from "@gym-app/domain/utils/imagenSubida";
@@ -17,17 +16,16 @@ export interface EstadoFormularioCheckin {
   error?: string;
 }
 
-const SIN_PERMISO = "Solo el socio o el gerente pueden configurar el checkin.";
 
-// Sesión válida con permiso de checkin; si falta la sesión redirige al login, si falta el permiso devuelve null.
-async function sesionConPermiso() {
+// Sesión válida; si falta, redirige al login.
+async function sesionActual() {
   const sesion = await obtenerUsuarioDeSesionActual();
   if (!sesion) redirect("/login");
-  return puedeEditarCheckin(sesion.usuario.rol) ? sesion : null;
+  return sesion;
 }
 
 // Guarda los cambios de reposo en la sucursal activa (siempre dentro de la organización del usuario).
-async function actualizarReposo(sesion: NonNullable<Awaited<ReturnType<typeof sesionConPermiso>>>, cambios: CambiosSucursal) {
+async function actualizarReposo(sesion: NonNullable<Awaited<ReturnType<typeof sesionActual>>>, cambios: CambiosSucursal) {
   const { usuario, sucursalActivaId } = sesion;
   return new PrismaSucursalRepository(prisma).actualizar(usuario.organizacionId, sucursalActivaId, cambios);
 }
@@ -36,8 +34,7 @@ export async function guardarFrasesAction(
   _estadoPrevio: EstadoFormularioCheckin,
   formData: FormData
 ): Promise<EstadoFormularioCheckin> {
-  const sesion = await sesionConPermiso();
-  if (!sesion) return { error: SIN_PERMISO };
+  const sesion = await sesionActual();
 
   const frases = normalizarFrasesReposo(formData.getAll("frase").map((valor) => valor.toString()));
   const sucursal = await actualizarReposo(sesion, { reposoFrases: frases });
@@ -73,8 +70,7 @@ export async function guardarImagenReposoAction(
   _estadoPrevio: EstadoFormularioCheckin,
   formData: FormData
 ): Promise<EstadoFormularioCheckin> {
-  const sesion = await sesionConPermiso();
-  if (!sesion) return { error: SIN_PERMISO };
+  const sesion = await sesionActual();
 
   let imagenUrl: string | null;
   try {
@@ -95,8 +91,7 @@ export async function guardarImagenReposoAction(
 
 // "Ajustar encuadre": guarda solo la imagen, al instante, sin esperar al "Guardar" del formulario.
 export async function actualizarImagenReposoAction(formData: FormData): Promise<{ imagenUrl?: string; error?: string }> {
-  const sesion = await sesionConPermiso();
-  if (!sesion) return { error: SIN_PERMISO };
+  const sesion = await sesionActual();
 
   let imagenUrl: string | null;
   try {
@@ -115,8 +110,7 @@ export async function actualizarImagenReposoAction(formData: FormData): Promise<
 }
 
 export async function restablecerImagenReposoAction(): Promise<void> {
-  const sesion = await sesionConPermiso();
-  if (!sesion) redirect("/miembros");
+  const sesion = await sesionActual();
 
   await actualizarReposo(sesion, { reposoImagenUrl: null });
   revalidatePath("/checkin/imagen");

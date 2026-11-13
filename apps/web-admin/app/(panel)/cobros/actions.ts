@@ -5,12 +5,9 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { obtenerUsuarioDeSesionActual } from "@/lib/sesion";
 import { PrismaPagoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPagoRepository";
-import { PrismaPermisoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPermisoRepository";
-import { AuthorizationService } from "@gym-app/domain/services/AuthorizationService";
 import { PrismaProductoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaProductoRepository";
 import {
   venderProducto,
-  RolNoAutorizadoError as RolNoAutorizadoVender,
   ProductoNoEncontradoError,
   ProductoInactivoError,
   CantidadInvalidaError,
@@ -19,7 +16,6 @@ import {
 import { LineasDePagoInvalidasError, MontoLineasNoCubreObjetivoError } from "@gym-app/domain/entities/Pago";
 import {
   anularPago,
-  RolNoAutorizadoError as RolNoAutorizadoAnular,
   PagoNoEncontradoError,
   PagoYaAnuladoError,
   MotivoRequeridoError as MotivoRequeridoAnular,
@@ -48,13 +44,11 @@ export async function anularPagoAction(
     await anularPago(
       {
         pagos: new PrismaPagoRepository(prisma),
-        autorizacion: new AuthorizationService(new PrismaPermisoRepository(prisma)),
       },
-      { organizacionId: usuario.organizacionId, pagoId, anuladoPorId: usuario.id, rolAnulador: usuario.rol, motivo }
+      { organizacionId: usuario.organizacionId, pagoId, anuladoPorId: usuario.id, motivo }
     );
   } catch (error) {
     if (
-      error instanceof RolNoAutorizadoAnular ||
       error instanceof PagoNoEncontradoError ||
       error instanceof PagoYaAnuladoError ||
       error instanceof MotivoRequeridoAnular
@@ -124,7 +118,6 @@ export async function venderProductoAction(
       {
         pagos: new PrismaPagoRepository(prisma),
         productos: new PrismaProductoRepository(prisma),
-        autorizacion: new AuthorizationService(new PrismaPermisoRepository(prisma)),
       },
       {
         organizacionId: usuario.organizacionId,
@@ -136,7 +129,6 @@ export async function venderProductoAction(
     );
   } catch (error) {
     if (
-      error instanceof RolNoAutorizadoVender ||
       error instanceof ProductoNoEncontradoError ||
       error instanceof ProductoInactivoError ||
       error instanceof CantidadInvalidaError ||

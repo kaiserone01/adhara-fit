@@ -2,7 +2,6 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { obtenerUsuarioDeSesionActual } from "@/lib/sesion";
-import { puedeEditarCheckin } from "@/lib/permisoCheckin";
 import { PrismaVitrinaRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaVitrinaRepository";
 import { Card } from "@gym-app/ui/components/Card";
 import { FilaVitrina } from "../FilaVitrina";
@@ -14,7 +13,6 @@ export default async function PaginaListaVitrina({ params }: { params: Promise<{
   if (!tipo) notFound();
   const sesion = await obtenerUsuarioDeSesionActual();
   if (!sesion) redirect("/login");
-  if (!puedeEditarCheckin(sesion.usuario.rol)) redirect("/miembros");
 
   const items = (await new PrismaVitrinaRepository(prisma).listar(sesion.sucursalActivaId)).filter((i) => i.tipo === tipo);
   const ahora = new Date();

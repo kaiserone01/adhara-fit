@@ -6,13 +6,10 @@ import { prisma } from "@/lib/prisma";
 import { obtenerUsuarioDeSesionActual } from "@/lib/sesion";
 import { PrismaPlanRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPlanRepository";
 import { PrismaSuscripcionRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSuscripcionRepository";
-import { PrismaPermisoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPermisoRepository";
-import { AuthorizationService } from "@gym-app/domain/services/AuthorizationService";
 import { crearPlan } from "@gym-app/domain/use-cases/CrearPlan";
 import { actualizarPlan, PlanNoEncontradoError } from "@gym-app/domain/use-cases/ActualizarPlan";
 import {
   actualizarFrecuenciaPlan,
-  RolNoAutorizadoError,
   PlanNoEncontradoError as ActualizarFrecuenciaPlanNoEncontradoError,
   ConfirmacionInvalidaError,
 } from "@gym-app/domain/use-cases/ActualizarFrecuenciaPlan";
@@ -145,7 +142,6 @@ export async function actualizarFrecuenciaPlanAction(
       { planes: new PrismaPlanRepository(prisma), suscripciones: new PrismaSuscripcionRepository(prisma) },
       {
         organizacionId: usuario.organizacionId,
-        rolSolicitante: usuario.rol,
         planId: id,
         frecuencia,
         diasCiclo,
@@ -156,7 +152,6 @@ export async function actualizarFrecuenciaPlanAction(
     );
   } catch (error) {
     if (
-      error instanceof RolNoAutorizadoError ||
       error instanceof ActualizarFrecuenciaPlanNoEncontradoError ||
       error instanceof ConfirmacionInvalidaError
     ) {
@@ -179,7 +174,7 @@ export async function eliminarPlanAction(id: string): Promise<void> {
   const { usuario } = sesion;
 
   await eliminarPlan(
-    { planes: new PrismaPlanRepository(prisma), autorizacion: new AuthorizationService(new PrismaPermisoRepository(prisma)) },
+    { planes: new PrismaPlanRepository(prisma) },
     { organizacionId: usuario.organizacionId, id, usuarioIdSolicitante: usuario.id }
   );
 

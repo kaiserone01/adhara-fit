@@ -41,7 +41,6 @@ export default async function PaginaEditarPlan({ params }: { params: Promise<{ i
         }}
         cambioFrecuencia={{
           accion: actualizarFrecuenciaPlanAction.bind(null, id),
-          puedeEditar: usuario.rol === "SOCIO",
           cantidadSuscripcionesActivas,
         }}
       />

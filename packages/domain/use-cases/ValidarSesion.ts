@@ -25,7 +25,7 @@ export async function validarSesion(deps: ValidarSesionDeps, token: string): Pro
   }
 
   const usuario = await deps.usuarios.buscarPorIdSinOrganizacion(sesion.usuarioId);
-  if (!usuario) {
+  if (!usuario || !usuario.activo) {
     return null;
   }
 

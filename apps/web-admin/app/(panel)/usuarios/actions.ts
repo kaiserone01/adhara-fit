@@ -6,43 +6,15 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { obtenerUsuarioDeSesionActual } from "@/lib/sesion";
 import { PrismaUsuarioAdminRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaUsuarioAdminRepository";
-import { PrismaUsuarioSucursalRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaUsuarioSucursalRepository";
-import { PrismaPermisoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPermisoRepository";
-import { AuthorizationService } from "@gym-app/domain/services/AuthorizationService";
 import { BcryptPasswordHasher } from "@gym-app/infrastructure/auth/BcryptPasswordHasher";
-import { PrismaSucursalRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSucursalRepository";
 import { storageR2 } from "@/lib/storageR2";
-import {
-  crearUsuarioAdmin,
-  NoAutorizadoError,
-  SucursalInvalidaError as SucursalInvalidaCrear,
-} from "@gym-app/domain/use-cases/CrearUsuarioAdmin";
+import { crearUsuarioAdmin, CorreoDuplicadoError } from "@gym-app/domain/use-cases/CrearUsuarioAdmin";
 import {
   actualizarUsuarioAdmin,
-  RolNoAutorizadoError as RolNoAutorizadoActualizar,
-  UsuarioNoEncontradoError as UsuarioNoEncontradoActualizar,
+  UsuarioNoEncontradoError,
+  AutoDesactivacionError,
+  UltimoAdministradorError,
 } from "@gym-app/domain/use-cases/ActualizarUsuarioAdmin";
-import {
-  eliminarUsuarioAdmin,
-  RolNoAutorizadoError as RolNoAutorizadoEliminar,
-  UsuarioNoEncontradoError as UsuarioNoEncontradoEliminar,
-  AutoEliminacionError,
-  UsuarioConHistorialError,
-} from "@gym-app/domain/use-cases/EliminarUsuarioAdmin";
-import {
-  asignarSucursalesAUsuario,
-  RolNoAutorizadoError as RolNoAutorizadoSucursales,
-  UsuarioNoEncontradoError as UsuarioNoEncontradoSucursales,
-  SucursalInvalidaError as SucursalInvalidaAsignar,
-} from "@gym-app/domain/use-cases/AsignarSucursalesAUsuario";
-import {
-  actualizarPermisosUsuario,
-  RolNoAutorizadoError as RolNoAutorizadoPermisos,
-  UsuarioNoEncontradoError as UsuarioNoEncontradoPermisos,
-  RolSinPermisosError,
-} from "@gym-app/domain/use-cases/ActualizarPermisosUsuario";
-import type { ModuloPermiso, AccionPermiso } from "@gym-app/domain/entities/Permiso";
-import type { RolUsuario } from "@gym-app/domain/entities/UsuarioAdmin";
 import { conMensajeOk } from "../redirectConMensaje";
 
 export interface EstadoFormularioUsuario {
@@ -52,25 +24,7 @@ export interface EstadoFormularioUsuario {
   ok?: string;
 }
 
-const MODULOS: ModuloPermiso[] = ["MIEMBROS", "PAGOS", "PLANES", "CAJA", "USUARIOS", "SUCURSALES", "EN_SALA"];
-const ACCIONES: AccionPermiso[] = ["VER", "CREAR", "EDITAR", "ELIMINAR"];
-
-const SOLO_SOCIO = "Solo el socio puede administrar usuarios.";
-
-/**
- * Las acciones que devuelven `void` están atadas a un `<form action={...}>` plano,
- * sin canal de `useActionState` donde reportar un error. Para no dejar que un error
- * de dominio escale a un 500 sin explicación, las envolvemos en try/catch y
- * redirigimos a la misma página con `?error=<mensaje>`, que la página renderiza
- * como banner (ver AvisoError). Cualquier error inesperado se re-lanza.
- */
-function redirigirConError(ruta: string, mensaje: string): never {
-  redirect(`${ruta}?error=${encodeURIComponent(mensaje)}`);
-}
-
-function redirigirConOk(ruta: string, mensaje: string): never {
-  redirect(conMensajeOk(ruta, mensaje));
-}
+const LARGO_MINIMO_CLAVE = 8;
 
 // Sube la foto al bucket "gym-app" en Cloudflare R2 (carpeta "usuarios") y
 // devuelve la URL pública. Mismo patrón que la foto de Miembro.
@@ -91,69 +45,44 @@ export async function crearUsuarioAction(
   const sesion = await obtenerUsuarioDeSesionActual();
   if (!sesion) redirect("/login");
   const { usuario } = sesion;
-  // Defensa en profundidad: el caso de uso ya lo valida, pero la Server Action
-  // también (Restricción Global #1 del plan).
-  if (usuario.rol !== "SOCIO") return { error: SOLO_SOCIO };
 
   const nombre = formData.get("nombre")?.toString().trim();
-  const rol = formData.get("rol")?.toString() as RolUsuario | undefined;
-  // Un entrenador no tiene acceso al sistema administrativo (ver diseño
-  // acordado) — el formulario no le pide email/contraseña, así que acá se
-  // generan credenciales internas únicas e inutilizables: el email no es
-  // uno real (nadie lo conoce) y la contraseña aleatoria se hashea y se
-  // descarta sin guardarla en texto plano ni mostrarla en ningún lado —
-  // la cuenta existe (sigue siendo un UsuarioAdmin, requerido por el
-  // esquema) pero nadie puede loguearse con ella.
-  const email =
-    rol === "ENTRENADOR"
-      ? `entrenador-${randomUUID()}@sinacceso.interno`
-      : formData.get("email")?.toString().trim();
-  const password = rol === "ENTRENADOR" ? randomUUID() : formData.get("password")?.toString();
-  const sucursalIds = formData.getAll("sucursalIds").map((v) => v.toString());
+  const email = formData.get("email")?.toString().trim().toLowerCase();
+  const clave = formData.get("password")?.toString();
 
-  if (!nombre || !email || !password || !rol) {
-    return { error: "Nombre, email, contraseña y rol son requeridos." };
+  if (!nombre || !email || !clave) {
+    return { error: "Nombre, correo y contraseña son requeridos." };
+  }
+  if (clave.length < LARGO_MINIMO_CLAVE) {
+    return { error: "La contraseña debe tener al menos " + LARGO_MINIMO_CLAVE + " caracteres." };
   }
 
   const telefono = formData.get("telefono")?.toString().trim() || null;
   const fotoUrl = await guardarFoto(formData.get("foto"));
 
   try {
-    const hasher = new BcryptPasswordHasher();
-    const passwordHash = await hasher.hash(password);
-
+    const passwordHash = await new BcryptPasswordHasher().hash(clave);
     await crearUsuarioAdmin(
+      { usuarios: new PrismaUsuarioAdminRepository(prisma) },
       {
-        usuarios: new PrismaUsuarioAdminRepository(prisma),
-        autorizacion: new AuthorizationService(new PrismaPermisoRepository(prisma)),
-        permisos: new PrismaPermisoRepository(prisma),
-        usuarioSucursales: new PrismaUsuarioSucursalRepository(prisma),
-        sucursales: new PrismaSucursalRepository(prisma),
-      },
-      {
-        solicitante: { rol: usuario.rol },
         organizacionId: usuario.organizacionId,
-        // Sucursal por defecto solo si hay exactamente una seleccionada; con varias,
-        // `null` = sin sucursal por defecto (sin scoping de turno en Caja).
-        sucursalId: sucursalIds.length === 1 ? sucursalIds[0] : null,
-        sucursalIds,
+        sucursalId: null,
         nombre,
         email,
         passwordHash,
-        rol,
         telefono,
         fotoUrl,
       }
     );
   } catch (error) {
-    if (error instanceof NoAutorizadoError || error instanceof SucursalInvalidaCrear) {
+    if (error instanceof CorreoDuplicadoError) {
       return { error: error.message };
     }
     throw error;
   }
 
   revalidatePath("/usuarios");
-  redirect(conMensajeOk("/usuarios", "Usuario creado."));
+  redirect(conMensajeOk("/usuarios", "Administrador creado."));
 }
 
 export async function actualizarUsuarioAction(
@@ -164,7 +93,6 @@ export async function actualizarUsuarioAction(
   const sesion = await obtenerUsuarioDeSesionActual();
   if (!sesion) redirect("/login");
   const { usuario } = sesion;
-  if (usuario.rol !== "SOCIO") return { error: SOLO_SOCIO };
 
   const nombre = formData.get("nombre")?.toString().trim();
   if (!nombre) {
@@ -179,14 +107,13 @@ export async function actualizarUsuarioAction(
       { usuarios: new PrismaUsuarioAdminRepository(prisma) },
       {
         organizacionId: usuario.organizacionId,
-        rolSolicitante: usuario.rol,
         usuarioIdSolicitante: usuario.id,
         id,
         cambios: { nombre, telefono, ...(fotoUrl ? { fotoUrl } : {}) },
       }
     );
   } catch (error) {
-    if (error instanceof RolNoAutorizadoActualizar || error instanceof UsuarioNoEncontradoActualizar) {
+    if (error instanceof UsuarioNoEncontradoError) {
       return { error: error.message };
     }
     throw error;
@@ -196,98 +123,24 @@ export async function actualizarUsuarioAction(
   return { ok: "Cambios guardados." };
 }
 
-export async function actualizarSucursalesUsuarioAction(id: string, formData: FormData): Promise<void> {
-  const sesion = await obtenerUsuarioDeSesionActual();
-  if (!sesion) redirect("/login");
-  const { usuario } = sesion;
-  if (usuario.rol !== "SOCIO") redirigirConError(`/usuarios/${id}`, SOLO_SOCIO);
-
-  const sucursalIds = formData.getAll("sucursalIds").map((v) => v.toString());
-
-  try {
-    await asignarSucursalesAUsuario(
-      {
-        usuarios: new PrismaUsuarioAdminRepository(prisma),
-        usuarioSucursales: new PrismaUsuarioSucursalRepository(prisma),
-        sucursales: new PrismaSucursalRepository(prisma),
-      },
-      { organizacionId: usuario.organizacionId, rolSolicitante: usuario.rol, usuarioId: id, sucursalIds }
-    );
-  } catch (error) {
-    if (
-      error instanceof RolNoAutorizadoSucursales ||
-      error instanceof UsuarioNoEncontradoSucursales ||
-      error instanceof SucursalInvalidaAsignar
-    ) {
-      console.error("No se pudieron asignar las sucursales:", error);
-      redirigirConError(`/usuarios/${id}`, error.message);
-    }
-    throw error;
-  }
-
-  revalidatePath(`/usuarios/${id}`);
-  redirigirConOk(`/usuarios/${id}`, "Sucursales actualizadas.");
-}
-
-export async function actualizarPermisosUsuarioAction(id: string, formData: FormData): Promise<void> {
-  const sesion = await obtenerUsuarioDeSesionActual();
-  if (!sesion) redirect("/login");
-  const { usuario } = sesion;
-  if (usuario.rol !== "SOCIO") redirigirConError(`/usuarios/${id}`, SOLO_SOCIO);
-
-  const permisos = MODULOS.flatMap((modulo) =>
-    ACCIONES.filter((accion) => formData.get(`permiso_${modulo}_${accion}`) === "on").map((accion) => ({
-      modulo,
-      accion,
-    }))
-  );
-
-  try {
-    await actualizarPermisosUsuario(
-      { usuarios: new PrismaUsuarioAdminRepository(prisma), permisos: new PrismaPermisoRepository(prisma) },
-      { organizacionId: usuario.organizacionId, rolSolicitante: usuario.rol, usuarioId: id, permisos }
-    );
-  } catch (error) {
-    if (
-      error instanceof RolNoAutorizadoPermisos ||
-      error instanceof UsuarioNoEncontradoPermisos ||
-      error instanceof RolSinPermisosError
-    ) {
-      console.error("No se pudieron actualizar los permisos:", error);
-      redirigirConError(`/usuarios/${id}`, error.message);
-    }
-    throw error;
-  }
-
-  revalidatePath(`/usuarios/${id}`);
-  redirigirConOk(`/usuarios/${id}`, "Permisos actualizados.");
-}
-
-// Sin redirect adentro a propósito: se llama desde un botón en el cliente
-// (papelera en la tarjeta del usuario). Los errores de dominio se devuelven
-// como valor (en producción Next oculta el mensaje de un error lanzado desde
-// una Server Action) para que el cliente los muestre con useFeedback.
-export async function eliminarUsuarioAction(id: string): Promise<{ error?: string }> {
+// Sin redirect adentro a propósito: se llama desde un botón en el cliente (tarjeta del administrador).
+// Los errores de dominio se devuelven como valor (en producción Next oculta el mensaje de un error
+// lanzado desde una Server Action) para que el cliente los muestre con useFeedback.
+export async function cambiarEstadoUsuarioAction(id: string, activo: boolean): Promise<{ error?: string }> {
   const sesion = await obtenerUsuarioDeSesionActual();
   if (!sesion) redirect("/login");
   const { usuario } = sesion;
 
   try {
-    await eliminarUsuarioAdmin(
+    await actualizarUsuarioAdmin(
       { usuarios: new PrismaUsuarioAdminRepository(prisma) },
-      {
-        organizacionId: usuario.organizacionId,
-        rolSolicitante: usuario.rol,
-        usuarioIdSolicitante: usuario.id,
-        id,
-      }
+      { organizacionId: usuario.organizacionId, usuarioIdSolicitante: usuario.id, id, cambios: { activo } }
     );
   } catch (error) {
     if (
-      error instanceof RolNoAutorizadoEliminar ||
-      error instanceof UsuarioNoEncontradoEliminar ||
-      error instanceof AutoEliminacionError ||
-      error instanceof UsuarioConHistorialError
+      error instanceof UsuarioNoEncontradoError ||
+      error instanceof AutoDesactivacionError ||
+      error instanceof UltimoAdministradorError
     ) {
       return { error: error.message };
     }

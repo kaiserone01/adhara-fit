@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { obtenerUsuarioDeSesionActual } from "@/lib/sesion";
 import { PrismaSucursalRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSucursalRepository";
-import { PrismaPermisoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPermisoRepository";
 import { listarSucursales } from "@gym-app/domain/use-cases/ListarSucursales";
 import { Button } from "@gym-app/ui/components/Button";
 import { Badge } from "@gym-app/ui/components/Badge";
@@ -15,13 +14,6 @@ export default async function PaginaSucursales() {
   if (!sesion) redirect("/login");
   const { usuario } = sesion;
 
-  const esSocio = usuario.rol === "SOCIO";
-  const permisos = new PrismaPermisoRepository(prisma);
-  // Un SOCIO siempre tiene acceso total (no puede auto-bloquearse por permisos).
-  const puedeVer = esSocio || (await permisos.tiene(usuario.id, "SUCURSALES", "VER"));
-  if (!puedeVer) redirect("/miembros");
-
-  const puedeCrear = esSocio || (await permisos.tiene(usuario.id, "SUCURSALES", "CREAR"));
   const sucursales = await listarSucursales(
     { sucursales: new PrismaSucursalRepository(prisma) },
     usuario.organizacionId
@@ -31,11 +23,9 @@ export default async function PaginaSucursales() {
     <div className="p-6 lg:p-8">
       <div className="mb-6 flex items-center justify-between">
         <PageHeader>Sucursales</PageHeader>
-        {puedeCrear && (
-          <Link href="/sucursales/nuevo">
-            <Button>Nueva sucursal</Button>
-          </Link>
-        )}
+        <Link href="/sucursales/nuevo">
+          <Button>Nueva sucursal</Button>
+        </Link>
       </div>
 
       <div className="hidden lg:block">

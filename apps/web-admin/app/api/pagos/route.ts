@@ -8,17 +8,14 @@ import { PrismaPagoRepository } from "@gym-app/infrastructure/persistence/prisma
 import { PrismaSuscripcionRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSuscripcionRepository";
 import { PrismaMemberRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaMemberRepository";
 import { PrismaPlanRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPlanRepository";
-import { PrismaPermisoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPermisoRepository";
 import { PrismaSucursalRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSucursalRepository";
 import { PrismaReglaAbonoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaReglaAbonoRepository";
-import { AuthorizationService } from "@gym-app/domain/services/AuthorizationService";
 import {
   registrarPago,
   MiembroNoEncontradoError as RegistrarPagoMiembroNoEncontradoError,
   MiembroFueraDeSucursalError,
   PlanNoEncontradoError as RegistrarPagoPlanNoEncontradoError,
   PlanInactivoError,
-  RolNoAutorizadoError,
   AbonoNoPermitidoError,
   AbonoMenorAlMinimoError,
 } from "@gym-app/domain/use-cases/RegistrarPago";
@@ -93,7 +90,6 @@ export async function POST(req: NextRequest) {
         miembros: new PrismaMemberRepository(prisma),
         planes: new PrismaPlanRepository(prisma),
         sucursales: new PrismaSucursalRepository(prisma),
-        autorizacion: new AuthorizationService(new PrismaPermisoRepository(prisma)),
         reglasAbono: new PrismaReglaAbonoRepository(prisma),
       },
       {
@@ -110,7 +106,6 @@ export async function POST(req: NextRequest) {
         ],
         sucursalId: sucursalActivaId,
         registradoPorId: usuario.id,
-        rolUsuario: usuario.rol,
       }
     );
 
@@ -124,9 +119,6 @@ export async function POST(req: NextRequest) {
     }
     if (error instanceof PlanInactivoError) {
       return NextResponse.json({ error: error.message }, { status: 400 });
-    }
-    if (error instanceof RolNoAutorizadoError) {
-      return NextResponse.json({ error: error.message }, { status: 403 });
     }
     if (error instanceof AbonoNoPermitidoError || error instanceof AbonoMenorAlMinimoError) {
       return NextResponse.json({ error: error.message }, { status: 400 });

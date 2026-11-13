@@ -1,4 +1,4 @@
-import { UsuarioAdmin, CambiosUsuarioAdmin, RolUsuario } from "../entities/UsuarioAdmin";
+import { UsuarioAdmin, CambiosUsuarioAdmin } from "../entities/UsuarioAdmin";
 
 export interface IUsuarioAdminRepository {
   crear(datos: {
@@ -7,7 +7,6 @@ export interface IUsuarioAdminRepository {
     nombre: string;
     email: string;
     passwordHash: string;
-    rol: RolUsuario;
     telefono?: string | null;
     fotoUrl?: string | null;
   }): Promise<UsuarioAdmin>;
@@ -19,13 +18,12 @@ export interface IUsuarioAdminRepository {
   listarPorOrganizacion(organizacionId: string): Promise<UsuarioAdmin[]>;
   actualizar(organizacionId: string, id: string, cambios: CambiosUsuarioAdmin): Promise<UsuarioAdmin | null>;
   /**
-   * Borrado físico. Usado para compensar una creación parcialmente fallida
-   * (ver CrearUsuarioAdmin) y por EliminarUsuarioAdmin (papelera en /usuarios).
-   * Sin onDelete: Cascade en el schema — falla si el usuario tiene turnos,
-   * pagos o miembros asignados; EliminarUsuarioAdmin traduce eso a un error
-   * de dominio legible.
+   * Desactiva al administrador solo si queda al menos otro activo; la lectura y la
+   * escritura van en una transacción que bloquea las filas activas, así dos
+   * desactivaciones simultáneas no pueden dejar el sistema sin administradores.
+   * Si ya estaba inactivo no escribe. null = no existe en la organización.
    */
-  eliminar(id: string): Promise<void>;
+  desactivarConservandoUnoActivo(organizacionId: string, id: string): Promise<UsuarioAdmin | "ULTIMO_ADMINISTRADOR" | null>;
   buscarPasswordHashPorId(id: string): Promise<string | null>;
   actualizarPassword(id: string, passwordHash: string): Promise<void>;
 }

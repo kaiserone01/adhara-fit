@@ -1,5 +1,3 @@
-export type RolUsuario = "SOCIO" | "GERENTE" | "RECEPCION" | "ENTRENADOR";
-
 export interface UsuarioAdmin {
   id: string;
   organizacionId: string;
@@ -7,7 +5,6 @@ export interface UsuarioAdmin {
   nombre: string;
   telefono: string | null;
   fotoUrl: string | null;
-  rol: RolUsuario;
   email: string;
   activo: boolean;
 }

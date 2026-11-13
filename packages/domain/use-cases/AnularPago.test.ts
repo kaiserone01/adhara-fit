@@ -2,8 +2,7 @@ import { describe, expect, test } from "vitest";
 import { anularPago } from "./AnularPago";
 import type { Pago } from "../entities/Pago";
 
-function crearDeps(opciones: { permitido?: boolean } = {}) {
-  const { permitido = true } = opciones;
+function crearDeps() {
   const pago = { id: "p1", grupoPagoId: null, anuladoEn: null } as unknown as Pago;
   const anuladas: { id: string; motivo: string }[] = [];
 
@@ -15,13 +14,12 @@ function crearDeps(opciones: { permitido?: boolean } = {}) {
         return pago;
       },
     },
-    autorizacion: { tienePermiso: async () => permitido },
   } as unknown as Parameters<typeof anularPago>[0];
 
   return { deps, anuladas };
 }
 
-const input = { organizacionId: "org", pagoId: "p1", anuladoPorId: "u1", rolAnulador: "SOCIO" as const, motivo: "método equivocado" };
+const input = { organizacionId: "org", pagoId: "p1", anuladoPorId: "u1", motivo: "método equivocado" };
 
 describe("anularPago", () => {
   test("anula el pago con el motivo sin espacios sobrantes", async () => {
@@ -36,8 +34,4 @@ describe("anularPago", () => {
     expect(anuladas).toEqual([]);
   });
 
-  test("sin permiso se rechaza", async () => {
-    const { deps } = crearDeps({ permitido: false });
-    await expect(anularPago(deps, input)).rejects.toThrow(/socio/i);
-  });
 });

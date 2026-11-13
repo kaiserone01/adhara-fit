@@ -20,9 +20,6 @@ export async function actualizarReglaAbonoAction(
   const sesion = await obtenerUsuarioDeSesionActual();
   if (!sesion) redirect("/login");
   const { usuario } = sesion;
-  if (usuario.rol !== "SOCIO") {
-    return { error: "Solo el socio puede configurar las reglas de abono." };
-  }
 
   const activo = formData.get("activo")?.toString() === "on";
   const tipo = formData.get("tipo")?.toString() as TipoMinimoAbono | undefined;

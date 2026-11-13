@@ -57,7 +57,6 @@ function crearDeps(opciones: { hayActiva?: boolean; vigenteHasta?: Date; permite
     },
     planes: { buscarPorId: async () => ({ id: "plan1", activo: true, precioUSD: 25, diasCiclo: 30, frecuencia: "MENSUAL", permitePagoParcial }) },
     sucursales: {},
-    autorizacion: { tienePermiso: async () => true },
     reglasAbono: {
       buscarPorOrganizacionYFrecuencia: async () => (reglaActiva ? { id: "r1", organizacionId: "org", frecuencia: "MENSUAL", activo: true, tipo: "DIAS", valor: 1 } : null),
     },
@@ -75,7 +74,6 @@ function input(extra: Partial<DatosRegistrarPago> = {}): DatosRegistrarPago {
     lineas: [{ monto: 25, metodo: "Transferencia", metodoPagoId: "mp1", numeroOperacion: "123" }],
     sucursalId: "s1",
     registradoPorId: "u1",
-    rolUsuario: "SOCIO",
     fechaPago: hace(10),
     ...extra,
   };

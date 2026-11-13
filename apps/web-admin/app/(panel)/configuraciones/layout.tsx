@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation";
-import { puedeEditarCheckin } from "@/lib/permisoCheckin";
 import { obtenerUsuarioDeSesionActual } from "@/lib/sesion";
 import { PageHeader } from "@gym-app/ui/components/PageHeader";
 import { TabsConfiguraciones } from "./TabsConfiguraciones";
@@ -8,8 +7,6 @@ import { TABS_CONFIGURACIONES } from "./tabs";
 export default async function LayoutConfiguraciones({ children }: { children: React.ReactNode }) {
   const sesion = await obtenerUsuarioDeSesionActual();
   if (!sesion) redirect("/login");
-  const { usuario } = sesion;
-  if (usuario.rol !== "SOCIO") redirect(puedeEditarCheckin(usuario.rol) ? "/checkin" : "/miembros");
 
   return (
     <div className="p-6 lg:p-8">

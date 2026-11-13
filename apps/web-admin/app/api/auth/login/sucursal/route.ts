@@ -9,7 +9,6 @@ import { NOMBRE_COOKIE_SESION } from "@/lib/sesion";
 import { PrismaUsuarioAdminRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaUsuarioAdminRepository";
 import { PrismaSesionRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSesionRepository";
 import { PrismaSucursalRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSucursalRepository";
-import { PrismaUsuarioSucursalRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaUsuarioSucursalRepository";
 import { BcryptPasswordHasher } from "@gym-app/infrastructure/auth/BcryptPasswordHasher";
 import { iniciarSesion, CredencialesInvalidasError } from "@gym-app/domain/use-cases/IniciarSesion";
 import { obtenerSucursalesVisiblesParaUsuario } from "@gym-app/domain/use-cases/ObtenerSucursalesVisiblesParaUsuario";
@@ -28,7 +27,7 @@ export async function POST(req: NextRequest) {
     const hasher = new BcryptPasswordHasher();
     const usuarios = new PrismaUsuarioAdminRepository(prisma);
     const credenciales = await usuarios.buscarCredencialesPorEmail(email);
-    if (!credenciales || !(await hasher.comparar(password, credenciales.passwordHash))) {
+    if (!credenciales || !credenciales.usuario.activo || !(await hasher.comparar(password, credenciales.passwordHash))) {
       return NextResponse.json({ error: "Email o contraseña incorrectos." }, { status: 401 });
     }
 
@@ -36,7 +35,7 @@ export async function POST(req: NextRequest) {
     // esté entre las que este usuario puede ver — evita que alguien fuerce una sucursal
     // ajena editando el body del POST.
     const sucursalesVisibles = await obtenerSucursalesVisiblesParaUsuario(
-      { sucursales: new PrismaSucursalRepository(prisma), usuarioSucursales: new PrismaUsuarioSucursalRepository(prisma) },
+      { sucursales: new PrismaSucursalRepository(prisma) },
       credenciales.usuario
     );
     if (!sucursalesVisibles.some((s) => s.id === sucursalId)) {
@@ -49,7 +48,7 @@ export async function POST(req: NextRequest) {
     );
 
     const response = NextResponse.json({
-      usuario: { id: resultado.usuario.id, email: resultado.usuario.email, rol: resultado.usuario.rol },
+      usuario: { id: resultado.usuario.id, email: resultado.usuario.email },
     });
     response.cookies.set(NOMBRE_COOKIE_SESION, resultado.token, {
       httpOnly: true,

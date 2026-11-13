@@ -5,7 +5,6 @@ import type { ISuscripcionRepository } from "../ports/ISuscripcionRepository";
 import type { IPlanRepository } from "../ports/IPlanRepository";
 import type { IPagoRepository } from "../ports/IPagoRepository";
 import type { ISucursalRepository } from "../ports/ISucursalRepository";
-import type { IAuthorizationService } from "../ports/IAuthorizationService";
 import type { Miembro, CambiosMiembro } from "../entities/Miembro";
 import type { Suscripcion } from "../entities/Suscripcion";
 import type { Plan, FrecuenciaPago } from "../entities/Plan";
@@ -138,11 +137,6 @@ function crearFakes(estadoInicial: { miembro: Miembro; suscripcion: Suscripcion;
     actualizar: async () => null,
   };
 
-  const autorizacion: IAuthorizationService = {
-    puedeCrearUsuarioConRol: () => true,
-    tienePermiso: async () => true,
-  };
-
   const auditoriaRepo: ICambioPlanAuditoriaRepository = {
     crear: async (datos) => {
       auditoriasCreadas.push(datos);
@@ -161,7 +155,6 @@ function crearFakes(estadoInicial: { miembro: Miembro; suscripcion: Suscripcion;
     miembros: memberRepo,
     planes: planRepo,
     sucursales: sucursalRepo,
-    autorizacion,
     auditoria: auditoriaRepo,
   };
 
@@ -303,7 +296,6 @@ describe("cambiarPlanConPago — caso Luis Castro (E1: vista previa vs guardado)
         lineas: [],
         sucursalId: "sucursal-1",
         registradoPorId: "usuario-1",
-        rolUsuario: "SOCIO",
         entrenadorId: null,
       });
 
@@ -372,7 +364,6 @@ describe("cambiarPlanConPago — caso Luis Castro (E1: vista previa vs guardado)
         lineas: [{ monto: 21.67, metodo: "efectivo_usd", metodoPagoId: "metodo-1", numeroOperacion: null }],
         sucursalId: "sucursal-1",
         registradoPorId: "usuario-1",
-        rolUsuario: "SOCIO",
         entrenadorId: null,
       });
 
@@ -427,7 +418,6 @@ describe("cambiarPlanConPago — caso Luis Castro (E1: vista previa vs guardado)
         ],
         sucursalId: "sucursal-1",
         registradoPorId: "usuario-1",
-        rolUsuario: "SOCIO",
         entrenadorId: null,
       });
 
@@ -468,7 +458,6 @@ describe("cambiarPlanConPago — caso Luis Castro (E1: vista previa vs guardado)
           lineas: [{ monto: 15, metodo: "efectivo_usd", metodoPagoId: "metodo-1", numeroOperacion: null }],
           sucursalId: "sucursal-1",
           registradoPorId: "usuario-1",
-          rolUsuario: "SOCIO",
           entrenadorId: null,
         })
       ).rejects.toThrow("La suma de las líneas de pago no coincide con el monto a cobrar.");
@@ -500,7 +489,6 @@ describe("cambiarPlanConPago — caso Luis Castro (E1: vista previa vs guardado)
           lineas: [],
           sucursalId: "sucursal-1",
           registradoPorId: "usuario-1",
-          rolUsuario: "SOCIO",
           entrenadorId: null,
         })
       ).rejects.toThrow("Elige un método de pago para cobrar la diferencia.");
@@ -537,7 +525,6 @@ describe("cambiarPlanConPago — caso Luis Mendoza (Corporativo -> Plan Viejo, V
         lineas: [],
         sucursalId: "sucursal-1",
         registradoPorId: "usuario-1",
-        rolUsuario: "SOCIO",
         entrenadorId: null,
       });
 

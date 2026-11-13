@@ -9,12 +9,10 @@ import { PrismaPagoRepository } from "@gym-app/infrastructure/persistence/prisma
 import { PrismaSuscripcionRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSuscripcionRepository";
 import { PrismaMemberRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaMemberRepository";
 import { PrismaPlanRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPlanRepository";
-import { PrismaPermisoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPermisoRepository";
 import { PrismaSucursalRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSucursalRepository";
 import { PrismaReglaAbonoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaReglaAbonoRepository";
 import type { PrismaClientOrTx } from "@gym-app/infrastructure/persistence/prisma/PrismaClientOrTx";
 import { PrismaCambioPlanAuditoriaRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaCambioPlanAuditoriaRepository";
-import { AuthorizationService } from "@gym-app/domain/services/AuthorizationService";
 import { conMensajeOk } from "../redirectConMensaje";
 import {
   registrarPago,
@@ -22,7 +20,6 @@ import {
   MiembroFueraDeSucursalError,
   PlanNoEncontradoError,
   PlanInactivoError,
-  RolNoAutorizadoError,
   MontoInvalidoError,
   LineasDePagoInvalidasError,
   AbonoNoPermitidoError,
@@ -37,7 +34,6 @@ import {
   MiembroNoEncontradoError as MiembroNoEncontradoErrorCambio,
   PlanNoEncontradoError as PlanNoEncontradoErrorCambio,
   PlanInactivoError as PlanInactivoErrorCambio,
-  RolNoAutorizadoError as RolNoAutorizadoErrorCambio,
   SinCicloVigenteError,
   MetodoPagoRequeridoError,
   EntrenadorRequeridoError,
@@ -133,8 +129,6 @@ export async function registrarPagoAction(
       miembros: new PrismaMemberRepository(cliente),
       planes: new PrismaPlanRepository(cliente),
       sucursales: new PrismaSucursalRepository(cliente),
-      // Los permisos se leen con el cliente global: no necesitan estar dentro de la transacción.
-      autorizacion: new AuthorizationService(new PrismaPermisoRepository(prisma)),
       reglasAbono: new PrismaReglaAbonoRepository(prisma),
     });
     const datosPago = {
@@ -144,7 +138,6 @@ export async function registrarPagoAction(
       lineas: lineas.map((linea) => ({ ...linea, metodo: linea.metodo || "Cortesía" })),
       sucursalId: sucursalIdPago,
       registradoPorId: usuario.id,
-      rolUsuario: usuario.rol,
       ...(fechaPagoTexto ? { fechaPago: new Date(`${fechaPagoTexto}T12:00:00`) } : {}),
       // Si pagó de más: guardar el sobrante como saldo a favor (si no, es de otro cobro y solo queda registrado).
       excedenteASaldoAFavor: formData.get("excedenteSaldo")?.toString() === "1",
@@ -159,7 +152,6 @@ export async function registrarPagoAction(
       error instanceof MiembroFueraDeSucursalError ||
       error instanceof PlanNoEncontradoError ||
       error instanceof PlanInactivoError ||
-      error instanceof RolNoAutorizadoError ||
       error instanceof MontoInvalidoError ||
       error instanceof LineasDePagoInvalidasError ||
       error instanceof AbonoNoPermitidoError ||
@@ -255,7 +247,6 @@ export async function cambiarPlanAction(
           miembros: new PrismaMemberRepository(tx),
           planes: new PrismaPlanRepository(tx),
           sucursales: new PrismaSucursalRepository(tx),
-          autorizacion: new AuthorizationService(new PrismaPermisoRepository(tx)),
           auditoria: new PrismaCambioPlanAuditoriaRepository(tx),
         },
         {
@@ -266,7 +257,6 @@ export async function cambiarPlanAction(
           lineas: lineas,
           sucursalId: sucursalIdPago,
           registradoPorId: usuario.id,
-          rolUsuario: usuario.rol,
           entrenadorId,
         }
       )
@@ -277,7 +267,6 @@ export async function cambiarPlanAction(
       error instanceof MiembroFueraDeSucursalError ||
       error instanceof PlanNoEncontradoErrorCambio ||
       error instanceof PlanInactivoErrorCambio ||
-      error instanceof RolNoAutorizadoErrorCambio ||
       error instanceof SinCicloVigenteError ||
       error instanceof MetodoPagoRequeridoError ||
       error instanceof EntrenadorRequeridoError ||

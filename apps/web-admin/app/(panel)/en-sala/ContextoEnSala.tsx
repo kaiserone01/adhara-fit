@@ -32,7 +32,7 @@ const CLAVE_AVISOS = "enSala.avisos";
 
 const Contexto = createContext<ValorContexto | null>(null);
 
-// Devuelve null fuera del ProveedorEnSala (usuarios sin permiso EN_SALA).
+// Devuelve null fuera del ProveedorEnSala (fuera del panel).
 export function useEnSala() {
   return useContext(Contexto);
 }

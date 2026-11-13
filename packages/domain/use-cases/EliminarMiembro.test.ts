@@ -1,10 +1,10 @@
 import { describe, expect, test } from "vitest";
-import { eliminarMiembro, RolNoAutorizadoError } from "./EliminarMiembro";
+import { eliminarMiembro } from "./EliminarMiembro";
 import { MiembroNoEncontradoError } from "./ActualizarMiembro";
 import { MiembroFueraDeSucursalError } from "./ObtenerMiembro";
 
-function crearDeps(opciones: { permiso?: boolean; miembro?: { sucursalId: string | null } | null } = {}) {
-  const { permiso = true, miembro = { sucursalId: "s1" } } = opciones;
+function crearDeps(opciones: { miembro?: { sucursalId: string | null } | null } = {}) {
+  const { miembro = { sucursalId: "s1" } } = opciones;
   const eliminados: string[] = [];
   const deps = {
     miembros: {
@@ -14,7 +14,6 @@ function crearDeps(opciones: { permiso?: boolean; miembro?: { sucursalId: string
       },
     },
     sucursales: { buscarPorId: async () => ({ nombre: "Tipuro" }) },
-    autorizacion: { tienePermiso: async () => permiso },
   } as unknown as Parameters<typeof eliminarMiembro>[0];
   return { deps, eliminados };
 }
@@ -22,7 +21,7 @@ function crearDeps(opciones: { permiso?: boolean; miembro?: { sucursalId: string
 const input = { organizacionId: "org", id: "m1", sucursalActivaId: "s1", usuarioIdSolicitante: "u1" };
 
 describe("eliminarMiembro", () => {
-  test("con permiso y en su sucursal, borra al miembro con su historial", async () => {
+  test("en su sucursal, borra al miembro con su historial", async () => {
     const { deps, eliminados } = crearDeps();
     await eliminarMiembro(deps, input);
     expect(eliminados).toEqual(["m1"]);
@@ -32,12 +31,6 @@ describe("eliminarMiembro", () => {
     const { deps, eliminados } = crearDeps({ miembro: { sucursalId: null } });
     await eliminarMiembro(deps, input);
     expect(eliminados).toEqual(["m1"]);
-  });
-
-  test("sin permiso MIEMBROS/ELIMINAR → RolNoAutorizadoError y no borra", async () => {
-    const { deps, eliminados } = crearDeps({ permiso: false });
-    await expect(eliminarMiembro(deps, input)).rejects.toBeInstanceOf(RolNoAutorizadoError);
-    expect(eliminados).toEqual([]);
   });
 
   test("miembro inexistente → MiembroNoEncontradoError", async () => {

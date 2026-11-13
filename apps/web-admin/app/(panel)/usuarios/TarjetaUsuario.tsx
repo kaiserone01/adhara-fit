@@ -2,42 +2,32 @@
 
 import { useTransition } from "react";
 import Link from "next/link";
-import { Trash } from "@phosphor-icons/react/dist/ssr";
 import { Card } from "@gym-app/ui/components/Card";
 import { Avatar } from "@gym-app/ui/components/Avatar";
+import { Badge } from "@gym-app/ui/components/Badge";
 import { useFeedback } from "@gym-app/ui/components/FeedbackOverlay";
 import type { UsuarioAdmin } from "@gym-app/domain/entities/UsuarioAdmin";
-import { eliminarUsuarioAction } from "./actions";
+import { cambiarEstadoUsuarioAction } from "./actions";
 
-const ETIQUETA_ROL: Record<UsuarioAdmin["rol"], string> = {
-  SOCIO: "Socio",
-  GERENTE: "Gerente",
-  RECEPCION: "Recepción",
-  ENTRENADOR: "Entrenador",
-};
-
-export function TarjetaUsuario({ usuario, puedeEliminar }: { usuario: UsuarioAdmin; puedeEliminar: boolean }) {
-  const [eliminando, iniciarTransicion] = useTransition();
+export function TarjetaUsuario({ usuario, esPropio }: { usuario: UsuarioAdmin; esPropio: boolean }) {
+  const [cambiando, iniciarTransicion] = useTransition();
   const { mostrarError } = useFeedback();
 
-  function eliminar(evento: React.MouseEvent) {
-    // La papelera vive dentro de una card que es un <Link> a la ficha del
-    // usuario — sin esto el clic también navegaría (mismo problema que
-    // EstadoToggle en Miembros).
+  function cambiarEstado(evento: React.MouseEvent) {
+    // El botón vive dentro de una card que es un <Link> a la ficha: sin esto el clic también navegaría.
     evento.preventDefault();
     evento.stopPropagation();
 
-    const confirmado = window.confirm(
-      `¿Eliminar a ${usuario.nombre || usuario.email}? Esta acción no se puede deshacer.`
-    );
-    if (!confirmado) return;
+    if (usuario.activo && !window.confirm(`¿Desactivar a ${usuario.nombre || usuario.email}? Ya no podrá iniciar sesión.`)) {
+      return;
+    }
 
     iniciarTransicion(async () => {
       try {
-        const { error } = await eliminarUsuarioAction(usuario.id);
+        const { error } = await cambiarEstadoUsuarioAction(usuario.id, !usuario.activo);
         if (error) mostrarError(error);
       } catch {
-        mostrarError("No se pudo eliminar el usuario.");
+        mostrarError("No se pudo cambiar el estado del administrador.");
       }
     });
   }
@@ -51,24 +41,22 @@ export function TarjetaUsuario({ usuario, puedeEliminar }: { usuario: UsuarioAdm
             <span className="font-medium" style={{ color: "var(--gx-ink)" }}>
               {usuario.nombre || usuario.email}
             </span>
+            <Badge tono={usuario.activo ? "verde" : "gris"}>{usuario.activo ? "Activo" : "Inactivo"}</Badge>
           </div>
-          {puedeEliminar && (
+          {!esPropio && (
             <button
               type="button"
-              onClick={eliminar}
-              disabled={eliminando}
-              title="Eliminar usuario"
-              aria-label="Eliminar usuario"
-              className="shrink-0 rounded-lg p-2 transition-colors disabled:opacity-50"
-              style={{ color: "var(--gx-bad)" }}
+              onClick={cambiarEstado}
+              disabled={cambiando}
+              className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-50"
+              style={{ color: usuario.activo ? "var(--gx-bad)" : "var(--gx-good)" }}
             >
-              <Trash size={18} weight="bold" />
+              {usuario.activo ? "Desactivar" : "Reactivar"}
             </button>
           )}
         </div>
-        <div className="mt-2 flex justify-between text-sm" style={{ color: "var(--gx-muted)" }}>
-          <span>{usuario.email}</span>
-          <span>{ETIQUETA_ROL[usuario.rol]}</span>
+        <div className="mt-2 text-sm" style={{ color: "var(--gx-muted)" }}>
+          {usuario.email}
         </div>
       </Card>
     </Link>

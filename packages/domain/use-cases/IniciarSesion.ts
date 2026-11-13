@@ -36,7 +36,8 @@ export async function iniciarSesion(
 ): Promise<IniciarSesionResultado> {
   const credenciales = await deps.usuarios.buscarCredencialesPorEmail(input.email);
 
-  if (!credenciales) {
+  // Un administrador desactivado no puede iniciar sesión (mismo mensaje que una credencial incorrecta).
+  if (!credenciales || !credenciales.usuario.activo) {
     throw new CredencialesInvalidasError();
   }
 

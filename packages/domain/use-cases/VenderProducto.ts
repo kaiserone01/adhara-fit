@@ -1,7 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { IPagoRepository } from "../ports/IPagoRepository";
 import { IProductoRepository } from "../ports/IProductoRepository";
-import { IAuthorizationService } from "../ports/IAuthorizationService";
 import { Pago, DatosLineaPago, validarLineasDePago } from "../entities/Pago";
 import {
   resolverItemsVenta,
@@ -17,16 +16,9 @@ import {
 export { ProductoNoEncontradoError, ProductoInactivoError, CantidadInvalidaError, SinProductosError };
 export type { ItemCarrito };
 
-export class RolNoAutorizadoError extends Error {
-  constructor() {
-    super("Tu rol no tiene permiso para vender productos.");
-  }
-}
-
 export interface VenderProductoDeps {
   pagos: IPagoRepository;
   productos: IProductoRepository;
-  autorizacion: IAuthorizationService;
 }
 
 export interface DatosVenderProducto {
@@ -38,9 +30,6 @@ export interface DatosVenderProducto {
 }
 
 export async function venderProducto(deps: VenderProductoDeps, input: DatosVenderProducto): Promise<Pago[]> {
-  if (!(await deps.autorizacion.tienePermiso(input.registradoPorId, "PAGOS", "CREAR"))) {
-    throw new RolNoAutorizadoError();
-  }
 
   const items = await resolverItemsVenta(deps.productos, input.organizacionId, input.items);
 

@@ -1,11 +1,4 @@
 import { IPlanRepository } from "../ports/IPlanRepository";
-import { IAuthorizationService } from "../ports/IAuthorizationService";
-
-export class RolNoAutorizadoError extends Error {
-  constructor() {
-    super("Tu rol no tiene permiso para eliminar planes.");
-  }
-}
 
 export class PlanNoEncontradoError extends Error {
   constructor() {
@@ -20,12 +13,9 @@ export class PlanConHistorialError extends Error {
 }
 
 export async function eliminarPlan(
-  deps: { planes: IPlanRepository; autorizacion: IAuthorizationService },
+  deps: { planes: IPlanRepository },
   input: { organizacionId: string; id: string; usuarioIdSolicitante: string }
 ): Promise<void> {
-  if (!(await deps.autorizacion.tienePermiso(input.usuarioIdSolicitante, "PLANES", "ELIMINAR"))) {
-    throw new RolNoAutorizadoError();
-  }
 
   const existente = await deps.planes.buscarPorId(input.organizacionId, input.id);
   if (!existente) {

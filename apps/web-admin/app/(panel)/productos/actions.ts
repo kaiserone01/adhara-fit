@@ -7,12 +7,9 @@ import { prisma } from "@/lib/prisma";
 import { obtenerUsuarioDeSesionActual } from "@/lib/sesion";
 import { storageR2 } from "@/lib/storageR2";
 import { PrismaProductoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaProductoRepository";
-import { PrismaPermisoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPermisoRepository";
-import { AuthorizationService } from "@gym-app/domain/services/AuthorizationService";
-import { crearProducto, RolNoAutorizadoError as RolNoCrear, ProductoInvalidoError } from "@gym-app/domain/use-cases/CrearProducto";
+import { crearProducto, ProductoInvalidoError } from "@gym-app/domain/use-cases/CrearProducto";
 import {
   actualizarProducto,
-  RolNoAutorizadoError as RolNoEditar,
   ProductoNoEncontradoError,
 } from "@gym-app/domain/use-cases/ActualizarProducto";
 import { eliminarProducto } from "@gym-app/domain/use-cases/EliminarProducto";
@@ -22,7 +19,7 @@ export interface EstadoFormularioProducto {
   error?: string;
 }
 
-const ERRORES_DE_DOMINIO = [RolNoCrear, RolNoEditar, ProductoInvalidoError, ProductoNoEncontradoError];
+const ERRORES_DE_DOMINIO = [ProductoInvalidoError, ProductoNoEncontradoError];
 
 function esErrorDeDominio(error: unknown): error is Error {
   return ERRORES_DE_DOMINIO.some((clase) => error instanceof clase);
@@ -31,7 +28,6 @@ function esErrorDeDominio(error: unknown): error is Error {
 function deps() {
   return {
     productos: new PrismaProductoRepository(prisma),
-    autorizacion: new AuthorizationService(new PrismaPermisoRepository(prisma)),
   };
 }
 

@@ -14,13 +14,9 @@ import { ContadorEnSala } from "./en-sala/ContextoEnSala";
 export function NavegacionMobile({
   nombre,
   email,
-  rol,
-  puedeVerEnSala,
 }: {
   nombre: string;
   email: string;
-  rol: string;
-  puedeVerEnSala: boolean;
 }) {
   const [masAbierto, setMasAbierto] = useState(false);
 
@@ -32,17 +28,13 @@ export function NavegacionMobile({
   );
 
   const items: ItemTab[] = [
-    ...(puedeVerEnSala
-      ? [
-          {
-            tipo: "link" as const,
-            href: "/en-sala",
-            label: "En sala",
-            icon: iconoEnSala("regular"),
-            iconActivo: iconoEnSala("fill"),
-          },
-        ]
-      : []),
+    {
+      tipo: "link" as const,
+      href: "/en-sala",
+      label: "En sala",
+      icon: iconoEnSala("regular"),
+      iconActivo: iconoEnSala("fill"),
+    },
     {
       tipo: "link",
       href: "/miembros",
@@ -70,7 +62,7 @@ export function NavegacionMobile({
   return (
     <>
       <BottomTabBar items={items} />
-      <MasSheet abierto={masAbierto} onCerrar={() => setMasAbierto(false)} nombre={nombre} email={email} rol={rol} />
+      <MasSheet abierto={masAbierto} onCerrar={() => setMasAbierto(false)} nombre={nombre} email={email} />
     </>
   );
 }

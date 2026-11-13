@@ -1,14 +1,7 @@
 import { IPlanRepository } from "../ports/IPlanRepository";
 import { ISuscripcionRepository } from "../ports/ISuscripcionRepository";
 import { Plan, FrecuenciaPago } from "../entities/Plan";
-import { RolUsuario } from "../entities/UsuarioAdmin";
 import { prorratearVencimiento } from "./CalcularVencimientoPlan";
-
-export class RolNoAutorizadoError extends Error {
-  constructor() {
-    super("Solo el socio puede cambiar la frecuencia o el entrenador de un plan.");
-  }
-}
 
 export class PlanNoEncontradoError extends Error {
   constructor() {
@@ -29,7 +22,6 @@ export interface ActualizarFrecuenciaPlanDeps {
 
 export interface ActualizarFrecuenciaPlanInput {
   organizacionId: string;
-  rolSolicitante: RolUsuario;
   planId: string;
   frecuencia: FrecuenciaPago;
   // Duración del ciclo en días para la frecuencia elegida — el frontend la
@@ -49,10 +41,6 @@ export async function actualizarFrecuenciaPlan(
   deps: ActualizarFrecuenciaPlanDeps,
   input: ActualizarFrecuenciaPlanInput
 ): Promise<Plan> {
-  if (input.rolSolicitante !== "SOCIO") {
-    throw new RolNoAutorizadoError();
-  }
-
   const plan = await deps.planes.buscarPorId(input.organizacionId, input.planId);
   if (!plan) {
     throw new PlanNoEncontradoError();

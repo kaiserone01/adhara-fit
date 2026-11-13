@@ -2,9 +2,7 @@ import { TabsConfiguraciones } from "../configuraciones/TabsConfiguraciones";
 import { TABS_CONFIGURACIONES } from "../configuraciones/tabs";
 
 // Sucursales vive en su propia ruta (fuera de /configuraciones) pero
-// comparte la misma barra de tabs — ver diseño acordado. Este layout NO
-// exige rol SOCIO: la propia página valida el permiso SUCURSALES/VER, que
-// algunos roles sin ser SOCIO también pueden tener.
+// comparte la misma barra de tabs — ver diseño acordado.
 export default function LayoutSucursales({ children }: { children: React.ReactNode }) {
   return (
     <>

@@ -19,10 +19,8 @@ import {
 } from "@gym-app/domain/use-cases/ActualizarMiembro";
 import { calcularCambiosFechas } from "@gym-app/domain/utils/cambiosFechasFicha";
 import { inicioDelDiaLima } from "@gym-app/domain/utils/fechaLima";
-import { PrismaPermisoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaPermisoRepository";
 import { PrismaSucursalRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaSucursalRepository";
 import { PrismaReglaAbonoRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaReglaAbonoRepository";
-import { AuthorizationService } from "@gym-app/domain/services/AuthorizationService";
 import { storageR2 } from "@/lib/storageR2";
 import {
   registrarPago,
@@ -33,7 +31,6 @@ import {
   MiembroFueraDeSucursalError as PagoMiembroFueraDeSucursalError,
   PlanNoEncontradoError,
   PlanInactivoError,
-  RolNoAutorizadoError as PagoRolNoAutorizadoError,
   MontoInvalidoError,
   AbonoNoPermitidoError,
   AbonoMenorAlMinimoError,
@@ -184,7 +181,6 @@ export async function crearMiembroAction(
         miembros: new PrismaMemberRepository(prisma),
         planes: new PrismaPlanRepository(prisma),
         sucursales: new PrismaSucursalRepository(prisma),
-        autorizacion: new AuthorizationService(new PrismaPermisoRepository(prisma)),
         reglasAbono: new PrismaReglaAbonoRepository(prisma),
       },
       {
@@ -208,7 +204,6 @@ export async function crearMiembroAction(
         ],
         sucursalId: sucursalIdPago,
         registradoPorId: usuario.id,
-        rolUsuario: usuario.rol,
       }
     );
   } catch (error) {
@@ -217,7 +212,6 @@ export async function crearMiembroAction(
       error instanceof PagoMiembroFueraDeSucursalError ||
       error instanceof PlanNoEncontradoError ||
       error instanceof PlanInactivoError ||
-      error instanceof PagoRolNoAutorizadoError ||
       error instanceof MontoInvalidoError ||
       error instanceof AbonoNoPermitidoError ||
       error instanceof AbonoMenorAlMinimoError ||
@@ -402,7 +396,6 @@ export async function eliminarMiembroAction(id: string): Promise<void> {
     {
       miembros: new PrismaMemberRepository(prisma),
       sucursales: new PrismaSucursalRepository(prisma),
-      autorizacion: new AuthorizationService(new PrismaPermisoRepository(prisma)),
     },
     { organizacionId: usuario.organizacionId, id, sucursalActivaId, usuarioIdSolicitante: usuario.id }
   );

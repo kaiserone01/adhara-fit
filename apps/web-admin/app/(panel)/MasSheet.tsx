@@ -3,27 +3,22 @@
 import Link from "next/link";
 import { Sheet } from "@gym-app/ui/components/Sheet";
 import { BarraUsuario } from "./BarraUsuario";
-import { puedeEditarCheckin } from "@/lib/permisoCheckin";
 
 export function MasSheet({
   abierto,
   onCerrar,
   nombre,
   email,
-  rol,
 }: {
   abierto: boolean;
   onCerrar: () => void;
   nombre: string;
   email: string;
-  rol: string;
 }) {
-  // Usuarios, Sucursales y Planes se administran desde las tabs de
-  // Configuraciones (ver diseño acordado) — solo SOCIO llega a ellos, igual
-  // que en el sidebar de escritorio.
+  // Planes, Sucursales y Administradores se administran desde las tabs de Configuraciones.
   const enlaces = [
     { href: "/productos", label: "Productos" },
-    ...(puedeEditarCheckin(rol) ? [{ href: "/configuraciones", label: "Configuraciones" }] : []),
+    { href: "/configuraciones", label: "Configuraciones" },
   ];
 
   return (

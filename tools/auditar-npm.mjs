@@ -27,12 +27,34 @@ export function avisosNuevos(audit, baseline) {
   return nuevos;
 }
 
+/**
+ * Ejecuta `npm audit --json` y devuelve su stdout. `npm audit` sale con código 1 cuando hay
+ * vulnerabilidades y aun así imprime JSON válido: eso NO es un error. Solo falla si no hay salida.
+ * En Windows npm es `npm.cmd`, que Node no lanza sin shell; con shell se pasa el comando como una
+ * sola cadena (con args y shell Node 24 avisa DEP0190). `spawn` y `plataforma` son inyectables.
+ */
+export function ejecutarAuditoria(raiz, { spawn = spawnSync, plataforma = process.platform } = {}) {
+  const opciones = { cwd: raiz, encoding: "utf8", maxBuffer: 1 << 28, shell: plataforma === "win32" };
+  const r = plataforma === "win32" ? spawn("npm audit --json", [], opciones) : spawn("npm", ["audit", "--json"], opciones);
+  if (r.error || typeof r.stdout !== "string" || r.stdout.trim() === "") {
+    const motivo = r.error ? r.error.message : `sin salida (código ${r.status ?? "desconocido"})`;
+    throw new Error(`auditar-npm: no se pudo ejecutar «npm audit --json»: ${motivo}. Revise que npm esté en el PATH y que haya red.`);
+  }
+  return r.stdout;
+}
+
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const raiz = resolve(dirname(fileURLToPath(import.meta.url)), "..");
   const i = process.argv.indexOf("--entrada");
-  const crudo = i > 0 ? readFileSync(process.argv[i + 1], "utf8") : spawnSync("npm", ["audit", "--json"], { cwd: raiz, encoding: "utf8", maxBuffer: 1 << 28 }).stdout;
-  const baseline = JSON.parse(readFileSync(join(raiz, "docs/linea-base-audit.json"), "utf8"));
-  const nuevos = avisosNuevos(JSON.parse(crudo), baseline);
+  let nuevos;
+  try {
+    const crudo = i > 0 ? readFileSync(process.argv[i + 1], "utf8") : ejecutarAuditoria(raiz);
+    const baseline = JSON.parse(readFileSync(join(raiz, "docs/linea-base-audit.json"), "utf8"));
+    nuevos = avisosNuevos(JSON.parse(crudo), baseline);
+  } catch (e) {
+    console.error(e.message.startsWith("auditar-npm:") ? e.message : `auditar-npm: ${e.message}`);
+    process.exit(2);
+  }
   if (nuevos.length) {
     console.error(nuevos.map((n) => `auditar-npm: aviso ${n.severidad} nuevo en ${n.paquete} (${n.ids.join(", ") || "sin identificador"})`).join("\n"));
     process.exit(1);

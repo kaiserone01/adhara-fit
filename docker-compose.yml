@@ -1,0 +1,53 @@
+# Entorno local de Adhara Fit: PostgreSQL y web-admin (S-00).
+# Antes de iniciar: copia .env.example a .env.
+# La base de este Compose es desechable: `docker compose down -v` la borra.
+name: adhara-fit
+
+services:
+  postgres:
+    image: postgres:16.4-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?Copia .env.example a .env antes de iniciar}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Copia .env.example a .env antes de iniciar}
+      POSTGRES_DB: ${POSTGRES_DB:?Copia .env.example a .env antes de iniciar}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web-admin:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:?Copia .env.example a .env antes de iniciar}:${POSTGRES_PASSWORD:?Copia .env.example a .env antes de iniciar}@postgres:5432/${POSTGRES_DB:?Copia .env.example a .env antes de iniciar}
+      R2_ACCOUNT_ID: ${R2_ACCOUNT_ID:-}
+      R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:-}
+      R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:-}
+      R2_BUCKET_NAME: ${R2_BUCKET_NAME:-}
+      R2_PUBLIC_URL: ${R2_PUBLIC_URL:-}
+    # Con cero migraciones heredadas `migrate deploy` no crea tablas (SUP-S00-010): se crea el esquema
+    # con `prisma db push` antes de arrancar. S-15 lo reemplaza por el servicio `migrar`.
+    entrypoint:
+      - /bin/sh
+      - -c
+      - cd migrate-toolkit/packages/db && ../../node_modules/.bin/prisma db push --config prisma7.config.ts && cd /app && exec node apps/web-admin/server.js
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:3000/login || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+volumes:
+  postgres_data:

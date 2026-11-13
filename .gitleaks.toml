@@ -1,0 +1,19 @@
+# Configuración de gitleaks para Adhara Fit (S-00, SUP-S00-003 y SUP-S00-014).
+title = "Adhara Fit"
+
+[extend]
+useDefault = true
+
+# Regla propia para las pruebas: no depende de formatos de proveedores.
+[[rules]]
+id = "adhara-test-secret"
+description = "Cadena de prueba ADHARA_TEST_SECRET_ seguida de 16 caracteres alfanuméricos"
+regex = '''ADHARA_TEST_SECRET_[A-Za-z0-9]{16}'''
+keywords = ["adhara_test_secret_"]
+
+# Falsos positivos: cada entrada lleva su motivo y se revisa en el diff del pull request (BEH-S00-014).
+[allowlist]
+description = "Entradas revisadas por el propietario"
+paths = [
+  '''docs/linea-base-audit\.json''',
+]

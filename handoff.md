@@ -152,6 +152,7 @@ Los 22 ADR están aceptados (001 a 022); ninguno queda propuesto ni retirado. AD
 - `docs/superpowers/specs/S-14`, `S-17`, `S-19`: aprobadas (2026-11-12); enmiendas en `S-00`, `S-01`, `S-02`, `S-04`, `S-05`, `S-06`, `S-08`, `S-09`, `S-10`, `S-11`, `S-12`, `S-13`, `S-15`, `S-22`, `S-23`; `docs/01` (RF-70), `docs/06`, `docs/08`, `docs/00-indice.md`, `COBERTURA-RF.md` y `BACKLOG-SPECS.md`: notas y estados.
 
 - **Desarrollo, Ola 0 / S-00 (2026-11-12):** `tools/verificar-repo.mjs`, `verificar-env.mjs`, `auditar-npm.mjs`, `base-efimera.mjs`, `importar-repo-a.mjs` y `verificar-gitleaks.test.mjs`, cada uno con su prueba; importación real del Repo A (`b4352a0`, un commit, `docs/informe-importacion.md`); `LICENSE`, `.gitignore` completado, `.env.example`, `docker-compose.yml`, `.gitleaks.toml`, `.github/workflows/ci.yml` y `README.md` de arranque. `docs/superpowers/plans/2026-11-12-refactor-fundaciones.md`: plan global G6.
+- `tools/verificar-drizzle.mjs`, `tools/guardia-db-local.mjs` y el modo `--drizzle` de `verificar-repo.mjs` (S-22 paso 0), con pruebas.
 - `docs/superpowers/specs/S-20-vitrina-de-tv.md` y `S-21-checkin-en-smart-tv.md`: redactadas, `en-revision`.
 
 ## 4. Intentos fallidos
@@ -204,8 +205,8 @@ Los 22 ADR están aceptados (001 a 022); ninguno queda propuesto ni retirado. AD
 
 ## 5. Próximos pasos
 1. Leer handoff.md y ejecutar /preflight.
-2. **Continuar S-00 (Ola 0):** confirmar `npm install -D pg` (lockfile), ejecutar `node tools/verificar-repo.mjs`, `verificar-env.mjs`, `node --test "tools/*.test.mjs"` y los scripts de calidad; commitear y empujar a `main` cuando el propietario lo pida. Quedan los AC manuales/e2e de S-00 (Compose en una máquina con Docker, CI en GitHub) para el propietario.
-3. **S-22 (Drizzle)**, luego Ola 1 (S-01, S-02, S-03), Ola 2 (S-04 a S-07), Ola 3 (S-08, S-09, S-10, S-11, S-18, S-23), Ola 3b (S-15 pasos 1 a 5), Ola 4 (S-19), Ola 5 (S-12, S-13, S-14), según el plan G6. Un commit por paso de la sección 5.1 de cada spec, pruebas primero.
+2. **S-00 está implementada y verde en local** (`verificar-repo`, `verificar-env`, `auditar-npm`, 63 pruebas de `tools/`, 390 de dominio, AC-S00-019 contra PostgreSQL 16 local). Quedan para el propietario los AC e2e y manuales (Compose con Docker, primer CI y primer resultado de gitleaks en GitHub). **Nada se ha empujado**: la plataforma negó el push porque el propietario no lo pidió en este turno; empujar a `main` y a `claude/gracious-faraday-0j7ziu` en cuanto lo pida.
+3. **S-22 (Drizzle), paso 1 en adelante** (el paso 0 está hecho): suites de contrato contra los puertos del dominio con la fábrica por implementación y `ADHARA_ORM`, base efímera (PostgreSQL 16 local: `pg_ctlcluster 16 main start` y rol de pruebas con `DATABASE_URL=postgresql://<rol>:<clave>@localhost:5432/postgres`); después esquema Drizzle y `comparar-esquemas`, 22 repositorios, `web-admin` (unos 108 archivos mencionan Prisma) y retiro de Prisma. Luego Ola 1 (S-01, S-02, S-03), Ola 2 (S-04 a S-07), Ola 3 (S-08, S-09, S-10, S-11, S-18, S-23), Ola 3b (S-15 pasos 1 a 5), Ola 4 (S-19), Ola 5 (S-12, S-13, S-14), según el plan G6. Un commit por paso de la sección 5.1 de cada spec, pruebas primero.
 4. Antes de la Ola 6: conciliar S-20 y S-21 con los hallazgos del revisor (§4), resumir al propietario y esperar «aprobada».
 5. Pedir al propietario: PNG originales del logotipo (antes de S-19), VPS/dominio/bucket/monitor/llave age (antes de la Ola 7), textos legales revisados, datos de cobro, nombre y correo del primer administrador, marca y modelo del televisor.
 6. Solo con orden expresa y ADR por ADR: cambiar estados de ADR a `aceptado (confirmado por el propietario, AAAA-MM-DD)`.

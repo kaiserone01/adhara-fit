@@ -57,3 +57,6 @@ docs/xls/*.xlsm
 apps/kiosk-host/**/bin/
 apps/kiosk-host/**/obj/
 apps/kiosk-host/publicado/
+
+# Configuración local del Check-in Module (URL y clave); no se versiona
+apps/checkin/public/checkin-config.json

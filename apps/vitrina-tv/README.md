@@ -17,7 +17,7 @@ Secretos:
 
 | Secreto | Para qué |
 | --- | --- |
-| `VITRINA_CLAVE_<SEDE>` | API key de la sede (nombre de la sede en mayúsculas, p. ej. `VITRINA_CLAVE_ZIPGYM`). Va dentro del APK. |
+| `VITRINA_CLAVE` | La clave única del gimnasio: el mismo valor que la variable `CHECKIN_CLAVE` de web-admin (la vitrina y el check-in comparten clave). Va dentro del APK. |
 | `CHECKIN_APK_PASSWORD` | Contraseña del cifrado 7-Zip del artefacto. |
 
 Inputs del workflow:
@@ -53,7 +53,7 @@ Desactivar la depuración USB/por red en Opciones de desarrollador y ejecutar `a
 
 ## 7. Rotar la clave
 
-Actualizar el secreto `VITRINA_CLAVE_<SEDE>`, recompilar y `adb install -r`.
+Cambiar `CHECKIN_CLAVE` en web-admin, actualizar el secreto `VITRINA_CLAVE`, recompilar y `adb install -r`.
 
 ## 8. Desarrollar en el TV
 

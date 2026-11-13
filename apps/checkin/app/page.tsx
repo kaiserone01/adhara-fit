@@ -1,9 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useReducer, useState } from "react";
-import { useRouter } from "next/navigation";
-import { guardarClaveDelFragmento, obtenerApiKey } from "@/lib/config";
-import { registrarCheckIn, ErrorCheckIn } from "@/lib/api";
+import { cargarConfig } from "@/lib/config";
+import { registrarCheckIn, fijarUrlApi, ErrorCheckIn } from "@/lib/api";
 import { encolar, listarPendientes } from "@/lib/colaPendientes";
 import { reintentarPendientes } from "@/lib/reintentarPendientes";
 import { useEntradaCedula } from "@/lib/useEntradaCedula";
@@ -60,8 +59,8 @@ function contenidoFicha(ficha: FichaActiva) {
 }
 
 export default function PaginaCheckIn() {
-  const router = useRouter();
   const [apiKey, setApiKey] = useState<string | null>(null);
+  const [errorConfig, setErrorConfig] = useState<string | null>(null);
   const [pantalla, despachar] = useReducer(reducirPantalla, estadoInicial);
   const [reaccion, setReaccion] = useState<Reaccion | null>(null);
   const [pendientes, setPendientes] = useState(0);
@@ -71,15 +70,20 @@ export default function PaginaCheckIn() {
   const hora = useHoraActual();
 
   useEffect(() => {
-    guardarClaveDelFragmento();
-    const clave = obtenerApiKey();
-    if (!clave) {
-      router.replace("/config");
-      return;
-    }
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- lee localStorage tras el montaje (SSR-safe, ver ADR de output: "export")
-    setApiKey(clave);
-  }, [router]);
+    let activo = true;
+    cargarConfig()
+      .then((config) => {
+        if (!activo) return;
+        fijarUrlApi(config.apiUrl);
+        setApiKey(config.clave);
+      })
+      .catch((error) => {
+        if (activo) setErrorConfig(error instanceof Error ? error.message : "No se pudo leer la configuración.");
+      });
+    return () => {
+      activo = false;
+    };
+  }, []);
 
   const actualizarPendientes = useCallback(() => {
     listarPendientes().then((lista) => setPendientes(lista.length));
@@ -205,8 +209,8 @@ export default function PaginaCheckIn() {
           <input {...propsInput} className={`${CLASES_CAMPO_CEDULA} bg-transparent outline-none`} style={ESTILO_CAMPO_CEDULA} />
         )}
 
-        <p className="min-h-[2.5rem] text-3xl" style={{ color: "var(--gx-muted)" }}>
-          {pantalla.procesando ? "Verificando…" : ""}
+        <p className="min-h-[2.5rem] text-3xl" style={{ color: errorConfig ? "var(--gx-bad)" : "var(--gx-muted)" }}>
+          {errorConfig ?? (pantalla.procesando ? "Verificando…" : "")}
         </p>
       </div>
 

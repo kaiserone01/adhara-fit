@@ -1,23 +1,26 @@
-import { claveDeFragmento } from "./claveFragmento";
-
-const CLAVE_STORAGE = "checkin_api_key";
-
-export function obtenerApiKey(): string | null {
-  if (typeof window === "undefined") return null;
-  return window.localStorage.getItem(CLAVE_STORAGE);
+// Configuración del Check-in Module. No hay servicio web propio: la interfaz va empaquetada en el APK y habla con web-admin.
+// La URL de web-admin y la clave (CHECKIN_CLAVE) las escribe apps/checkin-tv/capacitor/scripts/preparar.mjs en
+// checkin-config.json dentro del bundle del APK. Mismo esquema que la vitrina (apps/vitrina/lib/config.ts).
+export interface ConfigCheckin {
+  apiUrl: string;
+  clave: string;
 }
 
-export function guardarApiKey(apiKey: string): void {
-  window.localStorage.setItem(CLAVE_STORAGE, apiKey);
+const HOST_LOCAL = /^http:\/\/(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)(:\d+)?(\/|$)/;
+
+export function validarConfig(datos: unknown): ConfigCheckin {
+  const { apiUrl, clave } = (datos ?? {}) as Partial<Record<keyof ConfigCheckin, unknown>>;
+  if (typeof apiUrl !== "string" || !apiUrl) throw new Error("checkin-config.json no tiene apiUrl.");
+  if (typeof clave !== "string" || !clave) throw new Error("checkin-config.json no tiene clave.");
+  // La clave viaja en cada petición: https salvo en una red local de desarrollo.
+  if (!apiUrl.startsWith("https://") && !HOST_LOCAL.test(apiUrl)) {
+    throw new Error("apiUrl debe empezar por https:// (http:// solo se admite en una red local de desarrollo).");
+  }
+  return { apiUrl: apiUrl.replace(/\/+$/, ""), clave };
 }
 
-// La APK de Android TV abre el checkin con `#clave=<clave>` en la raíz (`/config` no se sirve como ruta
-// propia con `serve -s`: devuelve la página de inicio y perdería el fragmento). Si viene, se guarda y se
-// borra de la barra de direcciones y del historial. Devuelve true si guardó una clave.
-export function guardarClaveDelFragmento(): boolean {
-  const clave = claveDeFragmento(window.location.hash);
-  if (!clave) return false;
-  guardarApiKey(clave);
-  window.history.replaceState(null, "", window.location.pathname);
-  return true;
+export async function cargarConfig(): Promise<ConfigCheckin> {
+  const respuesta = await fetch("/checkin-config.json", { cache: "no-store" });
+  if (!respuesta.ok) throw new Error("Falta checkin-config.json en el bundle.");
+  return validarConfig(await respuesta.json());
 }

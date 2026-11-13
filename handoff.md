@@ -23,10 +23,17 @@ Bitácora de sesiones: la más reciente arriba, solo se añaden entradas. El his
 - Un comando con `python - <<EOF || node -e '...'` se colgó (el `python` de Windows no responde): usar scripts `.mjs` en el scratchpad, no comillas anidadas.
 - `web-admin#typecheck` falla por un error que ya traía el repo (`LayoutProps`, `app/layout.tsx(18,50)`, `docs/linea-base-tests.md`). No es regresión.
 
+**Rediseño de red del Check-in (mismo día)**
+- `CHECKIN_URL` existía porque el check-in nació como servicio web aparte y el APK solo lo abría (`server.url`). Se eliminó junto con `NEXT_PUBLIC_API_URL`: en Easypanel quedan **solo dos servicios, web-admin y PostgreSQL**; el check-in y la vitrina son APK que hablan con web-admin.
+- `apps/checkin` lee `checkin-config.json` (`{apiUrl, clave}`, dentro del bundle del APK) en vez de una variable de build (`validarConfig`, 11 pruebas). Se quitaron lo que era de la versión web: `Dockerfile`, service worker, `manifest.json`, la pantalla `/config` de clave manual y la clave por fragmento de URL (`claveFragmento` y sus pruebas, que ya no tienen objeto).
+- `apps/checkin-tv/capacitor`: `configuracion.mjs` (6 pruebas) y `preparar.mjs` empaquetan `apps/checkin/out`, sin `server.url`, como `vitrina-tv`. Variables solo de compilación: `CHECKIN_API_URL`, `CHECKIN_CLAVE`, `CHECKIN_WEB_DIR`. La vitrina usa la misma clave (`CHECKIN_CLAVE`).
+- CORS se deja en `*` a propósito: la defensa real es la clave en el encabezado (no una cookie), así que restringir el origen no añade seguridad. No existe ninguna variable de orígenes en el código; el requisito `KIOSCO_ORIGENES_PERMITIDOS` de S-01, S-20 y S-21 queda sin efecto.
+
 **Pendiente**
-1. APK: `apps/checkin-tv` aún abre la web remota (`server.url`, `scripts/preparar.mjs`). Hay que hacer que empaquete la interfaz de `apps/checkin` (export estático) como ya hace `vitrina-tv`, fijar la URL del servidor al compilar y reducir CORS (`Access-Control-Allow-Origin: *` en `apps/web-admin/lib/checkin.ts`) al único origen del APK. No se puede compilar en local (solo en CI).
-2. Servicio web de `apps/checkin` (su `Dockerfile`) deja de usarse.
-3. DNI y CE como único identificador (tramo 3); quitar el pasaporte.
+1. **El APK no se ha compilado ni probado:** falta escribir el workflow de GitHub Actions (Gradle) y probar en un TV real (lista en `apps/checkin-tv/README.md` §6).
+2. `apps/vitrina` conserva un `Dockerfile` y un `docker-entrypoint.sh` de vista previa que no se despliegan; se pueden borrar.
+3. Quitar la marca anterior y la tasa/bolívares de la interfaz del check-in (tramo 1; incluye `adrenalina-gym-bg.png` y las fuentes de Google).
+4. DNI y CE como único identificador (tramo 3); quitar el pasaporte.
 
 ## Sesión 2026-11-13 (local, Windows) — paso al modo ágil
 **Qué se hizo**

@@ -1,5 +1,10 @@
-const URL_API = process.env.NEXT_PUBLIC_API_URL;
 const TIMEOUT_CHECKIN_MS = 10_000;
+
+// URL base de web-admin: la fija la pantalla al arrancar con la de checkin-config.json (ver lib/config.ts).
+let urlApi = "";
+export function fijarUrlApi(url: string): void {
+  urlApi = url;
+}
 
 export type EstadoCheckIn = "activo" | "en_gracia" | "vencido" | "abono_vencido" | "sucursal_incorrecta";
 
@@ -37,8 +42,8 @@ export class ErrorCheckIn extends Error {
 // después" (no se lanza ErrorCheckIn) de "el servidor respondió que no"
 // (se lanza ErrorCheckIn, no es reintentable).
 export async function registrarCheckIn(apiKey: string, cedula: string): Promise<ResultadoCheckIn> {
-  if (!URL_API) {
-    throw new ErrorCheckIn("NEXT_PUBLIC_API_URL no está configurada en este build.", 0);
+  if (!urlApi) {
+    throw new ErrorCheckIn("La URL del servidor no está configurada en este APK.", 0);
   }
 
   // Sin respuesta en 10 s se aborta: el AbortError no es ErrorCheckIn, así que cuenta como "sin conexión".
@@ -47,7 +52,7 @@ export async function registrarCheckIn(apiKey: string, cedula: string): Promise<
   let respuesta: Response;
   let datos: { error?: string };
   try {
-    respuesta = await fetch(`${URL_API}/api/checkin`, {
+    respuesta = await fetch(`${urlApi}/api/checkin`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -77,11 +82,11 @@ export interface InfoCheckin {
 }
 
 export async function obtenerInfoCheckin(apiKey: string): Promise<InfoCheckin> {
-  if (!URL_API) {
-    throw new ErrorCheckIn("NEXT_PUBLIC_API_URL no está configurada en este build.", 0);
+  if (!urlApi) {
+    throw new ErrorCheckIn("La URL del servidor no está configurada en este APK.", 0);
   }
 
-  const respuesta = await fetch(`${URL_API}/api/checkin/estado`, { headers: { "X-Checkin-Api-Key": apiKey } });
+  const respuesta = await fetch(`${urlApi}/api/checkin/estado`, { headers: { "X-Checkin-Api-Key": apiKey } });
   if (!respuesta.ok) {
     throw new ErrorCheckIn(`Error ${respuesta.status} al leer el estado del checkin.`, respuesta.status);
   }

@@ -1,37 +1,25 @@
-// Genera lo que Capacitor necesita a partir de variables de entorno (nada de esto se versiona):
-//   capacitor.config.json  → app remota: abre urlInicio(CHECKIN_URL, CHECKIN_CLAVE)
-//   www/index.html         → Capacitor exige un webDir aunque la app sea remota
-//   www/offline.html       → página local si el primer arranque no tiene red; reintenta sola
-// Variables: CHECKIN_URL (por defecto https://checkin.example.com) y CHECKIN_CLAVE (opcional).
-import { mkdirSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+// Prepara lo que Capacitor necesita (nada de esto se versiona):
+//   www/                    → copia del export estático de apps/checkin (`npm run build --workspace checkin`)
+//   www/checkin-config.json → { apiUrl, clave }
+//   capacitor.config.json
+// Variables: CHECKIN_API_URL (URL base de web-admin), CHECKIN_CLAVE (la de web-admin) y CHECKIN_WEB_DIR
+// (por defecto ../../checkin/out, relativa a esta carpeta).
+import { cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { urlInicio } from "./url.mjs";
+import { construirConfiguracion } from "./configuracion.mjs";
 
 const raiz = join(dirname(fileURLToPath(import.meta.url)), "..");
-const inicio = urlInicio(process.env.CHECKIN_URL || "https://checkin.example.com", process.env.CHECKIN_CLAVE || "");
+const { capacitor, checkin } = construirConfiguracion(process.env);
+const webDir = resolve(raiz, process.env.CHECKIN_WEB_DIR || "../../checkin/out");
 
-const pagina = (titulo, mensaje, demoraMs) => `<!doctype html>
-<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${titulo}</title></head>
-<body style="margin:0;background:#0a0d07;color:#f3f6ec;font-family:Arial,Helvetica,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center">
-<div><h1 style="font-size:48px;margin:0 0 24px 0">${titulo}</h1><p style="font-size:28px;margin:0">${mensaje}</p></div>
-<script>setTimeout(function () { location.href = ${JSON.stringify(inicio)}; }, ${demoraMs});</script>
-</body></html>
-`;
+if (!existsSync(webDir)) throw new Error(`No existe la carpeta de la app web: ${webDir}. Compila apps/checkin primero.`);
 
+rmSync(join(raiz, "www"), { recursive: true, force: true });
 mkdirSync(join(raiz, "www"), { recursive: true });
-writeFileSync(join(raiz, "www", "index.html"), pagina("Checkin", "Abriendo…", 0));
-writeFileSync(join(raiz, "www", "offline.html"), pagina("Sin conexión", "Reintentando…", 10_000));
+cpSync(webDir, join(raiz, "www"), { recursive: true });
 
-const configuracion = {
-  appId: "pe.adharafit.checkin",
-  appName: "Adhara Check-in",
-  webDir: "www",
-  server: { url: inicio, cleartext: false, errorPath: "offline.html" },
-  // El APK es de debug: sin esto Capacitor deja logs (con la clave en la URL) y WebView inspeccionable.
-  loggingBehavior: "none",
-  android: { allowMixedContent: false, webContentsDebuggingEnabled: false },
-};
-writeFileSync(join(raiz, "capacitor.config.json"), `${JSON.stringify(configuracion, null, 2)}\n`);
+writeFileSync(join(raiz, "www", "checkin-config.json"), `${JSON.stringify(checkin)}\n`);
+writeFileSync(join(raiz, "capacitor.config.json"), `${JSON.stringify(capacitor, null, 2)}\n`);
 
-console.log("Preparado. URL de inicio:", process.env.CHECKIN_CLAVE ? inicio.replace(/#clave=.*/, "#clave=***") : inicio);
+console.log("Preparado. API:", checkin.apiUrl, "| clave: ***");

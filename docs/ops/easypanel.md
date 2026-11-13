@@ -12,7 +12,6 @@ Solo nombres; los valores van en Easypanel, nunca en el repositorio.
 | Variable | Qué es |
 |---|---|
 | `DATABASE_URL` | Cadena de conexión del servicio `adhara-fit-bd` (host interno del proyecto) |
-| `NEXT_PUBLIC_API_URL` | URL pública de la aplicación |
 | `R2_ACCOUNT_ID`, `R2_BUCKET_NAME`, `R2_PUBLIC_URL`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` | Almacenamiento de archivos (Cloudflare R2) |
 | `TZ` | `America/Lima` |
 | `CHECKIN_CLAVE` | Clave única del Check-in Module (mínimo 16 caracteres). Sin ella, el check-in responde 401 |

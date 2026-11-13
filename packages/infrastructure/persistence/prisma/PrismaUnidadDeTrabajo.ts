@@ -5,6 +5,7 @@ import { PrismaSuscripcionRepository } from "./PrismaSuscripcionRepository";
 import { PrismaPagoRepository } from "./PrismaPagoRepository";
 import { PrismaPlanRepository } from "./PrismaPlanRepository";
 import { PrismaCambioPlanAuditoriaRepository } from "./PrismaCambioPlanAuditoriaRepository";
+import { PrismaAuditoriaRepository } from "./PrismaAuditoriaRepository";
 
 // Tiempo límite de la transacción y de espera del bloqueo (S-04, SUP-S04-012).
 const TIEMPO_LIMITE_MS = 20_000;
@@ -22,6 +23,7 @@ export class PrismaUnidadDeTrabajo implements IUnidadDeTrabajo {
           pagos: new PrismaPagoRepository(tx),
           planes: new PrismaPlanRepository(tx),
           auditoriaCambioPlan: new PrismaCambioPlanAuditoriaRepository(tx),
+          auditoria: new PrismaAuditoriaRepository(tx),
         }),
       { timeout: TIEMPO_LIMITE_MS, maxWait: ESPERA_MAXIMA_MS }
     );

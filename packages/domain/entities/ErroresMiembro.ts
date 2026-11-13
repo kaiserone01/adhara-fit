@@ -6,8 +6,37 @@ export class DocumentoInvalidoError extends Error {
 }
 
 export class DocumentoDuplicadoError extends Error {
+  constructor(eliminado = false) {
+    super(
+      eliminado
+        ? "Existe un socio eliminado con ese número de documento: restáuralo desde el filtro «Eliminados» en vez de crear otro."
+        : "Ya existe un socio con ese número de documento."
+    );
+  }
+}
+
+// S-09: eliminar y restaurar miembros (baja lógica).
+export class MiembroYaEliminadoError extends Error {
   constructor() {
-    super("Ya existe un socio con ese número de documento.");
+    super("El socio ya está eliminado.");
+  }
+}
+
+export class MiembroNoEliminadoError extends Error {
+  constructor() {
+    super("El socio no está eliminado.");
+  }
+}
+
+export class MiembroEliminadoError extends Error {
+  constructor() {
+    super("El socio está eliminado: restáuralo para cobrarle, cambiarle el plan o editar su ficha.");
+  }
+}
+
+export class MotivoBajaInvalidoError extends Error {
+  constructor() {
+    super("El motivo puede tener como máximo 200 caracteres.");
   }
 }
 

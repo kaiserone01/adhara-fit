@@ -8,6 +8,26 @@ Bitácora de sesiones: la más reciente arriba, solo se añaden entradas. El his
 - **Desplegado:** provisional en Easypanel (`docs/ops/easypanel.md`): imagen del `Dockerfile`, esquema con `prisma db push` al arrancar, alta del primer administrador con `tools/crear-administrador.mjs`.
 - **Preferencia del propietario:** cada código (ADR-nnn, S-nn, REQ…) que se mencione lleva al lado una descripción simple.
 
+## Sesión 2026-11-13 (noche, 14) — Tramo 4 (parte 1): eliminar y restaurar socio (S-09)
+**Qué se hizo**
+- Baja lógica reversible: `Miembro.estado` (`ACTIVO` / `BAJA`, «Eliminado» en pantalla) con `bajaEn`, `bajaPorId` (clave foránea sin cascada) y `bajaMotivo`. Casos de uso `eliminarMiembro` y `restaurarMiembro` (archivo `EliminarMiembro.ts`): transacción con el socio bloqueado, estado releído tras el bloqueo, motivo opcional de hasta 200 caracteres y fila de `RegistroAuditoria` en la misma transacción (nuevo puerto `IAuditoriaRepository` en `IUnidadDeTrabajo`). No borran ni modifican pagos, suscripciones, check-ins ni datos del socio.
+- Efecto del estado: `listarMiembros(estado = ACTIVO)`; en sala y su historial excluyen eliminados (filtro en `PrismaCheckInRepository`); el check-in de un eliminado da «no encontrado»; `registrarPago` y `cambiarPlan` lanzan `MiembroEliminadoError` (después de resolver un `cobroId` ya registrado, que devuelve el resultado original); `actualizarMiembro` y el PATCH rechazan editar (409); anular pagos de un eliminado sigue permitido; el documento de un eliminado sigue ocupado y el error dice que se puede restaurar.
+- Panel: «Eliminar» en la ficha con confirmación y motivo, filtro «Ver eliminados» en `/miembros`, ficha de solo lectura con «Restaurar». Se quitaron `eliminarConHistorial`, el borrado de `EliminarMiembro`, `BotonQuitarMiembro`, `EstadoToggle`, `darDeBajaAction`, `reactivarAction` y el campo `activo` del PATCH. El PATCH de `api/miembros/[id]` rechaza con 400 cualquier campo fuera de su lista.
+- `tools/verificar-miembro.mjs` (+ prueba y paso en CI) falla si reaparecen esos términos fuera de `packages/db`.
+- Esquema (solo aditivo): enum `EstadoMiembro`, columnas de baja y su relación con `UsuarioAdmin`. `Miembro.activo` queda sin uso hasta S-15.
+
+**Qué funcionó**
+- Dominio 281 pruebas (16 nuevas de eliminar/restaurar y sus efectos), check-in 50, `tools` 113, `tsc` limpio, lint sin errores (5 avisos previos), build correcto.
+
+**Qué no funcionó / a tener en cuenta**
+- No hay CHECK en la base (coherencia estado/datos de baja) ni pruebas de concurrencia contra una base real: la exclusión la da `FOR UPDATE` del socio y el estado se relee tras el bloqueo. Se agregan con S-15 si hace falta.
+- Sin permiso `MIEMBROS ELIMINAR` (un solo rol administrador, S-23). Sin anonimización ni retención: un eliminado conserva todos sus datos.
+- No se reutiliza el documento ni el código de socio de un eliminado.
+
+**Siguiente**
+1. Probar en el despliegue: eliminar un socio con pagos, verlo en «Ver eliminados», restaurarlo.
+2. Tramo 4: reportes (S-14: morosos, por vencer, ingresos), consentimiento y avisos legales (S-13), marca y diseño (S-12, S-19).
+
 ## Sesión 2026-11-13 (noche, 13) — Tramo 3 (parte 4): cambio de plan único (S-07)
 **Qué se hizo**
 - Plan simplificado: nombre, duración en días (entero 1–365, **no editable** tras crearlo) y precio mayor que S/ 0.00. Sin frecuencia de pago, sin «incluye entrenador», sin cortesía. El entrenador del socio es opcional e independiente del plan. `ActualizarMiembro` ya no acepta cambio de plan.

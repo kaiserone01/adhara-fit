@@ -9,6 +9,7 @@ import { PrismaUnidadDeTrabajo } from "@gym-app/infrastructure/persistence/prism
 import { conMensajeOk } from "../redirectConMensaje";
 import {
   registrarPago,
+  MiembroEliminadoError,
   MiembroFueraDeSucursalError,
   MiembroNoEncontradoError,
   PlanNoEncontradoError,
@@ -108,6 +109,7 @@ export async function registrarPagoAction(
   } catch (error) {
     if (
       error instanceof MiembroNoEncontradoError ||
+      error instanceof MiembroEliminadoError ||
       error instanceof PlanNoEncontradoError ||
       error instanceof PlanInactivoError ||
       error instanceof MontoInvalidoError ||
@@ -214,6 +216,7 @@ export async function cambiarPlanAction(
   } catch (error) {
     if (
       error instanceof MiembroNoEncontradoErrorCambio ||
+      error instanceof MiembroEliminadoError ||
       error instanceof MiembroFueraDeSucursalError ||
       error instanceof PlanNoEncontradoErrorCambio ||
       error instanceof PlanInactivoErrorCambio ||

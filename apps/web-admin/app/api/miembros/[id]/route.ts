@@ -1,6 +1,6 @@
 // GET   /api/miembros/[id] — detalle de un miembro (solo si pertenece a la
 //                            organización del usuario en sesión).
-// PATCH /api/miembros/[id] — edita campos, o da de baja lógica con {"activo": false}.
+// PATCH /api/miembros/[id] — edita los campos permitidos (cualquier otro se rechaza con 400).
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { obtenerUsuarioDeSesion } from "@/lib/sesion";
@@ -16,6 +16,7 @@ import {
   actualizarMiembro,
   MiembroNoEncontradoError as ActualizarMiembroNoEncontradoError,
   MiembroFueraDeSucursalError as ActualizarMiembroFueraDeSucursalError,
+  MiembroEliminadoError,
 } from "@gym-app/domain/use-cases/ActualizarMiembro";
 import type { CambiosMiembro } from "@gym-app/domain/entities/Miembro";
 import { validarEntrenadorDeMiembro } from "@/app/(panel)/miembros/validarEntrenadorDeMiembro";
@@ -63,6 +64,27 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const { id } = await params;
   const body = await req.json();
 
+  const CAMPOS_EDITABLES = new Set([
+    "nombre",
+    "sucursalId",
+    "fechaInscripcion",
+    "fechaNacimiento",
+    "celular",
+    "fotoUrl",
+    "entrenadorId",
+    "precioPlan",
+  ]);
+  if (typeof body !== "object" || body === null || Array.isArray(body)) {
+    return NextResponse.json({ error: "El cuerpo debe ser un objeto." }, { status: 400 });
+  }
+  if (Object.keys(body).includes("planId")) {
+    return NextResponse.json({ error: "El plan no se cambia aquí: usa el cambio de plan de la ficha del socio." }, { status: 400 });
+  }
+  const desconocido = Object.keys(body).find((campo) => !CAMPOS_EDITABLES.has(campo));
+  if (desconocido) {
+    return NextResponse.json({ error: `Campo no editable: ${desconocido}.` }, { status: 400 });
+  }
+
   const cambios: CambiosMiembro = {};
   if (body.nombre !== undefined) cambios.nombre = body.nombre;
   if (body.sucursalId !== undefined) cambios.sucursalId = body.sucursalId;
@@ -75,11 +97,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (body.celular !== undefined) cambios.celular = body.celular;
   if (body.fotoUrl !== undefined) cambios.fotoUrl = body.fotoUrl;
   if (body.entrenadorId !== undefined) cambios.entrenadorId = body.entrenadorId;
-  if (body.planId !== undefined) {
-    return NextResponse.json({ error: "El plan no se cambia aquí: usa el cambio de plan de la ficha del socio." }, { status: 400 });
-  }
   if (body.precioPlan !== undefined) cambios.precioPlan = body.precioPlan;
-  if (body.activo !== undefined) cambios.activo = body.activo;
 
   const errorEntrenador = await validarEntrenadorDeMiembro(body.entrenadorId ?? null, id);
   if (errorEntrenador) return NextResponse.json({ error: errorEntrenador }, { status: 400 });
@@ -101,6 +119,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
     if (error instanceof ActualizarMiembroFueraDeSucursalError) {
       return NextResponse.json({ error: error.message }, { status: 403 });
+    }
+    if (error instanceof MiembroEliminadoError) {
+      return NextResponse.json({ error: error.message }, { status: 409 });
     }
     console.error("Error al actualizar miembro:", error);
     return NextResponse.json(

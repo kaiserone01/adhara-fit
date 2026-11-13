@@ -8,7 +8,6 @@ import { InputFecha } from "@gym-app/ui/components/InputFecha";
 import { Button } from "@gym-app/ui/components/Button";
 import { Card } from "@gym-app/ui/components/Card";
 import { normalizarTexto } from "@/lib/normalizarTexto";
-import { EstadoToggle } from "./EstadoToggle";
 import { DiasDisponibles, diasHastaVencimiento } from "./vencimiento";
 import type { Miembro } from "@gym-app/domain/entities/Miembro";
 import type { Plan } from "@gym-app/domain/entities/Plan";
@@ -255,7 +254,7 @@ function VistaImpresion({ miembros }: { miembros: FilaMiembro[] }) {
               <td className="py-1.5 pr-2">{descripcionDocumento(miembro.tipoDocumento, miembro.numeroDocumento)}</td>
               <td className="py-1.5 pr-2">{miembro.plan?.nombre ?? "Sin plan"}</td>
               <td className="py-1.5 pr-2">{miembro.fechaVencimiento ? formatearFecha(miembro.fechaVencimiento) : "—"}</td>
-              <td className="py-1.5 font-semibold">{miembro.activo ? "Activo" : "Inactivo"}</td>
+              <td className="py-1.5 font-semibold">{miembro.estado === "BAJA" ? "Eliminado" : "Activo"}</td>
             </tr>
           ))}
 
@@ -305,7 +304,6 @@ function VistaCards({ miembros }: { miembros: FilaMiembro[] }) {
                   {miembro.plan?.nombre ?? "Sin plan"}
                 </p>
               </div>
-              <EstadoToggle id={miembro.id} activo={miembro.activo} />
             </div>
 
             <div
@@ -339,7 +337,6 @@ function VistaLista({ miembros }: { miembros: FilaMiembro[] }) {
               <th className="py-2">Plan</th>
               <th className="py-2">Fecha de Vencimiento</th>
               <th className="py-2">Próximo cobro</th>
-              <th className="py-2">Estado</th>
               <th className="py-2"></th>
             </tr>
           </thead>
@@ -366,9 +363,6 @@ function VistaLista({ miembros }: { miembros: FilaMiembro[] }) {
                   <span className="flex flex-wrap items-center gap-2">
                     <DiasDisponibles fechaVencimiento={miembro.fechaVencimiento} />
                   </span>
-                </td>
-                <td className="py-2">
-                  <EstadoToggle id={miembro.id} activo={miembro.activo} />
                 </td>
                 <td className="py-2">
                   <Link

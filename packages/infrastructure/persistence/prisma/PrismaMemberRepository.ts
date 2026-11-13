@@ -32,7 +32,10 @@ type FilaMiembro = {
   precioPlan: { toNumber(): number };
   fechaUltimoPago: Date | null;
   fechaVencimiento: Date | null;
-  activo: boolean;
+  estado: "ACTIVO" | "BAJA";
+  bajaEn: Date | null;
+  bajaPorId: string | null;
+  bajaMotivo: string | null;
   createdAt: Date;
 };
 
@@ -55,7 +58,10 @@ function mapear(miembro: FilaMiembro): Miembro {
     precioPlan: miembro.precioPlan.toNumber(),
     fechaUltimoPago: miembro.fechaUltimoPago,
     fechaVencimiento: miembro.fechaVencimiento,
-    activo: miembro.activo,
+    estado: miembro.estado,
+    bajaEn: miembro.bajaEn,
+    bajaPorId: miembro.bajaPorId,
+    bajaMotivo: miembro.bajaMotivo,
     createdAt: miembro.createdAt,
   };
 }
@@ -133,17 +139,6 @@ export class PrismaMemberRepository implements IMemberRepository {
       .catch(traducirUnicidad);
 
     return mapear(miembro);
-  }
-
-  async eliminarConHistorial(organizacionId: string, id: string): Promise<void> {
-    await this.prisma.$transaction(async (tx) => {
-      await tx.checkIn.deleteMany({ where: { miembroId: id } });
-      await tx.cambioPlanAuditoria.deleteMany({ where: { miembroId: id } });
-      await tx.deudaProducto.deleteMany({ where: { miembroId: id } });
-      await tx.pago.deleteMany({ where: { miembroId: id } });
-      await tx.suscripcion.deleteMany({ where: { miembroId: id } });
-      await tx.miembro.deleteMany({ where: { id, organizacionId } });
-    });
   }
 
   async bloquearPorId(id: string): Promise<void> {

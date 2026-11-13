@@ -3,6 +3,7 @@
 import type { IUnidadDeTrabajo } from "../ports/IUnidadDeTrabajo";
 import type { Pago, DatosNuevoPago } from "../entities/Pago";
 import type { CambioPlanAuditoria, DatosNuevoCambioPlanAuditoria } from "../entities/CambioPlanAuditoria";
+import type { DatosRegistroAuditoria } from "../ports/IAuditoriaRepository";
 
 export interface MiembroMemoria {
   id: string;
@@ -10,6 +11,11 @@ export interface MiembroMemoria {
   precioPlan: number;
   fechaVencimiento: Date | null;
   fechaUltimoPago: Date | null;
+  sucursalId?: string | null;
+  estado?: "ACTIVO" | "BAJA";
+  bajaEn?: Date | null;
+  bajaPorId?: string | null;
+  bajaMotivo?: string | null;
 }
 
 export interface PlanMemoria {
@@ -31,15 +37,17 @@ export interface EstadoMemoria {
   pagos: Pago[];
   suscripcion: SuscripcionMemoria | null;
   auditorias: CambioPlanAuditoria[];
+  registrosAuditoria: DatosRegistroAuditoria[];
 }
 
 export function crearEstadoMemoria(parcial: Partial<EstadoMemoria> = {}): EstadoMemoria {
   return {
-    miembro: { id: "m1", planId: "mensual", precioPlan: 100, fechaVencimiento: null, fechaUltimoPago: null },
+    miembro: { id: "m1", planId: "mensual", precioPlan: 100, fechaVencimiento: null, fechaUltimoPago: null, estado: "ACTIVO" },
     planes: [{ id: "mensual", activo: true, precioUSD: 100, diasCiclo: 30 }],
     pagos: [],
     suscripcion: null,
     auditorias: [],
+    registrosAuditoria: [],
     ...parcial,
   };
 }
@@ -52,7 +60,7 @@ export function crearUnidadEnMemoria(estado: EstadoMemoria): IUnidadDeTrabajo {
       const repos = {
         miembros: {
           bloquearPorId: async () => undefined,
-          buscarPorId: async () => ({ ...estado.miembro }),
+          buscarPorId: async () => ({ sucursalId: null, ...estado.miembro }),
           actualizar: async (_org: string, _id: string, cambios: Partial<MiembroMemoria>) => {
             Object.assign(estado.miembro, cambios);
             return { ...estado.miembro };
@@ -103,6 +111,11 @@ export function crearUnidadEnMemoria(estado: EstadoMemoria): IUnidadDeTrabajo {
             pago.anuladoPorId = por;
             pago.motivoAnulacion = motivo;
             return pago;
+          },
+        },
+        auditoria: {
+          registrar: async (datos: DatosRegistroAuditoria) => {
+            estado.registrosAuditoria.push(datos);
           },
         },
         auditoriaCambioPlan: {

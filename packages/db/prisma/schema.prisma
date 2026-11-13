@@ -88,6 +88,7 @@ model UsuarioAdmin {
   createdAt      DateTime     @default(now())
 
   registrosAuditoria     RegistroAuditoria[]
+  miembrosEliminados     Miembro[]             @relation("MiembrosEliminados")
   sesiones               Sesion[]
   turnos                 Turno[]
   pagosRegistrados       Pago[]                @relation("PagosRegistrados")
@@ -163,7 +164,12 @@ model Miembro {
   saldoAFavorUSD   Decimal       @default(0) @db.Decimal(10, 2) // crédito generado al bajar de plan (ver CambiarPlanConPago) — se descuenta automáticamente del próximo pago (ver RegistrarPago), sin importar el plan de ese pago
   fechaUltimoPago  DateTime?
   fechaVencimiento DateTime?
-  activo           Boolean       @default(true) // baja lógica del miembro
+  activo           Boolean       @default(true) // sin uso desde S-09 (lo reemplaza estado); se quita con el reinicio limpio de S-15
+  estado           EstadoMiembro @default(ACTIVO) // S-09: BAJA = «Eliminado» en pantalla (baja lógica reversible; conserva pagos y datos)
+  bajaEn           DateTime? // instante de la eliminación
+  bajaPorId        String?
+  bajaPor          UsuarioAdmin? @relation("MiembrosEliminados", fields: [bajaPorId], references: [id])
+  bajaMotivo       String?
   porRegularizar   Boolean       @default(false) // los datos de fecha/pago vienen de una fuente externa (Excel/padrón) sin verificar: el socio debe ajustar el vencimiento o registrar un pago (badge "Por regularizar"); se limpia al ajustar la fecha o al registrar un pago
   vieneDelExcel    Boolean       @default(false) // el miembro viene del padrón/migración del Excel: su fecha de pago y de vencimiento se editan siempre en la ficha (no se conoce su fecha de inscripción)
   genero           Genero? // solo para saludar en el checkin ("Bienvenido" / "Bienvenida"); null = no definido
@@ -174,6 +180,11 @@ model Miembro {
   suscripciones        Suscripcion[]
   cambiosPlanAuditoria CambioPlanAuditoria[]
   deudasProducto       DeudaProducto[]
+}
+
+enum EstadoMiembro {
+  ACTIVO
+  BAJA
 }
 
 enum TipoDocumento {

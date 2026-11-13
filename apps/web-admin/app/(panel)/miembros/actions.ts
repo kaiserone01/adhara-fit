@@ -20,6 +20,7 @@ import {
   actualizarMiembro,
   MiembroNoEncontradoError,
   MiembroFueraDeSucursalError,
+  MiembroEliminadoError,
   PlanNoEncontradoError as ActualizarPlanNoEncontradoError,
   FechasIncoherentesError,
 } from "@gym-app/domain/use-cases/ActualizarMiembro";
@@ -40,7 +41,15 @@ import {
   FechaPagoFuturaError,
   PlanDistintoConVencimientoVigenteError,
 } from "@gym-app/domain/use-cases/RegistrarPago";
-import { eliminarMiembro } from "@gym-app/domain/use-cases/EliminarMiembro";
+import {
+  eliminarMiembro,
+  restaurarMiembro,
+  MiembroNoEncontradoError as BajaMiembroNoEncontradoError,
+  MiembroYaEliminadoError,
+  MiembroNoEliminadoError,
+  MotivoBajaInvalidoError,
+} from "@gym-app/domain/use-cases/EliminarMiembro";
+import { MiembroFueraDeSucursalError as BajaMiembroFueraDeSucursalError } from "@gym-app/domain/use-cases/ObtenerMiembro";
 import { conMensajeOk } from "../redirectConMensaje";
 
 export interface EstadoFormularioMiembro {
@@ -289,6 +298,7 @@ export async function actualizarMiembroAction(
       esErrorDeDocumento(error) ||
       error instanceof FechasIncoherentesError ||
       error instanceof MiembroNoEncontradoError ||
+      error instanceof MiembroEliminadoError ||
       error instanceof MiembroFueraDeSucursalError ||
       error instanceof ActualizarPlanNoEncontradoError
     ) {
@@ -329,7 +339,7 @@ export async function actualizarFotoMiembroAction(
       { organizacionId: usuario.organizacionId, id, sucursalActivaId, cambios: { fotoUrl } }
     );
   } catch (error) {
-    if (error instanceof MiembroNoEncontradoError || error instanceof MiembroFueraDeSucursalError) {
+    if (error instanceof MiembroNoEncontradoError || error instanceof MiembroEliminadoError || error instanceof MiembroFueraDeSucursalError) {
       return { error: error.message };
     }
     throw error;
@@ -340,56 +350,60 @@ export async function actualizarFotoMiembroAction(
   return { fotoUrl };
 }
 
-export async function darDeBajaAction(id: string): Promise<void> {
+export interface ResultadoBajaMiembro {
+  error?: string;
+}
+
+function mensajeDeBaja(error: unknown): string | null {
+  return error instanceof BajaMiembroNoEncontradoError ||
+    error instanceof BajaMiembroFueraDeSucursalError ||
+    error instanceof MiembroYaEliminadoError ||
+    error instanceof MiembroNoEliminadoError ||
+    error instanceof MotivoBajaInvalidoError
+    ? error.message
+    : null;
+}
+
+// Elimina al socio (baja lógica y reversible, S-09): deja de aparecer y sus pagos y datos se conservan.
+// Devuelve el error de dominio como mensaje (en producción Next oculta el texto de los errores lanzados).
+export async function eliminarMiembroAction(id: string, motivo: string): Promise<ResultadoBajaMiembro> {
   const sesion = await obtenerUsuarioDeSesionActual();
   if (!sesion) redirect("/login");
   const { usuario, sucursalActivaId } = sesion;
 
-  await actualizarMiembro(
-    {
-      miembros: new PrismaMemberRepository(prisma),
-      suscripciones: new PrismaSuscripcionRepository(prisma),
-      sucursales: new PrismaSucursalRepository(prisma),
-    },
-    { organizacionId: usuario.organizacionId, id, sucursalActivaId, cambios: { activo: false } }
-  );
+  try {
+    await eliminarMiembro(
+      { unidad: new PrismaUnidadDeTrabajo(prisma) },
+      { organizacionId: usuario.organizacionId, id, sucursalActivaId, usuarioId: usuario.id, motivo }
+    );
+  } catch (error) {
+    const mensaje = mensajeDeBaja(error);
+    if (mensaje) return { error: mensaje };
+    throw error;
+  }
 
   revalidatePath("/miembros");
+  revalidatePath(`/miembros/${id}`);
+  redirect(conMensajeOk("/miembros", "Socio eliminado. Sus pagos se conservan; puedes restaurarlo desde «Eliminados»."));
 }
 
-export async function reactivarAction(id: string): Promise<void> {
+export async function restaurarMiembroAction(id: string, motivo: string): Promise<ResultadoBajaMiembro> {
   const sesion = await obtenerUsuarioDeSesionActual();
   if (!sesion) redirect("/login");
   const { usuario, sucursalActivaId } = sesion;
 
-  await actualizarMiembro(
-    {
-      miembros: new PrismaMemberRepository(prisma),
-      suscripciones: new PrismaSuscripcionRepository(prisma),
-      sucursales: new PrismaSucursalRepository(prisma),
-    },
-    { organizacionId: usuario.organizacionId, id, sucursalActivaId, cambios: { activo: true } }
-  );
+  try {
+    await restaurarMiembro(
+      { unidad: new PrismaUnidadDeTrabajo(prisma) },
+      { organizacionId: usuario.organizacionId, id, sucursalActivaId, usuarioId: usuario.id, motivo }
+    );
+  } catch (error) {
+    const mensaje = mensajeDeBaja(error);
+    if (mensaje) return { error: mensaje };
+    throw error;
+  }
 
   revalidatePath("/miembros");
+  revalidatePath(`/miembros/${id}`);
+  redirect(conMensajeOk(`/miembros/${id}`, "Socio restaurado."));
 }
-
-// Borra al miembro con todo su historial. Los errores de dominio (en español)
-// se dejan propagar para que el cliente los muestre con useFeedback.
-export async function eliminarMiembroAction(id: string): Promise<void> {
-  const sesion = await obtenerUsuarioDeSesionActual();
-  if (!sesion) redirect("/login");
-  const { usuario, sucursalActivaId } = sesion;
-
-  await eliminarMiembro(
-    {
-      miembros: new PrismaMemberRepository(prisma),
-      sucursales: new PrismaSucursalRepository(prisma),
-    },
-    { organizacionId: usuario.organizacionId, id, sucursalActivaId, usuarioIdSolicitante: usuario.id }
-  );
-
-  revalidatePath("/miembros");
-  redirect(conMensajeOk("/miembros", "Miembro quitado del sistema."));
-}
-

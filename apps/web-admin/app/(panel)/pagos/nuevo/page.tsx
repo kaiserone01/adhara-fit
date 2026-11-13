@@ -22,7 +22,6 @@ export default async function PaginaNuevoPago() {
   ]);
 
   const planesActivos = planes.filter((plan) => plan.activo);
-  const miembrosActivos = miembros.filter((m) => m.activo);
 
   return (
     <div className="max-w-lg p-6 lg:p-8">
@@ -30,7 +29,7 @@ export default async function PaginaNuevoPago() {
         <PageHeader>Registrar pago</PageHeader>
       </div>
       <FormularioPago
-        miembros={miembrosActivos}
+        miembros={miembros}
         planes={planesActivos}
         metodosPago={metodosPago}
       />

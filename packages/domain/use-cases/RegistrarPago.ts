@@ -5,7 +5,9 @@ import { aCentavos, diaLima, estaVigente, sumarDiasCalendario } from "../utils/v
 import { fijarVencimiento } from "./FijarVencimiento";
 import { MiembroFueraDeSucursalError } from "./ObtenerMiembro";
 
-export { MiembroFueraDeSucursalError };
+import { MiembroEliminadoError } from "../entities/ErroresMiembro";
+
+export { MiembroFueraDeSucursalError, MiembroEliminadoError };
 
 export class MiembroNoEncontradoError extends Error {
   constructor() {
@@ -103,6 +105,8 @@ export async function registrarPago(deps: { unidad: IUnidadDeTrabajo }, input: D
 
     const miembro = await repos.miembros.buscarPorId(input.organizacionId, input.miembroId);
     if (!miembro) throw new MiembroNoEncontradoError();
+    // Un cobro ya registrado se devolvió arriba; un miembro eliminado (S-09) no recibe cobros nuevos.
+    if (miembro.estado === "BAJA") throw new MiembroEliminadoError();
 
     const plan = await repos.planes.buscarPorId(input.organizacionId, input.planId);
     if (!plan) throw new PlanNoEncontradoError();

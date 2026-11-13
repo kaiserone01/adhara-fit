@@ -20,8 +20,9 @@ export async function crearMiembro(
     throw new DocumentoInvalidoError();
   }
 
-  if (await deps.miembros.buscarPorDocumento(numeroDocumento)) {
-    throw new DocumentoDuplicadoError();
+  const existente = await deps.miembros.buscarPorDocumento(numeroDocumento);
+  if (existente) {
+    throw new DocumentoDuplicadoError(existente.estado === "BAJA");
   }
 
   const datos = { ...input, numeroDocumento };

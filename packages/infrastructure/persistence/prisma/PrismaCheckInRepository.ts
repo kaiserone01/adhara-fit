@@ -50,7 +50,7 @@ export class PrismaCheckInRepository implements ICheckInRepository {
 
   private async listarConFiltro(sucursalId: string, desde: Date, soloAbiertos: boolean): Promise<CheckInEnSala[]> {
     const filas = await this.prisma.checkIn.findMany({
-      where: { sucursalId, fechaHora: { gte: desde }, ...(soloAbiertos ? { salidaAt: null } : {}) },
+      where: { sucursalId, fechaHora: { gte: desde }, miembro: { estado: "ACTIVO" }, ...(soloAbiertos ? { salidaAt: null } : {}) },
       orderBy: { fechaHora: "desc" },
       include: { miembro: { include: { plan: { select: { nombre: true } } } } },
     });

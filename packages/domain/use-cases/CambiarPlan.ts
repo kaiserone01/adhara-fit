@@ -11,7 +11,9 @@ import {
   MiembroFueraDeSucursalError,
 } from "./RegistrarPago";
 
-export { MiembroNoEncontradoError, PlanNoEncontradoError, PlanInactivoError, MiembroFueraDeSucursalError };
+import { MiembroEliminadoError } from "../entities/ErroresMiembro";
+
+export { MiembroNoEncontradoError, PlanNoEncontradoError, PlanInactivoError, MiembroFueraDeSucursalError, MiembroEliminadoError };
 
 export class PlanIgualError extends Error {
   constructor() {
@@ -119,6 +121,7 @@ export async function cambiarPlan(deps: { unidad: IUnidadDeTrabajo }, input: Dat
 
       const miembro = await repos.miembros.buscarPorId(input.organizacionId, input.miembroId);
       if (!miembro) throw new MiembroNoEncontradoError();
+      if (miembro.estado === "BAJA") throw new MiembroEliminadoError();
 
       const planNuevo = await repos.planes.buscarPorId(input.organizacionId, input.planNuevoId);
       if (!planNuevo) throw new PlanNoEncontradoError();

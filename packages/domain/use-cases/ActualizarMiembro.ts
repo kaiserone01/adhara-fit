@@ -5,11 +5,11 @@ import { Miembro, CambiosMiembro } from "../entities/Miembro";
 import { fijarVencimiento } from "./FijarVencimiento";
 import { diaLima } from "../utils/vencimiento";
 import { MiembroFueraDeSucursalError } from "./ObtenerMiembro";
-import { DocumentoDuplicadoError, DocumentoInvalidoError } from "../entities/ErroresMiembro";
+import { DocumentoDuplicadoError, DocumentoInvalidoError, MiembroEliminadoError } from "../entities/ErroresMiembro";
 import { normalizarDocumento, requiereCodigoSocio, validarDocumento } from "../utils/documento";
 import { conCodigoSocio } from "./AsignarCodigoSocio";
 
-export { MiembroFueraDeSucursalError, DocumentoDuplicadoError, DocumentoInvalidoError };
+export { MiembroFueraDeSucursalError, DocumentoDuplicadoError, DocumentoInvalidoError, MiembroEliminadoError };
 
 // El plan no se cambia desde la ficha (S-07): lo hace `cambiarPlan`, que valora lo no consumido y cobra la diferencia.
 export type CambiosMiembroFicha = Omit<CambiosMiembro, "planId">;
@@ -45,6 +45,8 @@ export async function actualizarMiembro(
     throw new MiembroNoEncontradoError();
   }
 
+  if (antes.estado === "BAJA") throw new MiembroEliminadoError();
+
   if (antes.sucursalId !== null && antes.sucursalId !== input.sucursalActivaId) {
     const sucursal = await deps.sucursales.buscarPorId(input.organizacionId, antes.sucursalId);
     throw new MiembroFueraDeSucursalError(sucursal?.nombre ?? "otra sucursal");
@@ -61,7 +63,7 @@ export async function actualizarMiembro(
     }
     const existente = await deps.miembros.buscarPorDocumento(numeroFinal);
     if (existente && existente.id !== input.id) {
-      throw new DocumentoDuplicadoError();
+      throw new DocumentoDuplicadoError(existente.estado === "BAJA");
     }
     cambios.tipoDocumento = tipoFinal;
     cambios.numeroDocumento = numeroFinal;

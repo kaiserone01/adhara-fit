@@ -1,4 +1,5 @@
-import { BotonQuitarMiembro } from "../BotonQuitarMiembro";
+import { BotonBajaMiembro } from "../BotonBajaMiembro";
+import { FichaMiembroEliminado } from "./FichaMiembroEliminado";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { obtenerUsuarioDeSesionActual } from "@/lib/sesion";
@@ -60,6 +61,17 @@ export default async function PaginaEditarMiembro({ params }: { params: Promise<
   ]);
   const entrenadores = await obtenerEntrenadoresActivos();
 
+  // Un socio eliminado (S-09) se ve de solo lectura, con «Restaurar».
+  if (miembro.estado === "BAJA") {
+    return (
+      <FichaMiembroEliminado
+        miembro={miembro}
+        nombrePlan={planes.find((p) => p.id === miembro.planId)?.nombre ?? null}
+        totalPagos={pagos.length}
+      />
+    );
+  }
+
   // Cambio de plan a mitad de ciclo (S-07): solo con la membresía vigente y un plan asignado; «hoy» lo fija el servidor.
   const ahora = new Date();
   const planActual = planes.find((p) => p.id === miembro.planId);
@@ -87,7 +99,7 @@ export default async function PaginaEditarMiembro({ params }: { params: Promise<
     <div className="max-w-7xl p-6 lg:px-8 lg:py-6">
       <div className="mb-4 flex items-center justify-between gap-4">
         <PageHeader>Editar miembro</PageHeader>
-        <BotonQuitarMiembro id={id} nombre={miembro.nombre} totalPagos={pagos.length} />
+        <BotonBajaMiembro id={id} nombre={miembro.nombre} accion="eliminar" />
       </div>
 
       <FormularioMiembro

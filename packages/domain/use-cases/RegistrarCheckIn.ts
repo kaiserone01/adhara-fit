@@ -54,7 +54,8 @@ export async function registrarCheckIn(
     ? await deps.miembros.buscarPorCodigoSocio(identificador)
     : await deps.miembros.buscarPorDocumento(normalizarDocumento(identificador));
 
-  if (!miembro) {
+  // Un miembro eliminado (S-09) no registra acceso: para el kiosco es como si no existiera.
+  if (!miembro || miembro.estado === "BAJA") {
     throw new MiembroNoEncontradoError();
   }
 

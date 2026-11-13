@@ -1,5 +1,7 @@
 import type { TipoDocumento } from "../utils/documento";
 
+export type EstadoMiembro = "ACTIVO" | "BAJA";
+
 export interface Miembro {
   id: string;
   organizacionId: string;
@@ -18,7 +20,11 @@ export interface Miembro {
   precioPlan: number;
   fechaUltimoPago: Date | null;
   fechaVencimiento: Date | null;
-  activo: boolean;
+  // S-09: BAJA se muestra como «Eliminado». Un miembro eliminado conserva todos sus datos y pagos.
+  estado: EstadoMiembro;
+  bajaEn: Date | null;
+  bajaPorId: string | null;
+  bajaMotivo: string | null;
   createdAt: Date;
 }
 
@@ -55,5 +61,8 @@ export interface CambiosMiembro {
   precioPlan?: number;
   fechaUltimoPago?: Date | null;
   fechaVencimiento?: Date | null;
-  activo?: boolean;
+  estado?: EstadoMiembro;
+  bajaEn?: Date | null;
+  bajaPorId?: string | null;
+  bajaMotivo?: string | null;
 }

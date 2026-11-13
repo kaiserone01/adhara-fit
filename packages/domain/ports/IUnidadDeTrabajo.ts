@@ -3,6 +3,7 @@ import type { ISuscripcionRepository } from "./ISuscripcionRepository";
 import type { IPagoRepository } from "./IPagoRepository";
 import type { IPlanRepository } from "./IPlanRepository";
 import type { ICambioPlanAuditoriaRepository } from "./ICambioPlanAuditoriaRepository";
+import type { IAuditoriaRepository } from "./IAuditoriaRepository";
 
 export interface RepositoriosTransaccionales {
   miembros: IMemberRepository;
@@ -10,6 +11,8 @@ export interface RepositoriosTransaccionales {
   pagos: IPagoRepository;
   planes: IPlanRepository;
   auditoriaCambioPlan: ICambioPlanAuditoriaRepository;
+  // Registro de auditoría general (S-09): se escribe en la misma transacción que el cambio que registra.
+  auditoria: IAuditoriaRepository;
 }
 
 /**

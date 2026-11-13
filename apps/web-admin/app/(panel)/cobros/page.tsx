@@ -41,7 +41,6 @@ export default async function PaginaCobros({ searchParams }: { searchParams: Pro
     listarMetodosPagoActivos({ metodosPago: new PrismaMetodoPagoRepository(prisma) }, usuario.organizacionId),
   ]);
 
-  const miembrosActivos = miembros.filter((m) => m.activo);
   const planesActivos = planes.filter((p) => p.activo);
 
   return (
@@ -50,7 +49,7 @@ export default async function PaginaCobros({ searchParams }: { searchParams: Pro
         <PageHeader>Cobros</PageHeader>
         <div className="flex flex-wrap gap-2">
           <BotonRegistrarPagoCaja
-            miembros={miembrosActivos}
+            miembros={miembros}
             planes={planesActivos}
             metodosPago={metodosPago}
             miembroInicialId={cobrar}

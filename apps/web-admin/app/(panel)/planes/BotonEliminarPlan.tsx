@@ -11,8 +11,8 @@ export function BotonEliminarPlan({ id, nombre }: { id: string; nombre: string }
 
   function eliminar(evento: React.MouseEvent) {
     // Vive dentro de una fila/card que es un <Link> a la ficha del plan —
-    // sin esto el clic también navegaría (mismo patrón que EstadoToggle en
-    // Miembros y la papelera de TarjetaUsuario).
+    // sin esto el clic también navegaría (mismo patrón que la papelera de
+    // TarjetaUsuario).
     evento.preventDefault();
     evento.stopPropagation();
 

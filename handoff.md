@@ -8,6 +8,26 @@ Bitácora de sesiones: la más reciente arriba, solo se añaden entradas. El his
 - **Desplegado:** provisional en Easypanel (`docs/ops/easypanel.md`): imagen del `Dockerfile`, esquema con `prisma db push` al arrancar, alta del primer administrador con `tools/crear-administrador.mjs`.
 - **Preferencia del propietario:** cada código (ADR-nnn, S-nn, REQ…) que se mencione lleva al lado una descripción simple.
 
+## Sesión 2026-11-13 (noche, 15) — Tramo 4 (parte 2): reportes (S-14)
+**Qué se hizo**
+- Reportes nuevos en el menú «Reportes» (con pestañas y «Histórico de pagos»): `/reportes/morosos` (vencimiento anterior a hoy de Lima, días de atraso, último cobro no anulado, y aparte «Sin primer cobro»), `/reportes/por-vencer` (entre hoy y hoy + N días, N de 1 a 30, 7 por defecto) y `/reportes/ingresos` (por día o mes de Lima, por método y por concepto —membresía, cambio de plan, producto—, ventas por producto; no suma anulados e incluye cobros de socios eliminados; rango máximo 366 días o 36 meses).
+- Dominio: `listarMorosos`, `listarPorVencer` (reciben «hoy» como argumento, tope de 500 filas con `hayMas`, renovación estimada de todas las filas que cumplen), `obtenerIngresosPorPeriodo`, `enmascararDocumento` (5 puntos + últimos 3 caracteres), `RangoInvalidoError` y `ParametroInvalidoError`. Los eliminados no salen en morosos ni por vencer. Una consulta del repositorio por reporte (`listarActivosParaReporte`; el cobro de cambio de plan se reconoce por su auditoría).
+- Impresión A4 con encabezado común (negocio, título, rango, fecha y hora de Lima) en los tres reportes y en `/pagos`; sin menús ni filtros al imprimir.
+- Se retiraron de la lista de miembros los filtros de navegador «próximo cobro», «vencidos hasta» e «inscritos desde», con enlaces a los reportes. Guardia `tools/verificar-reportes.mjs` (+ prueba y paso en CI).
+- Índices `Pago(fechaPago)` y `Miembro(estado, fechaVencimiento)` (aditivos).
+
+**Qué funcionó**
+- Dominio 292 pruebas (11 nuevas), `tools` 116, `tsc` limpio, lint sin errores (5 avisos previos), build correcto.
+
+**Qué no funcionó / a tener en cuenta**
+- No hecho: desglose por tipo de comprobante (S-12 no está implementado), filtro por plan como parámetro del servidor en `GET api/miembros` y la lista (sigue en el navegador), montos como cadenas de dos decimales (son números formateados con `formatearSoles`) y `exigirSesion` de S-01 (las páginas usan `obtenerUsuarioDeSesionActual`, como el resto).
+- Los reportes de morosos y por vencer cargan todos los socios activos y filtran en memoria (cientos de socios; si crecen mucho, pasar el filtro a la consulta).
+- Fechas del encabezado y de las tablas con `Intl` de Lima; el formateador único de S-02 no existe aún.
+
+**Siguiente**
+1. Probar en el despliegue los tres reportes y la impresión (Ctrl+P).
+2. Tramo 4: consentimiento y avisos legales (S-13); marca y diseño (S-12, S-19) cuando el propietario lo indique.
+
 ## Sesión 2026-11-13 (noche, 14) — Tramo 4 (parte 1): eliminar y restaurar socio (S-09)
 **Qué se hizo**
 - Baja lógica reversible: `Miembro.estado` (`ACTIVO` / `BAJA`, «Eliminado» en pantalla) con `bajaEn`, `bajaPorId` (clave foránea sin cascada) y `bajaMotivo`. Casos de uso `eliminarMiembro` y `restaurarMiembro` (archivo `EliminarMiembro.ts`): transacción con el socio bloqueado, estado releído tras el bloqueo, motivo opcional de hasta 200 caracteres y fila de `RegistroAuditoria` en la misma transacción (nuevo puerto `IAuditoriaRepository` en `IUnidadDeTrabajo`). No borran ni modifican pagos, suscripciones, check-ins ni datos del socio.

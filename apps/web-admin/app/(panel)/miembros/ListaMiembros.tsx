@@ -4,7 +4,6 @@ import { descripcionDocumento } from "@gym-app/domain/utils/documento";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Input } from "@gym-app/ui/components/Input";
-import { InputFecha } from "@gym-app/ui/components/InputFecha";
 import { Button } from "@gym-app/ui/components/Button";
 import { Card } from "@gym-app/ui/components/Card";
 import { normalizarTexto } from "@/lib/normalizarTexto";
@@ -16,16 +15,6 @@ import type { SucursalResumen } from "@gym-app/domain/entities/SucursalResumen";
 const MINIMO_CARACTERES_BUSQUEDA = 3;
 
 type ModoVista = "cards" | "lista";
-
-type FiltroProximoCobro = "todos" | "vencidos" | "7" | "15" | "30";
-
-const OPCIONES_PROXIMO_COBRO: { valor: FiltroProximoCobro; etiqueta: string }[] = [
-  { valor: "todos", etiqueta: "Todos" },
-  { valor: "vencidos", etiqueta: "Vencidos" },
-  { valor: "7", etiqueta: "Próximos 7 días" },
-  { valor: "15", etiqueta: "Próximos 15 días" },
-  { valor: "30", etiqueta: "Próximos 30 días" },
-];
 
 function iniciales(nombre: string): string {
   return nombre
@@ -82,10 +71,7 @@ export function ListaMiembros({
 }) {
   const [modo, setModo] = useState<ModoVista>("cards");
   const [busqueda, setBusqueda] = useState("");
-  const [inscritoDesde, setInscritoDesde] = useState("");
-  const [venceHasta, setVenceHasta] = useState("");
   const [planFiltro, setPlanFiltro] = useState("");
-  const [proximoCobroFiltro, setProximoCobroFiltro] = useState<FiltroProximoCobro>("todos");
 
   const planesPorId = useMemo(() => new Map(planes.map((plan) => [plan.id, plan])), [planes]);
 
@@ -108,38 +94,15 @@ export function ListaMiembros({
         return false;
       }
 
-      const inscripcion = miembro.fechaInscripcion ?? miembro.createdAt;
-      if (inscritoDesde && inscripcion < new Date(`${inscritoDesde}T00:00:00`)) return false;
-
-      if (venceHasta) {
-        if (!miembro.fechaVencimiento || miembro.fechaVencimiento > new Date(`${venceHasta}T23:59:59`)) {
-          return false;
-        }
-      }
-
       if (planFiltro && miembro.planId !== planFiltro) return false;
-
-      if (proximoCobroFiltro !== "todos") {
-        if (!miembro.fechaVencimiento) return false;
-        const dias = diasHastaVencimiento(miembro.fechaVencimiento);
-        if (proximoCobroFiltro === "vencidos") {
-          if (dias >= 0) return false;
-        } else {
-          const limite = Number(proximoCobroFiltro);
-          if (dias < 0 || dias > limite) return false;
-        }
-      }
 
       return true;
     });
-  }, [filas, busqueda, inscritoDesde, venceHasta, planFiltro, proximoCobroFiltro]);
+  }, [filas, busqueda, planFiltro]);
 
   function limpiarFiltros() {
     setBusqueda("");
-    setInscritoDesde("");
-    setVenceHasta("");
     setPlanFiltro("");
-    setProximoCobroFiltro("todos");
   }
 
   return (
@@ -170,8 +133,6 @@ export function ListaMiembros({
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
         />
-        <InputFecha label="Inscritos desde" value={inscritoDesde} onChange={setInscritoDesde} className="tarjeta-luminosa" />
-        <InputFecha label="Vencidos hasta" value={venceHasta} onChange={setVenceHasta} className="tarjeta-luminosa" />
 
         <label className="flex flex-col gap-1.5 text-sm" style={{ color: "var(--gx-muted)" }}>
           Plan
@@ -189,20 +150,12 @@ export function ListaMiembros({
           </select>
         </label>
 
-        <label className="flex flex-col gap-1.5 text-sm" style={{ color: "var(--gx-muted)" }}>
-          Próximo cobro
-          <select
-            value={proximoCobroFiltro}
-            onChange={(e) => setProximoCobroFiltro(e.target.value as FiltroProximoCobro)}
-            className="tarjeta-luminosa min-h-11 rounded-lg border px-3 gx-campo"
-          >
-            {OPCIONES_PROXIMO_COBRO.map((opcion) => (
-              <option key={opcion.valor} value={opcion.valor}>
-                {opcion.etiqueta}
-              </option>
-            ))}
-          </select>
-        </label>
+        <Link href="/reportes/morosos" className="self-center text-sm font-medium hover:underline" style={{ color: "var(--gx-accent)" }}>
+          Ver morosos
+        </Link>
+        <Link href="/reportes/por-vencer" className="self-center text-sm font-medium hover:underline" style={{ color: "var(--gx-accent)" }}>
+          Ver por vencer
+        </Link>
 
         <Button type="button" variant="secundario" onClick={limpiarFiltros}>
           Limpiar

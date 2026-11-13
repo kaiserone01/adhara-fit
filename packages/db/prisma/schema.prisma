@@ -180,6 +180,8 @@ model Miembro {
   suscripciones        Suscripcion[]
   cambiosPlanAuditoria CambioPlanAuditoria[]
   deudasProducto       DeudaProducto[]
+
+  @@index([estado, fechaVencimiento]) // S-14: morosos y por vencer
 }
 
 enum EstadoMiembro {
@@ -337,6 +339,7 @@ model Pago {
   cambioPlanAuditoria CambioPlanAuditoria[]
 
   @@index([grupoPagoId])
+  @@index([fechaPago]) // S-14: reportes por período
 }
 
 // Artículo a la venta en el gimnasio (agua, Gatorade, guantines). El

@@ -13,6 +13,12 @@ const FORMATOS: Record<TipoDocumento, RegExp> = {
   CE: /^[A-Z0-9]{9,12}$/,
 };
 
+/** Documento para los reportes: 5 puntos y los últimos 3 caracteres («•••••678»); solo puntos si tiene menos de 3. */
+export function enmascararDocumento(numero: string): string {
+  const puntos = "•••••";
+  return numero.length < 3 ? puntos : puntos + numero.slice(-3);
+}
+
 /** «DNI 12345678», «CE 001234567». */
 export function descripcionDocumento(tipo: TipoDocumento, numero: string): string {
   return `${tipo} ${numero}`;

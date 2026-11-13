@@ -109,11 +109,16 @@ export class PrismaPagoRepository implements IPagoRepository {
   async listarPorOrganizacionYRango(organizacionId: string, desde: Date, hasta: Date): Promise<Pago[]> {
     const pagos = await this.prisma.pago.findMany({
       where: { sucursal: { organizacionId }, fechaPago: { gte: desde, lte: hasta } },
-      include: { miembro: { select: { nombre: true, precioPlan: true } }, registradoPor: { select: { nombre: true } } },
+      include: {
+        miembro: { select: { nombre: true, precioPlan: true } },
+        registradoPor: { select: { nombre: true } },
+        cambioPlanAuditoria: { select: { id: true }, take: 1 },
+      },
       orderBy: { fechaPago: "asc" },
     });
     return pagos.map((pago) => ({
       ...mapear(pago),
+      esCambioPlan: pago.cambioPlanAuditoria.length > 0,
       miembroNombre: pago.miembro?.nombre,
       miembroPrecioPlan: pago.miembro?.precioPlan.toNumber(),
       registradoPorNombre: pago.registradoPor.nombre,

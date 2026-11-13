@@ -28,6 +28,7 @@ jobs:
       - run: node tools/verificar-documento.mjs
       - run: node tools/verificar-plan.mjs
       - run: node tools/verificar-miembro.mjs
+      - run: node tools/verificar-reportes.mjs
       - run: node --test "tools/*.test.mjs"
 
   lint:

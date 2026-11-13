@@ -18,6 +18,7 @@ export function MasSheet({
   // Planes y Administradores se administran desde las tabs de Configuraciones.
   const enlaces = [
     { href: "/productos", label: "Productos" },
+    { href: "/reportes", label: "Reportes" },
     { href: "/configuraciones", label: "Configuraciones" },
   ];
 

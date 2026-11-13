@@ -11,6 +11,7 @@ import { conceptoPago } from "./conceptoPago";
 import { inicioDelDia, finDelDia } from "../fechas";
 import { FiltroFechasHistorico } from "./FiltroFechasHistorico";
 import { BotonImprimir } from "../BotonImprimir";
+import { EncabezadoImpresion } from "../reportes/EncabezadoImpresion";
 
 // El método se guarda como snapshot legible ("Pago Móvil - Banesco")
 // directo en Pago.metodo — no hay catálogo estático que traducir.
@@ -77,13 +78,11 @@ export default async function PaginaHistoricoPagos({
 
       {/* Lista de pagos — vista plana del período, es lo único que se imprime. */}
       <div>
-        <div className="hidden print:block mb-4">
-          <h1 className="text-xl font-bold text-black">Histórico de pagos</h1>
-          <div className="text-xs text-black">
-            {desde.toLocaleDateString("es-PE", { day: "2-digit", month: "2-digit", year: "numeric" })} – {hasta.toLocaleDateString("es-PE", { day: "2-digit", month: "2-digit", year: "numeric" })} · {pagosOrdenados.length}{" "}
-            {pagosOrdenados.length === 1 ? "pago" : "pagos"} · Total: {formatearSoles(reporte.totalCobrado)}
-          </div>
-        </div>
+        <EncabezadoImpresion
+          organizacionId={usuario.organizacionId}
+          titulo="Histórico de pagos"
+          rango={`${desde.toLocaleDateString("es-PE", { day: "2-digit", month: "2-digit", year: "numeric" })} – ${hasta.toLocaleDateString("es-PE", { day: "2-digit", month: "2-digit", year: "numeric" })} · ${pagosOrdenados.length} ${pagosOrdenados.length === 1 ? "pago" : "pagos"} · Total: ${formatearSoles(reporte.totalCobrado)}`}
+        />
         <div className="overflow-x-auto">
           <table className="w-full min-w-[560px] border-collapse text-left text-sm">
             <thead>

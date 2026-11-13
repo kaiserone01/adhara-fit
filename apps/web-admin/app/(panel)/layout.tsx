@@ -38,6 +38,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
               { href: "/miembros", label: "Miembros" },
               { href: "/cobros", label: "Cobros" },
               { href: "/productos", label: "Productos" },
+              { href: "/reportes", label: "Reportes" },
               // Planes y Administradores se administran desde las tabs de Configuraciones.
               { href: "/configuraciones", label: "Configuraciones" },
             ]}

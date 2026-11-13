@@ -29,6 +29,8 @@ export interface Pago {
   productoId?: string | null;
   productoNombre?: string | null;
   cantidad?: number | null;
+  // S-14: el cobro es el de un cambio de plan (tiene su auditoría); solo lo rellena el listado por rango.
+  esCambioPlan?: boolean;
 }
 
 // Meses que puede cubrir un solo pago adelantado (el precio y la duración del ciclo se multiplican).

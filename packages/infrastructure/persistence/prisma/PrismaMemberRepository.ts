@@ -3,6 +3,7 @@ import type { IMemberRepository } from "@gym-app/domain/ports/IMemberRepository"
 import type { Miembro, DatosNuevoMiembro, CambiosMiembro } from "@gym-app/domain/entities/Miembro";
 import { CodigoSocioEnConflictoError, DocumentoDuplicadoError } from "@gym-app/domain/entities/ErroresMiembro";
 import type { TipoDocumento } from "@gym-app/domain/utils/documento";
+import type { MiembroParaReporte } from "@gym-app/domain/entities/ReporteVencimientos";
 
 // Traduce la violación de unicidad de Prisma (P2002) al error de dominio según la columna.
 function traducirUnicidad(error: unknown): never {
@@ -117,6 +118,36 @@ export class PrismaMemberRepository implements IMemberRepository {
     });
 
     return miembros.map(mapear);
+  }
+
+  async listarActivosParaReporte(organizacionId: string): Promise<MiembroParaReporte[]> {
+    const miembros = await this.prisma.miembro.findMany({
+      where: { organizacionId, estado: "ACTIVO" },
+      select: {
+        id: true,
+        nombre: true,
+        codigoSocio: true,
+        numeroDocumento: true,
+        celular: true,
+        precioPlan: true,
+        fechaVencimiento: true,
+        plan: { select: { nombre: true } },
+        // Último cobro: el no anulado de mayor orden de registro (creadoEn).
+        pagos: { where: { anuladoEn: null }, orderBy: [{ creadoEn: "desc" }, { id: "desc" }], take: 1, select: { fechaPago: true, monto: true } },
+      },
+    });
+
+    return miembros.map((m) => ({
+      id: m.id,
+      nombre: m.nombre,
+      codigoSocio: m.codigoSocio,
+      numeroDocumento: m.numeroDocumento,
+      celular: m.celular,
+      planNombre: m.plan?.nombre ?? null,
+      precioPlan: m.precioPlan.toNumber(),
+      fechaVencimiento: m.fechaVencimiento,
+      ultimoCobro: m.pagos[0] ? { fecha: m.pagos[0].fechaPago, monto: m.pagos[0].monto.toNumber() } : null,
+    }));
   }
 
   async crear(datos: DatosNuevoMiembro): Promise<Miembro> {

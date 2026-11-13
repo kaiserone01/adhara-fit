@@ -1,4 +1,5 @@
 import { Miembro, DatosNuevoMiembro, CambiosMiembro } from "../entities/Miembro";
+import type { MiembroParaReporte } from "../entities/ReporteVencimientos";
 
 export interface IMemberRepository {
   // S-06: el documento (normalizado) y el código de socio son únicos en todo el sistema.
@@ -10,6 +11,8 @@ export interface IMemberRepository {
   // Todos los miembros de la organización, con su estado (S-09): quien llama filtra por estado.
   listarPorOrganizacion(organizacionId: string): Promise<Miembro[]>;
   // Lanzan DocumentoDuplicadoError o CodigoSocioEnConflictoError si la base rechaza la unicidad.
+  // S-14: socios no eliminados con su plan y su último cobro no anulado, en una sola consulta.
+  listarActivosParaReporte(organizacionId: string): Promise<MiembroParaReporte[]>;
   crear(datos: DatosNuevoMiembro): Promise<Miembro>;
   actualizar(organizacionId: string, id: string, cambios: CambiosMiembro): Promise<Miembro | null>;
   // Fecha del último pago (null = ninguno) y vencimiento; ver fijarVencimiento.

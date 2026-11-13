@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, type FocusEvent } from "react";
 import { Envelope, Eye, EyeSlash, LockSimple, SignIn } from "@phosphor-icons/react";
 import { motion, useReducedMotion } from "motion/react";
 import type { useLoginFlow } from "./useLoginFlow";
@@ -36,9 +37,30 @@ function CheckAnimado() {
   );
 }
 
+type CampoId = "email" | "password";
+
 export function LoginForm({ flujo }: { flujo: Flujo }) {
   const reducir = useReducedMotion();
   const { estado, error, errorVez, cargando } = flujo;
+
+  // Foco visual: el campo donde se escribe manda; si no hay ninguno enfocado,
+  // manda el que tiene el cursor encima. El otro se encoge para dar foco.
+  const [enfocado, setEnfocado] = useState<CampoId | null>(null);
+  const [encima, setEncima] = useState<CampoId | null>(null);
+  const activo = enfocado ?? encima;
+  const estadoCampo = (id: CampoId) => (activo === null ? "neutro" : activo === id ? "activo" : "inactivo");
+  const eventosCampo = (id: CampoId) => ({
+    onFocus: () => setEnfocado(id),
+    onBlur: (e: FocusEvent<HTMLElement>) => {
+      if (!e.currentTarget.contains(e.relatedTarget)) setEnfocado(null);
+    },
+    onPointerEnter: () => setEncima(id),
+    onPointerLeave: () => setEncima((actual) => (actual === id ? null : actual)),
+  });
+
+  // El botón solo se habilita con email y contraseña llenos.
+  const incompleto = flujo.email.trim() === "" || flujo.password === "";
+  const ocupado = estado === "cargando" || estado === "exito";
 
   // Entrada escalonada: título, campos y botón (1,0 – 1,6 s).
   const aparece = (orden: number) => ({
@@ -138,9 +160,14 @@ export function LoginForm({ flujo }: { flujo: Flujo }) {
         <Titulo texto="Iniciar sesión" />
       </motion.div>
 
-      <motion.label {...aparece(1)} className="flex flex-col gap-1.5 text-sm font-medium" style={{ color: "var(--gx-muted)" }}>
+      <motion.label
+        {...aparece(1)}
+        {...eventosCampo("email")}
+        className="flex flex-col gap-1.5 text-sm font-medium"
+        style={{ color: "var(--gx-muted)" }}
+      >
         Email
-        <span className="login-campo relative block">
+        <span className="login-campo relative block" data-foco={estadoCampo("email")}>
           <Envelope size={20} aria-hidden="true" className="login-icono pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="email"
@@ -155,9 +182,14 @@ export function LoginForm({ flujo }: { flujo: Flujo }) {
         </span>
       </motion.label>
 
-      <motion.label {...aparece(2)} className="flex flex-col gap-1.5 text-sm font-medium" style={{ color: "var(--gx-muted)" }}>
+      <motion.label
+        {...aparece(2)}
+        {...eventosCampo("password")}
+        className="flex flex-col gap-1.5 text-sm font-medium"
+        style={{ color: "var(--gx-muted)" }}
+      >
         Contraseña
-        <span className="login-campo relative block">
+        <span className="login-campo relative block" data-foco={estadoCampo("password")}>
           <LockSimple size={20} aria-hidden="true" className="login-icono pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type={flujo.verPassword ? "text" : "password"}
@@ -184,8 +216,9 @@ export function LoginForm({ flujo }: { flujo: Flujo }) {
         <motion.div {...vibra} className="flex flex-col gap-3">
           <button
             type="submit"
-            disabled={cargando || estado === "exito"}
-            className="login-boton flex min-h-12 cursor-pointer items-center justify-center gap-2.5 rounded-xl px-5 text-lg font-bold disabled:cursor-default disabled:opacity-90"
+            disabled={ocupado || incompleto}
+            data-ocupado={ocupado ? "" : undefined}
+            className="login-boton flex min-h-12 cursor-pointer items-center justify-center gap-2.5 rounded-xl px-5 text-lg font-bold disabled:cursor-not-allowed"
             style={{ background: "var(--gx-accent)", color: "var(--gx-accent-ink)" }}
           >
             {estado === "cargando" ? (

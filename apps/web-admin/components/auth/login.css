@@ -155,6 +155,20 @@
   color: var(--gx-accent);
 }
 
+/* Campos: el que tiene el foco (escribiendo o con el cursor encima) crece y el otro se encoge */
+.login-campo {
+  transition:
+    transform 0.25s ease,
+    opacity 0.25s ease;
+}
+.login-campo[data-foco="activo"] {
+  transform: scale(1.04);
+}
+.login-campo[data-foco="inactivo"] {
+  transform: scale(0.95);
+  opacity: 0.6;
+}
+
 /* Botón Ingresar */
 .login-boton {
   position: relative;
@@ -190,6 +204,12 @@
 .login-boton:hover:not(:disabled) .login-boton-icono {
   transform: translateX(3px);
 }
+/* Deshabilitado por falta de datos (no por estar enviando): se ve apagado */
+.login-boton:disabled:not([data-ocupado]) {
+  opacity: 0.4;
+  box-shadow: none;
+  filter: saturate(0.5);
+}
 .login-boton:focus-visible {
   outline: 2px solid var(--gx-ink);
   outline-offset: 3px;
@@ -213,8 +233,13 @@
   .login-boton,
   .login-boton::after,
   .login-boton .login-boton-icono,
-  .login-campo .login-icono {
+  .login-campo .login-icono,
+  .login-campo {
     transition: none;
+  }
+  .login-campo[data-foco="activo"],
+  .login-campo[data-foco="inactivo"] {
+    transform: none;
   }
   .login-boton:hover:not(:disabled),
   .login-boton:active:not(:disabled) {

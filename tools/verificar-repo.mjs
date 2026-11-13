@@ -73,12 +73,12 @@ export function motivoExclusion(ruta) {
   return null;
 }
 
-export function verificarExclusiones(raiz, archivos) {
+export function verificarExclusiones(raiz, archivos, { drizzle = false } = {}) {
   const errores = [];
   for (const a of archivos) {
     const m = motivoExclusion(a);
     if (m) errores.push(`exclusión: ${a} (${m})`);
-    if (a.toLowerCase().startsWith("packages/db/") && !PERMITIDOS_DB.includes(a.toLowerCase()) && !/^packages\/db\/prisma\/migrations\/\d{14}_/i.test(a)) {
+    if (!drizzle && a.toLowerCase().startsWith("packages/db/") && !PERMITIDOS_DB.includes(a.toLowerCase()) && !/^packages\/db\/prisma\/migrations\/\d{14}_/i.test(a)) {
       errores.push(`exclusión: ${a} (packages/db solo admite ${PERMITIDOS_DB.join(", ")})`);
     }
   }
@@ -227,10 +227,18 @@ export function verificarHistoria(raiz) {
   return errores;
 }
 
-export function verificarRepo(raiz, { historia = false, archivos } = {}) {
+/** REQ-S22-029: con Drizzle, packages/db solo admite package.json, drizzle.config.ts y src/. */
+export function verificarPackagesDbDrizzle(archivos) {
+  return archivos
+    .filter((a) => a.startsWith("packages/db/") && !/^packages\/db\/(package\.json|drizzle\.config\.ts|src\/.+)$/.test(a))
+    .map((a) => `packages/db: ${a} no está permitido con Drizzle (solo package.json, drizzle.config.ts y src/)`);
+}
+
+export function verificarRepo(raiz, { historia = false, archivos, drizzle = false } = {}) {
   const lista = archivos ?? listarArchivos(raiz);
   return [
-    ...verificarExclusiones(raiz, lista), ...verificarApps(raiz), ...verificarMigraciones(lista),
+    ...(drizzle ? verificarPackagesDbDrizzle(lista) : []),
+    ...verificarExclusiones(raiz, lista, { drizzle }), ...verificarApps(raiz), ...verificarMigraciones(lista),
     ...verificarObligatorios(raiz), ...verificarGitignore(raiz), ...verificarVersiones(raiz),
     ...verificarReferencias(raiz, lista), ...(historia ? verificarHistoria(raiz) : []),
   ];
@@ -238,7 +246,7 @@ export function verificarRepo(raiz, { historia = false, archivos } = {}) {
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const raiz = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-  const errores = verificarRepo(raiz, { historia: process.argv.includes("--historia") });
+  const errores = verificarRepo(raiz, { historia: process.argv.includes("--historia"), drizzle: process.argv.includes("--drizzle") });
   if (errores.length) { console.error(errores.map((e) => `verificar-repo: ${e}`).join("\n")); process.exit(1); }
   console.log("verificar-repo: sin hallazgos");
 }

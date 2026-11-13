@@ -1,23 +1,21 @@
-// S-06: documento de identidad (DNI, carné de extranjería, pasaporte) y código de socio.
-export const TIPOS_DOCUMENTO = ["DNI", "CE", "PASAPORTE"] as const;
+// S-06: documento de identidad (DNI o CE, carné de extranjería) y código de socio.
+export const TIPOS_DOCUMENTO = ["DNI", "CE"] as const;
 export type TipoDocumento = (typeof TIPOS_DOCUMENTO)[number];
 
 export const ETIQUETA_TIPO_DOCUMENTO: Record<TipoDocumento, string> = {
   DNI: "DNI",
-  CE: "Carné de extranjería",
-  PASAPORTE: "Pasaporte",
+  CE: "CE",
 };
 
-// Longitudes por tipo (asumido, por validar): DNI 8 dígitos; CE 9–12 y pasaporte 6–12 alfanuméricos.
+// Longitudes por tipo (asumido, por validar): DNI 8 dígitos; CE 9–12 alfanuméricos.
 const FORMATOS: Record<TipoDocumento, RegExp> = {
   DNI: /^[0-9]{8}$/,
   CE: /^[A-Z0-9]{9,12}$/,
-  PASAPORTE: /^[A-Z0-9]{6,12}$/,
 };
 
-/** «DNI 12345678», «CE 001234567», «Pasaporte P123456». */
+/** «DNI 12345678», «CE 001234567». */
 export function descripcionDocumento(tipo: TipoDocumento, numero: string): string {
-  return `${tipo === "PASAPORTE" ? "Pasaporte" : tipo} ${numero}`;
+  return `${tipo} ${numero}`;
 }
 
 export const LARGO_CODIGO_SOCIO = 4;

@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     }
     const tipoDocumento = body.tipoDocumento ?? "DNI";
     if (!esTipoDocumento(tipoDocumento)) {
-      return NextResponse.json({ error: "tipoDocumento debe ser DNI, CE o PASAPORTE." }, { status: 400 });
+      return NextResponse.json({ error: "tipoDocumento debe ser DNI o CE." }, { status: 400 });
     }
     if (!body.nombre || typeof body.numeroDocumento !== "string" || !body.sucursalId || body.precioPlan === undefined) {
       return NextResponse.json(

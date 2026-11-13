@@ -26,7 +26,7 @@ export async function crearMiembro(
 
   const datos = { ...input, numeroDocumento };
 
-  // Quien no puede teclear su documento (CE, pasaporte) recibe un código de socio de 4 dígitos.
+  // Quien no puede teclear su documento (CE) recibe un código de socio de 4 dígitos.
   if (requiereCodigoSocio(input.tipoDocumento)) {
     return conCodigoSocio(deps.miembros, (codigoSocio) => deps.miembros.crear({ ...datos, codigoSocio }));
   }

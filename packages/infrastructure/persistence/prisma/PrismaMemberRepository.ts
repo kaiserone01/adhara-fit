@@ -19,7 +19,7 @@ type FilaMiembro = {
   organizacionId: string;
   sucursalId: string | null;
   nombre: string;
-  tipoDocumento: TipoDocumento;
+  tipoDocumento: TipoDocumento | "PASAPORTE"; // PASAPORTE: valor heredado del enum, sin uso
   numeroDocumento: string;
   codigoSocio: string | null;
   fechaInscripcion: Date | null;
@@ -43,7 +43,7 @@ function mapear(miembro: FilaMiembro): Miembro {
     organizacionId: miembro.organizacionId,
     sucursalId: miembro.sucursalId,
     nombre: miembro.nombre,
-    tipoDocumento: miembro.tipoDocumento,
+    tipoDocumento: miembro.tipoDocumento === "PASAPORTE" ? "CE" : miembro.tipoDocumento,
     numeroDocumento: miembro.numeroDocumento,
     codigoSocio: miembro.codigoSocio,
     fechaInscripcion: miembro.fechaInscripcion,

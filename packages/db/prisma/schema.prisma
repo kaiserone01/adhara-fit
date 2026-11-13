@@ -150,7 +150,7 @@ model Miembro {
   nombre           String
   tipoDocumento    TipoDocumento @default(DNI) // S-06
   numeroDocumento  String        @unique // S-06: normalizado, único en todo el sistema sin importar el tipo
-  codigoSocio      String?       @unique // S-06: 4 dígitos, solo para CE y pasaporte (quien no puede teclear su documento)
+  codigoSocio      String?       @unique // S-06: 4 dígitos, solo para CE (quien no puede teclear su documento)
   fechaInscripcion DateTime?
   fechaNacimiento  DateTime?
   celular          String?
@@ -179,6 +179,7 @@ model Miembro {
 enum TipoDocumento {
   DNI
   CE
+  // Sin uso: el sistema solo admite DNI y CE. Se mantiene para que `db push` no pida --accept-data-loss; se quita con el reinicio limpio de S-15.
   PASAPORTE
 }
 

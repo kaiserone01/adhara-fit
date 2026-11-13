@@ -8,6 +8,20 @@ Bitácora de sesiones: la más reciente arriba, solo se añaden entradas. El his
 - **Desplegado:** provisional en Easypanel (`docs/ops/easypanel.md`): imagen del `Dockerfile`, esquema con `prisma db push` al arrancar, alta del primer administrador con `tools/crear-administrador.mjs`.
 - **Preferencia del propietario:** cada código (ADR-nnn, S-nn, REQ…) que se mencione lleva al lado una descripción simple.
 
+## Sesión 2026-11-13 (noche, 12) — Despliegue de S-04/S-06 y ajuste del tipo de documento
+**Qué se hizo**
+- El despliegue de S-06/S-04 no arrancaba: `prisma db push` se negaba por tres avisos de restricción única nueva (`Miembro.numeroDocumento`, `Miembro.codigoSocio`, `Pago.cobroId`) y el contenedor caía tras el deploy «verde». Se resolvió reiniciando la base (`DROP SCHEMA public CASCADE; CREATE SCHEMA public;`, a mano en el servicio de la base) porque solo existía el administrador inicial; con la base vacía el esquema se crea sin avisos y el administrador se recrea solo. No se tocó el entrypoint ni se usó `--accept-data-loss`.
+- Tipos de documento: solo **DNI** y **CE** (etiqueta «CE», sin «Carné de extranjería»); se quitó pasaporte del dominio, formularios, API y pruebas. El valor `PASAPORTE` queda en el enum de Prisma, sin uso (quitarlo haría que `db push` vuelva a pedir `--accept-data-loss`); el repositorio lo lee como CE. Se elimina con el reinicio limpio de S-15.
+
+**Qué funcionó**
+- Dominio 268 pruebas en verde; `tsc` limpio.
+
+**Qué no funcionó / a tener en cuenta**
+- Cualquier cambio de esquema que añada una restricción única, o quite un valor de enum o columna, hará fallar el arranque con datos reales mientras no existan migraciones (S-15). Con datos de producción: migración manual o reinicio consciente, no `--accept-data-loss` en el entrypoint.
+
+**Siguiente**
+1. S-07 (cambio de plan único).
+
 ## Sesión 2026-11-13 (noche, 11) — Tramo 3 (parte 3): pago único de membresía (S-04)
 **Qué se hizo**
 - Un cobro = un solo pago completo, con un solo método, por 1–6 meses. El monto debe ser exactamente el precio acordado del socio (`Miembro.precioPlan` si es su mismo plan; si no, el precio de lista) por los meses; no hay abonos, saldo a favor, pago dividido ni cortesías ($0). Un plan sin costo crea al socio sin cobro ni vencimiento.

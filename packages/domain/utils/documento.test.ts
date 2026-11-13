@@ -21,23 +21,20 @@ describe("documento (S-06)", () => {
     expect(validarDocumento("DNI", "1234-5678")).toBe(true); // el guion se normaliza
   });
 
-  it("CE: 9 a 12 alfanuméricos; pasaporte: 6 a 12", () => {
+  it("CE: 9 a 12 alfanuméricos", () => {
     expect(validarDocumento("CE", "abc123456")).toBe(true);
     expect(validarDocumento("CE", "ABC12345")).toBe(false);
     expect(validarDocumento("CE", "ABC1234567890")).toBe(false);
-    expect(validarDocumento("PASAPORTE", "p123456")).toBe(true);
-    expect(validarDocumento("PASAPORTE", "P1234")).toBe(false);
-    expect(validarDocumento("PASAPORTE", "P12345*")).toBe(false);
+    expect(validarDocumento("CE", "ABC12345*")).toBe(false);
   });
 
-  it("código de socio: exactamente cuatro dígitos; solo CE y pasaporte lo reciben", () => {
+  it("código de socio: exactamente cuatro dígitos; solo CE lo recibe", () => {
     expect(esCodigoSocio(" 0042 ")).toBe(true);
     expect(esCodigoSocio("42")).toBe(false);
     expect(esCodigoSocio("12345")).toBe(false);
     expect(esCodigoSocio("12A4")).toBe(false);
     expect(requiereCodigoSocio("DNI")).toBe(false);
     expect(requiereCodigoSocio("CE")).toBe(true);
-    expect(requiereCodigoSocio("PASAPORTE")).toBe(true);
     expect(formatearCodigoSocio(7)).toBe("0007");
   });
 });

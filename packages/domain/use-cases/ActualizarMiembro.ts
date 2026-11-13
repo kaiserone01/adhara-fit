@@ -65,7 +65,7 @@ export async function actualizarMiembro(
     cambios.tipoDocumento = tipoFinal;
     cambios.numeroDocumento = numeroFinal;
   }
-  // El código de socio ya asignado no cambia nunca; solo se asigna uno si el miembro pasa a CE o pasaporte sin tenerlo.
+  // El código de socio ya asignado no cambia nunca; solo se asigna uno si el miembro pasa a CE sin tenerlo.
   delete cambios.codigoSocio;
   const necesitaCodigo = cambiaDocumento && requiereCodigoSocio(tipoFinal) && antes.codigoSocio === null;
 

@@ -198,10 +198,10 @@ describe("actualizarMiembro — documento (S-06)", () => {
     expect(cambiosGuardados).toHaveLength(1);
   });
 
-  test("pasar de DNI a pasaporte asigna el siguiente código de socio", async () => {
+  test("pasar de DNI a CE asigna el siguiente código de socio", async () => {
     const { deps, cambiosGuardados } = crearDeps();
-    await actualizarMiembro(deps, { ...base, cambios: { tipoDocumento: "PASAPORTE", numeroDocumento: "p123456" } });
-    expect(cambiosGuardados[0]).toMatchObject({ tipoDocumento: "PASAPORTE", numeroDocumento: "P123456", codigoSocio: "0042" });
+    await actualizarMiembro(deps, { ...base, cambios: { tipoDocumento: "CE", numeroDocumento: "p12345678" } });
+    expect(cambiosGuardados[0]).toMatchObject({ tipoDocumento: "CE", numeroDocumento: "P12345678", codigoSocio: "0042" });
   });
 });
 

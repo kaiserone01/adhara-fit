@@ -6,9 +6,22 @@ import { Card } from "@gym-app/ui/components/Card";
 import { BotonCopiarEnlace } from "./BotonCopiarEnlace";
 
 const APLICACIONES = [
-  { archivo: "AF-checkin.apk", icono: "/aplicaciones/checkin.png", nombre: "Adhara Fit Check-in", detalle: "Aplicación para Android TV: pantalla de entrada de la recepción." },
-  { archivo: "AF-vitrina.apk", icono: "/aplicaciones/vitrina.png", nombre: "Adhara Fit Vitrina", detalle: "Aplicación para Android TV: pantalla de promociones y entrenadores." },
+  { app: "checkin", archivo: "AF-checkin.apk", icono: "/aplicaciones/checkin.png", nombre: "Adhara Fit Check-in", detalle: "Aplicación para Android TV: pantalla de entrada de la recepción." },
+  { app: "vitrina", archivo: "AF-vitrina.apk", icono: "/aplicaciones/vitrina.png", nombre: "Adhara Fit Vitrina", detalle: "Aplicación para Android TV: pantalla de promociones y entrenadores." },
 ];
+
+// Versión de la interfaz que publicó el último workflow (ota/<app>/latest.json, público): es la que deben mostrar los TV.
+async function versionPublicada(base: string, app: string): Promise<string | null> {
+  try {
+    const respuesta = await fetch(`${base}/ota/${app}/latest.json`, { cache: "no-store", signal: AbortSignal.timeout(4000) });
+    if (!respuesta.ok) return null;
+    const datos: unknown = await respuesta.json();
+    const nombre = (datos as { versionName?: unknown } | null)?.versionName;
+    return typeof nombre === "string" && /^[0-9][0-9A-Za-z.-]{0,20}$/.test(nombre) ? nombre : null;
+  } catch {
+    return null;
+  }
+}
 
 // Pastilla «Android TV»: las dos aplicaciones son solo para Android TV.
 function InsigniaAndroidTv() {
@@ -47,7 +60,7 @@ export default async function PaginaAplicaciones() {
       const enlace = `${base}/${app.archivo}`;
       // QR en SVG, de módulos negros sobre blanco y con margen: se escanea bien también en pantallas oscuras.
       const qr = await QRCode.toString(enlace, { type: "svg", margin: 2, errorCorrectionLevel: "M" });
-      return { ...app, enlace, qr };
+      return { ...app, enlace, qr, version: await versionPublicada(base, app.app) };
     })
   );
 
@@ -87,6 +100,10 @@ export default async function PaginaAplicaciones() {
               <div className="order-first flex shrink-0 flex-row items-center gap-3 self-end sm:order-none sm:flex-col sm:gap-2 sm:self-start">
                 <Image src={app.icono} alt={`Ícono de ${app.nombre}`} width={72} height={72} unoptimized className="size-[72px] rounded-2xl" />
                 <InsigniaAndroidTv />
+                {/* Debe coincidir con la v… que muestra el TV en la esquina inferior derecha. */}
+                <span className="text-xs tabular-nums" style={{ color: "var(--gx-muted)" }} title="Versión publicada; la misma que muestra el TV">
+                  {app.version ? `Versión ${app.version}` : "Versión no disponible"}
+                </span>
               </div>
             </div>
           </Card>

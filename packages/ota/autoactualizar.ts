@@ -14,6 +14,18 @@ const PRIMERA_REVISION_MS = 15 * 1000;
 // No se reinicia la interfaz mientras alguien la está usando.
 const INACTIVIDAD_MS = 20 * 1000;
 const CLAVE_INTENTOS = "adhara-ota-intentos:";
+// Último estado de la autoactualización, para que la etiqueta de versión lo muestre si algo falla (EtiquetaVersion).
+export const CLAVE_ESTADO = "adhara-ota-estado";
+export const EVENTO_ESTADO = "adhara-ota-estado";
+
+export function anotarEstado(texto: string): void {
+  try {
+    localStorage.setItem(CLAVE_ESTADO, texto.slice(0, 60));
+    window.dispatchEvent(new Event(EVENTO_ESTADO));
+  } catch {
+    // Sin almacenamiento: solo se pierde el aviso.
+  }
+}
 
 function intentosDe(versionCode: number): number {
   try {
@@ -66,14 +78,26 @@ async function revisar(config: ConfigActualizaciones): Promise<void> {
   const { bundle } = await CapacitorUpdater.current();
   const actual = versionDeBundle(bundle.version, config.versionCode);
   const manifiesto = await leerManifiesto(config.url);
-  if (!manifiesto || !hayVersionNueva(actual, manifiesto.versionCode)) return;
-  if (!puedeIntentar(intentosDe(manifiesto.versionCode))) return;
+  if (!manifiesto) {
+    anotarEstado("sin manifiesto");
+    return;
+  }
+  if (!hayVersionNueva(actual, manifiesto.versionCode)) {
+    anotarEstado("al día");
+    return;
+  }
+  if (!puedeIntentar(intentosDe(manifiesto.versionCode))) {
+    anotarEstado(`falló ${manifiesto.versionName}`);
+    return;
+  }
   sumarIntento(manifiesto.versionCode);
+  anotarEstado(`descargando ${manifiesto.versionName}`);
   const descargado = await CapacitorUpdater.download({
     url: urlDelZip(config.url, manifiesto.zip),
     version: manifiesto.versionName,
     checksum: manifiesto.sha256,
   });
+  anotarEstado(`lista ${manifiesto.versionName}`);
   await esperarInactividad();
   // Recarga la interfaz con el bundle nuevo. Si no arranca, el plugin vuelve solo al anterior.
   await CapacitorUpdater.set({ id: descargado.id });
@@ -92,8 +116,9 @@ export function iniciarActualizador(config: ConfigActualizaciones): () => void {
     if (detenido) return;
     try {
       await revisar(config);
-    } catch {
+    } catch (causa) {
       // Sin internet o servidor caído: se reintenta en el siguiente ciclo y la app sigue como está.
+      anotarEstado(`error: ${causa instanceof Error ? causa.message : "desconocido"}`);
     }
     if (!detenido) timer = setTimeout(ciclo, CADA_MS);
   };
@@ -105,8 +130,10 @@ export function iniciarActualizador(config: ConfigActualizaciones): () => void {
       await limpiarBundlesViejos(bundle.id);
     } catch {
       // El plugin no está disponible: nada que actualizar.
+      anotarEstado("sin plugin");
       return;
     }
+    anotarEstado("iniciada");
     if (!detenido) timer = setTimeout(ciclo, PRIMERA_REVISION_MS);
   })();
 

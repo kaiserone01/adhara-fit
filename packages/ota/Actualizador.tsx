@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { iniciarActualizador } from "./autoactualizar";
+import { anotarEstado, iniciarActualizador } from "./autoactualizar";
 import { leerActualizaciones } from "./manifiesto";
 import { cargarJsonConRespaldo } from "./respaldo";
 
@@ -13,9 +13,10 @@ export function Actualizador({ rutaConfig }: { rutaConfig: string }) {
     cargarJsonConRespaldo(rutaConfig)
       .then((datos) => {
         const config = leerActualizaciones(datos);
-        if (config && !desmontado) detener = iniciarActualizador(config);
+        if (!config) anotarEstado("sin configuración");
+        else if (!desmontado) detener = iniciarActualizador(config);
       })
-      .catch(() => undefined);
+      .catch(() => anotarEstado("sin configuración"));
     return () => {
       desmontado = true;
       detener();

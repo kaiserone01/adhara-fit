@@ -1,5 +1,6 @@
 import { Capacitor, CapacitorHttp } from "@capacitor/core";
 import { CapacitorUpdater } from "@capgo/capacitor-updater";
+import { porcentajeSeguro, type EstadoArranque } from "./arranque";
 import {
   hayVersionNueva,
   puedeIntentar,
@@ -9,10 +10,9 @@ import {
   type ConfigActualizaciones,
 } from "./manifiesto";
 
-const CADA_MS = 30 * 60 * 1000;
-const PRIMERA_REVISION_MS = 15 * 1000;
-// No se reinicia la interfaz mientras alguien la está usando.
-const INACTIVIDAD_MS = 20 * 1000;
+// Se busca una sola vez, al abrir la app. Tiempos máximos para que una red lenta no deje la TV esperando.
+const LIMITE_BUSCAR_MS = 8_000;
+const LIMITE_DESCARGAR_MS = 120_000;
 const CLAVE_INTENTOS = "adhara-ota-intentos:";
 // Último estado de la autoactualización, para que la etiqueta de versión lo muestre si algo falla (EtiquetaVersion).
 export const CLAVE_ESTADO = "adhara-ota-estado";
@@ -43,25 +43,24 @@ function sumarIntento(versionCode: number): void {
   }
 }
 
-function esperarInactividad(): Promise<void> {
-  return new Promise((resolver) => {
-    let ultima = Date.now();
-    const marcar = () => {
-      ultima = Date.now();
-    };
-    const eventos = ["keydown", "pointerdown", "touchstart"] as const;
-    for (const e of eventos) window.addEventListener(e, marcar, true);
-    const timer = setInterval(() => {
-      if (Date.now() - ultima < INACTIVIDAD_MS) return;
-      clearInterval(timer);
-      for (const e of eventos) window.removeEventListener(e, marcar, true);
-      resolver();
-    }, 2000);
+function conLimite<T>(promesa: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolver, rechazar) => {
+    const timer = setTimeout(() => rechazar(new Error("tiempo agotado")), ms);
+    promesa.then(
+      (valor) => {
+        clearTimeout(timer);
+        resolver(valor);
+      },
+      (error: unknown) => {
+        clearTimeout(timer);
+        rechazar(error);
+      }
+    );
   });
 }
 
 async function leerManifiesto(base: string) {
-  const respuesta = await CapacitorHttp.get({ url: `${base}/latest.json?t=${Date.now()}`, connectTimeout: 10000, readTimeout: 10000 });
+  const respuesta = await CapacitorHttp.get({ url: `${base}/latest.json?t=${Date.now()}`, connectTimeout: 6000, readTimeout: 6000 });
   if (respuesta.status !== 200) return null;
   const datos: unknown = typeof respuesta.data === "string" ? JSON.parse(respuesta.data) : respuesta.data;
   return validarManifiesto(datos);
@@ -74,71 +73,79 @@ async function limpiarBundlesViejos(idActual: string): Promise<void> {
   }
 }
 
-async function revisar(config: ConfigActualizaciones): Promise<void> {
-  const { bundle } = await CapacitorUpdater.current();
-  const actual = versionDeBundle(bundle.version, config.versionCode);
-  const manifiesto = await leerManifiesto(config.url);
+/**
+ * Confirma al plugin que este bundle arrancó bien (sin esto, a los 10 s lo da por malo y vuelve al anterior) y borra
+ * los bundles viejos. Devuelve false si el plugin no está disponible (navegador).
+ */
+export async function confirmarArranque(): Promise<boolean> {
+  if (!Capacitor.isNativePlatform()) return false;
+  try {
+    const { bundle } = await CapacitorUpdater.notifyAppReady();
+    await limpiarBundlesViejos(bundle.id);
+    return true;
+  } catch {
+    anotarEstado("sin plugin");
+    return false;
+  }
+}
+
+/**
+ * Busca una actualización de la interfaz al abrir la app y, si hay, la descarga y la instala mostrando el progreso por
+ * `alEstado`. Termina (resuelve) cuando la app puede arrancar: ya está actualizada, no se pudo buscar o falló la
+ * instalación. Si instala, el plugin recarga la interfaz y esta promesa no vuelve a resolverse. Plugin Capgo en modo
+ * manual, sin su nube.
+ */
+export async function buscarEInstalar(config: ConfigActualizaciones, alEstado: (estado: EstadoArranque) => void): Promise<void> {
+  alEstado({ fase: "buscando" });
+  let manifiesto;
+  let actual: number;
+  try {
+    const { bundle } = await CapacitorUpdater.current();
+    actual = versionDeBundle(bundle.version, config.versionCode);
+    manifiesto = await conLimite(leerManifiesto(config.url), LIMITE_BUSCAR_MS);
+  } catch (causa) {
+    anotarEstado(`error: ${causa instanceof Error ? causa.message : "desconocido"}`);
+    alEstado({ fase: "sin-conexion" });
+    return;
+  }
   if (!manifiesto) {
     anotarEstado("sin manifiesto");
+    alEstado({ fase: "sin-conexion" });
     return;
   }
   if (!hayVersionNueva(actual, manifiesto.versionCode)) {
     anotarEstado("al día");
+    alEstado({ fase: "al-dia" });
     return;
   }
+  const version = manifiesto.versionName;
   if (!puedeIntentar(intentosDe(manifiesto.versionCode))) {
-    anotarEstado(`falló ${manifiesto.versionName}`);
+    anotarEstado(`falló ${version}`);
+    alEstado({ fase: "error-instalar", version });
     return;
   }
+
   sumarIntento(manifiesto.versionCode);
-  anotarEstado(`descargando ${manifiesto.versionName}`);
-  const descargado = await CapacitorUpdater.download({
-    url: urlDelZip(config.url, manifiesto.zip),
-    version: manifiesto.versionName,
-    checksum: manifiesto.sha256,
-  });
-  anotarEstado(`lista ${manifiesto.versionName}`);
-  await esperarInactividad();
-  // Recarga la interfaz con el bundle nuevo. Si no arranca, el plugin vuelve solo al anterior.
-  await CapacitorUpdater.set({ id: descargado.id });
-}
-
-/**
- * Autoactualización de la interfaz del APK (Capgo en modo manual, sin su nube). Se llama una vez al arrancar la app.
- * Devuelve la función que detiene las revisiones. En el navegador no hace nada.
- */
-export function iniciarActualizador(config: ConfigActualizaciones): () => void {
-  if (!Capacitor.isNativePlatform()) return () => undefined;
-  let detenido = false;
-  let timer: ReturnType<typeof setTimeout> | undefined;
-
-  const ciclo = async () => {
-    if (detenido) return;
+  alEstado({ fase: "descargando", version, porcentaje: 0 });
+  try {
+    const escucha = await CapacitorUpdater.addListener("updaterEvent", (evento) => {
+      if (evento.type === "download") alEstado({ fase: "descargando", version, porcentaje: porcentajeSeguro(evento.data.percent) });
+    });
+    let descargado;
     try {
-      await revisar(config);
-    } catch (causa) {
-      // Sin internet o servidor caído: se reintenta en el siguiente ciclo y la app sigue como está.
-      anotarEstado(`error: ${causa instanceof Error ? causa.message : "desconocido"}`);
+      descargado = await conLimite(
+        CapacitorUpdater.download({ url: urlDelZip(config.url, manifiesto.zip), version, checksum: manifiesto.sha256 }),
+        LIMITE_DESCARGAR_MS
+      );
+    } finally {
+      await escucha.remove();
     }
-    if (!detenido) timer = setTimeout(ciclo, CADA_MS);
-  };
-
-  void (async () => {
-    // Confirma que este bundle arrancó bien; sin esto el plugin lo da por malo y vuelve al anterior.
-    try {
-      const { bundle } = await CapacitorUpdater.notifyAppReady();
-      await limpiarBundlesViejos(bundle.id);
-    } catch {
-      // El plugin no está disponible: nada que actualizar.
-      anotarEstado("sin plugin");
-      return;
-    }
-    anotarEstado("iniciada");
-    if (!detenido) timer = setTimeout(ciclo, PRIMERA_REVISION_MS);
-  })();
-
-  return () => {
-    detenido = true;
-    if (timer) clearTimeout(timer);
-  };
+    anotarEstado(`instalando ${version}`);
+    alEstado({ fase: "instalando", version });
+    // Recarga la interfaz con el bundle nuevo. Si no arranca, el plugin vuelve solo al anterior.
+    await CapacitorUpdater.set({ id: descargado.id });
+  } catch (causa) {
+    anotarEstado(`error: ${causa instanceof Error ? causa.message : "desconocido"}`);
+    alEstado({ fase: "error-instalar", version });
+  }
 }

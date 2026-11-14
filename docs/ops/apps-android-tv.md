@@ -90,14 +90,14 @@ Relaciones en una frase: la **clave** (`CHECKIN_CLAVE`) vive en tres sitios (Eas
 4. Sube al bucket `apk`: `AF-<app>.apk` + `AF-<app>.json`.
 5. Si hay `R2_APK_PUBLIC_URL`: zip de `apps/<app>/out` (el workflow aborta si contiene el archivo de configuración), lo sube como `ota/<app>/<corrida>.zip` y por último `ota/<app>/latest.json`.
 6. **Instalación inicial (manual, una vez por TV):** abrir `https://apk.adhara.fit/AF-<app>.apk` en el TV (o escanear el QR del panel), permitir «Instalar apps desconocidas» y abrir. El primer APK con autoactualización siempre se instala a mano. Android no permite actualizar el APK completo en silencio.
-7. **Autoactualización de la interfaz:** la app, a los 15 s de abrir y luego cada 30 min, pide `ota/<app>/latest.json`. Si `versionCode` es mayor que el que corre, descarga el zip, verifica el SHA-256 (plugin `@capgo/capacitor-updater` 8.54.2, modo manual, sin la nube de Capgo), espera a que nadie toque el TV 20 s y recarga la interfaz. Si la interfaz nueva no confirma el arranque en 10 s, el plugin vuelve a la anterior; cada versión se intenta como máximo 3 veces; los bundles viejos se borran.
+7. **Autoactualización de la interfaz (solo al abrir la app):** antes de mostrar la app, la puerta de arranque (`packages/ota/ArranqueActualizable.tsx`) muestra el logo y «Buscando actualizaciones…», pide `ota/<app>/latest.json` y, si `versionCode` es mayor que el que corre, descarga el zip mostrando el porcentaje, verifica el SHA-256 (plugin `@capgo/capacitor-updater` 8.54.2, modo manual, sin la nube de Capgo), muestra «Instalando…» y recarga la interfaz. Si está al día muestra «Está actualizado» (1,2 s); sin red muestra el aviso (2 s) y arranca. La app no se revisa después mientras siga abierta. Si la interfaz nueva no confirma el arranque en 10 s, el plugin vuelve a la anterior; cada versión se intenta como máximo 3 veces; los bundles viejos se borran.
 8. La configuración (URL y clave) no viaja en el zip: se guarda una copia en `localStorage` del WebView (`respaldo.ts`) para que la interfaz actualizada la siga encontrando.
 
 Qué se actualiza solo y qué no:
 
 | Cambio | ¿Se actualiza solo? |
 |---|---|
-| Pantallas, textos, estilos, lógica de la interfaz web | Sí (unos minutos después de ejecutar el workflow). |
+| Pantallas, textos, estilos, lógica de la interfaz web | Sí, la próxima vez que se abra la app (cerrarla y abrirla, o reiniciar el TV). |
 | Contenido de la vitrina y frases del check-in | Sí, y ya no necesitaba el workflow (se edita en el panel). |
 | Código Android (permisos, plugins, ícono, nombre, versión de Capacitor) | No: requiere un APK nuevo instalado a mano. |
 | Clave `CHECKIN_CLAVE` o URL de web-admin | No: van dentro del APK; hay que recompilar y reinstalar. |

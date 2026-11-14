@@ -8,6 +8,17 @@ Bitácora de sesiones: la más reciente arriba, solo se añaden entradas. El his
 - **Desplegado:** provisional en Easypanel (`docs/ops/easypanel.md`): imagen del `Dockerfile`, esquema con `prisma db push` al arrancar, alta del primer administrador con `tools/crear-administrador.mjs`.
 - **Preferencia del propietario:** cada código (ADR-nnn, S-nn, REQ…) que se mencione lleva al lado una descripción simple.
 
+## Sesión 2026-11-14 (30) — Autoactualización solo al abrir, con pantalla de progreso
+**Qué se hizo**
+- Decisión del propietario: la interfaz de los APK se actualiza **solo al abrir la app** (ya no cada 30 min ni con espera de inactividad). Nueva puerta de arranque `packages/ota/ArranqueActualizable.tsx` (envuelve la app en los layouts de checkin y vitrina): logo + «Buscando actualizaciones…» → si hay versión nueva «Descargando actualización 1.0.N · NN %» con barra y «Instalando…» → recarga; si no, «Está actualizado» 1,2 s; sin red o con fallo, aviso 2 s y arranca igual. La app (y su lógica de red) no se monta hasta terminar. Estados y mensajes puros en `arranque.ts` con pruebas; `autoactualizar.ts` reescrito (`confirmarArranque`, `buscarEInstalar`, tiempos máximos 8 s buscar y 120 s descargar, 3 intentos por versión). Se eliminó `Actualizador.tsx`.
+- Versión publicada visible en Configuraciones → Aplicaciones (debajo de la insignia Android TV; lee `ota/<app>/latest.json`) y estado de la OTA junto a la etiqueta de versión del TV.
+- Se lanzó el workflow `apk` desde aquí con `gh workflow run` (autorizado por el propietario).
+**Qué funcionó:** pruebas de `packages/ota` (27), `tsc`, lint y `next build` de checkin y vitrina. Corridas 4, 5 y 6 del workflow en verde; `latest.json` publicado.
+**Qué no funcionó / no repetir:** el teléfono del propietario (APK 1.0.4, que ya tenía la OTA con revisión periódica) no mostró la etiqueta de versión de la 1.0.5: causa sin confirmar (no hay depuración en el APK); la 1.0.6+ muestra el estado de la OTA en la etiqueta. Una app abierta días (vitrina) no se actualizará hasta que se reinicie: consecuencia aceptada de la decisión.
+**Siguiente**
+- Instalar a mano el APK nuevo (primer APK con la puerta de arranque), publicar otra corrida con un cambio visible y comprobar en el teléfono/TV: pantalla de progreso → nueva versión.
+- Pendientes anteriores (Easypanel `R2_BUCKET_NAME` duplicada, regla de Cloudflare, fallas por describir). Idea abierta: «latido» de cada TV hacia web-admin para ver su versión en el panel.
+
 ## Sesión 2026-11-14 (29) — Vitrina como cartelera, convenciones de pantalla del TV y versión visible
 **Qué se hizo**
 - Diagnóstico de las imágenes rotas de la vitrina: Easypanel tenía `R2_BUCKET_NAME` duplicada (`adhara-fit-app` y `apk`; gana la última), así que web-admin subía al bucket `apk` y la URL pública (`media.adhara.fit`) daba 404. **Lo corrige el propietario**: borrar la línea `R2_BUCKET_NAME=apk`, redeplegar y volver a subir (o mover) lo que cayó en `apk` (carpeta `vitrina/` y quizá fotos). Convención: web-admin escribe solo en `adhara-fit-app`; el workflow escribe solo en `apk`.

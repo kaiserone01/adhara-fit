@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Barlow, Bebas_Neue } from "next/font/google";
 import "./globals.css";
-import { Actualizador } from "@gym-app/ota/Actualizador";
+import { ArranqueActualizable } from "@gym-app/ota/ArranqueActualizable";
 import { EtiquetaVersion } from "@gym-app/ota/EtiquetaVersion";
 import { ThemeStyleTag } from "@gym-app/theming/ThemeStyleTag";
 import { temaAdhara } from "@gym-app/theming/tokens";
@@ -18,9 +18,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="es" className={`h-full ${titulo.variable} ${texto.variable}`}>
       <body className="h-full overflow-hidden" style={{ background: "var(--gx-ground)", color: "var(--gx-ink)" }}>
         <ThemeStyleTag tema={temaAdhara} />
-        <Actualizador rutaConfig="/vitrina-config.json" />
         <EtiquetaVersion />
-        {children}
+        <ArranqueActualizable rutaConfig="/vitrina-config.json">{children}</ArranqueActualizable>
       </body>
     </html>
   );

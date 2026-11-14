@@ -58,7 +58,7 @@ Si se filtra el enlace mientras estuvo abierto: cambiar `CHECKIN_CLAVE` (web-adm
 
 ## 6. Autoactualización de la interfaz (sin reinstalar)
 
-Cada APK revisa `latest.json` al arrancar (a los 15 s) y cada 30 minutos. Si hay una versión mayor, descarga el zip, verifica el SHA-256 y recarga la interfaz cuando nadie toca el TV hace 20 s. El plugin es `@capgo/capacitor-updater` en modo manual y sin la nube de Capgo; la lógica está en `packages/ota`.
+Cada APK busca actualizaciones **solo al abrirse**: tras el logo muestra «Buscando actualizaciones…» (se lee `latest.json`, máximo 8 s). Si hay una versión mayor, muestra «Descargando actualización 1.0.N · NN %» con una barra de progreso, verifica el SHA-256, muestra «Instalando…» y recarga la interfaz. Si ya está al día, muestra «Está actualizado» un instante y arranca la app; si no hay red, avisa y arranca igual con la versión que tiene. Una app que se queda abierta días (la vitrina) no se actualiza hasta que se cierre y se vuelva a abrir o se reinicie el TV. El plugin es `@capgo/capacitor-updater` en modo manual y sin la nube de Capgo; la lógica está en `packages/ota`.
 
 - **Qué se actualiza:** la interfaz web (pantallas, textos, estilos, lógica de las apps de check-in y vitrina). Un cambio llega a los TV unos minutos después de ejecutar el workflow `apk`, sin tocar los TV.
 - **Qué no se actualiza:** el código Android (permisos, plugins, ícono, nombre, versión de Capacitor). Eso exige un APK nuevo, instalado a mano como en la sección 4 (Android no permite instalar APK en silencio).

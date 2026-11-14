@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { redirect } from "next/navigation";
 import QRCode from "qrcode";
 import { obtenerUsuarioDeSesionActual } from "@/lib/sesion";
@@ -5,9 +6,25 @@ import { Card } from "@gym-app/ui/components/Card";
 import { BotonCopiarEnlace } from "./BotonCopiarEnlace";
 
 const APLICACIONES = [
-  { archivo: "AF-checkin.apk", nombre: "Adhara Fit Check-in", detalle: "Pantalla de entrada del TV de la recepción." },
-  { archivo: "AF-vitrina.apk", nombre: "Adhara Fit Vitrina", detalle: "Pantalla de promociones y entrenadores." },
+  { archivo: "AF-checkin.apk", icono: "/aplicaciones/checkin.png", nombre: "Adhara Fit Check-in", detalle: "Aplicación para Android TV: pantalla de entrada de la recepción." },
+  { archivo: "AF-vitrina.apk", icono: "/aplicaciones/vitrina.png", nombre: "Adhara Fit Vitrina", detalle: "Aplicación para Android TV: pantalla de promociones y entrenadores." },
 ];
+
+// Pastilla «Android TV»: las dos aplicaciones son solo para Android TV.
+function InsigniaAndroidTv() {
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium"
+      style={{ borderColor: "var(--gx-edge)", color: "var(--gx-muted)" }}
+    >
+      <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <rect x="2.5" y="4" width="19" height="13" rx="2" />
+        <path d="M8 21h8M12 17v4" />
+      </svg>
+      Android TV
+    </span>
+  );
+}
 
 export default async function PaginaAplicaciones() {
   const sesion = await obtenerUsuarioDeSesionActual();
@@ -65,6 +82,11 @@ export default async function PaginaAplicaciones() {
                 <div>
                   <BotonCopiarEnlace enlace={app.enlace} />
                 </div>
+              </div>
+              {/* Esquina: el ícono de la aplicación y, debajo, que es una app de Android TV. */}
+              <div className="order-first flex shrink-0 flex-row items-center gap-3 self-end sm:order-none sm:flex-col sm:gap-2 sm:self-start">
+                <Image src={app.icono} alt={`Ícono de ${app.nombre}`} width={72} height={72} unoptimized className="size-[72px] rounded-2xl" />
+                <InsigniaAndroidTv />
               </div>
             </div>
           </Card>

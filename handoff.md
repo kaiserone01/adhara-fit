@@ -8,6 +8,24 @@ Bitácora de sesiones: la más reciente arriba, solo se añaden entradas. El his
 - **Desplegado:** provisional en Easypanel (`docs/ops/easypanel.md`): imagen del `Dockerfile`, esquema con `prisma db push` al arrancar, alta del primer administrador con `tools/crear-administrador.mjs`.
 - **Preferencia del propietario:** cada código (ADR-nnn, S-nn, REQ…) que se mencione lleva al lado una descripción simple.
 
+## Sesión 2026-11-14 (noche, 28) — Cierre: autoactualización publicada, apk.adhara.fit y documentación de las apps de TV
+**Qué se hizo**
+- Autoactualización (OTA) de la interfaz de los dos APK (commit de la sesión 27) y su traslado a `apk.adhara.fit`: el workflow sube `ota/<app>/<corrida>.zip` y `ota/<app>/latest.json` al bucket `apk` y usa `R2_APK_PUBLIC_URL` (no el bucket de medios).
+- Guía para generar la llave de firma en PowerShell (JDK 8 ya instalado: `keytool` con ruta completa y `-storetype PKCS12`); el propietario creó `APK_KEYSTORE_BASE64`, cargó los secrets y lanzó el workflow `apk`.
+- Pestaña Configuraciones → Aplicaciones: ícono de cada app en la esquina de su tarjeta, insignia «Android TV» y descripciones («Aplicación para Android TV…»); íconos livianos en `apps/web-admin/public/aplicaciones/`.
+- Documentación: nuevo `docs/ops/apps-android-tv.md` (qué resuelve cada app, dónde está cada pieza, buckets, secrets y variables, flujo completo, estado, pendientes), `docs/ops/prompt-retomar-apps.md` (prompt inicial) y corrección de las secciones desactualizadas de `apps/checkin-tv/README.md` y `apps/vitrina-tv/README.md` (hablaban del cifrado `.enc`, `CHECKIN_APK_PASSWORD` y de la llave que cambiaba en cada corrida).
+**Qué funcionó:** pruebas de `packages/ota` y de ambos `configuracion.test.mjs`, `tsc`, lint y `next build` de checkin, vitrina y web-admin; subida de commits a `main` y a la rama.
+**Qué no funcionó / no repetir**
+- El propietario detectó fallas en las aplicaciones tras lanzar el workflow; **aún no se han descrito ni registrado**: se abordan al retomar (ver el prompt).
+- No se ha probado nada en un TV real: ni la instalación, ni la autoactualización, ni el rollback.
+- `python3` en este equipo abre la tienda de Windows y bloquea la terminal: usar `node`. En `node -e` dentro de bash, las barras invertidas de expresiones regulares se pierden: escribir con Edit/Write.
+- Un archivo `actualizador.ts` chocó con `Actualizador.tsx` en Windows (sin distinción de mayúsculas); la lógica quedó en `autoactualizar.ts`.
+**Siguiente**
+- Retomar con el prompt de `docs/ops/prompt-retomar-apps.md`: el propietario describe las fallas y las modificaciones de ambas apps.
+- Crear la regla de Cloudflare en `apk.adhara.fit` (bloquear lo que no empiece por `/ota/`) y borrar el secret `APK_PASSPHRASE`.
+- Probar en un TV real la instalación y la autoactualización de punta a punta (corrida N instalada, corrida N+1 con un cambio visible) y el rollback.
+- Asumido, por validar: formato del CE (solo dígitos, 9 a 12).
+
 ## Sesión 2026-11-13 (noche, 27) — Autoactualización (OTA) de la interfaz de los APK
 **Qué se hizo**
 - Paquete nuevo `packages/ota` (`@gym-app/ota`): `manifiesto.ts` (validar `latest.json`, comparar versiones, URLs seguras, límite de 3 intentos; con pruebas), `autoactualizar.ts` (revisa a los 15 s y cada 30 min con CapacitorHttp, descarga con checksum SHA-256, espera 20 s sin uso y aplica; `notifyAppReady` al arrancar y borra bundles viejos), `respaldo.ts` (lee el JSON de configuración y guarda copia en localStorage), `Actualizador.tsx` (componente sin interfaz).

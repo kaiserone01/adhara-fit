@@ -34,7 +34,7 @@ Abrir la app desde el launcher del TV como "Adhara Fit Check-in".
 
 ## 5. Rotar la clave
 
-Cambiar `CHECKIN_CLAVE` en Easypanel (esto invalida de inmediato al APK instalado), volver a compilar con la clave nueva (sección 3) e instalar con `adb install -r`. La vitrina usa la misma clave: recompilar también su APK.
+Cambiar `CHECKIN_CLAVE` en Easypanel (esto invalida de inmediato al APK instalado) y en el secret de GitHub, ejecutar el workflow `apk` e instalar el APK nuevo con `adb install -r` (la clave va en el APK, no se actualiza por OTA). La vitrina usa la misma clave: recompilar también su APK.
 
 ## 6. Lista de verificación en el TV real
 
@@ -55,7 +55,7 @@ No hace falta recompilar ni reinstalar: en el panel, menú **Check-in**, se edit
 
 ## 8. Seguridad
 
-El repositorio es **público**. El APK lleva la clave dentro: nunca publicarlo ni subirlo a un sitio sin acceso restringido. Con acceso físico al TV la clave podría extraerse del APK instalado (riesgo aceptado). El APK se firma con una llave de debug que el workflow genera en cada ejecución (`debug.keystore` no se versiona: `*.keystore` está en `.gitignore`). Como la llave cambia en cada compilación, **para actualizar un TV hay que desinstalar antes el APK anterior** (`adb uninstall pe.adharafit.checkin`); `adb install -r` fallaría por firma distinta. La firma no protege nada.
+El repositorio es **público**. El APK lleva la clave dentro: nunca publicarlo ni subirlo a un sitio sin acceso restringido. Con acceso físico al TV la clave podría extraerse del APK instalado (riesgo aceptado). El APK se firma con la llave fija del secret `APK_KEYSTORE_BASE64` (sin ella el workflow genera una nueva en cada corrida y habría que desinstalar el APK anterior antes de instalar). La firma no protege nada.
 
 ## Desarrollo
 

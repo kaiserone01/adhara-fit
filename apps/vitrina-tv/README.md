@@ -11,28 +11,15 @@ APK Capacitor 8 (`appId` `pe.adharafit.vitrina`, nombre "Adhara Fit Vitrina") co
 
 ## 3. Compilar
 
-GitHub Actions, workflow `apk` (`.github/workflows/apk.yml`): sube `AF-vitrina.apk` al bucket privado `apk` de R2 (`https://apk.adhara.fit/AF-vitrina.apk` mientras el acceso público esté abierto). Detalles en `docs/ops/apk.md`.
+GitHub Actions, workflow `apk` (`.github/workflows/apk.yml`, Actions → apk → Run workflow): compila los dos APK y sube `AF-vitrina.apk` al bucket `apk` de R2 (`https://apk.adhara.fit/AF-vitrina.apk`). La vitrina usa la misma URL de web-admin y la misma clave que el check-in (`CHECKIN_API_URL` y `CHECKIN_CLAVE` del repositorio). Secrets, llave de firma, apertura del bucket y autoactualización: `docs/ops/apk.md` y `docs/ops/apps-android-tv.md`.
 
-Secretos:
-
-| Secreto | Para qué |
-| --- | --- |
-| `VITRINA_CLAVE` | La clave única del gimnasio: el mismo valor que la variable `CHECKIN_CLAVE` de web-admin (la vitrina y el check-in comparten clave). Va dentro del APK. |
-| `CHECKIN_APK_PASSWORD` | Contraseña del cifrado 7-Zip del artefacto. |
-
-Inputs del workflow:
-
-- `sucursal`: nombre corto de la sede (minúsculas, números y `_`).
-- `api_url`: URL base de web-admin, sin `/` final (la app pide ahí `/api/vitrina`). Se guarda en `vitrina-config.json` del APK, no es de build.
-- `modo`: `vitrina` (app real) o `prueba` (página de rendimiento de `prueba/`, sin clave).
-
-El workflow inspecciona el APK (applicationId, versionCode, permisos, `leanback`, `capacitor.config.json` y `vitrina-config.json`) y falla si algo no cuadra.
+Pruebas del APK de la vitrina con una página de rendimiento (`apps/vitrina-tv/prueba/`): solo en local, el workflow actual no la compila.
 
 ## 4. Instalar
 
-Por enlace (lo habitual): abrir el enlace de descarga del APK en el TV (navegador o app Downloader), permitir "Instalar apps desconocidas" a esa app y abrirlo. **El APK real lleva la clave de la sede dentro** (que también sirve para registrar check-ins): el enlace no puede ser público; el artefacto del workflow va cifrado y hay que descifrarlo antes de subirlo a un sitio con acceso restringido. El APK de prueba no lleva clave.
+Abrir `https://apk.adhara.fit/AF-vitrina.apk` en el TV (navegador o app Downloader) o escanear el QR de Configuraciones → Aplicaciones, permitir «Instalar apps desconocidas» a esa app y abrirlo. **El APK lleva la clave de la sede dentro** (también sirve para registrar check-ins): el acceso a los APK en `apk.adhara.fit` se cierra (regla de Cloudflare) salvo mientras se instala.
 
-Por USB, o por red: `adb connect <ip>` y luego `adb install -r vitrina-<sede>.apk`.
+Por USB, o por red: `adb connect <ip>` y luego `adb install -r AF-vitrina.apk`. Como la llave de firma es fija (`APK_KEYSTORE_BASE64`), se instala encima sin desinstalar.
 
 ## 5. Arranque automático (la instalación es por enlace, sin adb)
 
@@ -53,7 +40,7 @@ Desactivar la depuración USB/por red en Opciones de desarrollador y ejecutar `a
 
 ## 7. Rotar la clave
 
-Cambiar `CHECKIN_CLAVE` en web-admin, actualizar el secreto `VITRINA_CLAVE`, recompilar y `adb install -r`.
+Cambiar `CHECKIN_CLAVE` en web-admin y en el secret `CHECKIN_CLAVE` de GitHub, ejecutar el workflow `apk` y reinstalar el APK (la clave va en el APK, no se actualiza por OTA).
 
 ## 8. Desarrollar en el TV
 
@@ -63,13 +50,13 @@ Para ver cambios sin recompilar el APK, preparar el proyecto con `VITRINA_DEV_UR
 
 Con el panel y la vitrina apuntando al mismo web-admin (producción):
 
-1. Acceso: el APK está en el bucket `apk`, cerrado salvo mientras se instala; no hay `.apk` como artefacto de GitHub.
+1. Acceso: el APK está en el bucket `apk`, bloqueado por Cloudflare salvo `/ota/` mientras no se instala; no hay `.apk` como artefacto de GitHub.
 2. Ícono y nombre: el launcher muestra "Adhara Fit Vitrina" con el escudo; también el banner de Android TV.
 3. Contenido: promo, franja de 3 entrenadores y producto con oferta + Bs se ven bien a 1080p; el video de la franja reproduce de a uno.
 4. Cambios en vivo: activar, ordenar o eliminar en el panel se refleja en segundos; sustituir una pieza descarga solo la nueva y borra el archivo viejo.
 5. Sin red: sin internet, apagar y encender el TV: abre solo, muestra el último contenido y respeta `inicio`/`fin`.
 6. Reloj tras un corte de luz: enchufar el TV sin internet: un ítem vencido no reaparece y la tasa no cambia de estado por la hora.
 7. Arranque automático: apagar y encender: la app abre sola.
-8. Actualización encima: otro `run_number`, `adb install -r`: se conservan archivos descargados y permisos.
+8. Actualización encima: otra corrida del workflow, `adb install -r`: se conservan archivos descargados y permisos. Autoactualización de la interfaz: ver `docs/ops/apps-android-tv.md` (pendiente de probar en un TV).
 9. Tasa desactualizada: con la tasa de ayer desaparece el equivalente en Bs y se mantiene el USD.
 10. Depuración apagada: desactivar la depuración USB/por red y `adb disconnect`.

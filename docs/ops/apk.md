@@ -1,5 +1,7 @@
 # APK de Android TV: compilación, descarga e instalación
 
+Mapa completo (qué hace cada app, buckets, secrets, estado y pendientes): `docs/ops/apps-android-tv.md`.
+
 Dos apps: **Adhara Fit Check-in** (`pe.adharafit.checkin`) y **Adhara Fit Vitrina** (`pe.adharafit.vitrina`). Se compilan en GitHub Actions y se publican en el bucket privado `apk` de R2.
 
 ## 1. Qué hace el workflow `apk`

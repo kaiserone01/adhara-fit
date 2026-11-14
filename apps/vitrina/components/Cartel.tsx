@@ -1,6 +1,5 @@
 import type { Almacen } from "@/lib/almacen";
 import type { VitrinaItem } from "@gym-app/domain/entities/Vitrina";
-import { Badges } from "./Badges";
 import { Medio } from "./Medio";
 
 interface Props {
@@ -11,6 +10,7 @@ interface Props {
   alTerminarVideo: (fallo: boolean) => void;
 }
 
+// Una pieza gráfica a pantalla completa (16:9). 'contain': se ve entera, sin recortar, aunque no sea 16:9.
 export function Cartel({ item, almacen, bucle, alTerminarVideo }: Props) {
   return (
     <div className="relative h-full w-full overflow-hidden" style={{ background: "var(--gx-ground)" }}>
@@ -25,7 +25,6 @@ export function Cartel({ item, almacen, bucle, alTerminarVideo }: Props) {
         bucle={bucle}
         alTerminar={alTerminarVideo}
       />
-      <Badges item={item} />
     </div>
   );
 }

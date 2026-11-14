@@ -85,6 +85,9 @@ jobs:
 
       # Export estático de la interfaz (apps/<app>/out); el APK la lleva empaquetada.
       - run: npm run build --workspace ${{ matrix.web }}
+        env:
+          # La interfaz muestra esta versión en una esquina (EtiquetaVersion); tras una OTA, la del bundle nuevo.
+          NEXT_PUBLIC_APP_VERSION: ${{ env.APK_VERSION_NAME }}
 
       - name: Instalar Capacitor
         working-directory: ${{ matrix.tv }}

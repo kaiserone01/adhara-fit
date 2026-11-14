@@ -14,16 +14,15 @@ function BotonEnviar() {
   );
 }
 
-export function BotonEliminarItem({ id, volver }: { id: string; volver: string }) {
+export function BotonEliminarItem({ id }: { id: string }) {
   return (
     <form
       action={eliminarItemAction}
       onSubmit={(e) => {
-        if (!confirm("¿Eliminar este ítem? También se borra su archivo.")) e.preventDefault();
+        if (!confirm("¿Eliminar esta pieza? También se borra su archivo.")) e.preventDefault();
       }}
     >
       <input type="hidden" name="id" value={id} />
-      <input type="hidden" name="volver" value={volver} />
       <BotonEnviar />
     </form>
   );

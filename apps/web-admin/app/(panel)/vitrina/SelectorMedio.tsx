@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@gym-app/ui/components/Button";
 import { useFeedback } from "@gym-app/ui/components/FeedbackOverlay";
-import type { TipoMedio, TipoVitrinaItem } from "@gym-app/domain/entities/Vitrina";
+import type { TipoMedio } from "@gym-app/domain/entities/Vitrina";
 import { analizarMp4 } from "@gym-app/domain/utils/mp4";
 import { validarVideo } from "@gym-app/domain/utils/videoVitrina";
 import { prepararSubidaVideoAction, subirImagenVitrinaAction } from "./actions";
@@ -25,12 +25,10 @@ async function subirImagen(archivo: File): Promise<string> {
 
 // `alOcupar` avisa al formulario para deshabilitar "Guardar" mientras se procesa o sube un archivo.
 export function SelectorMedio({
-  tipoItem,
   inicial,
   alOcupar,
   alCambiarTipo,
 }: {
-  tipoItem: TipoVitrinaItem;
   inicial?: Medio;
   alOcupar?: (ocupado: boolean) => void;
   alCambiarTipo?: (tipo: TipoMedio | null) => void; // el formulario muestra "Con sonido" solo con un video
@@ -61,7 +59,7 @@ export function SelectorMedio({
       }
       // Video: se valida antes de subir (la subida va directa a R2 y el servidor no lo ve).
       const info = await analizarMp4(lectorDeArchivo(archivo), archivo.size);
-      const motivo = validarVideo(info, archivo.size, tipoItem === "ENTRENADOR");
+      const motivo = validarVideo(info, archivo.size, false);
       if (motivo) throw new Error(motivo);
 
       const poster = await posterDeVideo(archivo); // se genera aquí (falla pronto si el navegador no lee el video), pero se sube al final
@@ -99,15 +97,23 @@ export function SelectorMedio({
       <input type="hidden" name="posterUrl" value={medio?.posterUrl ?? ""} />
 
       <label htmlFor="archivo-vitrina" className="text-sm" style={{ color: "var(--gx-muted)" }}>
-        {tipoItem === "ENTRENADOR" ? "Foto o video vertical (MP4 H.264)" : "Cartel: imagen o video (MP4 H.264)"}
+        Pieza gráfica: imagen o video horizontal 16:9 (ideal 1920×1080; video MP4 H.264)
       </label>
 
-      {vista && (
-        <div className="h-48 w-32 overflow-hidden rounded-lg border" style={{ borderColor: "var(--gx-edge)", background: "var(--gx-surface-2)" }}>
-          {/* eslint-disable-next-line @next/next/no-img-element -- imagen en R2 (dominio externo) */}
-          <img src={vista} alt="" className="h-full w-full object-contain" />
-        </div>
-      )}
+      {/* Marco de previsualización 16:9: así se verá en la TV (la pieza entera, sin recortar). */}
+      <div
+        className="relative aspect-video w-full max-w-lg overflow-hidden rounded-lg border"
+        style={{ borderColor: "var(--gx-edge)", background: "var(--gx-ground)" }}
+      >
+        {vista ? (
+          // eslint-disable-next-line @next/next/no-img-element -- imagen en R2 (dominio externo)
+          <img src={vista} alt="Vista previa de la pieza" className="h-full w-full object-contain" />
+        ) : (
+          <span className="absolute inset-0 flex items-center justify-center text-sm" style={{ color: "var(--gx-muted)" }}>
+            Vista previa 16:9
+          </span>
+        )}
+      </div>
       {medio?.mediaTipo === "VIDEO" && <p className="text-sm" style={{ color: "var(--gx-good)" }}>Video cargado.</p>}
 
       <input

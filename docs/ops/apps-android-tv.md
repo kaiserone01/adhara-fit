@@ -2,17 +2,17 @@
 
 Documento de referencia de todo lo que tiene que ver con las dos aplicaciones de TV: qué resuelven, dónde está cada pieza, cómo se compilan, publican, instalan y actualizan, y cómo se relacionan los buckets, los secrets y las variables. Complementa `docs/ops/apk.md` (operación paso a paso) y los README de `apps/checkin-tv` y `apps/vitrina-tv` (detalle de cada TV).
 
-Última revisión: 2026-11-14 (sesión noche, 28).
+Última revisión: 2026-11-14 (sesión 29).
 
 ## 1. Qué resuelve cada aplicación
 
 | App | Nombre visible | `appId` | Qué hace | Habla con |
 |---|---|---|---|---|
 | Check-in | Adhara Fit Check-in | `pe.adharafit.checkin` | Pantalla del TV de la recepción. El socio escribe su DNI/CE con un numpad USB y la entrada queda registrada. Muestra saludo, foto y estado de la membresía; en reposo muestra frases e imagen configurables. Si no hay red guarda las entradas en una cola y las reenvía. | `POST /api/checkin` y `GET /api/checkin/estado` de web-admin, con la clave en el encabezado `X-Checkin-Api-Key`. |
-| Vitrina | Adhara Fit Vitrina | `pe.adharafit.vitrina` | Pantalla de promociones, entrenadores y productos. Guarda el contenido en el disco del TV (funciona sin red) y se actualiza en vivo cuando el panel cambia algo. | `GET /api/vitrina` y `GET /api/vitrina/eventos` (SSE) de web-admin, con la clave de la sede. |
+| Vitrina | Adhara Fit Vitrina | `pe.adharafit.vitrina` | Cartelera informativa: cada pieza gráfica (imagen o video 16:9) ocupa una diapositiva completa, en el orden de la lista. Guarda el contenido en el disco del TV (funciona sin red) y se actualiza en vivo cuando el panel cambia algo. | `GET /api/vitrina` y `GET /api/vitrina/eventos` (SSE) de web-admin, con la clave de la sede. |
 
 - Las dos son **solo para Android TV** (la pestaña Configuraciones → Aplicaciones del panel lo indica con una insignia «Android TV» y el ícono de cada app).
-- Qué se edita desde el panel, sin tocar los TV: menú **Check-in** (frases, imagen del círculo, opacidad del fondo del reposo; el TV consulta cada ~30 s) y menú **Vitrina** (contenido).
+- Qué se edita desde el panel, sin tocar los TV: menú **Check-in** (frases, imagen del círculo, opacidad del fondo del reposo; el TV consulta cada ~30 s) y menú **Vitrina** (una sola pestaña: piezas de la cartelera + ajustes). Proporciones y distribución de pantalla (TCL 50V6C, 1920×1080, rem, versión visible): `docs/ops/tv-convenciones.md`.
 - Fuera de alcance (decisión del propietario): `kiosk-host` (`.exe`), sitio público, WhatsApp, SUNAT. Dentro de alcance (ADR-021): vitrina de TV y check-in en smart-TV con teclado numérico USB. Hoja de ruta: tramo 5 «Kiosco y TV» de `docs/superpowers/plans/2026-11-13-ruta-agil.md` (S-20, S-21).
 
 ## 2. Dónde está cada cosa en el repositorio
@@ -28,6 +28,8 @@ Documento de referencia de todo lo que tiene que ver con las dos aplicaciones de
 | `.github/workflows/apk.yml` | Workflow que compila los APK, los sube y publica la interfaz para la autoactualización. |
 | `tools/generar-iconos-apk.mjs` | Regenera íconos, banner de TV y pantalla de arranque desde `docs/ADHARA_FIT_Logo_Kit/icon-checkin.png` e `icon-vitrina.png`. |
 | `docs/ops/apk.md` | Operación: secrets, llave de firma, instalar, autoactualización. |
+| `docs/ops/tv-convenciones.md` | Convenciones de pantalla: televisor de referencia, lienzo 1920×1080, rem, cartelera, versión visible. |
+| `apps/web-admin/app/(panel)/vitrina/` | Panel de la cartelera: `page.tsx` (lista + ajustes), `nuevo/`, `[id]/`. |
 
 Marca: carbón `#231F20`, amarillo `#FFCB04`, blanco. Íconos: Check-in = pesa rusa verde con teclado; Vitrina = pesa rusa naranja con megáfono.
 

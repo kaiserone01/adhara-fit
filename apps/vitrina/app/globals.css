@@ -1,8 +1,9 @@
 @import "tailwindcss";
 
-/* Todo se mide en rem: 16 px a 1920x1080, y escala solo en cualquier TV (mismo criterio que el checkin). */
+/* Todo se mide en rem: 16 px a 1920x1080 (el TCL 50V6C, Google TV), y escala solo en cualquier pantalla: el mínimo de 3 px
+   deja que un celular pequeño la muestre completa (la prioridad es la TV; ver docs/ops/tv-convenciones.md). */
 html {
-  font-size: clamp(9px, min(0.8333vw, 1.5vh), 32px);
+  font-size: clamp(3px, min(0.8333vw, 1.5vh), 32px);
   cursor: none;
 }
 

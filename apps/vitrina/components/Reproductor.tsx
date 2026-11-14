@@ -7,9 +7,8 @@ import { construirSecuencia } from "@gym-app/domain/services/secuenciaVitrina";
 import { itemsDeManifiesto } from "@gym-app/domain/services/manifiestoVitrina";
 import { itemsReproducibles } from "@/lib/reproducibles";
 import { posicionarIndice } from "@/lib/posicionarDiapositiva";
-import { colaDeVideos, msParaAvanzar, techoDiapositivaMs } from "@/lib/reproduccion";
+import { msParaAvanzar, techoDiapositivaMs } from "@/lib/reproduccion";
 import { Cartel } from "./Cartel";
-import { Franja } from "./Franja";
 import { PantallaMarca } from "./PantallaMarca";
 
 export function Reproductor({ manifiesto, almacen, ahora }: { manifiesto: ManifiestoVitrina; almacen: Almacen; ahora: Date }) {
@@ -41,11 +40,9 @@ export function Reproductor({ manifiesto, almacen, ahora }: { manifiesto: Manifi
   const claveActual = actual?.clave;
   const duracionActual = actual?.duracionSeg;
 
-  // Con una sola diapositiva los videos se repiten y el temporizador solo la mantiene viva.
+  // Con una sola diapositiva el video se repite y el temporizador solo la mantiene viva.
   const unica = secuencia.length === 1;
-  const videos = actual === null ? 0 : actual.tipo === "FRANJA" ? colaDeVideos(actual.entrenadores).length : actual.item.mediaTipo === "VIDEO" ? 1 : 0;
-  const conVideo = !unica && videos > 0;
-  const esFranja = actual?.tipo === "FRANJA";
+  const conVideo = !unica && actual?.item.mediaTipo === "VIDEO";
   // Identifica cada paso por la diapositiva (`ciclo` distingue vueltas de la misma): reposicionar no lo cambia.
   const turno = claveActual === undefined ? null : `${claveActual}#${ciclo}`;
   const [videosListos, setVideosListos] = useState<{ turno: string; fallo: boolean } | null>(null);
@@ -60,20 +57,19 @@ export function Reproductor({ manifiesto, almacen, ahora }: { manifiesto: Manifi
     if (duracionActual === undefined) return;
     const restante = msParaAvanzar({
       conVideo,
-      esFranja,
       videosTerminados: terminados,
       huboFallo: terminados && (videosListos?.fallo ?? false),
       transcurridoMs: Date.now() - inicioTurnoMs.current,
       duracionSeg: duracionActual,
     });
     // Espera al evento de fin del último video, pero con un techo absoluto para que la TV nunca quede pegada.
-    const espera = restante ?? Math.max(0, techoDiapositivaMs(videos, duracionActual) - (Date.now() - inicioTurnoMs.current));
+    const espera = restante ?? Math.max(0, techoDiapositivaMs(duracionActual) - (Date.now() - inicioTurnoMs.current));
     const id = setTimeout(() => {
       setIndice((i) => i + 1);
       setCiclo((c) => c + 1);
     }, espera);
     return () => clearTimeout(id);
-  }, [turno, duracionActual, conVideo, esFranja, terminados, videosListos, videos]);
+  }, [turno, duracionActual, conVideo, terminados, videosListos]);
 
   if (!actual) return <PantallaMarca />;
 
@@ -83,11 +79,7 @@ export function Reproductor({ manifiesto, almacen, ahora }: { manifiesto: Manifi
   // se corta); con una sola diapositiva tampoco se repite la transición.
   return (
     <main key={actual.clave} className={`h-full w-full ${manifiesto.transicion === "DESLIZAR" ? "trans-deslizar" : "trans-fundido"}`}>
-      {actual.tipo === "FRANJA" ? (
-        <Franja entrenadores={actual.entrenadores} almacen={almacen} unica={unica} alTerminarVideos={() => alTerminarVideos(false)} />
-      ) : (
-        <Cartel item={actual.item} almacen={almacen} bucle={unica} alTerminarVideo={alTerminarVideos} />
-      )}
+      <Cartel item={actual.item} almacen={almacen} bucle={unica} alTerminarVideo={alTerminarVideos} />
     </main>
   );
 }

@@ -20,7 +20,6 @@ export function normalizarSonido<T extends { mediaTipo: string; sonido?: boolean
 // Mensaje de error del primer problema de un ítem antes de guardarlo, o null si es válido.
 export function validarVitrinaItem(d: DatosVitrinaItem): string | null {
   if (!d.mediaUrl.trim()) return "Falta subir la imagen o el video.";
-  if (d.tipo === "ENTRENADOR" && !d.nombre?.trim()) return "El entrenador necesita un nombre.";
 
   const limites: Array<[string | null, number, string]> = [
     [d.nombre, 60, "El nombre"],

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Actualizador } from "@gym-app/ota/Actualizador";
+import { EtiquetaVersion } from "@gym-app/ota/EtiquetaVersion";
 import { GuardaWebView } from "../components/GuardaWebView";
 import { ThemeStyleTag } from "@gym-app/theming/ThemeStyleTag";
 import { temaAdhara } from "@gym-app/theming/tokens";
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="marca-agua-pagina sin-logo min-h-full" style={{ background: "var(--gx-ground)", color: "var(--gx-ink)" }}>
         <ThemeStyleTag tema={temaAdhara} />
         <Actualizador rutaConfig="/checkin-config.json" />
+        <EtiquetaVersion />
         <GuardaWebView>{children}</GuardaWebView>
       </body>
     </html>

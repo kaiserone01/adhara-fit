@@ -45,10 +45,6 @@ describe("validarVitrinaItem", () => {
   test("exige el medio", () => {
     expect(validarVitrinaItem(datos({ mediaUrl: "  " }))).toMatch(/imagen o el video/);
   });
-  test("el entrenador exige nombre", () => {
-    expect(validarVitrinaItem(datos({ tipo: "ENTRENADOR", nombre: "  " }))).toMatch(/nombre/);
-    expect(validarVitrinaItem(datos({ tipo: "ENTRENADOR", nombre: "Ana" }))).toBeNull();
-  });
   test("oferta mayor que el precio", () => {
     expect(validarVitrinaItem(datos({ precioUSD: 10, ofertaUSD: 15 }))).toMatch(/mayor/);
   });

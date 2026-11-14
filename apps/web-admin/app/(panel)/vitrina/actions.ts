@@ -16,7 +16,6 @@ import { extensionDeImagen, MAX_BYTES_IMAGEN_VITRINA } from "@gym-app/domain/uti
 import { MAX_BYTES_VIDEO_VITRINA } from "@gym-app/domain/utils/videoVitrina";
 import { DURACION_MAX_SEG, DURACION_MIN_SEG, normalizarSonido, numeroOpcional, validarVitrinaItem } from "@gym-app/domain/utils/vitrinaItem";
 import { conMensajeOk } from "../redirectConMensaje";
-import { SLUG_DE_TIPO } from "./slugs";
 
 export interface EstadoFormularioVitrina {
   error?: string;
@@ -37,7 +36,8 @@ const textoOpcional = (valor: FormDataEntryValue | null): string | null => valor
 const FECHA = /^\d{4}-\d{2}-\d{2}$/;
 
 function leerDatos(formData: FormData): { datos: DatosVitrinaItem } | { error: string } {
-  const tipo = formData.get("tipo")?.toString();
+  // Las piezas nuevas son todas del mismo tipo; los ítems antiguos (entrenador, producto) conservan el suyo al editarlos.
+  const tipo = formData.get("tipo")?.toString() || "PROMO";
   if (tipo !== "ENTRENADOR" && tipo !== "PROMO" && tipo !== "PRODUCTO") return { error: "Tipo de ítem no válido." };
   const mediaTipo = formData.get("mediaTipo")?.toString();
   if (mediaTipo !== "IMAGEN" && mediaTipo !== "VIDEO") return { error: "Falta subir la imagen o el video." };
@@ -177,8 +177,8 @@ export async function guardarItemAction(_estadoPrevio: EstadoFormularioVitrina, 
   revalidatePath("/vitrina", "layout");
   redirect(
     conMensajeOk(
-      `/vitrina/${SLUG_DE_TIPO[datos.tipo]}`,
-      id ? "Cambios guardados." : "Creado. Está inactivo: actívalo para mostrarlo en la TV."
+      "/vitrina",
+      id ? "Cambios guardados." : "Pieza creada. Está inactiva: actívala para mostrarla en la TV."
     )
   );
 }
@@ -209,8 +209,6 @@ export async function moverItemAction(formData: FormData): Promise<void> {
 export async function eliminarItemAction(formData: FormData): Promise<void> {
   const sesion = await sesionActual();
   const id = formData.get("id")?.toString();
-  const volver = formData.get("volver")?.toString() ?? "";
-  const destino = /^\/vitrina(\/[a-z]+)?$/.test(volver) ? volver : "/vitrina/secuencia";
 
   const borrado = id ? await repositorio().eliminar(sesion.sucursalActivaId, id) : null;
   if (borrado) {
@@ -218,7 +216,7 @@ export async function eliminarItemAction(formData: FormData): Promise<void> {
     notificarCambioVitrina(sesion.sucursalActivaId);
   }
   revalidatePath("/vitrina", "layout");
-  redirect(conMensajeOk(destino, "Eliminado."));
+  redirect(conMensajeOk("/vitrina", "Pieza eliminada."));
 }
 
 export async function guardarAjustesVitrinaAction(
@@ -240,5 +238,5 @@ export async function guardarAjustesVitrinaAction(
   });
   notificarCambioVitrina(sesion.sucursalActivaId);
   revalidatePath("/vitrina", "layout");
-  redirect(conMensajeOk("/vitrina/ajustes", "Ajustes guardados."));
+  redirect(conMensajeOk("/vitrina", "Ajustes guardados."));
 }

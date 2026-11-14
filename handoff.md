@@ -8,6 +8,20 @@ Bitácora de sesiones: la más reciente arriba, solo se añaden entradas. El his
 - **Desplegado:** provisional en Easypanel (`docs/ops/easypanel.md`): imagen del `Dockerfile`, esquema con `prisma db push` al arrancar, alta del primer administrador con `tools/crear-administrador.mjs`.
 - **Preferencia del propietario:** cada código (ADR-nnn, S-nn, REQ…) que se mencione lleva al lado una descripción simple.
 
+## Sesión 2026-11-14 (29) — Vitrina como cartelera, convenciones de pantalla del TV y versión visible
+**Qué se hizo**
+- Diagnóstico de las imágenes rotas de la vitrina: Easypanel tenía `R2_BUCKET_NAME` duplicada (`adhara-fit-app` y `apk`; gana la última), así que web-admin subía al bucket `apk` y la URL pública (`media.adhara.fit`) daba 404. **Lo corrige el propietario**: borrar la línea `R2_BUCKET_NAME=apk`, redeplegar y volver a subir (o mover) lo que cayó en `apk` (carpeta `vitrina/` y quizá fotos). Convención: web-admin escribe solo en `adhara-fit-app`; el workflow escribe solo en `apk`.
+- Vitrina convertida en **cartelera informativa** (decisión del propietario: el cliente encontraba complejo manejar entrenadores, promos y productos): una sola pestaña (`/vitrina`: lista de piezas con miniatura 16:9, subir/bajar, mostrar/quitar, editar + ajustes de duración y transición), `/vitrina/nuevo` y `/vitrina/[id]`; formulario simple (pieza, nombre interno, sonido, duración, desde/hasta); marco de previsualización 16:9. Se eliminaron las rutas `[tipo]`, `secuencia`, `ajustes`, `slugs.ts` y `tabs.ts` de la vitrina.
+- TV (`apps/vitrina`): una pieza por diapositiva; se quitaron `Franja.tsx` (3 columnas de entrenadores) y `Badges.tsx` (precios y etiquetas sobrepuestos); `construirSecuencia` ya no agrupa; `reproduccion.ts` sin cola de videos de franja. Los ítems antiguos (entrenador/producto) se muestran como piezas simples. Sin cambios de esquema (campos antiguos siguen en la base). Validación: ya no se exige nombre al entrenador; los videos ya no deben ser verticales (se pasa `soloVertical=false`).
+- Convenciones: nuevo `docs/ops/tv-convenciones.md` (TCL 50V6C, lienzo 1920×1080, rem, márgenes seguros, formatos de pieza). Escala: el mínimo del tamaño base pasó de 9 px a 3 px en check-in y vitrina para que un celular pequeño muestre todo (aproximación; prioridad TV).
+- Versión visible: `packages/ota/EtiquetaVersion.tsx` (esquina inferior derecha, discreta) en ambas apps, con `NEXT_PUBLIC_APP_VERSION` (el workflow lo pone igual a `versionName`); tras una OTA muestra la del bundle nuevo.
+**Qué funcionó:** pruebas del dominio (secuencia, validación) y de `apps/vitrina` (por archivo), `tsc` de web-admin, checkin y vitrina, lint, `next build` de checkin y vitrina con la versión incrustada.
+**Qué no funcionó / no repetir:** en `apps/vitrina` `vitest run` con varios archivos falla en bloque («reading config») también sin mis cambios; correr cada archivo por separado con `--pool=threads`. Borrar `.next/types` rompe `tsc` (`LayoutProps`): regenerar con `npx next typegen`. No se vio en el navegador la pantalla nueva de la cartelera.
+**Siguiente**
+- Propietario: corregir Easypanel (línea duplicada), mover/volver a subir los archivos, crear la regla de Cloudflare de `apk.adhara.fit`, ejecutar `apk` y comprobar en el TV: cartelera 16:9, etiqueta de versión y autoactualización.
+- Describir las fallas pendientes de las apps (ver el prompt de `docs/ops/prompt-retomar-apps.md`).
+- Asumido, por validar: los ítems antiguos de la vitrina se muestran solo con su imagen o video; los videos de la cartelera pueden ser horizontales y hasta 1080p.
+
 ## Sesión 2026-11-14 (noche, 28) — Cierre: autoactualización publicada, apk.adhara.fit y documentación de las apps de TV
 **Qué se hizo**
 - Autoactualización (OTA) de la interfaz de los dos APK (commit de la sesión 27) y su traslado a `apk.adhara.fit`: el workflow sube `ota/<app>/<corrida>.zip` y `ota/<app>/latest.json` al bucket `apk` y usa `R2_APK_PUBLIC_URL` (no el bucket de medios).

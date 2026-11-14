@@ -7,7 +7,6 @@ import {
   estaVisible,
   estadoVisibilidad,
   numeroDeDiapositiva,
-  repartirFranjas,
   type Diapositiva,
 } from "./secuenciaVitrina";
 
@@ -16,29 +15,7 @@ const ent = (id: string, orden: number, extra: Partial<VitrinaItem> = {}) =>
   itemDePrueba({ id, orden, tipo: "ENTRENADOR", nombre: id, ...extra });
 const promo = (id: string, orden: number, extra: Partial<VitrinaItem> = {}) =>
   itemDePrueba({ id, orden, tipo: "PROMO", ...extra });
-const claves = (secuencia: Diapositiva[]) =>
-  secuencia.map((d) => (d.tipo === "FRANJA" ? d.entrenadores.map((e) => e.id).join("+") : d.item.id));
-
-describe("repartirFranjas", () => {
-  test.each([
-    [0, []],
-    [1, [1]],
-    [2, [2]],
-    [3, [3]],
-    [4, [2, 2]],
-    [5, [3, 2]],
-    [6, [3, 3]],
-    [7, [3, 2, 2]],
-    [8, [3, 3, 2]],
-    [10, [3, 3, 2, 2]],
-  ])("%i entrenadores → %j", (n, esperado) => {
-    expect(repartirFranjas(n)).toEqual(esperado);
-  });
-
-  test("nunca deja una franja de 1 si hay más de un entrenador", () => {
-    for (let n = 2; n <= 30; n++) expect(Math.min(...repartirFranjas(n))).toBeGreaterThanOrEqual(2);
-  });
-});
+const claves = (secuencia: Diapositiva[]) => secuencia.map((d) => d.item.id);
 
 describe("visibilidad", () => {
   test("un ítem inactivo no se ve", () => {
@@ -74,34 +51,19 @@ describe("construirSecuencia", () => {
     expect(claves(s)).toEqual(["a", "b", "c"]);
   });
 
-  test("5 entrenadores consecutivos se reparten 3+2", () => {
+  test("los entrenadores de cartas antiguas también salen uno por diapositiva", () => {
     const items = [1, 2, 3, 4, 5].map((n) => ent(`e${n}`, n));
-    expect(claves(construirSecuencia(items, AHORA, 12))).toEqual(["e1+e2+e3", "e4+e5"]);
+    expect(claves(construirSecuencia(items, AHORA, 12))).toEqual(["e1", "e2", "e3", "e4", "e5"]);
   });
 
-  test("7 entrenadores se reparten 3+2+2", () => {
-    const items = [1, 2, 3, 4, 5, 6, 7].map((n) => ent(`e${n}`, n));
-    expect(claves(construirSecuencia(items, AHORA, 12))).toEqual(["e1+e2+e3", "e4+e5", "e6+e7"]);
-  });
-
-  test("una promo entre dos entrenadores corta el grupo", () => {
-    const s = construirSecuencia([ent("a", 1), promo("p", 2), ent("b", 3)], AHORA, 12);
-    expect(claves(s)).toEqual(["a", "p", "b"]);
-  });
-
-  test("un entrenador inactivo entre dos activos no corta el grupo", () => {
-    const s = construirSecuencia([ent("a", 1), ent("x", 2, { activo: false }), ent("b", 3)], AHORA, 12);
-    expect(claves(s)).toEqual(["a+b"]);
+  test("un ítem inactivo no ocupa lugar en la secuencia", () => {
+    const s = construirSecuencia([ent("a", 1), ent("x", 2, { activo: false }), promo("b", 3)], AHORA, 12);
+    expect(claves(s)).toEqual(["a", "b"]);
   });
 
   test("la duración de un cartel es la suya o la de la sede", () => {
     const s = construirSecuencia([promo("a", 1, { duracionSeg: 20 }), promo("b", 2)], AHORA, 12);
     expect(s.map((d) => d.duracionSeg)).toEqual([20, 12]);
-  });
-
-  test("la duración de una franja es la de su primer entrenador, o la de la sede", () => {
-    expect(construirSecuencia([ent("a", 1, { duracionSeg: 30 }), ent("b", 2)], AHORA, 12)[0].duracionSeg).toBe(30);
-    expect(construirSecuencia([ent("a", 1), ent("b", 2, { duracionSeg: 30 })], AHORA, 12)[0].duracionSeg).toBe(12);
   });
 
   test("la clave de cada diapositiva es estable y única", () => {
@@ -114,11 +76,11 @@ describe("construirSecuencia", () => {
 });
 
 describe("numeroDeDiapositiva", () => {
-  test("numera cada ítem visible, los entrenadores de una franja comparten número", () => {
+  test("numera cada pieza visible según su lugar en la secuencia", () => {
     const s = construirSecuencia([ent("a", 1), ent("b", 2), promo("p", 3)], AHORA, 12);
     const numeros = numeroDeDiapositiva(s);
     expect(numeros.get("a")).toBe(1);
-    expect(numeros.get("b")).toBe(1);
-    expect(numeros.get("p")).toBe(2);
+    expect(numeros.get("b")).toBe(2);
+    expect(numeros.get("p")).toBe(3);
   });
 });

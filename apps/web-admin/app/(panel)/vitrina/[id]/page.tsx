@@ -3,26 +3,23 @@ import { prisma } from "@/lib/prisma";
 import { obtenerUsuarioDeSesionActual } from "@/lib/sesion";
 import { PrismaVitrinaRepository } from "@gym-app/infrastructure/persistence/prisma/PrismaVitrinaRepository";
 import { Card } from "@gym-app/ui/components/Card";
-import { BotonEliminarItem } from "../../BotonEliminarItem";
-import { FormularioVitrinaItem } from "../../FormularioVitrinaItem";
-import { SLUG_DE_TIPO, tipoDeSlug } from "../../slugs";
+import { BotonEliminarItem } from "../BotonEliminarItem";
+import { FormularioVitrinaItem } from "../FormularioVitrinaItem";
 
-export default async function PaginaEditarVitrina({ params }: { params: Promise<{ tipo: string; id: string }> }) {
-  const { tipo: slug, id } = await params;
-  const tipo = tipoDeSlug(slug);
-  if (!tipo) notFound();
+export default async function PaginaEditarPieza({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const sesion = await obtenerUsuarioDeSesionActual();
   if (!sesion) redirect("/login");
 
   const item = await new PrismaVitrinaRepository(prisma).buscar(sesion.sucursalActivaId, id);
-  if (!item || item.tipo !== tipo) notFound();
+  if (!item) notFound();
 
   return (
     <div className="flex max-w-3xl flex-col gap-4">
       <Card>
-        <FormularioVitrinaItem key={item.id} tipo={tipo} item={item} />
+        <FormularioVitrinaItem key={item.id} item={item} />
       </Card>
-      <BotonEliminarItem id={item.id} volver={`/vitrina/${SLUG_DE_TIPO[tipo]}`} />
+      <BotonEliminarItem id={item.id} />
     </div>
   );
 }

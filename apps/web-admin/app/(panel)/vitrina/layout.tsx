@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import { obtenerUsuarioDeSesionActual } from "@/lib/sesion";
 import { PageHeader } from "@gym-app/ui/components/PageHeader";
 import { TabsConfiguraciones } from "../configuraciones/TabsConfiguraciones";
-import { TABS_VITRINA } from "./tabs";
 import { TABS_CONFIGURACIONES } from "../configuraciones/tabs";
 
 export default async function LayoutVitrina({ children }: { children: React.ReactNode }) {
@@ -16,7 +15,6 @@ export default async function LayoutVitrina({ children }: { children: React.Reac
       </div>
 
       <TabsConfiguraciones tabs={TABS_CONFIGURACIONES} />
-      <TabsConfiguraciones tabs={TABS_VITRINA} />
 
       {children}
     </div>

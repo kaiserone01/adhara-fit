@@ -6,7 +6,7 @@ import { Input } from "@gym-app/ui/components/Input";
 import { useFeedback } from "@gym-app/ui/components/FeedbackOverlay";
 import { TRANSICIONES_VITRINA, type AjustesVitrina } from "@gym-app/domain/entities/Vitrina";
 import { DURACION_MAX_SEG, DURACION_MIN_SEG } from "@gym-app/domain/utils/vitrinaItem";
-import { guardarAjustesVitrinaAction } from "../actions";
+import { guardarAjustesVitrinaAction } from "./actions";
 
 const NOMBRE_TRANSICION: Record<(typeof TRANSICIONES_VITRINA)[number], string> = {
   FUNDIDO: "Fundido",

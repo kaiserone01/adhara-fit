@@ -5,36 +5,38 @@ import { Card } from "@gym-app/ui/components/Card";
 import type { VitrinaItem } from "@gym-app/domain/entities/Vitrina";
 import { estadoVisibilidad } from "@gym-app/domain/services/secuenciaVitrina";
 import { alternarActivoAction, moverItemAction } from "./actions";
-import { SLUG_DE_TIPO, TITULO_DE_TIPO } from "./slugs";
 
 const ESTADO: Record<ReturnType<typeof estadoVisibilidad>, { texto: string; color: string }> = {
   EN_PANTALLA: { texto: "En la TV", color: "var(--gx-good)" },
-  PROGRAMADO: { texto: "Programado", color: "var(--gx-warn)" },
-  VENCIDO: { texto: "Vencido", color: "var(--gx-bad)" },
-  INACTIVO: { texto: "Inactivo", color: "var(--gx-muted)" },
+  PROGRAMADO: { texto: "Programada", color: "var(--gx-warn)" },
+  VENCIDO: { texto: "Vencida", color: "var(--gx-bad)" },
+  INACTIVO: { texto: "Inactiva", color: "var(--gx-muted)" },
 };
 
 export function FilaVitrina({
   item,
   ahora,
   numeroDiapositiva,
+  posicion,
   mover,
 }: {
   item: VitrinaItem;
   ahora: Date;
   numeroDiapositiva?: number;
+  posicion: number;
   mover?: { puedeSubir: boolean; puedeBajar: boolean };
 }) {
   const estado = ESTADO[estadoVisibilidad(item, ahora)];
-  const titulo = item.nombre || item.etiqueta || TITULO_DE_TIPO[item.tipo];
+  const titulo = item.nombre || `Pieza ${posicion}`;
   const miniatura = item.mediaTipo === "VIDEO" ? item.posterUrl : item.mediaUrl;
 
   return (
     <Card className="flex flex-wrap items-center gap-4">
-      <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg" style={{ background: "var(--gx-surface-2)" }}>
+      {/* Miniatura 16:9, la misma proporción de la TV. */}
+      <div className="aspect-video w-40 shrink-0 overflow-hidden rounded-lg border" style={{ background: "var(--gx-surface-2)", borderColor: "var(--gx-edge)" }}>
         {miniatura && (
           // eslint-disable-next-line @next/next/no-img-element -- imagen en R2 (dominio externo)
-          <img src={miniatura} alt="" className="h-full w-full object-cover" />
+          <img src={miniatura} alt="" className="h-full w-full object-contain" />
         )}
       </div>
 
@@ -43,7 +45,7 @@ export function FilaVitrina({
           {titulo}
         </p>
         <p className="text-sm" style={{ color: "var(--gx-muted)" }}>
-          {TITULO_DE_TIPO[item.tipo]} · {item.mediaTipo === "VIDEO" ? (item.sonido ? "Video · Con sonido" : "Video") : "Imagen"}
+          {item.mediaTipo === "VIDEO" ? (item.sonido ? "Video · Con sonido" : "Video") : "Imagen"}
           {numeroDiapositiva ? ` · Diapositiva ${numeroDiapositiva}` : ""}
         </p>
         <p className="text-sm font-medium" style={{ color: estado.color }}>
@@ -57,14 +59,14 @@ export function FilaVitrina({
             <form action={moverItemAction}>
               <input type="hidden" name="id" value={item.id} />
               <input type="hidden" name="direccion" value="SUBIR" />
-              <Button type="submit" variant="secundario" disabled={!mover.puedeSubir} aria-label="Subir en la secuencia">
+              <Button type="submit" variant="secundario" disabled={!mover.puedeSubir} aria-label="Subir en la cartelera">
                 <ArrowUp size={20} aria-hidden="true" />
               </Button>
             </form>
             <form action={moverItemAction}>
               <input type="hidden" name="id" value={item.id} />
               <input type="hidden" name="direccion" value="BAJAR" />
-              <Button type="submit" variant="secundario" disabled={!mover.puedeBajar} aria-label="Bajar en la secuencia">
+              <Button type="submit" variant="secundario" disabled={!mover.puedeBajar} aria-label="Bajar en la cartelera">
                 <ArrowDown size={20} aria-hidden="true" />
               </Button>
             </form>
@@ -78,7 +80,7 @@ export function FilaVitrina({
           </Button>
         </form>
         <Link
-          href={`/vitrina/${SLUG_DE_TIPO[item.tipo]}/${item.id}`}
+          href={`/vitrina/${item.id}`}
           className="inline-flex min-h-11 cursor-pointer items-center rounded-lg border px-4 text-sm font-semibold"
           style={{ borderColor: "var(--gx-field-edge)", color: "var(--gx-ink)" }}
         >

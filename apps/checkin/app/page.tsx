@@ -12,13 +12,16 @@ import { precargarFoto } from "@/lib/precargarFoto";
 import { textoSaludo } from "@/lib/saludo";
 import { useFraseRotativa } from "@/lib/useFraseRotativa";
 import { useFrasesReposo } from "@/lib/useFrasesReposo";
-import { useHoraActual } from "@/lib/useHoraActual";
+import { useFechaActual, useHoraActual } from "@/lib/useHoraActual";
 import { useInfoCheckin } from "@/lib/useInfoCheckin";
 import { ESPERA_POR_DEFECTO_SEGUNDOS } from "@/lib/esperaBloqueo";
 import { AccessCard } from "@/components/AccessCard";
 import { FichaAviso } from "@/components/FichaAviso";
 import { FichaGiratoria } from "@/components/FichaGiratoria";
 import { FichaReposo } from "@/components/FichaReposo";
+import { CampoIdentificador } from "@/components/CampoIdentificador";
+import { FondoAmbiental } from "@/components/FondoAmbiental";
+import { IndicadorIngreso } from "@/components/IndicadorIngreso";
 import { FondoVideo, type Reaccion } from "@/components/FondoVideo";
 
 // Cuánto tiempo se queda la ficha real en pantalla antes de volver al reposo.
@@ -26,10 +29,6 @@ const DURACION_FICHA_MS = 30_000;
 const REINTENTO_PENDIENTES_MS = 30_000;
 // Tope de espera por la foto antes de voltear la ficha (si falla, sale con iniciales).
 const ESPERA_FOTO_MS = 1_500;
-
-// Recuadro del campo del identificador, igual con y sin host nativo.
-const CLASES_CAMPO_IDENTIFICADOR = "w-full max-w-2xl text-center text-6xl tracking-widest rounded-xl border-2 px-6 py-4";
-const ESTILO_CAMPO_IDENTIFICADOR = { borderColor: "var(--gx-accent)", color: "var(--gx-ink)" };
 
 function contenidoFicha(ficha: FichaActiva) {
   switch (ficha.tipo) {
@@ -68,10 +67,12 @@ export default function PaginaCheckIn() {
   // Instante hasta el que el servidor pidió no enviar más (429); 0 si no hay bloqueo.
   const [bloqueadoHasta, setBloqueadoHasta] = useState(0);
   const [ahoraMs, setAhoraMs] = useState(() => Date.now());
-  const { identificador, limpiar, sinInput, propsInput } = useEntradaIdentificador({ alEnviar: enviar });
+  const { identificador, limpiar, sinInput, propsInput, enviarActual } = useEntradaIdentificador({ alEnviar: enviar });
   const info = useInfoCheckin(apiKey);
   const { frase, saliendo } = useFraseRotativa(useFrasesReposo(info?.reposo));
   const hora = useHoraActual();
+  const fecha = useFechaActual();
+  const bloqueado = bloqueadoHasta > ahoraMs;
 
   // Mientras dura el bloqueo se refresca cada segundo para mostrar la cuenta regresiva.
   useEffect(() => {
@@ -189,47 +190,44 @@ export default function PaginaCheckIn() {
   }
 
   return (
-    <main
-      className="flex min-h-screen flex-col items-center gap-[4vmin] p-[5vmin]"
-      style={{ color: "var(--gx-ink)" }}
-    >
+    <main className="flex min-h-screen flex-col items-center gap-4 px-[5vmin] pb-[4vmin] pt-[3vmin]" style={{ color: "var(--gx-ink)" }}>
       <FondoVideo reaccion={reaccion} />
+      <FondoAmbiental />
 
-      {/* Logo fijo arriba a la derecha, dentro del margen de overscan. */}
-      {/* eslint-disable-next-line @next/next/no-img-element -- output: "export" no soporta el optimizador de next/image */}
-      <img
-        src="/branding/isotipo.png"
-        alt=""
-        aria-hidden
-        className="pointer-events-none fixed right-[5vmin] top-[5vmin] h-64 w-64 object-contain"
-      />
-
-      {pendientes > 0 && (
-        <div
-          className="fixed left-[5vmin] top-[5vmin] rounded px-3 py-1 text-xl"
-          style={{ background: "var(--gx-bad)", color: "var(--gx-bad-ink)" }}
-        >
-          {pendientes} pendiente{pendientes === 1 ? "" : "s"} por sincronizar
+      {/* Franja superior: aviso de pendientes a la izquierda; logo y lema a la derecha (dentro del margen de overscan). */}
+      <div className="entrada-1 flex w-full items-start justify-between">
+        <div>
+          {pendientes > 0 && (
+            <div className="rounded px-3 py-1 text-xl" style={{ background: "var(--gx-bad)", color: "var(--gx-bad-ink)" }}>
+              {pendientes} pendiente{pendientes === 1 ? "" : "s"} por sincronizar
+            </div>
+          )}
         </div>
-      )}
+        <div className="flex flex-col items-end gap-1">
+          {/* eslint-disable-next-line @next/next/no-img-element -- output: "export" no soporta el optimizador de next/image */}
+          <img src="/branding/logo-negativo.png" alt="Adhara Fit" className="h-16 w-auto object-contain" />
+          <p className="text-lg font-bold uppercase" style={{ letterSpacing: "0.3em", color: "var(--gx-accent)" }}>
+            Entrena · Supérate · Vive mejor
+          </p>
+        </div>
+      </div>
 
-      <div className="flex w-full flex-col items-center gap-2">
-        <h1 className="text-7xl" style={{ fontFamily: '"Bebas Neue", sans-serif', letterSpacing: "0.02em" }}>
-          Ingresa tu DNI o carné de extranjería
+      <div className="flex w-full flex-col items-center gap-4">
+        <h1 className="titular-checkin text-center">
+          Ingresa tu <span>DNI</span> o <span>Carné de Extranjería</span>
         </h1>
 
-        {sinInput ? (
-          // En el APK el identificador llega por teclas del numpad: no hace falta foco. Solo se muestran puntos.
-          <div className={`${CLASES_CAMPO_IDENTIFICADOR} min-h-[5.5rem]`} style={ESTILO_CAMPO_IDENTIFICADOR} aria-label="Identificador oculto">
-            {"•".repeat(identificador.length)}
-          </div>
-        ) : (
-          <input {...propsInput} className={`${CLASES_CAMPO_IDENTIFICADOR} bg-transparent outline-none`} style={ESTILO_CAMPO_IDENTIFICADOR} />
-        )}
+        <CampoIdentificador
+          longitud={identificador.length}
+          sinInput={sinInput}
+          propsInput={propsInput}
+          procesando={pantalla.procesando}
+          bloqueado={bloqueado}
+        />
 
-        <p className="min-h-[2.5rem] text-3xl" style={{ color: errorConfig ? "var(--gx-bad)" : "var(--gx-muted)" }}>
+        <p aria-live="polite" className="min-h-[2.5rem] text-3xl" style={{ color: errorConfig ? "var(--gx-bad)" : "var(--gx-muted)" }}>
           {errorConfig ??
-            (bloqueadoHasta > ahoraMs
+            (bloqueado
               ? `Demasiados intentos. Espera ${Math.ceil((bloqueadoHasta - ahoraMs) / 1_000)} s.`
               : pantalla.procesando
                 ? "Verificando…"
@@ -245,7 +243,7 @@ export default function PaginaCheckIn() {
               frase={frase}
               saliendo={saliendo}
               hora={hora}
-              sede={info?.sucursalNombre ?? null}
+              fecha={fecha}
               imagenUrl={info?.reposo?.imagenUrl ?? null}
               opacidad={info?.reposo?.opacidad}
             />
@@ -253,6 +251,8 @@ export default function PaginaCheckIn() {
           renderFicha={contenidoFicha}
         />
       </div>
+
+      <IndicadorIngreso habilitado={identificador.length > 0 && !pantalla.procesando && !bloqueado} alTocar={enviarActual} />
     </main>
   );
 }

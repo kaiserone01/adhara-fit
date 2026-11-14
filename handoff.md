@@ -8,6 +8,19 @@ Bitácora de sesiones: la más reciente arriba, solo se añaden entradas. El his
 - **Desplegado:** provisional en Easypanel (`docs/ops/easypanel.md`): imagen del `Dockerfile`, esquema con `prisma db push` al arrancar, alta del primer administrador con `tools/crear-administrador.mjs`.
 - **Preferencia del propietario:** cada código (ADR-nnn, S-nn, REQ…) que se mencione lleva al lado una descripción simple.
 
+## Sesión 2026-11-14 (31) — Rediseño visual del check-in (negro y amarillo)
+**Qué se hizo**
+- `apps/checkin` con nueva imagen: titular «INGRESA TU DNI O CARNÉ DE EXTRANJERÍA» (DNI y CE en amarillo), campo con ícono de documento y brillo, ficha central en reposo con avatar de aro amarillo, línea amarilla y Hora | Fecha, píldora «Presiona Enter para ingresar», logo y lema arriba a la derecha, rayas diagonales en dos esquinas y barra amarilla inferior.
+- Componentes nuevos: `CampoIdentificador`, `IndicadorIngreso`, `FondoAmbiental` (velo oscuro, luces amarillas desenfocadas, trazo diagonal, 14 partículas). Cambios: `app/page.tsx`, `FichaReposo` (se quitó **Sede**, se añadió **Fecha**), `MarcoFicha` (prop `reposo`), `useHoraActual.ts` (+ `useFechaActual`, Lima), `useEntradaIdentificador.ts` (+ `enviarActual`), `globals.css`.
+- Se conservó todo el flujo real: envío por Enter/numpad, bloqueo 429, cola sin conexión, ficha giratoria, fichas de resultado y error, identificador nunca visible (solo puntos).
+**Qué funcionó:** `tsc`, `eslint` (solo el aviso de fuentes que ya existía), 52 pruebas y `build` en verde.
+**Decisiones (asumido, por validar)**
+- Sin Three.js, R3F ni GSAP: el TV tiene 2 GB de RAM. Todo es CSS (transform/opacity) y SVG de íconos; con `prefers-reduced-motion` las animaciones se apagan. Íconos: `@phosphor-icons/react` ya viene con `@gym-app/ui` (sin dependencia nueva).
+- El lema «ENTRENA · SUPÉRATE · VIVE MEJOR» es texto estático institucional; hora y fecha son las reales del dispositivo; no hay nombre ni datos simulados. «Presiona Enter» también se puede tocar (envía lo tecleado).
+- Sin ornamentos 3D (pesa de disco, kettlebell): quedan como mejora si el TV real aguanta más.
+**Qué no funcionó:** no se pudo capturar la pantalla (no hay navegador controlable desde la sesión), así que el ajuste a 1920×1080 y 1366×768 se calculó en `rem`, sin ver el resultado. En vitest, `--pool=threads` rompe las pruebas de esta app («reading 'config'»): usar `npx vitest run` a secas.
+**Siguiente:** mirarlo en el TV y en el celular tras el siguiente APK/OTA; ajustar tamaños, brillo de los efectos y la posición de las rayas según lo que se vea.
+
 ## Sesión 2026-11-14 (30) — Autoactualización solo al abrir, con pantalla de progreso
 **Qué se hizo**
 - Decisión del propietario: la interfaz de los APK se actualiza **solo al abrir la app** (ya no cada 30 min ni con espera de inactividad). Nueva puerta de arranque `packages/ota/ArranqueActualizable.tsx` (envuelve la app en los layouts de checkin y vitrina): logo + «Buscando actualizaciones…» → si hay versión nueva «Descargando actualización 1.0.N · NN %» con barra y «Instalando…» → recarga; si no, «Está actualizado» 1,2 s; sin red o con fallo, aviso 2 s y arranca igual. La app (y su lógica de red) no se monta hasta terminar. Estados y mensajes puros en `arranque.ts` con pruebas; `autoactualizar.ts` reescrito (`confirmarArranque`, `buscarEInstalar`, tiempos máximos 8 s buscar y 120 s descargar, 3 intentos por versión). Se eliminó `Actualizador.tsx`.

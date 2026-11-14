@@ -118,5 +118,6 @@ export function useEntradaIdentificador({ alEscribir, alEnviar }: Opciones) {
     autoFocus: true,
   };
 
-  return { identificador, limpiar: () => asignar(""), sinInput: android, propsInput };
+  // `enviarActual` deja que el indicador «Presiona Enter» envíe lo tecleado al tocarlo (pantalla táctil).
+  return { identificador, limpiar: () => asignar(""), sinInput: android, propsInput, enviarActual: () => manejar({ type: "enter" }) };
 }

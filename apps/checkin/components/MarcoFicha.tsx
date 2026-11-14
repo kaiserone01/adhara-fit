@@ -9,17 +9,20 @@ export function MarcoFicha({
   brillo,
   duracionMs,
   opacidadFondo,
+  reposo,
   children,
 }: {
   color: string;
   brillo?: string;
   duracionMs?: number;
   opacidadFondo?: number;
+  // Ficha en reposo: respira con un brillo amarillo lento (la animación se apaga con prefers-reduced-motion).
+  reposo?: boolean;
   children: ReactNode;
 }) {
   return (
     <div
-      className="flex flex-1 flex-col overflow-hidden rounded-3xl border-4"
+      className={`flex flex-1 flex-col overflow-hidden rounded-3xl border-4${reposo ? " marco-reposo" : ""}`}
       style={{
         borderColor: color,
         background: fondoFicha(opacidadFondo),
@@ -31,7 +34,7 @@ export function MarcoFicha({
         style={{ borderBottom: "1px solid var(--gx-edge)" }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element -- output: "export" no soporta el optimizador de next/image */}
-        <img src="/branding/logo-negativo.png" alt="Adhara Fit" className="h-20 w-auto object-contain" />
+        <img src="/branding/logo-negativo.png" alt="Adhara Fit" className="h-14 w-auto object-contain" />
       </div>
 
       <div className="flex flex-1 flex-col">{children}</div>

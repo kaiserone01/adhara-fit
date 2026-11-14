@@ -16,3 +16,19 @@ export function useHoraActual(): string {
 
   return hora;
 }
+
+const formatoFecha = () => new Date().toLocaleDateString("es-PE", { timeZone: "America/Lima", day: "2-digit", month: "2-digit", year: "numeric" });
+
+// "" hasta montar (mismo motivo que la hora). Se refresca cada minuto para que cambie sola a medianoche.
+export function useFechaActual(): string {
+  const [fecha, setFecha] = useState("");
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reloj: se lee tras el montaje (SSR-safe)
+    setFecha(formatoFecha());
+    const temporizador = setInterval(() => setFecha(formatoFecha()), 60_000);
+    return () => clearInterval(temporizador);
+  }, []);
+
+  return fecha;
+}

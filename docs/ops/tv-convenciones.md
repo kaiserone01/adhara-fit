@@ -39,6 +39,7 @@ Consecuencias de diseño: siempre **horizontal 16:9**; poca RAM (2 GB), por eso 
 
 - Ficha del socio completa y centrada en 16:9, con tamaños en `rem`; teclado numérico USB con Num Lock. Reposo con frases e imagen configurables desde el panel (menú Check-in).
 - Misma regla de `rem`: la ficha debe caber entera a 1920×1080 y a 960×540.
+- Imagen: negro y amarillo Adhara (`#ffcb04`) sobre el video de fondo con velo oscuro. Reposo: titular, campo del documento, ficha con avatar, frase, Hora y Fecha, y píldora «Presiona Enter para ingresar». Sin sede ni datos inventados. Efectos solo con CSS (transform/opacity), sin WebGL, y apagados con `prefers-reduced-motion`. Código: `apps/checkin/components/{FondoAmbiental,CampoIdentificador,IndicadorIngreso,FichaReposo}.tsx`.
 
 ## 5. Versión visible
 

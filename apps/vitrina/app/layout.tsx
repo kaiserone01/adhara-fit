@@ -8,7 +8,7 @@ import { temaAdhara } from "@gym-app/theming/tokens";
 const titulo = Bebas_Neue({ weight: "400", subsets: ["latin"], variable: "--fuente-titulo" });
 const texto = Barlow({ weight: ["400", "500", "600", "700"], subsets: ["latin"], variable: "--fuente-texto" });
 
-export const metadata: Metadata = { title: "Vitrina" };
+export const metadata: Metadata = { title: "Adhara Fit Vitrina" };
 export const viewport: Viewport = { themeColor: temaAdhara.ground };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

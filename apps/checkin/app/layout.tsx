@@ -5,7 +5,7 @@ import { ThemeStyleTag } from "@gym-app/theming/ThemeStyleTag";
 import { temaAdhara } from "@gym-app/theming/tokens";
 
 export const metadata: Metadata = {
-  title: "Check-in",
+  title: "Adhara Fit Check-in",
 };
 
 export const viewport: Viewport = {

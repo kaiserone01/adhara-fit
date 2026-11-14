@@ -12,7 +12,7 @@ export function construirConfiguracion(env) {
 
   const capacitor = {
     appId: "pe.adharafit.vitrina",
-    appName: "Adhara Vitrina",
+    appName: "Adhara Fit Vitrina",
     webDir: "www",
     // El APK es de debug y lleva la clave de la sede en el bundle: sin logs y sin WebView inspeccionable.
     loggingBehavior: "none",

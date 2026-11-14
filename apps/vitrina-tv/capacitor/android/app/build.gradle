@@ -7,8 +7,8 @@ android {
         applicationId "pe.adharafit.vitrina"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode = Integer.parseInt((project.findProperty("versionCode") ?: "1").toString())
-        versionName "1.0"
+        versionCode Integer.parseInt(System.getenv("APK_VERSION_CODE") ?: (project.findProperty("versionCode") ?: "1").toString())
+        versionName System.getenv("APK_VERSION_NAME") ?: "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

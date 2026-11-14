@@ -31,7 +31,7 @@ test("el APK empaqueta la app: sin server.url, sin logs y sin WebView inspeccion
   assert.equal(capacitor.server, undefined);
   assert.equal(capacitor.webDir, "www");
   assert.equal(capacitor.appId, "pe.adharafit.checkin");
-  assert.equal(capacitor.appName, "Adhara Check-in");
+  assert.equal(capacitor.appName, "Adhara Fit Check-in");
   assert.equal(capacitor.loggingBehavior, "none");
   assert.deepEqual(capacitor.android, { allowMixedContent: false, webContentsDebuggingEnabled: false });
 });

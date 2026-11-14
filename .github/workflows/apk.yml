@@ -1,9 +1,17 @@
 name: apk
 
-# Compila los APK de Android TV (Check-in y Vitrina) y sube cada uno CIFRADO como artefacto.
-# Se lanza a mano: Actions → apk → Run workflow.
-# El repositorio es público y el APK lleva la clave del check-in dentro, así que nunca se sube sin cifrar.
-# Secrets del repositorio: CHECKIN_CLAVE y APK_PASSPHRASE. CHECKIN_API_URL puede ser variable o secret del repositorio.
+# Compila los APK de Android TV (Check-in y Vitrina) y los sube al bucket privado de R2 «apk» como AF-checkin.apk y
+# AF-vitrina.apk, junto a un AF-<app>.json con la versión y la huella (canal para la futura autoactualización).
+# Se lanza a mano: Actions → apk → Run workflow (botón verde; «Re-run» repite el workflow viejo, no sirve).
+# El repositorio es público y el APK lleva la clave del check-in dentro: el APK nunca se sube como artefacto de
+# GitHub; solo va al bucket, cuyo acceso público se abre únicamente mientras se instala (Cloudflare).
+#
+# Secrets del repositorio (no de un Environment):
+#   CHECKIN_CLAVE                                   la misma clave que tiene web-admin.
+#   R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY   credenciales de R2 con permiso de escritura en el bucket.
+#   APK_KEYSTORE_BASE64 (recomendado)               llave de firma fija en base64 (ver docs/ops/apk.md): sin ella
+#                                                   cada APK se firma con una llave nueva y no se puede instalar encima.
+# CHECKIN_API_URL puede ser variable o secret del repositorio. R2_APK_BUCKET_NAME (variable, opcional) vale «apk».
 on:
   workflow_dispatch:
 
@@ -21,6 +29,9 @@ env:
   CHECKIN_CLAVE: ${{ secrets.CHECKIN_CLAVE }}
   VITRINA_API_URL: ${{ vars.CHECKIN_API_URL || secrets.CHECKIN_API_URL }}
   VITRINA_CLAVE: ${{ secrets.CHECKIN_CLAVE }}
+  # Cada corrida sube el código de versión: Android solo deja instalar encima un APK con versionCode mayor.
+  APK_VERSION_CODE: ${{ github.run_number }}
+  APK_VERSION_NAME: 1.0.${{ github.run_number }}
 
 jobs:
   apk:
@@ -41,9 +52,13 @@ jobs:
         run: |
           test -n "$CHECKIN_API_URL" || { echo "Falta CHECKIN_API_URL (como variable o como secret del repositorio)."; exit 1; }
           test -n "$CHECKIN_CLAVE" || { echo "Falta el secret CHECKIN_CLAVE."; exit 1; }
-          test -n "$APK_PASSPHRASE" || { echo "Falta el secret APK_PASSPHRASE."; exit 1; }
+          test -n "$R2_ACCOUNT_ID" || { echo "Falta el secret R2_ACCOUNT_ID."; exit 1; }
+          test -n "$R2_ACCESS_KEY_ID" || { echo "Falta el secret R2_ACCESS_KEY_ID."; exit 1; }
+          test -n "$R2_SECRET_ACCESS_KEY" || { echo "Falta el secret R2_SECRET_ACCESS_KEY."; exit 1; }
         env:
-          APK_PASSPHRASE: ${{ secrets.APK_PASSPHRASE }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
 
       - uses: actions/checkout@v4
 
@@ -71,31 +86,49 @@ jobs:
         working-directory: ${{ matrix.tv }}
         run: npm run sync
 
-      # build.gradle firma con android/app/debug.keystore, que no se versiona (*.keystore en .gitignore).
-      # Cada ejecución genera una llave nueva: para actualizar un TV hay que desinstalar el APK anterior.
-      - name: Generar la llave de debug
+      # build.gradle firma con android/app/debug.keystore (alias androiddebugkey, clave «android»), que no se versiona.
+      # Con APK_KEYSTORE_BASE64 se usa siempre la misma llave y el APK se puede instalar encima del anterior; sin ese
+      # secret se genera una llave nueva en cada corrida y hay que desinstalar el APK anterior del TV.
+      - name: Preparar la llave de firma
         working-directory: ${{ matrix.tv }}/android/app
         run: |
-          keytool -genkeypair -v -keystore debug.keystore -storepass android -keypass android \
-            -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 \
-            -dname "CN=Android Debug,O=Android,C=US"
+          if [ -n "$APK_KEYSTORE_BASE64" ]; then
+            echo "$APK_KEYSTORE_BASE64" | base64 -d > debug.keystore
+            echo "Llave de firma fija (APK_KEYSTORE_BASE64)."
+          else
+            echo "::warning::Sin APK_KEYSTORE_BASE64: llave nueva en cada corrida; para actualizar un TV habrá que desinstalar el APK anterior."
+            keytool -genkeypair -v -keystore debug.keystore -storepass android -keypass android \
+              -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 \
+              -dname "CN=Android Debug,O=Android,C=US"
+          fi
+        env:
+          APK_KEYSTORE_BASE64: ${{ secrets.APK_KEYSTORE_BASE64 }}
 
       - name: Compilar el APK
         working-directory: ${{ matrix.tv }}/android
         run: ./gradlew assembleDebug --no-daemon
 
-      - name: Cifrar el APK
+      - name: Subir al bucket apk (R2)
         run: |
+          set -e
+          APK="${{ matrix.tv }}/android/app/build/outputs/apk/debug/app-debug.apk"
+          NOMBRE="AF-${{ matrix.app }}"
           mkdir -p salida
-          openssl enc -aes-256-cbc -pbkdf2 -salt -pass env:APK_PASSPHRASE \
-            -in "${{ matrix.tv }}/android/app/build/outputs/apk/debug/app-debug.apk" \
-            -out "salida/adhara-${{ matrix.app }}.apk.enc"
+          cp "$APK" "salida/$NOMBRE.apk"
+          SHA=$(sha256sum "salida/$NOMBRE.apk" | cut -d' ' -f1)
+          printf '{"app":"%s","versionCode":%s,"versionName":"%s","sha256":"%s","apk":"%s.apk"}\n' \
+            "${{ matrix.app }}" "$APK_VERSION_CODE" "$APK_VERSION_NAME" "$SHA" "$NOMBRE" > "salida/$NOMBRE.json"
+          DESTINO="s3://${R2_APK_BUCKET_NAME:-apk}"
+          ENDPOINT="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+          aws s3 cp "salida/$NOMBRE.apk" "$DESTINO/$NOMBRE.apk" --endpoint-url "$ENDPOINT" --content-type application/vnd.android.package-archive
+          aws s3 cp "salida/$NOMBRE.json" "$DESTINO/$NOMBRE.json" --endpoint-url "$ENDPOINT" --content-type application/json --cache-control "no-store"
+          echo "Subido $NOMBRE.apk (versión $APK_VERSION_NAME, sha256 $SHA)."
         env:
-          APK_PASSPHRASE: ${{ secrets.APK_PASSPHRASE }}
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: adhara-${{ matrix.app }}-apk-cifrado
-          path: salida/adhara-${{ matrix.app }}.apk.enc
-          retention-days: 14
-          if-no-files-found: error
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_APK_BUCKET_NAME: ${{ vars.R2_APK_BUCKET_NAME }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          # R2 no acepta las sumas de verificación nuevas del cliente de AWS.
+          AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+          AWS_RESPONSE_CHECKSUM_VALIDATION: when_required

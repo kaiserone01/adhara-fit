@@ -8,6 +8,25 @@ Bitácora de sesiones: la más reciente arriba, solo se añaden entradas. El his
 - **Desplegado:** provisional en Easypanel (`docs/ops/easypanel.md`): imagen del `Dockerfile`, esquema con `prisma db push` al arrancar, alta del primer administrador con `tools/crear-administrador.mjs`.
 - **Preferencia del propietario:** cada código (ADR-nnn, S-nn, REQ…) que se mencione lleva al lado una descripción simple.
 
+## Sesión 2026-11-13 (noche, 26) — Íconos y nombres de los APK, subida a R2 y pestaña Aplicaciones
+**Qué se hizo**
+- **Íconos de marca:** `tools/generar-iconos-apk.mjs` genera, desde `docs/ADHARA_FIT_Logo_Kit/icon-checkin.png` e `icon-vitrina.png`, el ícono del launcher (clásico, redondo y adaptativo), el banner de Android TV (ícono + «ADHARA FIT» + «CHECK-IN»/«VITRINA»), la pantalla de arranque (fondo oscuro con el ícono) y los íconos web (`icon.png`, `apple-icon.png`) de `apps/checkin` y `apps/vitrina`. Los PNG se versionan. Se retiraron `generar-iconos.ps1`, `icono-checkin.jpg` y el `generar-iconos.mjs` anterior de la vitrina (eran de la base heredada).
+- **Nombres:** «Adhara Fit Check-in» y «Adhara Fit Vitrina» en `strings.xml`, `configuracion.mjs` (+ prueba), títulos de las páginas, el aviso de permiso de la vitrina y los README. El `appId` (`pe.adharafit.*`) no cambia.
+- **Workflow `apk`:** ya no cifra ni sube artefactos de GitHub; sube `AF-checkin.apk` y `AF-vitrina.apk` al bucket `apk` de R2 (S3 con `aws s3 cp`) con un `AF-<app>.json` (`versionCode`, `versionName`, `sha256`). `versionCode` = número de corrida (`APK_VERSION_CODE`, leído en `build.gradle`). Llave de firma fija opcional con el secret `APK_KEYSTORE_BASE64` (sin ella se genera una nueva en cada corrida y no se puede instalar encima). Guía en `docs/ops/apk.md`.
+- **Configuraciones → Aplicaciones:** enlaces de descarga, botón de copiar y QR (SVG generado en el servidor) de los dos APK, a partir de `R2_APK_PUBLIC_URL` (declarada en `.env.example`; hay que ponerla en Easypanel). Dependencia nueva: `qrcode` (+ `@types/qrcode`) en `web-admin`, para generar el QR sin servicios externos.
+
+**Qué funcionó**
+- Pruebas de las cáscaras (6 y 9), `verificar-env`, `tsc`, lint (0 errores) y build de web-admin, checkin y vitrina.
+
+**Qué no funcionó / a tener en cuenta**
+- No se compiló el APK ni se probó la subida a R2 (necesita los secrets en GitHub: `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `CHECKIN_CLAVE`, `CHECKIN_API_URL`).
+- Los colores de la interfaz del check-in y de la vitrina ya usaban la paleta de marca (carbón `#231F20`, amarillo `#FFCB04`): lo que se veía distinto eran los recursos nativos del APK heredado (ícono, banner, arranque), ahora reemplazados.
+- Autoactualización: **no implementada**. Propuesta: (1) actualización de la interfaz sin reinstalar con `@capgo/capacitor-updater` en modo manual, con paquetes en el bucket y reversión automática; (2) la actualización del APK completo (cambios nativos) exige permiso de «instalar apps desconocidas» y confirmación del usuario en Android, por lo que se limitará a avisar y abrir el instalador. Requisito previo: la llave de firma fija.
+
+**Siguiente**
+1. Crear la llave fija (`docs/ops/apk.md` §3) y cargar los secrets; lanzar el workflow y abrir/cerrar el acceso a `apk.adhara.fit`.
+2. Decidir la autoactualización con el propietario antes de implementarla.
+
 ## Sesión 2026-11-13 (noche, 25) — Cobro en dos columnas y diagnóstico del APK
 **Qué se hizo**
 - **Cobro (`FormularioCobro`) en dos columnas:** a la izquierda el socio (tarjeta compacta que pasa por la nueva prop `cabecera`) y el resumen «Total a cobrar» con «Cambiar plan»; a la derecha la fecha, el bloque «Método de pago» con su título y, al final, el botón «Registrar pago de S/ X». El número de operación sale **debajo** de los métodos y solo con Yape o BCP (con efectivo desaparece); se retiró la variante en la cuarta casilla de la fila (`enFila`) y `CampoNumeroOperacion` volvió a su versión anterior. El ojo del método seleccionado se mantiene.

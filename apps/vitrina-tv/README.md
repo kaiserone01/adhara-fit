@@ -1,8 +1,8 @@
-# Adhara Vitrina para Android TV
+# Adhara Fit Vitrina para Android TV
 
 ## 1. Qué es
 
-APK Capacitor 8 (`appId` `pe.adharafit.vitrina`, nombre "Adhara Vitrina") con la app web de la vitrina empaquetada dentro. No usa `server.url` (salvo `VITRINA_DEV_URL` en desarrollo). El proyecto Capacitor está en `apps/vitrina-tv/capacitor/` (no es workspace npm); `apps/vitrina-tv/prueba/` es una página descartable para probar el TV real.
+APK Capacitor 8 (`appId` `pe.adharafit.vitrina`, nombre "Adhara Fit Vitrina") con la app web de la vitrina empaquetada dentro. No usa `server.url` (salvo `VITRINA_DEV_URL` en desarrollo). El proyecto Capacitor está en `apps/vitrina-tv/capacitor/` (no es workspace npm); `apps/vitrina-tv/prueba/` es una página descartable para probar el TV real.
 
 ## 2. Requisitos del TV
 
@@ -11,7 +11,7 @@ APK Capacitor 8 (`appId` `pe.adharafit.vitrina`, nombre "Adhara Vitrina") con la
 
 ## 3. Compilar
 
-GitHub Actions, workflow "Compilar APK de la vitrina" (`apk-vitrina.yml`). El artefacto descargado es un `.zip`; dentro viene el `.7z` cifrado, que hay que descomprimir también.
+GitHub Actions, workflow `apk` (`.github/workflows/apk.yml`): sube `AF-vitrina.apk` al bucket privado `apk` de R2 (`https://apk.adhara.fit/AF-vitrina.apk` mientras el acceso público esté abierto). Detalles en `docs/ops/apk.md`.
 
 Secretos:
 
@@ -36,7 +36,7 @@ Por USB, o por red: `adb connect <ip>` y luego `adb install -r vitrina-<sede>.ap
 
 ## 5. Arranque automático (la instalación es por enlace, sin adb)
 
-Android 10+ solo deja abrir una app al encender el TV si tiene el permiso "Mostrar sobre otras aplicaciones". Con instalación por enlace no hay adb, así que la app lo pide sola al abrirse: muestra un aviso y abre la pantalla de ese permiso del sistema (activar "Adhara Vitrina"). Si ese TV no trae la pantalla, queda el ajuste de "autoinicio" del fabricante, o fijar la app como launcher; anótalo aquí al probar cada modelo.
+Android 10+ solo deja abrir una app al encender el TV si tiene el permiso "Mostrar sobre otras aplicaciones". Con instalación por enlace no hay adb, así que la app lo pide sola al abrirse: muestra un aviso y abre la pantalla de ese permiso del sistema (activar "Adhara Fit Vitrina"). Si ese TV no trae la pantalla, queda el ajuste de "autoinicio" del fabricante, o fijar la app como launcher; anótalo aquí al probar cada modelo.
 
 Con adb (solo para depurar, opcional):
 
@@ -63,8 +63,8 @@ Para ver cambios sin recompilar el APK, preparar el proyecto con `VITRINA_DEV_UR
 
 Con el panel y la vitrina apuntando al mismo web-admin (producción):
 
-1. Cifrado: el artefacto es un `.7z` cifrado; no hay `.apk` suelto.
-2. Ícono y nombre: el launcher muestra "Adhara Vitrina" con el escudo; también el banner de Android TV.
+1. Acceso: el APK está en el bucket `apk`, cerrado salvo mientras se instala; no hay `.apk` como artefacto de GitHub.
+2. Ícono y nombre: el launcher muestra "Adhara Fit Vitrina" con el escudo; también el banner de Android TV.
 3. Contenido: promo, franja de 3 entrenadores y producto con oferta + Bs se ven bien a 1080p; el video de la franja reproduce de a uno.
 4. Cambios en vivo: activar, ordenar o eliminar en el panel se refleja en segundos; sustituir una pieza descarga solo la nueva y borra el archivo viejo.
 5. Sin red: sin internet, apagar y encender el TV: abre solo, muestra el último contenido y respeta `inicio`/`fin`.

@@ -6,8 +6,7 @@
   "scripts": {
     "preparar": "node scripts/preparar.mjs",
     "sync": "node scripts/preparar.mjs && cap sync android",
-    "test": "node --test \"scripts/*.test.mjs\"",
-    "iconos": "node scripts/generar-iconos.mjs"
+    "test": "node --test \"scripts/*.test.mjs\""
   },
   "dependencies": {
     "@capacitor/android": "^8.5.3",

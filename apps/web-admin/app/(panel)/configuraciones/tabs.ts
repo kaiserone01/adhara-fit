@@ -8,4 +8,5 @@ export const TABS_CONFIGURACIONES = [
   { href: "/entrenadores", label: "Entrenadores" },
   { href: "/checkin", label: "Checkin" },
   { href: "/vitrina", label: "Vitrina" },
+  { href: "/configuraciones/aplicaciones", label: "Aplicaciones" },
 ];

@@ -11,6 +11,17 @@ export function construirConfiguracion(env) {
   // La clave viaja en cada petición: solo https en el APK.
   if (!apiUrl.startsWith("https://")) throw new Error("CHECKIN_API_URL debe empezar por https://");
 
+  // Autoactualización de la interfaz (packages/ota): modo manual y sin la nube de Capgo (URLs vacías = sin llamadas).
+  // El bundle que no confirma arranque en 10 s se descarta y la app vuelve al anterior.
+  const capacitorPlugins = {
+    CapacitorUpdater: { autoUpdate: "off", appReadyTimeout: 10000, resetWhenUpdate: true, statsUrl: "", updateUrl: "", channelUrl: "" },
+  };
+  // Dirección donde el workflow publica latest.json y los zip de esta app; sin ella el APK no se actualiza solo.
+  const actualizacionesUrl = (env.ACTUALIZACIONES_URL || "").replace(/\/+$/, "");
+  if (actualizacionesUrl && !actualizacionesUrl.startsWith("https://")) throw new Error("ACTUALIZACIONES_URL debe empezar por https://");
+  const versionCode = Number.parseInt(env.APK_VERSION_CODE || "1", 10) || 1;
+  const actualizaciones = actualizacionesUrl ? { url: actualizacionesUrl, versionCode } : undefined;
+
   const capacitor = {
     appId: "pe.adharafit.checkin",
     appName: "Adhara Fit Check-in",
@@ -18,7 +29,8 @@ export function construirConfiguracion(env) {
     // El APK es de debug y lleva la clave en el bundle: sin logs y sin WebView inspeccionable.
     loggingBehavior: "none",
     android: { allowMixedContent: false, webContentsDebuggingEnabled: false },
+    plugins: capacitorPlugins,
   };
 
-  return { capacitor, checkin: { apiUrl, clave } };
+  return { capacitor, checkin: { apiUrl, clave, ...(actualizaciones && { actualizaciones }) } };
 }

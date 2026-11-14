@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
   // paquetes de presentación pura (sin Prisma, sin dominio) — agregarlos
   // no viola esa regla.
   output: "export",
-  transpilePackages: ["@gym-app/theming", "@gym-app/ui"],
+  transpilePackages: ["@gym-app/ota", "@gym-app/theming", "@gym-app/ui"],
 };
 
 export default nextConfig;

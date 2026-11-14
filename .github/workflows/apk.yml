@@ -12,6 +12,11 @@ name: apk
 #   APK_KEYSTORE_BASE64 (recomendado)               llave de firma fija en base64 (ver docs/ops/apk.md): sin ella
 #                                                   cada APK se firma con una llave nueva y no se puede instalar encima.
 # CHECKIN_API_URL puede ser variable o secret del repositorio. R2_APK_BUCKET_NAME (variable, opcional) vale «apk».
+#
+# Autoactualización (packages/ota): además del APK, publica la interfaz (zip) y ota/<app>/latest.json en el bucket de
+# medios (R2_BUCKET_NAME, por defecto «adhara-fit-app», público en R2_PUBLIC_URL). Los APK ya instalados la descargan
+# solos. R2_PUBLIC_URL (variable o secret) es la URL pública de ese bucket; sin ella el APK no se actualiza por OTA.
+# El zip no lleva la clave: la configuración (URL y clave) solo va dentro del APK.
 on:
   workflow_dispatch:
 
@@ -37,6 +42,9 @@ jobs:
   apk:
     name: APK ${{ matrix.app }}
     runs-on: ubuntu-latest
+    env:
+      # Dirección de latest.json de esta app (vacía = el APK no se autoactualiza).
+      ACTUALIZACIONES_URL: ${{ (vars.R2_PUBLIC_URL || secrets.R2_PUBLIC_URL) && format('{0}/ota/{1}', vars.R2_PUBLIC_URL || secrets.R2_PUBLIC_URL, matrix.app) || '' }}
     strategy:
       fail-fast: false
       matrix:
@@ -132,3 +140,35 @@ jobs:
           # R2 no acepta las sumas de verificación nuevas del cliente de AWS.
           AWS_REQUEST_CHECKSUM_CALCULATION: when_required
           AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+
+      # La interfaz exportada (sin configuración ni clave) se publica como zip versionado y latest.json apunta a ella.
+      # Va al final: solo se publica si el APK compiló. latest.json se sube el último para que nunca apunte a un zip ausente.
+      - name: Publicar la actualización de la interfaz (R2)
+        if: env.ACTUALIZACIONES_URL != ''
+        run: |
+          set -e
+          ZIP="${APK_VERSION_CODE}.zip"
+          mkdir -p ota
+          (cd "apps/${{ matrix.web }}/out" && zip -qr "$GITHUB_WORKSPACE/ota/$ZIP" .)
+          if unzip -l "ota/$ZIP" | grep -Eq "(checkin|vitrina)-config\.json"; then echo "El zip lleva configuración: se aborta."; exit 1; fi
+          SHA=$(sha256sum "ota/$ZIP" | cut -d' ' -f1)
+          printf '{"app":"%s","versionCode":%s,"versionName":"%s","zip":"%s","sha256":"%s"}\n' \
+            "${{ matrix.app }}" "$APK_VERSION_CODE" "$APK_VERSION_NAME" "$ZIP" "$SHA" > ota/latest.json
+          DESTINO="s3://${R2_BUCKET_NAME:-adhara-fit-app}/ota/${{ matrix.app }}"
+          ENDPOINT="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+          aws s3 cp "ota/$ZIP" "$DESTINO/$ZIP" --endpoint-url "$ENDPOINT" --content-type application/zip
+          aws s3 cp ota/latest.json "$DESTINO/latest.json" --endpoint-url "$ENDPOINT" --content-type application/json --cache-control "no-store"
+          echo "Publicada la interfaz $APK_VERSION_NAME en $ACTUALIZACIONES_URL (sha256 $SHA)."
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_BUCKET_NAME: ${{ vars.R2_BUCKET_NAME }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+          AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+
+      - name: Aviso si no se publicó la actualización
+        if: env.ACTUALIZACIONES_URL == ''
+        run: |
+          echo "::warning::Sin R2_PUBLIC_URL este APK no se autoactualizará (hay que reinstalarlo a mano)."

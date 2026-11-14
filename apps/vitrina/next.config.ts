@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   // web-admin por HTTP (lib/api.ts). Importa solo funciones puras de @gym-app/domain (ADR-002).
   output: "export",
   images: { unoptimized: true },
-  transpilePackages: ["@gym-app/domain", "@gym-app/theming"],
+  transpilePackages: ["@gym-app/domain", "@gym-app/ota", "@gym-app/theming"],
 };
 
 export default nextConfig;

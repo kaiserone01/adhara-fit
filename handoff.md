@@ -8,6 +8,19 @@ Bitácora de sesiones: la más reciente arriba, solo se añaden entradas. El his
 - **Desplegado:** provisional en Easypanel (`docs/ops/easypanel.md`): imagen del `Dockerfile`, esquema con `prisma db push` al arrancar, alta del primer administrador con `tools/crear-administrador.mjs`.
 - **Preferencia del propietario:** cada código (ADR-nnn, S-nn, REQ…) que se mencione lleva al lado una descripción simple.
 
+## Sesión 2026-11-13 (noche, 27) — Autoactualización (OTA) de la interfaz de los APK
+**Qué se hizo**
+- Paquete nuevo `packages/ota` (`@gym-app/ota`): `manifiesto.ts` (validar `latest.json`, comparar versiones, URLs seguras, límite de 3 intentos; con pruebas), `autoactualizar.ts` (revisa a los 15 s y cada 30 min con CapacitorHttp, descarga con checksum SHA-256, espera 20 s sin uso y aplica; `notifyAppReady` al arrancar y borra bundles viejos), `respaldo.ts` (lee el JSON de configuración y guarda copia en localStorage), `Actualizador.tsx` (componente sin interfaz).
+- `apps/checkin` y `apps/vitrina`: `cargarConfig` usa el respaldo (el bundle OTA no lleva la configuración ni la clave) y el layout monta `<Actualizador>`; `transpilePackages` y dependencia `@gym-app/ota`; `Dockerfile` raíz y de la vitrina copian `packages/ota`.
+- Cáscaras Capacitor (`checkin-tv`/`vitrina-tv`): `configuracion.mjs` añade `plugins.CapacitorUpdater` (modo manual, URLs de Capgo vacías, `appReadyTimeout` 10 s) y el bloque `actualizaciones {url, versionCode}` desde `ACTUALIZACIONES_URL`/`APK_VERSION_CODE`; pruebas nuevas; dependencia `@capgo/capacitor-updater` 8.54.2 (justificada: es el plugin OTA mantenido para Capacitor 8; modo manual, sin su nube).
+- `apk.yml`: pasa `ACTUALIZACIONES_URL` (de `R2_PUBLIC_URL`) al empaquetado y, tras compilar el APK, sube `ota/<app>/<versionCode>.zip` y `latest.json` (no-store) al bucket de medios; aborta si el zip lleva configuración. `docs/ops/apk.md` sección 6.
+**Qué funcionó:** pruebas de `packages/ota` y de ambos `configuracion.test.mjs`, `tsc`, lint y `next build` de checkin y vitrina.
+**Qué no funcionó / no repetir:** un archivo `actualizador.ts` chocó con `Actualizador.tsx` en Windows (nombres iguales sin distinguir mayúsculas): ahora es `autoactualizar.ts`. No se probó en un TV real ni se ejecutó el workflow; la aplicación del bundle (`set`) solo se puede comprobar en el dispositivo.
+**Siguiente**
+- Propietario: crear la llave fija y poner `APK_KEYSTORE_BASE64`; poner `R2_PUBLIC_URL=https://media.adhara.fit` en GitHub; ejecutar `apk` (Run workflow); instalar a mano ese primer APK en cada TV; luego ejecutar `apk` otra vez con un cambio visible y comprobar que el TV lo toma solo.
+- Si el bucket de medios restringe el origen, el zip se descarga nativamente (sin CORS); no hace falta configurarlo.
+- Pendiente (nivel 2): aviso en el TV cuando haya un APK nuevo (cambio de código Android).
+
 ## Sesión 2026-11-13 (noche, 26) — Íconos y nombres de los APK, subida a R2 y pestaña Aplicaciones
 **Qué se hizo**
 - **Íconos de marca:** `tools/generar-iconos-apk.mjs` genera, desde `docs/ADHARA_FIT_Logo_Kit/icon-checkin.png` e `icon-vitrina.png`, el ícono del launcher (clásico, redondo y adaptativo), el banner de Android TV (ícono + «ADHARA FIT» + «CHECK-IN»/«VITRINA»), la pantalla de arranque (fondo oscuro con el ícono) y los íconos web (`icon.png`, `apple-icon.png`) de `apps/checkin` y `apps/vitrina`. Los PNG se versionan. Se retiraron `generar-iconos.ps1`, `icono-checkin.jpg` y el `generar-iconos.mjs` anterior de la vitrina (eran de la base heredada).

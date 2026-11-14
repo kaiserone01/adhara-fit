@@ -1,6 +1,8 @@
 // Configuración del Check-in Module. No hay servicio web propio: la interfaz va empaquetada en el APK y habla con web-admin.
 // La URL de web-admin y la clave (CHECKIN_CLAVE) las escribe apps/checkin-tv/capacitor/scripts/preparar.mjs en
 // checkin-config.json dentro del bundle del APK. Mismo esquema que la vitrina (apps/vitrina/lib/config.ts).
+import { cargarJsonConRespaldo } from "@gym-app/ota/respaldo";
+
 export interface ConfigCheckin {
   apiUrl: string;
   clave: string;
@@ -19,8 +21,9 @@ export function validarConfig(datos: unknown): ConfigCheckin {
   return { apiUrl: apiUrl.replace(/\/+$/, ""), clave };
 }
 
+export const RUTA_CONFIG = "/checkin-config.json";
+
+// Tras una actualización OTA el bundle nuevo no trae el archivo: cargarJsonConRespaldo usa la copia guardada.
 export async function cargarConfig(): Promise<ConfigCheckin> {
-  const respuesta = await fetch("/checkin-config.json", { cache: "no-store" });
-  if (!respuesta.ok) throw new Error("Falta checkin-config.json en el bundle.");
-  return validarConfig(await respuesta.json());
+  return validarConfig(await cargarJsonConRespaldo(RUTA_CONFIG));
 }

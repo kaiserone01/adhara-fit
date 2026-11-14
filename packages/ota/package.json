@@ -1,0 +1,16 @@
+{
+  "name": "@gym-app/ota",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Autoactualización de la interfaz de los APK de Android TV (check-in y vitrina) sin reinstalar.",
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@capacitor/core": "^8.5.3",
+    "@capgo/capacitor-updater": "8.54.2"
+  },
+  "devDependencies": {
+    "vitest": "5.0.2"
+  }
+}

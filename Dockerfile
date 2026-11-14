@@ -16,6 +16,7 @@ COPY packages/db/package.json packages/db/package.json
 COPY packages/domain/package.json packages/domain/package.json
 COPY packages/infrastructure/package.json packages/infrastructure/package.json
 COPY packages/design-system/package.json packages/design-system/package.json
+COPY packages/ota/package.json packages/ota/package.json
 COPY packages/theming/package.json packages/theming/package.json
 COPY packages/config/package.json packages/config/package.json
 COPY packages/ui/package.json packages/ui/package.json

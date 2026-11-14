@@ -43,10 +43,32 @@ test("por defecto no hay server.url (la app va empaquetada) y no se depura", () 
 
 test("no activa CapacitorHttp", () => {
   const { capacitor } = construirConfiguracion({ VITRINA_API_URL: "https://admin.test" });
-  assert.equal(capacitor.plugins, undefined);
+  assert.equal(capacitor.plugins.CapacitorHttp, undefined);
 });
 
 test("VITRINA_DEV_URL añade server.url solo para desarrollo", () => {
   const { capacitor } = construirConfiguracion({ VITRINA_DEV_URL: "http://192.168.1.10:3002" });
   assert.deepEqual(capacitor.server, { url: "http://192.168.1.10:3002", cleartext: true });
+});
+
+test("la autoactualización va en modo manual y sin la nube de Capgo", () => {
+  const { capacitor } = construirConfiguracion({ VITRINA_API_URL: "https://admin.test" });
+  assert.deepEqual(capacitor.plugins.CapacitorUpdater, {
+    autoUpdate: "off",
+    appReadyTimeout: 10000,
+    resetWhenUpdate: true,
+    statsUrl: "",
+    updateUrl: "",
+    channelUrl: "",
+  });
+});
+
+test("ACTUALIZACIONES_URL y APK_VERSION_CODE van al JSON de la app; sin ellos no hay bloque", () => {
+  const con = construirConfiguracion({ ...{ VITRINA_API_URL: "https://admin.test" }, ACTUALIZACIONES_URL: "https://media.test/ota/x/", APK_VERSION_CODE: "7" });
+  assert.deepEqual(con.vitrina.actualizaciones, { url: "https://media.test/ota/x", versionCode: 7 });
+  assert.equal(construirConfiguracion({ VITRINA_API_URL: "https://admin.test" }).vitrina.actualizaciones, undefined);
+});
+
+test("ACTUALIZACIONES_URL debe empezar por https://", () => {
+  assert.throws(() => construirConfiguracion({ ...{ VITRINA_API_URL: "https://admin.test" }, ACTUALIZACIONES_URL: "http://media.test/x" }), /ACTUALIZACIONES_URL/);
 });

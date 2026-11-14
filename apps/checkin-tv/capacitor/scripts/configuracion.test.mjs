@@ -35,3 +35,25 @@ test("el APK empaqueta la app: sin server.url, sin logs y sin WebView inspeccion
   assert.equal(capacitor.loggingBehavior, "none");
   assert.deepEqual(capacitor.android, { allowMixedContent: false, webContentsDebuggingEnabled: false });
 });
+
+test("la autoactualización va en modo manual y sin la nube de Capgo", () => {
+  const { capacitor } = construirConfiguracion({ CHECKIN_API_URL: "https://admin.test", CHECKIN_CLAVE: CLAVE });
+  assert.deepEqual(capacitor.plugins.CapacitorUpdater, {
+    autoUpdate: "off",
+    appReadyTimeout: 10000,
+    resetWhenUpdate: true,
+    statsUrl: "",
+    updateUrl: "",
+    channelUrl: "",
+  });
+});
+
+test("ACTUALIZACIONES_URL y APK_VERSION_CODE van al JSON de la app; sin ellos no hay bloque", () => {
+  const con = construirConfiguracion({ ...{ CHECKIN_API_URL: "https://admin.test", CHECKIN_CLAVE: CLAVE }, ACTUALIZACIONES_URL: "https://media.test/ota/x/", APK_VERSION_CODE: "7" });
+  assert.deepEqual(con.checkin.actualizaciones, { url: "https://media.test/ota/x", versionCode: 7 });
+  assert.equal(construirConfiguracion({ CHECKIN_API_URL: "https://admin.test", CHECKIN_CLAVE: CLAVE }).checkin.actualizaciones, undefined);
+});
+
+test("ACTUALIZACIONES_URL debe empezar por https://", () => {
+  assert.throws(() => construirConfiguracion({ ...{ CHECKIN_API_URL: "https://admin.test", CHECKIN_CLAVE: CLAVE }, ACTUALIZACIONES_URL: "http://media.test/x" }), /ACTUALIZACIONES_URL/);
+});
